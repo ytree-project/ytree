@@ -55,12 +55,10 @@ class SimpleTree(object):
             next_halos = []
             ds2 = yt.load(fn)
 
-            yt.mylog.info("Creating halo ancestries for z = %f to %f." %
-                          (ds1.current_redshift, ds2.current_redshift))
+            yt.mylog.info("Searching for ancestors of %d halos." %
+                          len(current_halos))
 
             for current_halo in current_halos:
-                yt.mylog.info("Searching for ancestors of halo %d." %
-                              current_halo.halo_id)
                 hc = ds1.halo(current_halo.halo_type,
                               current_halo.halo_id)
                 ancestor_ids = self.find_ancestors(hc, ds2)
@@ -69,8 +67,6 @@ class SimpleTree(object):
                 ancestor_halos = \
                   [SimpleHalo(halo_type, ancestor_id, halo_info)
                    for ancestor_id in ancestor_ids]
-                yt.mylog.info("Halo %d has %d ancestors." %
-                              (current_halo.halo_id, len(ancestor_ids)))
                 current_halo.ancestors = ancestor_halos
                 next_halos.extend(ancestor_halos)
 
