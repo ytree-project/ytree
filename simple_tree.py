@@ -43,23 +43,17 @@ class SimpleTree(object):
                 ancestors.append(candidate_id)
         return ancestors
 
-    def trace_lineage(self, halo_type, halo_id):
-        ds2 = None
-        current_halos = None
-        for i in range(len(self.ts.outputs)-1, 1, -1):
-            next_halos = []
-            if ds2 is None:
-                ds1 = yt.load(self.ts.outputs[i])
-            else:
-                ds1 = ds2                
-            ds2 = yt.load(self.ts.outputs[i-1])
+    def trace_lineage(self, halo_type, halo_ids):
+        outputs_r = self.ts.outputs[::-1]
+        ds1 = yt.load(outputs_r[0])
+        halo_info = {"redshift": ds1.current_redshift,
+                     "ds": ds1.parameter_filename}
+        current_halos = [SimpleHalo(halo_type, halo_id, halo_info)
+                         for halo_id in halo_ids]
 
-            if current_halos is None:
-                trunk = SimpleHalo(
-                    halo_type, halo_id,
-                    halo_info={"redshift": ds1.current_redshift,
-                               "ds": ds1.parameter_filename})
-                current_halos = [trunk]
+        for fn in outputs_r[1:]:
+            next_halos = []
+            ds2 = yt.load(fn)
 
             yt.mylog.info("Creating halo ancestries for z = %f to %f." %
                           (ds1.current_redshift, ds2.current_redshift))
@@ -70,16 +64,17 @@ class SimpleTree(object):
                 hc = ds1.halo(current_halo.halo_type,
                               current_halo.halo_id)
                 ancestor_ids = self.find_ancestors(hc, ds2)
-                ancestor_info = {"redshift": ds2.current_redshift,
-                                 "ds": ds2.parameter_filename}
+                halo_info["redshift"] = ds2.current_redshift
+                halo_info["ds"] = ds2.parameter_filename
                 ancestor_halos = \
-                  [SimpleHalo(halo_type, ancestor_id, ancestor_info)
+                  [SimpleHalo(halo_type, ancestor_id, halo_info)
                    for ancestor_id in ancestor_ids]
                 yt.mylog.info("Halo %d has %d ancestors." %
                               (current_halo.halo_id, len(ancestor_ids)))
                 current_halo.ancestors = ancestor_halos
                 next_halos.extend(ancestor_halos)
 
+            ds1 = ds2
             current_halos = next_halos
             if len(current_halos) == 0:
                 break
