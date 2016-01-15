@@ -48,8 +48,9 @@ class SimpleTree(object):
         ds1 = yt.load(outputs_r[0])
         halo_info = {"redshift": ds1.current_redshift,
                      "ds": ds1.parameter_filename}
-        current_halos = [SimpleHalo(halo_type, halo_id, halo_info)
-                         for halo_id in halo_ids]
+        start_halos = [SimpleHalo(halo_type, halo_id, halo_info)
+                       for halo_id in halo_ids]
+        current_halos = start_halos
 
         for fn in outputs_r[1:]:
             next_halos = []
@@ -75,4 +76,4 @@ class SimpleTree(object):
             if len(current_halos) == 0:
                 break
 
-        return trunk
+        return start_halos
