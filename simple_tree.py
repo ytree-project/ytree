@@ -59,12 +59,13 @@ class SimpleTree(object):
             yt.mylog.info("Searching for ancestors of %d halos." %
                           len(current_halos))
 
+            halo_info["redshift"] = ds2.current_redshift
+            halo_info["ds"] = ds2.parameter_filename
+
             for current_halo in current_halos:
                 hc = ds1.halo(current_halo.halo_type,
                               current_halo.halo_id)
                 ancestor_ids = self.find_ancestors(hc, ds2)
-                halo_info["redshift"] = ds2.current_redshift
-                halo_info["ds"] = ds2.parameter_filename
                 ancestor_halos = \
                   [SimpleHalo(halo_type, ancestor_id, halo_info)
                    for ancestor_id in ancestor_ids]
