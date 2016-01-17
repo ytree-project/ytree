@@ -3,6 +3,8 @@ import yt
 
 from yt.utilities.exceptions import \
     YTSphereTooSmall
+from yt.utilities.parallel_tools.parallel_analysis_interface import \
+    _get_comm
 
 def halos_in_sphere(hc, ds2, radius_field, factor=1):
     radius = (factor * hc[radius_field]).in_units("code_length")
@@ -56,12 +58,19 @@ class SimpleTree(object):
             these_ancestor_ids = []
             these_descendent_ids = []
 
-            for current_id in current_ids:
+            comm = _get_comm(())
+            njobs = min(comm.size, len(current_ids))
+            for current_id in yt.parallel_objects(current_ids, njobs=njobs):
                 ancestor_ids = self.find_ancestors(
                     halo_type, current_id, ds1, ds2)
                 these_ancestor_ids.extend(ancestor_ids)
                 these_descendent_ids.extend(
                     [current_id]*len(ancestor_ids))
+
+            these_ancestor_ids = comm.par_combine_object(
+                these_ancestor_ids, "cat", datatype="list")
+            these_descendent_ids = comm.par_combine_object(
+                these_descendent_ids, "cat", datatype="list")
 
             all_ancestor_ids.append(these_ancestor_ids)
             all_descendent_ids.append(these_descendent_ids)
