@@ -15,11 +15,10 @@ def halos_in_sphere(hc, ds2, radius_field, factor=1):
     except YTSphereTooSmall:
         return []
 
-def simple_ancestry(hc, candidate):
+def simple_ancestry(halo_member_ids, candidate):
     threshold = 0.5
-    hc_ids = hc["member_ids"]
     c_ids = candidate["member_ids"]
-    common = np.intersect1d(hc_ids, c_ids)
+    common = np.intersect1d(halo_member_ids, c_ids)
     return common.size > threshold * c_ids.size
 
 class SimpleTree(object):
@@ -27,12 +26,21 @@ class SimpleTree(object):
         self.ts = time_series
 
     def find_ancestors(self, halo_type, halo_id, ds1, ds2):
+        comm = _get_comm(())
+        if comm.rank == 0:
+            hc = ds1.halo(halo_type, halo_id)
+            halo_member_ids = hc["member_ids"]
+            candidate_ids = halos_in_sphere(hc, ds2, "Group_R_Crit200", 5)
+        else:
+            candidate_ids = None
+            halo_member_ids = None
+        candidate_ids = comm.comm.bcast(candidate_ids, root=0)
+        halo_member_ids = comm.comm.bcast(halo_member_ids, root=0)
+
         ancestors = []
-        hc = ds1.halo(halo_type, halo_id)
-        candidate_ids = halos_in_sphere(hc, ds2, "Group_R_Crit200", 5)
-        for candidate_id in candidate_ids:
-            candidate = ds2.halo(hc.ptype, candidate_id)
-            if simple_ancestry(hc, candidate):
+        for candidate_id in yt.parallel_objects(candidate_ids, njobs=-1):
+            candidate = ds2.halo(halo_type, candidate_id)
+            if simple_ancestry(halo_member_ids, candidate):
                 ancestors.append(candidate_id)
         return ancestors
 
