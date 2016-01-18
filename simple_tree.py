@@ -4,14 +4,10 @@ import yt
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm
 
-from .halo_selectors import \
+from .ancestry_checker import \
+    ancestry_checker_registry
+from .halo_selector import \
     selector_registry
-
-def simple_ancestry(halo_member_ids, candidate):
-    threshold = 0.5
-    c_ids = candidate["member_ids"]
-    common = np.intersect1d(halo_member_ids, c_ids)
-    return common.size > threshold * c_ids.size
 
 class SimpleTree(object):
     def __init__(self, time_series):
@@ -20,8 +16,15 @@ class SimpleTree(object):
         # set a default selector
         self.set_selector("sphere", "Group_R_Crit200", factor=5)
 
+        # set a default ancestry checker
+        self.set_ancestry_checker("common_ids")
+
     def set_selector(self, selector, *args, **kwargs):
         self.selector = selector_registry.find(selector, *args, **kwargs)
+
+    def set_ancestry_checker(self, ancestry_checker, *args, **kwargs):
+        self.ancestry_checker = \
+          ancestry_checker_registry.find(ancestry_checker, *args, **kwargs)
 
     def find_ancestors(self, halo_type, halo_id, ds1, ds2):
         comm = _get_comm(())
@@ -32,13 +35,15 @@ class SimpleTree(object):
         else:
             candidate_ids = None
             halo_member_ids = None
-        candidate_ids = comm.comm.bcast(candidate_ids, root=0)
-        halo_member_ids = comm.comm.bcast(halo_member_ids, root=0)
+        if comm.comm is not None:
+            candidate_ids = comm.comm.bcast(candidate_ids, root=0)
+            halo_member_ids = comm.comm.bcast(halo_member_ids, root=0)
 
         ancestors = []
         for candidate_id in yt.parallel_objects(candidate_ids, njobs=-1):
             candidate = ds2.halo(halo_type, candidate_id)
-            if simple_ancestry(halo_member_ids, candidate):
+            candidate_member_ids = candidate["member_ids"]
+            if self.ancestry_checker(halo_member_ids, candidate_member_ids):
                 ancestors.append(candidate_id)
         return ancestors
 

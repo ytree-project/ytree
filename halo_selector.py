@@ -24,6 +24,7 @@ class HaloSelector(object):
 
     The function should return a list of integers representing the ids
     of potential halos to check for ancestry.
+
     """
     def __init__(self, function, args=None, kwargs=None):
         self.function = function
@@ -47,14 +48,15 @@ def sphere_selector(hc, ds2, radius_field, factor=1):
         The dataset of the ancestor halos.
     radius_field : str
         Name of the field to be used to get the halo radius.
-    factor : float optional
+    factor : float, optional
         Multiplicative factor of the halo radius in which
-        potential halos will be gathered.
+        potential halos will be gathered.  Default: 1.
 
     Returns
     -------
     my_ids : list of ints
        List of ids of potential halos.
+
     """
 
     radius = (factor * hc[radius_field]).in_units("code_length")
