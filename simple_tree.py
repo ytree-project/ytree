@@ -59,8 +59,9 @@ class SimpleTree(object):
         for fn in outputs_r[1:]:
             ds2 = yt.load(fn)
 
-            yt.mylog.info("Searching for ancestors of %d halos." %
-                          len(current_ids))
+            if yt.is_root():
+                yt.mylog.info("Searching for ancestors of %d halos." %
+                              len(current_ids))
 
             these_ancestor_ids = []
             these_ancestor_counts = []
