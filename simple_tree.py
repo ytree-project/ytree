@@ -50,11 +50,10 @@ class SimpleTree(object):
     def trace_lineage(self, halo_type, halo_ids):
         outputs_r = self.ts.outputs[::-1]
         ds1 = yt.load(outputs_r[0])
-        halo_info = {"redshift": ds1.current_redshift,
-                     "ds": ds1.parameter_filename}
         current_ids = halo_ids
 
         all_ancestor_ids = []
+        all_ancestor_counts = []
         all_descendent_ids = []
 
         for fn in outputs_r[1:]:
@@ -63,10 +62,8 @@ class SimpleTree(object):
             yt.mylog.info("Searching for ancestors of %d halos." %
                           len(current_ids))
 
-            halo_info["redshift"] = ds2.current_redshift
-            halo_info["ds"] = ds2.parameter_filename
-
             these_ancestor_ids = []
+            these_ancestor_counts = []
             these_descendent_ids = []
 
             comm = _get_comm(())
@@ -75,15 +72,18 @@ class SimpleTree(object):
                 ancestor_ids = self.find_ancestors(
                     halo_type, current_id, ds1, ds2)
                 these_ancestor_ids.extend(ancestor_ids)
-                these_descendent_ids.extend(
-                    [current_id]*len(ancestor_ids))
+                these_ancestor_counts.append(len(ancestor_ids))
+                these_descendent_ids.append(current_id)
 
             these_ancestor_ids = comm.par_combine_object(
                 these_ancestor_ids, "cat", datatype="list")
+            these_ancestor_counts = comm.par_combine_object(
+                these_ancestor_counts, "cat", datatype="list")
             these_descendent_ids = comm.par_combine_object(
                 these_descendent_ids, "cat", datatype="list")
 
             all_ancestor_ids.append(these_ancestor_ids)
+            all_ancestor_counts.append(these_ancestor_counts)
             all_descendent_ids.append(these_descendent_ids)
 
             ds1 = ds2
