@@ -1,19 +1,11 @@
 import numpy as np
 import yt
 
-from yt.utilities.exceptions import \
-    YTSphereTooSmall
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm
 
-def halos_in_sphere(hc, ds2, radius_field, factor=1):
-    radius = (factor * hc[radius_field]).in_units("code_length")
-    try:
-        sp = ds2.sphere(hc.position.in_units("code_length"), radius)
-        my_ids = sp[(hc.ptype, "particle_identifier")]
-        return my_ids.d.astype(np.int64)
-    except YTSphereTooSmall:
-        return []
+from .halo_selectors import \
+    selector_registry
 
 def simple_ancestry(halo_member_ids, candidate):
     threshold = 0.5
@@ -25,12 +17,18 @@ class SimpleTree(object):
     def __init__(self, time_series):
         self.ts = time_series
 
+        # set a default selector
+        self.set_selector("sphere", "Group_R_Crit200", factor=5)
+
+    def set_selector(self, selector, *args, **kwargs):
+        self.selector = selector_registry.find(selector, *args, **kwargs)
+
     def find_ancestors(self, halo_type, halo_id, ds1, ds2):
         comm = _get_comm(())
         if comm.rank == 0:
             hc = ds1.halo(halo_type, halo_id)
             halo_member_ids = hc["member_ids"]
-            candidate_ids = halos_in_sphere(hc, ds2, "Group_R_Crit200", 5)
+            candidate_ids = self.selector(hc, ds2)
         else:
             candidate_ids = None
             halo_member_ids = None
