@@ -61,7 +61,8 @@ def sphere_selector(hc, ds2, radius_field, factor=1):
 
     radius = (factor * hc[radius_field]).in_units("code_length")
     try:
-        sp = ds2.sphere(hc.position.in_units("code_length"), radius)
+        # Never mix code units from multiple datasets!!!
+        sp = ds2.sphere(hc.position.in_units("code_length").d, radius.d[0])
         my_ids = sp[(hc.ptype, "particle_identifier")]
         return my_ids.d.astype(np.int64)
     except YTSphereTooSmall:

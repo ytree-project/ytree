@@ -28,13 +28,13 @@ class SimpleTree(object):
 
     def find_ancestors(self, halo_type, halo_id, ds1, ds2):
         hc = ds1.halo(halo_type, halo_id)
-        halo_member_ids = hc["member_ids"]
+        halo_member_ids = hc["member_ids"].d.astype(np.int64)
         candidate_ids = self.selector(hc, ds2)
 
         ancestors = []
         for candidate_id in candidate_ids:
             candidate = ds2.halo(halo_type, candidate_id)
-            candidate_member_ids = candidate["member_ids"]
+            candidate_member_ids = candidate["member_ids"].d.astype(np.int64)
             if self.ancestry_checker(halo_member_ids, candidate_member_ids):
                 ancestors.append(candidate_id)
         return ancestors
