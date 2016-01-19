@@ -50,46 +50,38 @@ class SimpleTree(object):
     def trace_lineage(self, halo_type, halo_ids):
         outputs_r = self.ts.outputs[::-1]
         ds1 = yt.load(outputs_r[0])
-        current_ids = halo_ids
 
-        all_ancestor_ids = []
         all_ancestor_counts = []
-        all_descendent_ids = []
+        all_halo_ids = [halo_ids]
 
         for fn in outputs_r[1:]:
             ds2 = yt.load(fn)
 
             if yt.is_root():
                 yt.mylog.info("Searching for ancestors of %d halos." %
-                              len(current_ids))
+                              len(all_halo_ids[-1]))
 
             these_ancestor_ids = []
             these_ancestor_counts = []
-            these_descendent_ids = []
 
             comm = _get_comm(())
-            njobs = min(comm.size, len(current_ids))
-            for current_id in yt.parallel_objects(current_ids, njobs=njobs):
+            njobs = min(comm.size, len(all_halo_ids[-1]))
+            for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=njobs):
                 ancestor_ids = self.find_ancestors(
                     halo_type, current_id, ds1, ds2)
                 these_ancestor_ids.extend(ancestor_ids)
                 these_ancestor_counts.append(len(ancestor_ids))
-                these_descendent_ids.append(current_id)
 
             these_ancestor_ids = comm.par_combine_object(
                 these_ancestor_ids, "cat", datatype="list")
             these_ancestor_counts = comm.par_combine_object(
                 these_ancestor_counts, "cat", datatype="list")
-            these_descendent_ids = comm.par_combine_object(
-                these_descendent_ids, "cat", datatype="list")
 
-            all_ancestor_ids.append(these_ancestor_ids)
             all_ancestor_counts.append(these_ancestor_counts)
-            all_descendent_ids.append(these_descendent_ids)
-
-            ds1 = ds2
-            current_ids = these_ancestor_ids
-            if len(current_ids) == 0:
+            if len(these_ancestor_ids) > 0:
+                all_halo_ids.append(these_ancestor_ids)
+            else:
                 break
+            ds1 = ds2
 
         return # need to return something
