@@ -27,20 +27,12 @@ class SimpleTree(object):
           ancestry_checker_registry.find(ancestry_checker, *args, **kwargs)
 
     def find_ancestors(self, halo_type, halo_id, ds1, ds2):
-        comm = _get_comm(())
-        if comm.rank == 0:
-            hc = ds1.halo(halo_type, halo_id)
-            halo_member_ids = hc["member_ids"]
-            candidate_ids = self.selector(hc, ds2)
-        else:
-            candidate_ids = None
-            halo_member_ids = None
-        if comm.comm is not None:
-            candidate_ids = comm.comm.bcast(candidate_ids, root=0)
-            halo_member_ids = comm.comm.bcast(halo_member_ids, root=0)
+        hc = ds1.halo(halo_type, halo_id)
+        halo_member_ids = hc["member_ids"]
+        candidate_ids = self.selector(hc, ds2)
 
         ancestors = []
-        for candidate_id in yt.parallel_objects(candidate_ids, njobs=-1):
+        for candidate_id in candidate_ids:
             candidate = ds2.halo(halo_type, candidate_id)
             candidate_member_ids = candidate["member_ids"]
             if self.ancestry_checker(halo_member_ids, candidate_member_ids):
@@ -66,7 +58,7 @@ class SimpleTree(object):
 
             comm = _get_comm(())
             njobs = min(comm.size, len(all_halo_ids[-1]))
-            for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=njobs):
+            for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=-1):
                 ancestor_ids = self.find_ancestors(
                     halo_type, current_id, ds1, ds2)
                 these_ancestor_ids.extend(ancestor_ids)
