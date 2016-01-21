@@ -108,13 +108,12 @@ class SimpleTree(object):
                     these_halo_properties[hp] = \
                       mpi_gather_list(comm.comm, these_halo_properties[hp])
 
+            if len(these_ancestor_ids) == 0: break
+
+            all_halo_ids.append(these_ancestor_ids)
             all_ancestor_counts.append(these_ancestor_counts)
             for hp in halo_properties:
                 all_halo_properties[hp].append(these_halo_properties[hp])
-            if len(these_ancestor_ids) > 0:
-                all_halo_ids.append(these_ancestor_ids)
-            else:
-                break
             ds1 = ds2
 
         return # need to return something
