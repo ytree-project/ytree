@@ -1,4 +1,3 @@
-from collections import defaultdict
 import numpy as np
 import yt
 
@@ -54,16 +53,28 @@ class SimpleTree(object):
 
         return hc, ancestors
 
-    def trace_lineage(self, halo_type, halo_ids, halo_properties=None):
+    def trace_lineage(self, halo_type, root_ids, halo_properties=None):
         if halo_properties is None:
             halo_properties = []
 
+        comm = _get_comm(())
         outputs_r = self.ts.outputs[::-1]
         ds1 = yt.load(outputs_r[0])
 
+        all_halo_ids = [root_ids]
         all_ancestor_counts = []
-        all_halo_ids = [halo_ids]
-        all_halo_properties = defaultdict(list)
+
+        all_halo_properties = dict([(halo_property, [[]])
+                                    for halo_property in halo_properties])
+        for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=-1):
+            hc = ds1.halo(halo_type, current_id)
+            for halo_property in halo_properties:
+                all_halo_properties[halo_property][0].append(
+                    get_halo_property(hc, halo_property))
+        if comm.comm is not None:
+            for halo_property in halo_properties:
+                all_halo_properties[halo_property][0] = \
+                  mpi_gather_list(comm.comm, all_halo_properties[halo_property][0])
 
         for fn in outputs_r[1:]:
             ds2 = yt.load(fn)
@@ -77,7 +88,6 @@ class SimpleTree(object):
             these_halo_properties = \
               dict([(halo_property, []) for halo_property in halo_properties])
 
-            comm = _get_comm(())
             njobs = min(comm.size, len(all_halo_ids[-1]))
             for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=-1):
                 current_halo, ancestors = self.find_ancestors(
