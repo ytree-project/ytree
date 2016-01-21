@@ -6,7 +6,7 @@ class SimpleKnot(object):
         self.halo_id = halo_id
         self.ancestors = []
         if properties is None: properties = {}
-        for p, val in properties:
+        for p, val in properties.items():
             setattr(self, p, val)
 
     def __repr__(self):
@@ -31,11 +31,15 @@ def load_tree(filename, properties=None):
     # 2) Create level arrays full of knots.
     i_halo = 0
     level_knots = []
-    for level in level_count:
+    for i_level, level in enumerate(level_count):
         level_knots.append([])
         for i_on_level in range(sum(level)):
+            halo_properties = dict([(hp, ds.data[hp][i_halo])
+                                    for hp in properties])
+            halo_properties["redshift"] = ds.data["redshift"][i_level]
             my_id = halo_ids[i_halo]
-            level_knots[-1].append(SimpleKnot(halo_ids[i_halo]))
+            level_knots[-1].append(SimpleKnot(halo_ids[i_halo],
+                                              halo_properties))
             i_halo += 1
     level_count.pop(0)
 
