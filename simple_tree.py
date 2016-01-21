@@ -64,17 +64,16 @@ class SimpleTree(object):
         all_halo_ids = [root_ids]
         all_ancestor_counts = []
 
-        all_halo_properties = dict([(halo_property, [[]])
-                                    for halo_property in halo_properties])
+        all_halo_properties = dict([(hp, [[]]) for hp in halo_properties])
         for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=-1):
             hc = ds1.halo(halo_type, current_id)
-            for halo_property in halo_properties:
-                all_halo_properties[halo_property][0].append(
-                    get_halo_property(hc, halo_property))
+            for hp in halo_properties:
+                all_halo_properties[hp][0].append(
+                    get_halo_property(hc, hp))
         if comm.comm is not None:
-            for halo_property in halo_properties:
-                all_halo_properties[halo_property][0] = \
-                  mpi_gather_list(comm.comm, all_halo_properties[halo_property][0])
+            for hp in halo_properties:
+                all_halo_properties[hp][0] = \
+                  mpi_gather_list(comm.comm, all_halo_properties[hp][0])
 
         for fn in outputs_r[1:]:
             ds2 = yt.load(fn)
@@ -85,18 +84,16 @@ class SimpleTree(object):
 
             these_ancestor_ids = []
             these_ancestor_counts = []
-            these_halo_properties = \
-              dict([(halo_property, []) for halo_property in halo_properties])
+            these_halo_properties = dict([(hp, []) for hp in halo_properties])
 
             njobs = min(comm.size, len(all_halo_ids[-1]))
             for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=-1):
                 current_halo, ancestors = self.find_ancestors(
                     halo_type, current_id, ds1, ds2)
 
-                for halo_property in halo_properties:
-                    these_halo_properties[halo_property].extend(
-                        [get_halo_property(ancestor, halo_property)
-                         for ancestor in ancestors])
+                for hp in halo_properties:
+                    these_halo_properties[hp].extend(
+                        [get_halo_property(ancestor, hp) for ancestor in ancestors])
 
                 these_ancestor_ids.extend([ancestor.particle_identifier
                                            for ancestor in ancestors])
@@ -107,14 +104,13 @@ class SimpleTree(object):
             these_ancestor_counts = comm.par_combine_object(
                 these_ancestor_counts, "cat", datatype="list")
             if comm.comm is not None:
-                for halo_property in these_halo_properties:
-                    these_halo_properties[halo_property] = \
-                      mpi_gather_list(comm.comm, these_halo_properties[halo_property])
+                for hp in halo_properties:
+                    these_halo_properties[hp] = \
+                      mpi_gather_list(comm.comm, these_halo_properties[hp])
 
             all_ancestor_counts.append(these_ancestor_counts)
-            for halo_property in these_halo_properties:
-                all_halo_properties[halo_property].append(
-                    these_halo_properties[halo_property])
+            for hp in halo_properties:
+                all_halo_properties[hp].append(these_halo_properties[hp])
             if len(these_ancestor_ids) > 0:
                 all_halo_ids.append(these_ancestor_ids)
             else:
