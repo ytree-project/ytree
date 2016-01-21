@@ -126,10 +126,9 @@ class SimpleTree(object):
             all_redshift.append(ds2.current_redshift)
             ds1 = ds2
 
-        self.save_tree(filename, ds_props, all_redshift,
-                       all_halo_ids, all_ancestor_counts,
-                       all_halo_properties)
-        return # need to return something
+        return self.save_tree(filename, ds_props, all_redshift,
+                              all_halo_ids, all_ancestor_counts,
+                              all_halo_properties)
 
     @parallel_root_only
     def save_tree(self, filename, ds_properties, redshift,
@@ -150,7 +149,7 @@ class SimpleTree(object):
         for hp in halo_properties:
             data[hp] = yt.YTArray(halo_properties_flat[hp])
 
-        yt.save_as_dataset(ds_properties, filename, data)
+        return yt.save_as_dataset(ds_properties, filename, data)
 
 def get_halo_property(halo, halo_property):
     val = getattr(halo, halo_property, None)
