@@ -17,8 +17,9 @@ from .halo_selector import \
     selector_registry
 
 class SimpleTree(object):
-    def __init__(self, time_series):
+    def __init__(self, time_series, setup_function=None):
         self.ts = time_series
+        self.setup_function = setup_function
 
         # set a default selector
         self.set_selector("sphere", "Group_R_Crit200", factor=5)
@@ -64,6 +65,8 @@ class SimpleTree(object):
         comm = _get_comm(())
         outputs_r = self.ts.outputs[::-1]
         ds1 = yt.load(outputs_r[0])
+        if self.setup_function is not None:
+            self.setup_function(ds1)
         ds_props = dict([(attr, getattr(ds1, attr))
                          for attr in ["domain_left_edge", "domain_right_edge",
                                       "omega_matter", "omega_lambda",
@@ -86,6 +89,8 @@ class SimpleTree(object):
 
         for fn in outputs_r[1:]:
             ds2 = yt.load(fn)
+            if self.setup_function is not None:
+                self.setup_function(ds2)
 
             if yt.is_root():
                 yt.mylog.info("Searching for ancestors of %d halos." %
