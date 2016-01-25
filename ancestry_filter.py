@@ -51,6 +51,7 @@ def most_massive(halo, ancestors):
         List containing data container of most massive halo.
 
     """
+    if len(ancestors) == 0: return []
     i_max = np.argmax([my_halo.mass for my_halo in ancestors])
     return [ancestors[i_max]]
 

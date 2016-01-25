@@ -11,6 +11,8 @@ from .ancestry_checker import \
     ancestry_checker_registry
 from .ancestry_filter import \
     ancestry_filter_registry
+from .ancestry_short import \
+    ancestry_short_registry
 from .communication import \
     mpi_gather_list
 from .halo_selector import \
@@ -28,6 +30,7 @@ class SimpleTree(object):
         self.set_ancestry_checker("common_ids")
 
         self.ancestry_filter = None
+        self.ancestry_short = None
 
     def set_selector(self, selector, *args, **kwargs):
         self.selector = selector_registry.find(selector, *args, **kwargs)
@@ -40,6 +43,10 @@ class SimpleTree(object):
         self.ancestry_filter = \
           ancestry_filter_registry.find(ancestry_filter, *args, **kwargs)
 
+    def set_ancestry_short(self, ancestry_short, *args, **kwargs):
+        self.ancestry_short = \
+          ancestry_short_registry.find(ancestry_short, *args, **kwargs)
+
     def find_ancestors(self, halo_type, halo_id, ds1, ds2):
         hc = ds1.halo(halo_type, halo_id)
         halo_member_ids = hc["member_ids"].d.astype(np.int64)
@@ -51,6 +58,9 @@ class SimpleTree(object):
             candidate_member_ids = candidate["member_ids"].d.astype(np.int64)
             if self.ancestry_checker(halo_member_ids, candidate_member_ids):
                 ancestors.append(candidate)
+                if self.ancestry_short is not None and \
+                        self.ancestry_short(hc, candidate):
+                    break
 
         if self.ancestry_filter is not None:
             ancestors = self.ancestry_filter(hc, ancestors)
@@ -101,6 +111,8 @@ class SimpleTree(object):
             these_halo_properties = dict([(hp, []) for hp in halo_properties])
 
             njobs = min(comm.size, len(all_halo_ids[-1]))
+            pbar = yt.get_pbar("Getting ancestors", len(all_halo_ids[-1]))
+            my_i = 0
             for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=-1):
                 current_halo, ancestors = self.find_ancestors(
                     halo_type, current_id, ds1, ds2)
@@ -112,6 +124,9 @@ class SimpleTree(object):
                 these_ancestor_ids.extend([ancestor.particle_identifier
                                            for ancestor in ancestors])
                 these_ancestor_counts.append(len(ancestors))
+                my_i += 1
+                pbar.update(my_i)
+            pbar.finish()
 
             these_ancestor_ids = comm.par_combine_object(
                 these_ancestor_ids, "cat", datatype="list")
