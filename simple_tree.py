@@ -19,8 +19,6 @@ from .halo_selector import \
     selector_registry, \
     clear_id_cache
 
-_id_store = []
-
 class SimpleTree(object):
     def __init__(self, time_series, setup_function=None):
         self.ts = time_series
@@ -50,14 +48,16 @@ class SimpleTree(object):
         self.ancestry_short = \
           ancestry_short_registry.find(ancestry_short, *args, **kwargs)
 
-    def find_ancestors(self, halo_type, halo_id, ds1, ds2):
+    def find_ancestors(self, halo_type, halo_id, ds1, ds2,
+                       id_store=None):
+        if id_store is None: id_store = []
         hc = ds1.halo(halo_type, halo_id)
         halo_member_ids = hc["member_ids"].d.astype(np.int64)
         candidate_ids = self.selector(hc, ds2)
 
         ancestors = []
         for candidate_id in candidate_ids:
-            if candidate_id in _id_store: continue
+            if candidate_id in id_store: continue
             candidate = ds2.halo(halo_type, candidate_id)
             candidate_member_ids = candidate["member_ids"].d.astype(np.int64)
             if self.ancestry_checker(halo_member_ids, candidate_member_ids):
@@ -66,8 +66,8 @@ class SimpleTree(object):
                         self.ancestry_short(hc, candidate):
                     break
 
-        _id_store.extend([ancestor.particle_identifier
-                          for ancestor in ancestors])
+        id_store.extend([ancestor.particle_identifier
+                         for ancestor in ancestors])
 
         if self.ancestry_filter is not None:
             ancestors = self.ancestry_filter(hc, ancestors)
@@ -110,6 +110,7 @@ class SimpleTree(object):
                   mpi_gather_list(comm.comm, all_halo_properties[hp][0])
 
         for fn in outputs_r[1:]:
+            id_store = []
             ds2 = yt.load(fn)
             if self.setup_function is not None:
                 self.setup_function(ds2)
@@ -127,7 +128,7 @@ class SimpleTree(object):
             my_i = 0
             for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=-1):
                 current_halo, ancestors = self.find_ancestors(
-                    halo_type, current_id, ds1, ds2)
+                    halo_type, current_id, ds1, ds2, id_store=id_store)
 
                 for hp in halo_properties:
                     these_halo_properties[hp].extend(
@@ -158,7 +159,6 @@ class SimpleTree(object):
             all_redshift.append(ds2.current_redshift)
             ds1 = ds2
             clear_id_cache()
-            _id_store = []
 
         return self.save_tree(filename, ds_props, all_redshift,
                               all_halo_ids, all_ancestor_counts,
