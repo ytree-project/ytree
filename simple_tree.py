@@ -16,7 +16,10 @@ from .ancestry_short import \
 from .communication import \
     mpi_gather_list
 from .halo_selector import \
-    selector_registry
+    selector_registry, \
+    clear_id_cache
+
+_id_store = []
 
 class SimpleTree(object):
     def __init__(self, time_series, setup_function=None):
@@ -54,6 +57,7 @@ class SimpleTree(object):
 
         ancestors = []
         for candidate_id in candidate_ids:
+            if candidate_id in _id_store: continue
             candidate = ds2.halo(halo_type, candidate_id)
             candidate_member_ids = candidate["member_ids"].d.astype(np.int64)
             if self.ancestry_checker(halo_member_ids, candidate_member_ids):
@@ -61,6 +65,9 @@ class SimpleTree(object):
                 if self.ancestry_short is not None and \
                         self.ancestry_short(hc, candidate):
                     break
+
+        _id_store.extend([ancestor.particle_identifier
+                          for ancestor in ancestors])
 
         if self.ancestry_filter is not None:
             ancestors = self.ancestry_filter(hc, ancestors)
@@ -87,11 +94,16 @@ class SimpleTree(object):
         all_ancestor_counts = [[len(root_ids)]]
 
         all_halo_properties = dict([(hp, [[]]) for hp in halo_properties])
+        pbar = yt.get_pbar("Getting initial halos", len(all_halo_ids[-1]))
+        my_i = 0
         for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=-1):
             hc = ds1.halo(halo_type, current_id)
             for hp in halo_properties:
                 all_halo_properties[hp][0].append(
                     get_halo_property(hc, hp))
+            my_i += 1
+            pbar.update(my_i)
+        pbar.finish()
         if comm.comm is not None:
             for hp in halo_properties:
                 all_halo_properties[hp][0] = \
@@ -145,6 +157,8 @@ class SimpleTree(object):
                 all_halo_properties[hp].append(these_halo_properties[hp])
             all_redshift.append(ds2.current_redshift)
             ds1 = ds2
+            clear_id_cache()
+            _id_store = []
 
         return self.save_tree(filename, ds_props, all_redshift,
                               all_halo_ids, all_ancestor_counts,

@@ -7,6 +7,12 @@ from yt.utilities.exceptions import \
 
 selector_registry = OperatorRegistry()
 
+_id_cache = {}
+
+def clear_id_cache():
+    for key in _id_cache.keys():
+        del _id_cache[key]
+
 def add_selector(name, function):
     selector_registry[name] = HaloSelector(function)
 
@@ -69,3 +75,30 @@ def sphere_selector(hc, ds2, radius_field, factor=1):
         return []
 
 add_selector("sphere", sphere_selector)
+
+def all_selector(hc, ds2):
+    r"""
+    Return all halos from the ancestor dataset.
+
+    Parameters
+    ----------
+    hc : halo container object
+        Halo container associated with the target halo.
+    ds2 : halo catalog-type dataset
+        The dataset of the ancestor halos.
+
+    Returns
+    -------
+    my_ids : list of ints
+       List of ids of potential halos.
+
+    """
+
+    ad = ds2.all_data()
+    if "all" in _id_cache:
+        return _id_cache["all"]
+    my_ids = ad[hc.ptype, "particle_identifier"].d.astype(np.int64)
+    _id_cache["all"] = my_ids
+    return my_ids
+
+add_selector("all", all_selector)
