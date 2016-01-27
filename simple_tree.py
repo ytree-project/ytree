@@ -94,14 +94,15 @@ class SimpleTree(object):
         all_ancestor_counts = [[len(root_ids)]]
 
         all_halo_properties = dict([(hp, [[]]) for hp in halo_properties])
-        pbar = yt.get_pbar("Getting initial halos", len(all_halo_ids[-1]))
+        pbar = yt.get_pbar("Getting initial halos", len(all_halo_ids[-1]),
+                           parallel=True)
         my_i = 0
         for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=-1):
             hc = ds1.halo(halo_type, current_id)
             for hp in halo_properties:
                 all_halo_properties[hp][0].append(
                     get_halo_property(hc, hp))
-            my_i += 1
+            my_i += comm.size
             pbar.update(my_i)
         pbar.finish()
         if comm.comm is not None:
@@ -124,7 +125,7 @@ class SimpleTree(object):
             these_halo_properties = dict([(hp, []) for hp in halo_properties])
 
             njobs = min(comm.size, len(all_halo_ids[-1]))
-            pbar = yt.get_pbar("Getting ancestors", len(all_halo_ids[-1]))
+            pbar = yt.get_pbar("Getting ancestors", len(all_halo_ids[-1]), parallel=True)
             my_i = 0
             for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=-1):
                 current_halo, ancestors = self.find_ancestors(
@@ -137,7 +138,7 @@ class SimpleTree(object):
                 these_ancestor_ids.extend([ancestor.particle_identifier
                                            for ancestor in ancestors])
                 these_ancestor_counts.append(len(ancestors))
-                my_i += 1
+                my_i += comm.size
                 pbar.update(my_i)
             pbar.finish()
 
