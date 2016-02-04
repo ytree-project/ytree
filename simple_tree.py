@@ -135,8 +135,8 @@ class SimpleTree(object):
                                for attr in ["current_time", "current_redshift"]]))
             return yt.save_as_dataset(my_ds, filename, data)
 
-    def trace_lineage_2(self, halo_type, root_ids,
-                        halo_properties=None, filename=None):
+    def trace_lineage(self, halo_type, root_ids,
+                      halo_properties=None, filename=None):
 
         filename = get_output_filename(filename, "tree", ".h5")
         output_dir = os.path.dirname(filename)
@@ -183,118 +183,6 @@ class SimpleTree(object):
 
             ds1 = ds2
             clear_id_cache()
-
-    def trace_lineage(self, halo_type, root_ids,
-                      halo_properties=None, filename=None):
-        if halo_properties is None:
-            halo_properties = []
-
-        comm = _get_comm(())
-        outputs_r = self.ts.outputs[::-1]
-        ds1 = yt.load(outputs_r[0])
-        if self.setup_function is not None:
-            self.setup_function(ds1)
-        ds_props = dict([(attr, getattr(ds1, attr))
-                         for attr in ["domain_left_edge", "domain_right_edge",
-                                      "omega_matter", "omega_lambda",
-                                      "hubble_constant"]])
-
-        all_redshift = [ds1.current_redshift]
-        all_halo_ids = [root_ids]
-        all_ancestor_counts = [[len(root_ids)]]
-
-        all_halo_properties = dict([(hp, [[]]) for hp in halo_properties])
-        pbar = yt.get_pbar("Getting initial halos", len(all_halo_ids[-1]),
-                           parallel=True)
-        my_i = 0
-        for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=-1):
-            hc = ds1.halo(halo_type, current_id)
-            for hp in halo_properties:
-                all_halo_properties[hp][0].append(
-                    get_halo_property(hc, hp))
-            my_i += comm.size
-            pbar.update(my_i)
-        pbar.finish()
-        if comm.comm is not None:
-            for hp in halo_properties:
-                all_halo_properties[hp][0] = \
-                  mpi_gather_list(comm.comm, all_halo_properties[hp][0])
-
-        for fn in outputs_r[1:]:
-            id_store = []
-            ds2 = yt.load(fn)
-            if self.setup_function is not None:
-                self.setup_function(ds2)
-
-            if yt.is_root():
-                yt.mylog.info("Searching for ancestors of %d halos." %
-                              len(all_halo_ids[-1]))
-
-            these_ancestor_ids = []
-            these_ancestor_counts = []
-            these_halo_properties = dict([(hp, []) for hp in halo_properties])
-
-            njobs = min(comm.size, len(all_halo_ids[-1]))
-            pbar = yt.get_pbar("Getting ancestors", len(all_halo_ids[-1]), parallel=True)
-            my_i = 0
-            for current_id in yt.parallel_objects(all_halo_ids[-1], njobs=-1):
-                current_halo, ancestors = self.find_ancestors(
-                    halo_type, current_id, ds1, ds2, id_store=id_store)
-
-                for hp in halo_properties:
-                    these_halo_properties[hp].extend(
-                        [get_halo_property(ancestor, hp) for ancestor in ancestors])
-
-                these_ancestor_ids.extend([ancestor.particle_identifier
-                                           for ancestor in ancestors])
-                these_ancestor_counts.append(len(ancestors))
-                my_i += comm.size
-                pbar.update(my_i)
-            pbar.finish()
-
-            these_ancestor_ids = comm.par_combine_object(
-                these_ancestor_ids, "cat", datatype="list")
-            these_ancestor_counts = comm.par_combine_object(
-                these_ancestor_counts, "cat", datatype="list")
-            if comm.comm is not None:
-                for hp in halo_properties:
-                    these_halo_properties[hp] = \
-                      mpi_gather_list(comm.comm, these_halo_properties[hp])
-
-            if len(these_ancestor_ids) == 0: break
-
-            all_halo_ids.append(these_ancestor_ids)
-            all_ancestor_counts.append(these_ancestor_counts)
-            for hp in halo_properties:
-                all_halo_properties[hp].append(these_halo_properties[hp])
-            all_redshift.append(ds2.current_redshift)
-            ds1 = ds2
-            clear_id_cache()
-
-        return self.save_tree(filename, ds_props, all_redshift,
-                              all_halo_ids, all_ancestor_counts,
-                              all_halo_properties)
-
-    @parallel_root_only
-    def save_tree(self, filename, ds_properties, redshift,
-                  halo_ids, ancestor_counts, halo_properties):
-        filename = get_output_filename(filename, "tree", ".h5")
-        redshift = np.array(redshift)
-        halo_ids_flat = []
-        ancestor_counts_flat = []
-        halo_properties_flat = dict([(hp, []) for hp in halo_properties])
-        for i in range(redshift.size):
-            halo_ids_flat.extend(halo_ids[i])
-            ancestor_counts_flat.extend(ancestor_counts[i])
-            for hp in halo_properties:
-                halo_properties_flat[hp].extend(halo_properties[hp][i])
-        data = {"redshift": redshift}
-        data["halo_ids"] = np.array(halo_ids_flat).astype(np.float64)
-        data["ancestor_counts"] = np.array(ancestor_counts_flat).astype(np.float64)
-        for hp in halo_properties:
-            data[hp] = yt.YTArray(halo_properties_flat[hp])
-
-        return yt.save_as_dataset(ds_properties, filename, data)
 
 def create_halo_data_lists(ds, halos, halo_properties):
     data = dict([(hp, []) for hp in halo_properties])
