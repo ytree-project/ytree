@@ -183,6 +183,9 @@ class SimpleTree(object):
             self.save_segment(segment_file, ds1, ds2, target_halos, ancestor_halos,
                               all_links, halo_properties)
 
+            if len(ancestor_halos) == 0:
+                break
+
             ds1 = ds2
             clear_id_cache()
 
