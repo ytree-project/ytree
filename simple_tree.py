@@ -140,7 +140,7 @@ class SimpleTree(object):
 
         filename = get_output_filename(filename, "tree", ".h5")
         output_dir = os.path.dirname(filename)
-        if yt.is_root(): ensure_dir(output_dir)
+        if yt.is_root() and len(output_dir) > 0: ensure_dir(output_dir)
 
         comm = _get_comm(())
         all_outputs = self.ts.outputs[::-1]
@@ -166,8 +166,9 @@ class SimpleTree(object):
             ancestor_halos = []
 
             njobs = min(comm.size, len(target_ids))
-            pbar = yt.get_pbar("Linking halos:", len(target_ids), parallel=True)
-            for i_halo, halo_id in yt.parallel_objects(enumerate(target_ids), njobs=njobs):
+            pbar = yt.get_pbar("Linking halos", len(target_ids), parallel=True)
+            my_i = 0
+            for halo_id in yt.parallel_objects(target_ids, njobs=njobs):
                 my_halo = ds1.halo(halo_type, halo_id)
 
                 target_halos.append(my_halo)
@@ -175,7 +176,8 @@ class SimpleTree(object):
                 all_links.extend([[my_halo.particle_identifier, my_ancestor.particle_identifier]
                                   for my_ancestor in my_ancestors])
                 ancestor_halos.extend(my_ancestors)
-                pbar.update(i_halo)
+                my_i += njobs
+                pbar.update(my_i)
             pbar.finish()
 
             self.save_segment(segment_file, ds1, ds2, target_halos, ancestor_halos,
