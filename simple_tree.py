@@ -182,6 +182,7 @@ class SimpleTree(object):
                               all_links, halo_properties)
 
             ds1 = ds2
+            clear_id_cache()
 
     def trace_lineage(self, halo_type, root_ids,
                       halo_properties=None, filename=None):
