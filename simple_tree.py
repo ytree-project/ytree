@@ -1,7 +1,9 @@
 import numpy as np
+import os
 import yt
 
 from yt.funcs import \
+    ensure_dir, \
     get_output_filename
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm, \
@@ -48,17 +50,15 @@ class SimpleTree(object):
         self.ancestry_short = \
           ancestry_short_registry.find(ancestry_short, *args, **kwargs)
 
-    def find_ancestors(self, halo_type, halo_id, ds1, ds2,
-                       id_store=None):
+    def find_ancestors(self, hc, ds2, id_store=None):
         if id_store is None: id_store = []
-        hc = ds1.halo(halo_type, halo_id)
         halo_member_ids = hc["member_ids"].d.astype(np.int64)
         candidate_ids = self.selector(hc, ds2)
 
         ancestors = []
         for candidate_id in candidate_ids:
             if candidate_id in id_store: continue
-            candidate = ds2.halo(halo_type, candidate_id)
+            candidate = ds2.halo(hc.ptype, candidate_id)
             candidate_member_ids = candidate["member_ids"].d.astype(np.int64)
             if self.ancestry_checker(halo_member_ids, candidate_member_ids):
                 ancestors.append(candidate)
@@ -72,7 +72,62 @@ class SimpleTree(object):
         if self.ancestry_filter is not None:
             ancestors = self.ancestry_filter(hc, ancestors)
 
-        return hc, ancestors
+        return ancestors
+
+    def _load_halo_objects(self, ds, filename):
+        pass
+
+    def load_ds(self, filename):
+        ds = yt.load(filename)
+        if self.setup_function is not None:
+            self.setup_function(ds)
+        return ds
+
+    def trace_lineage_2(self, halo_type, root_ids,
+                        halo_properties=None, filename=None):
+
+        filename = get_output_filename(filename, "tree", ".h5")
+        output_dir = os.path.dirname(filename)
+        if yt.is_root(): ensure_dir(output_dir)
+
+        comm = _get_comm(())
+        all_outputs = self.ts.outputs[::-1]
+        ds1 = None
+
+        for i, fn in enumerate(all_outputs[1:]):
+            segment_file = os.path.join(output_dir, "tree_segment_%04d.h5")
+            if os.path.exists(segment_file): continue
+
+            if ds1 is None:
+                ds1 = self.load_ds(all_outputs[i])
+            ds2 = self.load_ds(fn)
+
+            if i == 0:
+                target_ids = root_ids
+            else:
+                raise RuntimeError("not there yet!")
+
+            id_store = []
+            all_links = []
+            target_halos = []
+            ancestor_halos = []
+
+            njobs = min(comm.size, len(target_ids))
+            pbar = yt.get_pbar("Linking halos:", len(target_ids))
+            for i_halo, halo_id in yt.parallel_objects(enumerate(target_ids), njobs=njobs):
+                my_halo = ds1.halo(halo_type, halo_id)
+
+                target_halos.append(my_halo)
+                my_ancestors = self.find_ancestors(my_halo, ds2, id_store=id_store)
+                all_links.extend([[my_halo.particle_identifier, my_ancestor.particle_identifier]
+                                  for my_ancestor in my_ancestors])
+                ancestor_halos.extend(my_ancestors)
+                pbar.update(i_halo)
+            pbar.finish()
+
+            import pdb ; pdb.set_trace()
+
+            ds1 = ds2
 
     def trace_lineage(self, halo_type, root_ids,
                       halo_properties=None, filename=None):
