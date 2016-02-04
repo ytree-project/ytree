@@ -90,31 +90,50 @@ class SimpleTree(object):
     def save_segment(self, filename, ds1, ds2, descendent_halos, ancestor_halos,
                      halo_links, halo_properties=None):
         if halo_properties is None:
-            halo_properties = []
+            my_hp = []
+        else:
+            my_hp = halo_properties[:]
+        if "particle_identifier" not in my_hp:
+            my_hp.append("particle_identifier")
 
-        #comm = _get_comm(())
+        descendent_data = create_halo_data_lists(ds1, descendent_halos, my_hp)
+        ancestor_data = create_halo_data_lists(ds1, ancestor_halos, my_hp)
 
         data = {"links": halo_links}
-        data["descendent_particle_identifier"] = \
-          create_halo_data_array(ds1, descendent_halos, "particle_identifier", dtype=np.int64)
-        data.update(dict([("descendent_%s" % hp, create_halo_data_array(ds1, descendent_halos, hp))
-                          for hp in halo_properties]))
-        data["ancestor_particle_identifier"] = \
-          create_halo_data_array(ds1, ancestor_halos, "particle_identifier", dtype=np.int64)
-        data.update(dict([("ancestor_%s" % hp, create_halo_data_array(ds2, ancestor_halos, hp))
-                          for hp in halo_properties]))
+        for field in descendent_data:
+            data["descendent_%s" % field] = descendent_data[field]
+        for field in ancestor_data:
+            data["ancestor_%s" % field] = ancestor_data[field]
+        del descendent_data, ancestor_data
 
-        my_ds = dict([(attr, getattr(ds1, attr))
-                      for attr in ["dimensionality",
-                                   "domain_left_edge", "domain_right_edge",
-                                   "domain_dimensions", "periodicity",
-                                   "omega_lambda", "omega_matter",
-                                   "hubble_constant"]])
-        my_ds.update(dict([("%s_1" % attr, getattr(ds1, attr))
-                           for attr in ["current_time", "current_redshift"]]))
-        my_ds.update(dict([("%s_2" % attr, getattr(ds2, attr))
-                           for attr in ["current_time", "current_redshift"]]))
-        return yt.save_as_dataset(my_ds, filename, data)
+        comm = _get_comm(())
+        if comm.comm is not None:
+            for field in data:
+                data[field] = mpi_gather_list(comm.comm, data[field])
+
+        if yt.is_root():
+            for field in data:
+                if field in ["links", "descendent_particle_identifier",
+                             "ancestor_particle_identifier"]:
+                    data[field] = np.array(data[field], dtype=np.int64)
+                elif "descendent" in field:
+                    data[field] = ds1.arr(data[field])
+                elif "ancestor" in field:
+                    data[field] = ds2.arr(data[field])
+                else:
+                    raise RuntimeError("Bad field: %s." % field)
+
+            my_ds = dict([(attr, getattr(ds1, attr))
+                          for attr in ["dimensionality",
+                                       "domain_left_edge", "domain_right_edge",
+                                       "domain_dimensions", "periodicity",
+                                       "omega_lambda", "omega_matter",
+                                       "hubble_constant"]])
+            my_ds.update(dict([("%s_1" % attr, getattr(ds1, attr))
+                               for attr in ["current_time", "current_redshift"]]))
+            my_ds.update(dict([("%s_2" % attr, getattr(ds2, attr))
+                               for attr in ["current_time", "current_redshift"]]))
+            return yt.save_as_dataset(my_ds, filename, data)
 
     def trace_lineage_2(self, halo_type, root_ids,
                         halo_properties=None, filename=None):
@@ -147,7 +166,7 @@ class SimpleTree(object):
             ancestor_halos = []
 
             njobs = min(comm.size, len(target_ids))
-            pbar = yt.get_pbar("Linking halos:", len(target_ids))
+            pbar = yt.get_pbar("Linking halos:", len(target_ids), parallel=True)
             for i_halo, halo_id in yt.parallel_objects(enumerate(target_ids), njobs=njobs):
                 my_halo = ds1.halo(halo_type, halo_id)
 
@@ -276,17 +295,11 @@ class SimpleTree(object):
 
         return yt.save_as_dataset(ds_properties, filename, data)
 
-def create_halo_data_array(ds, halos, halo_property, dtype=None):
-    data = []
+def create_halo_data_lists(ds, halos, halo_properties):
+    data = dict([(hp, []) for hp in halo_properties])
     for halo in halos:
-        data.append(get_halo_property(halo, halo_property))
-    if hasattr(data[0], "units"):
-        data = ds.arr(data)
-    else:
-        data = np.array(data)
-
-    if dtype is not None:
-        data = data.astype(dtype)
+        for hp in halo_properties:
+            data[hp].append(get_halo_property(halo, hp))
     return data
 
 def get_halo_property(halo, halo_property):
