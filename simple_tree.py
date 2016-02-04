@@ -1,3 +1,4 @@
+import h5py
 import numpy as np
 import os
 import yt
@@ -74,14 +75,46 @@ class SimpleTree(object):
 
         return ancestors
 
-    def _load_halo_objects(self, ds, filename):
-        pass
+    def _load_ancestor_ids(self, filename):
+        fh = h5py.File(filename, "r")
+        halo_ids = fh["/data/ancestor_particle_identifier"].value
+        fh.close()
+        return halo_ids
 
-    def load_ds(self, filename):
+    def _load_ds(self, filename):
         ds = yt.load(filename)
         if self.setup_function is not None:
             self.setup_function(ds)
         return ds
+
+    def save_segment(self, filename, ds1, ds2, descendent_halos, ancestor_halos,
+                     halo_links, halo_properties=None):
+        if halo_properties is None:
+            halo_properties = []
+
+        #comm = _get_comm(())
+
+        data = {"links": halo_links}
+        data["descendent_particle_identifier"] = \
+          create_halo_data_array(ds1, descendent_halos, "particle_identifier", dtype=np.int64)
+        data.update(dict([("descendent_%s" % hp, create_halo_data_array(ds1, descendent_halos, hp))
+                          for hp in halo_properties]))
+        data["ancestor_particle_identifier"] = \
+          create_halo_data_array(ds1, ancestor_halos, "particle_identifier", dtype=np.int64)
+        data.update(dict([("ancestor_%s" % hp, create_halo_data_array(ds2, ancestor_halos, hp))
+                          for hp in halo_properties]))
+
+        my_ds = dict([(attr, getattr(ds1, attr))
+                      for attr in ["dimensionality",
+                                   "domain_left_edge", "domain_right_edge",
+                                   "domain_dimensions", "periodicity",
+                                   "omega_lambda", "omega_matter",
+                                   "hubble_constant"]])
+        my_ds.update(dict([("%s_1" % attr, getattr(ds1, attr))
+                           for attr in ["current_time", "current_redshift"]]))
+        my_ds.update(dict([("%s_2" % attr, getattr(ds2, attr))
+                           for attr in ["current_time", "current_redshift"]]))
+        return yt.save_as_dataset(my_ds, filename, data)
 
     def trace_lineage_2(self, halo_type, root_ids,
                         halo_properties=None, filename=None):
@@ -95,17 +128,18 @@ class SimpleTree(object):
         ds1 = None
 
         for i, fn in enumerate(all_outputs[1:]):
-            segment_file = os.path.join(output_dir, "tree_segment_%04d.h5")
+            segment_file = os.path.join(output_dir, "tree_segment_%04d.h5" % i)
             if os.path.exists(segment_file): continue
 
             if ds1 is None:
-                ds1 = self.load_ds(all_outputs[i])
-            ds2 = self.load_ds(fn)
+                ds1 = self._load_ds(all_outputs[i])
+            ds2 = self._load_ds(fn)
 
             if i == 0:
                 target_ids = root_ids
             else:
-                raise RuntimeError("not there yet!")
+                last_segment_file = os.path.join(output_dir, "tree_segment_%04d.h5" % (i-1))
+                target_ids = self._load_ancestor_ids(last_segment_file)
 
             id_store = []
             all_links = []
@@ -125,7 +159,8 @@ class SimpleTree(object):
                 pbar.update(i_halo)
             pbar.finish()
 
-            import pdb ; pdb.set_trace()
+            self.save_segment(segment_file, ds1, ds2, target_halos, ancestor_halos,
+                              all_links, halo_properties)
 
             ds1 = ds2
 
@@ -241,7 +276,22 @@ class SimpleTree(object):
 
         return yt.save_as_dataset(ds_properties, filename, data)
 
+def create_halo_data_array(ds, halos, halo_property, dtype=None):
+    data = []
+    for halo in halos:
+        data.append(get_halo_property(halo, halo_property))
+    if hasattr(data[0], "units"):
+        data = ds.arr(data)
+    else:
+        data = np.array(data)
+
+    if dtype is not None:
+        data = data.astype(dtype)
+    return data
+
 def get_halo_property(halo, halo_property):
     val = getattr(halo, halo_property, None)
     if val is None: val = halo[halo_property]
-    return val.in_cgs()
+    if hasattr(val, "units"):
+        return val.in_cgs()
+    return val
