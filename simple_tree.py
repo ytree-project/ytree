@@ -131,7 +131,7 @@ class SimpleTree(object):
                                        "hubble_constant"]])
             extra_attrs = \
                 dict([("descendent_%s" % attr, getattr(ds1, attr))
-                      for attr in ["current_time", "current_redshift"]]))
+                      for attr in ["current_time", "current_redshift"]])
             extra_attrs.update(
                 dict([("ancestor_%s" % attr, getattr(ds2, attr))
                       for attr in ["current_time", "current_redshift"]]))

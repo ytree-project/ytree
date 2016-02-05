@@ -22,6 +22,26 @@ class TreeNode(object):
     def __repr__(self):
         return "TreeNode[%d,%d]" % (self.level_id, self.halo_id)
 
+class Tree(object):
+    def __init__(self, trunk, arbor=None):
+        self.trunk = trunk
+        self.arbor = arbor
+
+    def __repr__(self):
+        return "%s" % self.trunk
+
+    def __getitem__(self, field):
+        field_ids = []
+        my_node = self.trunk
+        while my_node is not None:
+            field_ids.append(my_node.global_id)
+            if my_node.ancestors is None:
+                my_node = None
+            else:
+                my_node = my_node.ancestors[0]
+        field_ids = np.array(field_ids)
+        return self.arbor._field_data[field][field_ids]
+
 class Arbor(object):
     def __init__(self, output_dir, fields=None):
         self.output_dir = output_dir
@@ -74,7 +94,7 @@ class Arbor(object):
                 i_anc = np.where(link[1] == anc_ids)[0][0]
                 des_nodes[i_des].add_ancestor(anc_nodes[i_anc])
 
-        self.tree = my_tree
+        self.tree = [Tree(trunk, self) for trunk in my_tree]
 
         for field in self._field_data:
             my_data = []
