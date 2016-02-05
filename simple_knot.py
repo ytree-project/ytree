@@ -62,14 +62,14 @@ class Arbor(object):
         for i, fn in enumerate(my_files):
             fh = h5py.File(fn, "r")
             if my_tree is None:
-                #self.redshift.append(fh.attrs["descendent_current_redshift"])
+                self.redshift.append(fh.attrs["descendent_current_redshift"])
                 des_ids = fh["data/descendent_particle_identifier"].value
                 for field in self.fields:
                     self._field_data[field].append(
                         _hdf5_yt_array(fh, "data/descendent_%s" % field))
             else:
                 des_ids = anc_ids
-            #self.redshift.append(fh.attrs["ancestor_current_redshift"])
+            self.redshift.append(fh.attrs["ancestor_current_redshift"])
             anc_ids = fh["data/ancestor_particle_identifier"].value
             for field in self.fields:
                 self._field_data[field].append(
@@ -94,6 +94,7 @@ class Arbor(object):
                 i_anc = np.where(link[1] == anc_ids)[0][0]
                 des_nodes[i_des].add_ancestor(anc_nodes[i_anc])
 
+        self.redshift = np.array(self.redshift)
         self.tree = [Tree(trunk, self) for trunk in my_tree]
 
         for field in self._field_data:
