@@ -129,11 +129,13 @@ class SimpleTree(object):
                                        "domain_dimensions", "periodicity",
                                        "omega_lambda", "omega_matter",
                                        "hubble_constant"]])
-            my_ds.update(dict([("%s_1" % attr, getattr(ds1, attr))
-                               for attr in ["current_time", "current_redshift"]]))
-            my_ds.update(dict([("%s_2" % attr, getattr(ds2, attr))
-                               for attr in ["current_time", "current_redshift"]]))
-            return yt.save_as_dataset(my_ds, filename, data)
+            extra_attrs = \
+                dict([("descendent_%s" % attr, getattr(ds1, attr))
+                      for attr in ["current_time", "current_redshift"]]))
+            extra_attrs.update(
+                dict([("ancestor_%s" % attr, getattr(ds2, attr))
+                      for attr in ["current_time", "current_redshift"]]))
+            return yt.save_as_dataset(my_ds, filename, data, extra_attrs=extra_attrs)
 
     def trace_lineage(self, halo_type, root_ids,
                       halo_properties=None, filename=None):

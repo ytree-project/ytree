@@ -4,6 +4,9 @@ import numpy as np
 import os
 import yt
 
+from yt.frontends.ytdata.utilities import \
+    _hdf5_yt_array
+
 class TreeNode(object):
     def __init__(self, halo_id, level_id, global_id=None):
         self.halo_id = halo_id
@@ -19,21 +22,6 @@ class TreeNode(object):
     def __repr__(self):
         return "TreeNode[%d,%d]" % (self.level_id, self.halo_id)
 
-def get_ancestry_arrays(knot, fields):
-    data = dict([(field, []) for field in fields])
-    my_knot = knot
-    while my_knot is not None:
-        for field in fields:
-            data[field].append(getattr(my_knot, field))
-        if my_knot.ancestors is not None and \
-          len(my_knot.ancestors) > 0:
-            my_knot = my_knot.ancestors[0]
-        else:
-            my_knot = None
-    for field in data:
-        data[field] = yt.YTArray(data[field])
-    return data
-
 class Arbor(object):
     def __init__(self, output_dir, fields=None):
         self.output_dir = output_dir
@@ -47,20 +35,25 @@ class Arbor(object):
         my_files.sort()
 
         self._field_data = dict([(f, []) for f in self.fields])
+        self.redshift = []
 
         offset = 0
         my_tree = None
         for i, fn in enumerate(my_files):
             fh = h5py.File(fn, "r")
             if my_tree is None:
+                #self.redshift.append(fh.attrs["descendent_current_redshift"])
                 des_ids = fh["data/descendent_particle_identifier"].value
                 for field in self.fields:
-                    self._field_data[field].append(fh["data/descendent_%s" % field].value)
+                    self._field_data[field].append(
+                        _hdf5_yt_array(fh, "data/descendent_%s" % field))
             else:
                 des_ids = anc_ids
+            #self.redshift.append(fh.attrs["ancestor_current_redshift"])
             anc_ids = fh["data/ancestor_particle_identifier"].value
             for field in self.fields:
-                self._field_data[field].append(fh["data/ancestor_%s" % field].value)
+                self._field_data[field].append(
+                    _hdf5_yt_array(fh, "data/ancestor_%s" % field))
             links = fh["data/links"].value
             fh.close()
 
@@ -87,7 +80,11 @@ class Arbor(object):
             my_data = []
             for level in self._field_data[field]:
                 my_data.extend(level)
-            self._field_data[field] = np.array(my_data)
+            if hasattr(my_data[0], "units"):
+                my_data = yt.YTArray(my_data)
+            else:
+                my_data = np.array(my_data)
+            self._field_data[field] = my_data
 
         yt.mylog.info("Arbor contains %d trees with %d total halos." %
                       (len(self.tree), offset))
