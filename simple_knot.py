@@ -59,6 +59,7 @@ class Arbor(object):
 
         offset = 0
         my_tree = None
+        pbar = yt.get_pbar("Load segment files", len(my_files))
         for i, fn in enumerate(my_files):
             fh = h5py.File(fn, "r")
             if my_tree is None:
@@ -93,10 +94,13 @@ class Arbor(object):
                 i_des = np.where(link[0] == des_ids)[0][0]
                 i_anc = np.where(link[1] == anc_ids)[0][0]
                 des_nodes[i_des].add_ancestor(anc_nodes[i_anc])
+            pbar.update(i)
+        pbar.finish()
 
         self.redshift = np.array(self.redshift)
         self.tree = [Tree(trunk, self) for trunk in my_tree]
 
+        yt.mylog.info("Preparing field data.")
         for field in self._field_data:
             my_data = []
             for level in self._field_data[field]:
