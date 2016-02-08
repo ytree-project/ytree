@@ -22,7 +22,7 @@ from .halo_selector import \
     selector_registry, \
     clear_id_cache
 
-class SimpleTree(object):
+class TreeFarm(object):
     def __init__(self, time_series, setup_function=None):
         self.ts = time_series
         self.setup_function = setup_function
