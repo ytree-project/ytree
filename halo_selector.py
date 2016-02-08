@@ -13,7 +13,7 @@ def clear_id_cache():
     for key in _id_cache.keys():
         del _id_cache[key]
 
-def add_selector(name, function):
+def add_halo_selector(name, function):
     selector_registry[name] = HaloSelector(function)
 
 class HaloSelector(object):
@@ -74,7 +74,7 @@ def sphere_selector(hc, ds2, radius_field, factor=1):
     except YTSphereTooSmall:
         return []
 
-add_selector("sphere", sphere_selector)
+add_halo_selector("sphere", sphere_selector)
 
 def all_selector(hc, ds2):
     r"""
@@ -101,4 +101,4 @@ def all_selector(hc, ds2):
     _id_cache["all"] = my_ids
     return my_ids
 
-add_selector("all", all_selector)
+add_halo_selector("all", all_selector)
