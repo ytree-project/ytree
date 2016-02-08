@@ -28,7 +28,7 @@ class Tree(object):
         self.arbor = arbor
 
     def __repr__(self):
-        return "%s" % self.trunk
+        return "Tree[%d]" % self.trunk.halo_id
 
     def __getitem__(self, field):
         field_ids = []
