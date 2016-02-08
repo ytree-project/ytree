@@ -58,11 +58,11 @@ class Arbor(object):
         self.redshift = []
 
         offset = 0
-        my_tree = None
+        my_trees = None
         pbar = yt.get_pbar("Load segment files", len(my_files))
         for i, fn in enumerate(my_files):
             fh = h5py.File(fn, "r")
-            if my_tree is None:
+            if my_trees is None:
                 self.redshift.append(fh.attrs["descendent_current_redshift"])
                 des_ids = fh["data/descendent_particle_identifier"].value
                 for field in self.fields:
@@ -78,10 +78,10 @@ class Arbor(object):
             links = fh["data/links"].value
             fh.close()
 
-            if my_tree is None:
+            if my_trees is None:
                 des_nodes = [TreeNode(my_id, i, gid+offset)
                              for gid, my_id in enumerate(des_ids)]
-                my_tree = des_nodes
+                my_trees = des_nodes
                 offset += des_ids.size
             else:
                 des_nodes = anc_nodes
@@ -98,7 +98,7 @@ class Arbor(object):
         pbar.finish()
 
         self.redshift = np.array(self.redshift)
-        self.tree = [Tree(trunk, self) for trunk in my_tree]
+        self.trees = [Tree(trunk, self) for trunk in my_trees]
 
         for field in self._field_data:
             pbar = yt.get_pbar("Preparing mass data",
@@ -115,4 +115,4 @@ class Arbor(object):
             pbar.finish()
 
         yt.mylog.info("Arbor contains %d trees with %d total halos." %
-                      (len(self.tree), offset))
+                      (len(self.trees), offset))
