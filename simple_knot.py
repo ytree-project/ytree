@@ -100,16 +100,19 @@ class Arbor(object):
         self.redshift = np.array(self.redshift)
         self.tree = [Tree(trunk, self) for trunk in my_tree]
 
-        yt.mylog.info("Preparing field data.")
         for field in self._field_data:
+            pbar = yt.get_pbar("Preparing mass data",
+                               len(self._field_data[field]))
             my_data = []
-            for level in self._field_data[field]:
+            for i, level in enumerate(self._field_data[field]):
                 my_data.extend(level)
+                pbar.update(i)
             if hasattr(my_data[0], "units"):
                 my_data = yt.YTArray(my_data)
             else:
                 my_data = np.array(my_data)
             self._field_data[field] = my_data
+            pbar.finish()
 
         yt.mylog.info("Arbor contains %d trees with %d total halos." %
                       (len(self.tree), offset))
