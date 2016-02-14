@@ -101,7 +101,7 @@ class Arbor(object):
         self.trees = [Tree(trunk, self) for trunk in my_trees]
 
         for field in self._field_data:
-            pbar = yt.get_pbar("Preparing mass data",
+            pbar = yt.get_pbar("Preparing %s data" % field,
                                len(self._field_data[field]))
             my_data = []
             for i, level in enumerate(self._field_data[field]):
