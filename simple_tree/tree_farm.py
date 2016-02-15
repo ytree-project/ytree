@@ -137,8 +137,8 @@ class TreeFarm(object):
                       for attr in ["current_time", "current_redshift"]]))
             return yt.save_as_dataset(my_ds, filename, data, extra_attrs=extra_attrs)
 
-    def trace_lineage(self, halo_type, root_ids,
-                      halo_properties=None, filename=None):
+    def trace_ancestors(self, halo_type, root_ids,
+                        halo_properties=None, filename=None):
 
         filename = get_output_filename(filename, "tree", ".h5")
         output_dir = os.path.dirname(filename)
@@ -159,7 +159,8 @@ class TreeFarm(object):
             if i == 0:
                 target_ids = root_ids
             else:
-                last_segment_file = os.path.join(output_dir, "tree_segment_%04d.h5" % (i-1))
+                last_segment_file = os.path.join(output_dir,
+                                                 "tree_segment_%04d.h5" % (i-1))
                 target_ids = self._load_ancestor_ids(last_segment_file)
 
             id_store = []
@@ -175,7 +176,8 @@ class TreeFarm(object):
 
                 target_halos.append(my_halo)
                 my_ancestors = self.find_ancestors(my_halo, ds2, id_store=id_store)
-                all_links.extend([[my_halo.particle_identifier, my_ancestor.particle_identifier]
+                all_links.extend([[my_halo.particle_identifier,
+                                   my_ancestor.particle_identifier]
                                   for my_ancestor in my_ancestors])
                 ancestor_halos.extend(my_ancestors)
                 my_i += njobs
