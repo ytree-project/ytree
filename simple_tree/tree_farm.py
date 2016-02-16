@@ -109,6 +109,7 @@ class TreeFarm(object):
         comm = _get_comm(())
         if comm.comm is not None:
             for field in data:
+                if yt.is_root(): yt.mylog.info("Communicating field array: %s.", field)
                 data[field] = mpi_gather_list(comm.comm, data[field])
 
         if yt.is_root():
@@ -246,10 +247,16 @@ class TreeFarm(object):
             clear_id_cache()
 
 def create_halo_data_lists(ds, halos, halo_properties):
+    comm = _get_comm(())
+    pbar = yt.get_pbar("Gathering field data from halos", comm.size*len(halos), parallel=True)
     data = dict([(hp, []) for hp in halo_properties])
+    my_i = 0
     for halo in halos:
         for hp in halo_properties:
             data[hp].append(get_halo_property(halo, hp))
+        my_i += comm.size
+        pbar.update(my_i)
+    pbar.finish()
     return data
 
 def get_halo_property(halo, halo_property):
