@@ -193,6 +193,58 @@ class TreeFarm(object):
             ds1 = ds2
             clear_id_cache()
 
+    def trace_descendents(self, halo_type,
+                          halo_properties=None, filename=None):
+
+        filename = get_output_filename(filename, "tree", ".h5")
+        output_dir = os.path.dirname(filename)
+        if yt.is_root() and len(output_dir) > 0: ensure_dir(output_dir)
+
+        comm = _get_comm(())
+        all_outputs = self.ts.outputs[:]
+        ds2 = None
+
+        for i, fn in enumerate(all_outputs[1:]):
+            segment_file = os.path.join(output_dir, "tree_segment_%04d.h5" % i)
+            if os.path.exists(segment_file): continue
+
+            if ds2 is None:
+                ds2 = self._load_ds(all_outputs[i])
+            ds1 = self._load_ds(fn)
+
+            id_store = []
+            all_links = []
+            target_halos = []
+            ancestor_halos = []
+
+            if ds1.index.particle_count[halo_type] > 0:
+
+                ad = ds1.all_data()
+                target_ids = ad[halo_type, "particle_identifier"].d.astype(np.int64)
+                del ad
+
+                njobs = min(comm.size, len(target_ids))
+                pbar = yt.get_pbar("Linking halos", len(target_ids), parallel=True)
+                my_i = 0
+                for halo_id in yt.parallel_objects(target_ids, njobs=njobs):
+                    my_halo = ds1.halo(halo_type, halo_id)
+
+                    target_halos.append(my_halo)
+                    my_ancestors = self.find_ancestors(my_halo, ds2, id_store=id_store)
+                    all_links.extend([[my_halo.particle_identifier,
+                                       my_ancestor.particle_identifier]
+                                      for my_ancestor in my_ancestors])
+                    ancestor_halos.extend(my_ancestors)
+                    my_i += njobs
+                    pbar.update(my_i)
+                pbar.finish()
+
+            self.save_segment(segment_file, ds1, ds2, target_halos, ancestor_halos,
+                              all_links, halo_properties)
+
+            ds2 = ds1
+            clear_id_cache()
+
 def create_halo_data_lists(ds, halos, halo_properties):
     data = dict([(hp, []) for hp in halo_properties])
     for halo in halos:
