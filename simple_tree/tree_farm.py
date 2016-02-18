@@ -96,8 +96,8 @@ class TreeFarm(object):
         if "particle_identifier" not in my_hp:
             my_hp.append("particle_identifier")
 
-        descendent_data = create_halo_data_lists(ds1, descendent_halos, my_hp)
-        ancestor_data = create_halo_data_lists(ds1, ancestor_halos, my_hp)
+        descendent_data = create_halo_data_lists(descendent_halos, my_hp)
+        ancestor_data = create_halo_data_lists(ancestor_halos, my_hp)
 
         data = {"links": halo_links}
         for field in descendent_data:
@@ -246,7 +246,7 @@ class TreeFarm(object):
             ds2 = ds1
             clear_id_cache()
 
-def create_halo_data_lists(ds, halos, halo_properties):
+def create_halo_data_lists(halos, halo_properties):
     comm = _get_comm(())
     pbar = yt.get_pbar("Gathering field data from halos", comm.size*len(halos), parallel=True)
     data = dict([(hp, []) for hp in halo_properties])
@@ -257,6 +257,13 @@ def create_halo_data_lists(ds, halos, halo_properties):
         my_i += comm.size
         pbar.update(my_i)
     pbar.finish()
+    if len(halos) == 0:
+        return data
+    for hp in halo_properties:
+        if hasattr(data[hp][0], "units"):
+            data[hp] = yt.YTArray(data[hp])
+        else:
+            data[hp] = np.array(data[hp])
     return data
 
 def get_halo_property(halo, halo_property):
