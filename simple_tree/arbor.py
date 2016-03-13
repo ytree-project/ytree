@@ -1,3 +1,4 @@
+import functools
 import h5py
 import glob
 import numpy as np
@@ -136,6 +137,22 @@ class ArborCT(object):
         pbar.finish()
         yt.mylog.info("Arbor contains %d trees with %d total halos." %
                       (len(self.trees), self._field_data["uid"].size))
+
+    _arr = None
+    @property
+    def arr(self):
+        if self._arr is not None:
+            return self._arr
+        self._arr = functools.partial(yt.YTArray, registry = self.unit_registry)
+        return self._arr
+
+    _quan = None
+    @property
+    def quan(self):
+        if self._quan is not None:
+            return self._quan
+        self._quan = functools.partial(yt.YTQuantity, registry=self.unit_registry)
+        return self._quan
 
 class Arbor(object):
     def __init__(self, output_dir, fields=None):
