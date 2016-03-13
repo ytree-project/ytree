@@ -42,6 +42,64 @@ class Tree(object):
         field_ids = np.array(field_ids)
         return self.arbor._field_data[field][field_ids]
 
+_ct_columns = (("a",        (0,)),
+               ("uid",      (1,)),
+               ("desc_id",  (3,)),
+               ("mvir",     (10,)),
+               ("rvir",     (11,)),
+               ("position", (17, 18, 19)),
+               ("velocity", (20, 21, 21)),
+               ("tree_id",  (29,)),
+               ("halo_id",  (30,)), # from halo finder
+               ("snapshot", (31,)))
+_ct_usecol = []
+_ct_fields = {}
+for field, col in _ct_columns:
+    _ct_usecol.extend(col)
+    _ct_fields[field] = np.arange(len(_ct_usecol)-len(col),
+                                  len(_ct_usecol))
+
+class ArborCT(object):
+    def __init__(self, filename):
+        data = np.loadtxt(filename, skiprows=46, unpack=True,
+                          usecols=_ct_usecol)
+        self._field_data = {}
+        for field, cols in _ct_fields.items():
+            if cols.size == 1:
+                self._field_data[field] = data[cols][0]
+            else:
+                self._field_data[field] = np.rollaxis(data[cols], 1)
+        self._field_data["redshift"] = 1. / self._field_data["a"] - 1.
+        del self._field_data["a"]
+        self._load_tree()
+        for field in ["tree_id", "desc_id", "halo_id", "uid"]:
+            del self._field_data[field]
+
+    def _load_tree(self):
+        self.trees = []
+        root_ids = np.unique(self._field_data["tree_id"])
+        pbar = yt.get_pbar("Loading trees", root_ids.size)
+        for my_i, root_id in enumerate(root_ids):
+            tree_halos = (root_id == self._field_data["tree_id"])
+            my_tree = {}
+            for i in np.where(tree_halos)[0]:
+                desc_id = int(self._field_data["desc_id"][i])
+                halo_id = int(self._field_data["halo_id"][i])
+                uid = int(self._field_data["uid"][i])
+                if desc_id == -1:
+                    level = 0
+                else:
+                    level = my_tree[desc_id].level_id + 1
+                my_node = TreeNode(halo_id, level, i)
+                my_tree[uid] = my_node
+                if desc_id >= 0:
+                    my_tree[desc_id].add_ancestor(my_node)
+            self.trees.append(Tree(my_tree[root_id], self))
+            pbar.update(my_i)
+        pbar.finish()
+        yt.mylog.info("Arbor contains %d trees with %d total halos." %
+                      (len(self.trees), self._field_data["uid"].size))
+
 class Arbor(object):
     def __init__(self, output_dir, fields=None):
         self.output_dir = output_dir
