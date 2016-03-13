@@ -12,11 +12,12 @@ from yt.utilities.cosmology import \
     Cosmology
 
 class TreeNode(object):
-    def __init__(self, halo_id, level_id, global_id=None):
+    def __init__(self, halo_id, level_id, global_id=None, arbor=None):
         self.halo_id = halo_id
         self.level_id = level_id
         self.global_id = global_id
         self.ancestors = None
+        self.arbor = arbor
 
     def add_ancestor(self, ancestor):
         if self.ancestors is None:
@@ -25,6 +26,9 @@ class TreeNode(object):
 
     def __repr__(self):
         return "TreeNode[%d,%d]" % (self.level_id, self.halo_id)
+
+    def __getitem__(self, field):
+        return self.arbor._field_data[field][self.global_id]
 
 class Tree(object):
     def __init__(self, trunk, arbor=None):
@@ -123,7 +127,7 @@ class ArborCT(object):
                     level = 0
                 else:
                     level = my_tree[desc_id].level_id + 1
-                my_node = TreeNode(halo_id, level, i)
+                my_node = TreeNode(halo_id, level, i, arbor=self)
                 my_tree[uid] = my_node
                 if desc_id >= 0:
                     my_tree[desc_id].add_ancestor(my_node)
@@ -170,14 +174,14 @@ class Arbor(object):
             fh.close()
 
             if my_trees is None:
-                des_nodes = [TreeNode(my_id, i, gid+offset)
+                des_nodes = [TreeNode(my_id, i, gid+offset, arbor=self)
                              for gid, my_id in enumerate(des_ids)]
                 my_trees = des_nodes
                 offset += des_ids.size
             else:
                 des_nodes = anc_nodes
 
-            anc_nodes = [TreeNode(my_id, i+1, gid+offset)
+            anc_nodes = [TreeNode(my_id, i+1, gid+offset, arbor=self)
                          for gid, my_id in enumerate(anc_ids)]
             offset += anc_ids.size
 
