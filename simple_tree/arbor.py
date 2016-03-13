@@ -6,6 +6,10 @@ import yt
 
 from yt.frontends.ytdata.utilities import \
     _hdf5_yt_array
+from yt.units.unit_registry import \
+    UnitRegistry
+from yt.utilities.cosmology import \
+    Cosmology
 
 class TreeNode(object):
     def __init__(self, halo_id, level_id, global_id=None):
@@ -52,6 +56,10 @@ _ct_columns = (("a",        (0,)),
                ("tree_id",  (29,)),
                ("halo_id",  (30,)), # from halo finder
                ("snapshot", (31,)))
+_ct_units = {"mvir": "Msun/h",
+             "rvir": "kpc/h",
+             "position": "Mpc/h",
+             "velocity": "km/s"}
 _ct_usecol = []
 _ct_fields = {}
 for field, col in _ct_columns:
@@ -61,6 +69,16 @@ for field, col in _ct_columns:
 
 class ArborCT(object):
     def __init__(self, filename):
+        self.filename = filename
+        self._read_cosmological_parameters()
+        self.unit_registry = UnitRegistry()
+        self.unit_registry.modify("h", self.hubble_constant)
+        self.cosmology = Cosmology(
+            hubble_constant=self.hubble_constant,
+            omega_matter=self.omega_matter,
+            omega_lambda=self.omega_lambda,
+            unit_registry=self.unit_registry)
+
         data = np.loadtxt(filename, skiprows=46, unpack=True,
                           usecols=_ct_usecol)
         self._field_data = {}
@@ -69,11 +87,26 @@ class ArborCT(object):
                 self._field_data[field] = data[cols][0]
             else:
                 self._field_data[field] = np.rollaxis(data[cols], 1)
+            if field in _ct_units:
+                self._field_data[field] = \
+                  yt.YTArray(self._field_data[field], _ct_units[field],
+                             registry=self.unit_registry)
         self._field_data["redshift"] = 1. / self._field_data["a"] - 1.
         del self._field_data["a"]
         self._load_tree()
         for field in ["tree_id", "desc_id", "halo_id", "uid"]:
             del self._field_data[field]
+
+    def _read_cosmological_parameters(self):
+        f = file(self.filename, "r")
+        for i in range(2):
+            line = f.readline()
+        f.close()
+        pars = line[1:].split(";")
+        for i, par in enumerate(["omega_matter", "omega_lambda",
+                                 "hubble_constant"]):
+            v = float(pars[i].split(" = ")[1])
+            setattr(self, par, v)
 
     def _load_tree(self):
         self.trees = []
