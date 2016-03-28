@@ -12,6 +12,9 @@ from yt.units.unit_registry import \
 from yt.utilities.cosmology import \
     Cosmology
 
+from .tree_node_selector import \
+    tree_node_selector_registry
+
 class TreeNode(object):
     def __init__(self, halo_id, level_id, global_id=None, arbor=None):
         self.halo_id = halo_id
@@ -47,9 +50,33 @@ class Tree(object):
             if my_node.ancestors is None:
                 my_node = None
             else:
-                my_node = my_node.ancestors[0]
+                my_node = my_node.arbor.selector(my_node.ancestors)
         field_ids = np.array(field_ids)
         return self.arbor._field_data[field][field_ids]
+
+class Arbor(object):
+    def __init__(self):
+        self.unit_registry = UnitRegistry()
+
+    def set_selector(self, selector, *args, **kwargs):
+        self.selector = tree_node_selector_registry.find(
+            selector, *args, **kwargs)
+
+    _arr = None
+    @property
+    def arr(self):
+        if self._arr is not None:
+            return self._arr
+        self._arr = functools.partial(yt.YTArray, registry=self.unit_registry)
+        return self._arr
+
+    _quan = None
+    @property
+    def quan(self):
+        if self._quan is not None:
+            return self._quan
+        self._quan = functools.partial(yt.YTQuantity, registry=self.unit_registry)
+        return self._quan
 
 _ct_columns = (("a",        (0,)),
                ("uid",      (1,)),
@@ -72,11 +99,11 @@ for field, col in _ct_columns:
     _ct_fields[field] = np.arange(len(_ct_usecol)-len(col),
                                   len(_ct_usecol))
 
-class ArborCT(object):
+class ArborCT(Arbor):
     def __init__(self, filename):
+        super(ArborCT, self).__init__()
         self.filename = filename
         self._read_cosmological_parameters()
-        self.unit_registry = UnitRegistry()
         self.unit_registry.modify("h", self.hubble_constant)
         self.cosmology = Cosmology(
             hubble_constant=self.hubble_constant,
@@ -84,7 +111,25 @@ class ArborCT(object):
             omega_lambda=self.omega_lambda,
             unit_registry=self.unit_registry)
 
-        data = np.loadtxt(filename, skiprows=46, unpack=True,
+        self._load_field_data()
+        self._load_trees()
+        for field in ["tree_id", "desc_id", "halo_id", "uid"]:
+            del self._field_data[field]
+        self.set_selector("max_field_value", "mvir")
+
+    def _read_cosmological_parameters(self):
+        f = file(self.filename, "r")
+        for i in range(2):
+            line = f.readline()
+        f.close()
+        pars = line[1:].split(";")
+        for i, par in enumerate(["omega_matter", "omega_lambda",
+                                 "hubble_constant"]):
+            v = float(pars[i].split(" = ")[1])
+            setattr(self, par, v)
+
+    def _load_field_data(self):
+        data = np.loadtxt(self.filename, skiprows=46, unpack=True,
                           usecols=_ct_usecol)
         self._field_data = {}
         for field, cols in _ct_fields.items():
@@ -98,22 +143,8 @@ class ArborCT(object):
                              registry=self.unit_registry)
         self._field_data["redshift"] = 1. / self._field_data["a"] - 1.
         del self._field_data["a"]
-        self._load_tree()
-        for field in ["tree_id", "desc_id", "halo_id", "uid"]:
-            del self._field_data[field]
 
-    def _read_cosmological_parameters(self):
-        f = file(self.filename, "r")
-        for i in range(2):
-            line = f.readline()
-        f.close()
-        pars = line[1:].split(";")
-        for i, par in enumerate(["omega_matter", "omega_lambda",
-                                 "hubble_constant"]):
-            v = float(pars[i].split(" = ")[1])
-            setattr(self, par, v)
-
-    def _load_tree(self):
+    def _load_trees(self):
         self.trees = []
         root_ids = np.unique(self._field_data["tree_id"])
         pbar = yt.get_pbar("Loading trees", root_ids.size)
@@ -138,31 +169,17 @@ class ArborCT(object):
         yt.mylog.info("Arbor contains %d trees with %d total halos." %
                       (len(self.trees), self._field_data["uid"].size))
 
-    _arr = None
-    @property
-    def arr(self):
-        if self._arr is not None:
-            return self._arr
-        self._arr = functools.partial(yt.YTArray, registry = self.unit_registry)
-        return self._arr
-
-    _quan = None
-    @property
-    def quan(self):
-        if self._quan is not None:
-            return self._quan
-        self._quan = functools.partial(yt.YTQuantity, registry=self.unit_registry)
-        return self._quan
-
-class Arbor(object):
+class ArborTF(Arbor):
     def __init__(self, output_dir, fields=None):
+        super(ArborTF, self).__init__()
         self.output_dir = output_dir
         if fields is None:
             fields = []
         self.fields = fields
-        self._load_tree()
+        self._load_trees()
+        self.set_selector("max_field_value", "mass")
 
-    def _load_tree(self):
+    def _load_trees(self):
         my_files = glob.glob(os.path.join(self.output_dir, "tree_segment_*.h5"))
         my_files.sort()
 
