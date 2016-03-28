@@ -38,21 +38,30 @@ class Tree(object):
     def __init__(self, trunk, arbor=None):
         self.trunk = trunk
         self.arbor = arbor
+        self._field_ids = None
+        self._tree_line = None
 
     def __repr__(self):
         return "Tree[%d]" % self.trunk.halo_id
 
     def __getitem__(self, field):
-        field_ids = []
-        my_node = self.trunk
-        while my_node is not None:
-            field_ids.append(my_node.global_id)
-            if my_node.ancestors is None:
-                my_node = None
-            else:
-                my_node = my_node.arbor.selector(my_node.ancestors)
-        field_ids = np.array(field_ids)
-        return self.arbor._field_data[field][field_ids]
+        if self._field_ids is None:
+            field_ids = []
+            tree_line = []
+            my_node = self.trunk
+            while my_node is not None:
+                field_ids.append(my_node.global_id)
+                tree_line.append(my_node)
+                if my_node.ancestors is None:
+                    my_node = None
+                else:
+                    my_node = my_node.arbor.selector(my_node.ancestors)
+            self._field_ids = np.array(field_ids)
+            self._tree_line = tree_line
+        if isinstance(field, str):
+            return self.arbor._field_data[field][self._field_ids]
+        else:
+            return self._tree_line[field]
 
 class Arbor(object):
     def __init__(self):

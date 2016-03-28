@@ -49,6 +49,28 @@ def max_field_value(ancestors, field):
     """
 
     vals = np.array([a[field] for a in ancestors])
-    return ancestors[np.argmin(vals)]
+    return ancestors[np.argmax(vals)]
 
 add_tree_node_selector("max_field_value", max_field_value)
+
+def min_field_value(ancestors, field):
+    r"""
+    Return the TreeNode with the minimum value of the given field.
+
+    Parameters
+    ----------
+    ancestors : list of TreeNode objects
+        List of TreeNode objects from which to select.
+    field : string
+        Field to be used for selection.
+
+    Returns
+    -------
+    TreeNode object
+
+    """
+
+    vals = np.array([a[field] for a in ancestors])
+    return ancestors[np.argmin(vals)]
+
+add_tree_node_selector("min_field_value", min_field_value)
