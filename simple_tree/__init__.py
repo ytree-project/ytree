@@ -1,5 +1,5 @@
 from arbor import \
-    Arbor
+    ArborCT, ArborTF
 from tree_farm import \
     TreeFarm
 from ancestry_checker import \
