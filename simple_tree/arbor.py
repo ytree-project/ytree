@@ -138,6 +138,7 @@ class ArborCT(Arbor):
             setattr(self, par, v)
 
     def _load_field_data(self):
+        yt.mylog.info("Loading tree data from %s." % self.filename)
         data = np.loadtxt(self.filename, skiprows=46, unpack=True,
                           usecols=_ct_usecol)
         self._field_data = {}
