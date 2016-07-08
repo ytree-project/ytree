@@ -22,33 +22,25 @@ class TreeNode(object):
         self.global_id = global_id
         self.ancestors = None
         self.arbor = arbor
+        self._field_ids = None
+        self._tree_line = None
 
     def add_ancestor(self, ancestor):
         if self.ancestors is None:
             self.ancestors = []
         self.ancestors.append(ancestor)
 
-    def __repr__(self):
-        return "TreeNode[%d,%d]" % (self.level_id, self.halo_id)
-
-    def __getitem__(self, field):
+    def halo(self, field):
         return self.arbor._field_data[field][self.global_id]
 
-class Tree(object):
-    def __init__(self, trunk, arbor=None):
-        self.trunk = trunk
-        self.arbor = arbor
-        self._field_ids = None
-        self._tree_line = None
-
     def __repr__(self):
-        return "Tree[%d]" % self.trunk.halo_id
+        return "TreeNode[%d,%d]" % (self.level_id, self.halo_id)
 
     def __getitem__(self, field):
         if self._field_ids is None:
             field_ids = []
             tree_line = []
-            my_node = self.trunk
+            my_node = self
             while my_node is not None:
                 field_ids.append(my_node.global_id)
                 tree_line.append(my_node)
@@ -173,7 +165,7 @@ class ArborCT(Arbor):
                 my_tree[uid] = my_node
                 if desc_id >= 0:
                     my_tree[desc_id].add_ancestor(my_node)
-            self.trees.append(Tree(my_tree[root_id], self))
+            self.trees.append(my_tree[root_id])
             pbar.update(my_i)
         pbar.finish()
         yt.mylog.info("Arbor contains %d trees with %d total halos." %
@@ -237,7 +229,7 @@ class ArborTF(Arbor):
         pbar.finish()
 
         self.redshift = np.array(self.redshift)
-        self.trees = [Tree(trunk, self) for trunk in my_trees]
+        self.trees = my_trees
 
         for field in self._field_data:
             pbar = yt.get_pbar("Preparing %s data" % field,
