@@ -30,13 +30,21 @@ class TreeNode(object):
             self.ancestors = []
         self.ancestors.append(ancestor)
 
-    def halo(self, field):
+    def __getitem__(self, field):
         return self.arbor._field_data[field][self.global_id]
 
     def __repr__(self):
         return "TreeNode[%d,%d]" % (self.level_id, self.halo_id)
 
-    def __getitem__(self, field):
+    def walk(self):
+        yield self
+        if self.ancestors is None:
+            return
+        for ancestor in self.ancestors:
+            for a_node in ancestor.walk():
+                yield a_node
+
+    def line(self, field):
         if self._field_ids is None:
             field_ids = []
             tree_line = []

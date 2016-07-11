@@ -48,7 +48,7 @@ def max_field_value(ancestors, field):
 
     """
 
-    vals = np.array([a.halo(field) for a in ancestors])
+    vals = np.array([a[field] for a in ancestors])
     return ancestors[np.argmax(vals)]
 
 add_tree_node_selector("max_field_value", max_field_value)
@@ -70,7 +70,7 @@ def min_field_value(ancestors, field):
 
     """
 
-    vals = np.array([a.halo(field) for a in ancestors])
+    vals = np.array([a[field] for a in ancestors])
     return ancestors[np.argmin(vals)]
 
 add_tree_node_selector("min_field_value", min_field_value)
