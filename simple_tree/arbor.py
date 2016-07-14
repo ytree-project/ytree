@@ -22,8 +22,9 @@ class TreeNode(object):
         self.global_id = global_id
         self.ancestors = None
         self.arbor = arbor
-        self._field_ids = None
-        self._tree_line = None
+        self._tree_field_indices = None
+        self._line_field_indices = None
+        self._node_line = None
 
     def add_ancestor(self, ancestor):
         if self.ancestors is None:
@@ -36,32 +37,36 @@ class TreeNode(object):
     def __repr__(self):
         return "TreeNode[%d,%d]" % (self.level_id, self.halo_id)
 
-    def walk(self):
+    def twalk(self):
         yield self
         if self.ancestors is None:
             return
         for ancestor in self.ancestors:
-            for a_node in ancestor.walk():
+            for a_node in ancestor.twalk():
                 yield a_node
 
+    def lwalk(self):
+        my_node = self
+        while my_node is not None:
+            yield my_node
+            if my_node.ancestors is None:
+                my_node = None
+            else:
+                my_node = my_node.arbor.selector(my_node.ancestors)
+
     def line(self, field):
-        if self._field_ids is None:
-            field_ids = []
-            tree_line = []
-            my_node = self
-            while my_node is not None:
-                field_ids.append(my_node.global_id)
-                tree_line.append(my_node)
-                if my_node.ancestors is None:
-                    my_node = None
-                else:
-                    my_node = my_node.arbor.selector(my_node.ancestors)
-            self._field_ids = np.array(field_ids)
-            self._tree_line = tree_line
+        if self._line_field_indices is None:
+            line_field_indices = []
+            node_line = []
+            for my_node in self.lwalk():
+                line_field_indices.append(my_node.global_id)
+                node_line.append(my_node)
+            self._line_field_indices = np.array(line_field_indices)
+            self._node_line = node_line
         if isinstance(field, str):
-            return self.arbor._field_data[field][self._field_ids]
+            return self.arbor._field_data[field][self._line_field_indices]
         else:
-            return self._tree_line[field]
+            return self._node_line[field]
 
 class Arbor(object):
     def __init__(self):
