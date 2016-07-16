@@ -22,7 +22,6 @@ class TreeNode(object):
         self.global_id = global_id
         self.ancestors = None
         self.arbor = arbor
-        self._tree_field_indices = None
         self._line_field_indices = None
         self._node_line = None
 
@@ -36,6 +35,16 @@ class TreeNode(object):
 
     def __repr__(self):
         return "TreeNode[%d,%d]" % (self.level_id, self.halo_id)
+
+    _tfi = None
+    @property
+    def _tree_field_indices(self):
+        if self._tfi is None:
+            tfi = []
+            for my_node in self.twalk():
+                tfi.append(my_node.global_id)
+            self._tfi = np.array(tfi)
+        return self._tfi
 
     def twalk(self):
         yield self
