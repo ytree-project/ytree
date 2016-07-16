@@ -38,11 +38,24 @@ class TreeNode(object):
     @property
     def _tree_field_indices(self):
         if self._tfi is None:
-            tfi = []
-            for my_node in self.twalk():
-                tfi.append(my_node.global_id)
-            self._tfi = np.array(tfi)
+            self._set_tree_attrs()
         return self._tfi
+
+    _tn = None
+    @property
+    def _tree_nodes(self):
+        if self._tn is None:
+            self._set_tree_attrs()
+        return self._tn
+
+    def _set_tree_attrs(self):
+        tfi = []
+        tn = []
+        for my_node in self.twalk():
+            tfi.append(my_node.global_id)
+            tn.append(my_node)
+        self._tfi = np.array(tfi)
+        self._tn = tn
 
     _lfi = None
     @property
