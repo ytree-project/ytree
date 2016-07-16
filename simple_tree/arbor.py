@@ -22,8 +22,6 @@ class TreeNode(object):
         self.global_id = global_id
         self.ancestors = None
         self.arbor = arbor
-        self._line_field_indices = None
-        self._node_line = None
 
     def add_ancestor(self, ancestor):
         if self.ancestors is None:
@@ -46,6 +44,29 @@ class TreeNode(object):
             self._tfi = np.array(tfi)
         return self._tfi
 
+    _lfi = None
+    @property
+    def _line_field_indices(self):
+        if self._lfi is None:
+            self._set_line_attrs()
+        return self._lfi
+
+    _ln = None
+    @property
+    def _line_nodes(self):
+        if self._ln is None:
+            self._set_line_attrs()
+        return self._ln
+
+    def _set_line_attrs(self):
+        lfi = []
+        ln = []
+        for my_node in self.lwalk():
+            lfi.append(my_node.global_id)
+            ln.append(my_node)
+        self._lfi = np.array(lfi)
+        self._ln = ln
+
     def twalk(self):
         yield self
         if self.ancestors is None:
@@ -64,18 +85,10 @@ class TreeNode(object):
                 my_node = my_node.arbor.selector(my_node.ancestors)
 
     def line(self, field):
-        if self._line_field_indices is None:
-            line_field_indices = []
-            node_line = []
-            for my_node in self.lwalk():
-                line_field_indices.append(my_node.global_id)
-                node_line.append(my_node)
-            self._line_field_indices = np.array(line_field_indices)
-            self._node_line = node_line
         if isinstance(field, str):
             return self.arbor._field_data[field][self._line_field_indices]
         else:
-            return self._node_line[field]
+            return self._line_nodes[field]
 
 class Arbor(object):
     def __init__(self):
