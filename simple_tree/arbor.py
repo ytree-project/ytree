@@ -97,6 +97,12 @@ class TreeNode(object):
             else:
                 my_node = my_node.arbor.selector(my_node.ancestors)
 
+    def tree(self, field):
+        if isinstance(field, str):
+            return self.arbor._field_data[field][self._tree_field_indices]
+        else:
+            return self._tree_nodes[field]
+
     def line(self, field):
         if isinstance(field, str):
             return self.arbor._field_data[field][self._line_field_indices]
