@@ -6,7 +6,10 @@ import os
 import yt
 
 from yt.frontends.ytdata.utilities import \
+    save_as_dataset, \
     _hdf5_yt_array
+from yt.funcs import \
+    get_output_filename
 from yt.units.unit_registry import \
     UnitRegistry
 from yt.utilities.cosmology import \
@@ -109,6 +112,22 @@ class TreeNode(object):
         else:
             return self._line_nodes[field]
 
+    def save_tree(self, filename=None, fields=None):
+        keyword = "tree_%d_%d" % (self.level_id, self.halo_id)
+        filename = get_output_filename(filename, keyword, ".h5")
+        if fields is None:
+            fields = self.arbor._field_data.keys()
+        ds = {}
+        for attr in ["hubble_constant",
+                     "omega_matter",
+                     "omega_lambda"]:
+            if hasattr(self.arbor, attr):
+                ds[attr] = getattr(self.arbor, attr)
+        data = {}
+        for field in fields:
+            data[field] = self.tree(field)
+        save_as_dataset(ds, filename, data)
+
 class Arbor(object):
     def __init__(self):
         self.unit_registry = UnitRegistry()
@@ -206,9 +225,9 @@ class ArborCT(Arbor):
             tree_halos = (root_id == self._field_data["tree_id"])
             my_tree = {}
             for i in np.where(tree_halos)[0]:
-                desc_id = int(self._field_data["desc_id"][i])
-                halo_id = int(self._field_data["halo_id"][i])
-                uid = int(self._field_data["uid"][i])
+                desc_id = np.int64(self._field_data["desc_id"][i])
+                halo_id = np.int64(self._field_data["halo_id"][i])
+                uid = np.int64(self._field_data["uid"][i])
                 if desc_id == -1:
                     level = 0
                 else:
@@ -299,3 +318,55 @@ class ArborTF(Arbor):
 
         yt.mylog.info("Arbor contains %d trees with %d total halos." %
                       (len(self.trees), offset))
+
+class ArborST(Arbor):
+    def __init__(self, filename):
+        super(ArborST, self).__init__()
+        self.filename = filename
+
+        self._load_field_data()
+        self.cosmology = Cosmology(
+            hubble_constant=self.hubble_constant,
+            omega_matter=self.omega_matter,
+            omega_lambda=self.omega_lambda,
+            unit_registry=self.unit_registry)
+        self._load_trees()
+        for field in ["mass", "mvir"]:
+            if field in self._field_data:
+                self.set_selector("max_field_value", "mvir")
+
+    def _load_field_data(self):
+        fh = h5py.File(self.filename, "r")
+        for attr in ["hubble_constant",
+                     "omega_matter",
+                     "omega_lambda"]:
+            setattr(self, attr, fh.attrs[attr])
+        self.unit_registry.modify("h", self.hubble_constant)
+        self._field_data = dict([(f, _hdf5_yt_array(fh["data"], f, self))
+                                 for f in fh["data"]])
+        fh.close()
+
+    def _load_trees(self):
+        self.trees = []
+        root_ids = np.unique(self._field_data["tree_id"]).d.astype(np.int64)
+        pbar = yt.get_pbar("Loading trees", root_ids.size)
+        for my_i, root_id in enumerate(root_ids):
+            tree_halos = (root_id == self._field_data["tree_id"])
+            my_tree = {}
+            for i in np.where(tree_halos)[0]:
+                desc_id = np.int64(self._field_data["desc_id"][i])
+                halo_id = np.int64(self._field_data["halo_id"][i])
+                uid = np.int64(self._field_data["uid"][i])
+                if desc_id == -1:
+                    level = 0
+                else:
+                    level = my_tree[desc_id].level_id + 1
+                my_node = TreeNode(halo_id, level, i, arbor=self)
+                my_tree[uid] = my_node
+                if desc_id >= 0:
+                    my_tree[desc_id].add_ancestor(my_node)
+            self.trees.append(my_tree[root_id])
+            pbar.update(my_i)
+        pbar.finish()
+        yt.mylog.info("Arbor contains %d trees with %d total halos." %
+                      (len(self.trees), self._field_data["uid"].size))
