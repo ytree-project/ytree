@@ -244,12 +244,9 @@ class ArborCT(Arbor):
                       (len(self.trees), self._field_data["uid"].size))
 
 class ArborTF(Arbor):
-    def __init__(self, output_dir, fields=None):
+    def __init__(self, output_dir):
         super(ArborTF, self).__init__()
         self.output_dir = output_dir
-        if fields is None:
-            fields = []
-        self.fields = fields
         self._load_trees()
         self.set_selector("max_field_value", "mass")
 
@@ -257,7 +254,7 @@ class ArborTF(Arbor):
         my_files = glob.glob(os.path.join(self.output_dir, "tree_segment_*.h5"))
         my_files.sort()
 
-        self._field_data = dict([(f, []) for f in self.fields])
+        fields = None
         self.redshift = []
 
         offset = 0
@@ -265,17 +262,24 @@ class ArborTF(Arbor):
         pbar = yt.get_pbar("Load segment files", len(my_files))
         for i, fn in enumerate(my_files):
             fh = h5py.File(fn, "r")
+            if fields is None:
+                fields = []
+                for field in fh["data"]:
+                    if field.startswith("descendent_"):
+                        fields.append(field[len("descendent_"):])
+                self._field_data = dict([(f, []) for f in fields])
+
             if my_trees is None:
                 self.redshift.append(fh.attrs["descendent_current_redshift"])
                 des_ids = fh["data/descendent_particle_identifier"].value
-                for field in self.fields:
+                for field in fields:
                     self._field_data[field].append(
                         _hdf5_yt_array(fh, "data/descendent_%s" % field))
             else:
                 des_ids = anc_ids
             self.redshift.append(fh.attrs["ancestor_current_redshift"])
             anc_ids = fh["data/ancestor_particle_identifier"].value
-            for field in self.fields:
+            for field in fields:
                 self._field_data[field].append(
                     _hdf5_yt_array(fh, "data/ancestor_%s" % field))
             links = fh["data/links"].value
