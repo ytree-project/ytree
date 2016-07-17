@@ -168,8 +168,6 @@ class ArborCT(Arbor):
 
         self._load_field_data()
         self._load_trees()
-        for field in ["tree_id", "desc_id", "halo_id", "uid"]:
-            del self._field_data[field]
         self.set_selector("max_field_value", "mvir")
 
     def _read_cosmological_parameters(self):
