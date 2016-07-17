@@ -127,6 +127,7 @@ class TreeNode(object):
         for field in fields:
             data[field] = self.tree(field)
         save_as_dataset(ds, filename, data)
+        return filename
 
 class Arbor(object):
     def __init__(self):
@@ -239,7 +240,7 @@ class ArborCT(Arbor):
             self.trees.append(my_tree[root_id])
             pbar.update(my_i)
         pbar.finish()
-        yt.mylog.info("Arbor contains %d trees with %d total halos." %
+        yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), self._field_data["uid"].size))
 
 class ArborTF(Arbor):
@@ -316,7 +317,7 @@ class ArborTF(Arbor):
             self._field_data[field] = my_data
             pbar.finish()
 
-        yt.mylog.info("Arbor contains %d trees with %d total halos." %
+        yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), offset))
 
 class ArborST(Arbor):
@@ -368,5 +369,5 @@ class ArborST(Arbor):
             self.trees.append(my_tree[root_id])
             pbar.update(my_i)
         pbar.finish()
-        yt.mylog.info("Arbor contains %d trees with %d total halos." %
+        yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), self._field_data["uid"].size))
