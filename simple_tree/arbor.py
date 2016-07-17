@@ -255,6 +255,8 @@ class ArborTF(Arbor):
         my_files.sort()
 
         fields = None
+        self._field_data = \
+          dict([(f, []) for f in ["uid", "desc_id"]])#, "tree_id"]])
         self.redshift = []
 
         offset = 0
@@ -267,7 +269,7 @@ class ArborTF(Arbor):
                 for field in fh["data"]:
                     if field.startswith("descendent_"):
                         fields.append(field[len("descendent_"):])
-                self._field_data = dict([(f, []) for f in fields])
+                self._field_data.update(dict([(f, []) for f in fields]))
 
             if my_trees is None:
                 self.redshift.append(fh.attrs["descendent_current_redshift"])
@@ -277,6 +279,7 @@ class ArborTF(Arbor):
                         _hdf5_yt_array(fh, "data/descendent_%s" % field))
             else:
                 des_ids = anc_ids
+
             self.redshift.append(fh.attrs["ancestor_current_redshift"])
             anc_ids = fh["data/ancestor_particle_identifier"].value
             for field in fields:
@@ -286,21 +289,31 @@ class ArborTF(Arbor):
             fh.close()
 
             if my_trees is None:
+                fsize = des_ids.size
+                self._field_data["uid"].append(
+                    np.arange(offset, offset + fsize))
+                self._field_data["desc_id"].append(-np.ones(fsize))
                 des_nodes = [TreeNode(my_id, i, gid+offset, arbor=self)
                              for gid, my_id in enumerate(des_ids)]
                 my_trees = des_nodes
-                offset += des_ids.size
+                offset += fsize
             else:
                 des_nodes = anc_nodes
 
+            fsize = anc_ids.size
+            self._field_data["uid"].append(
+                np.arange(offset, offset + fsize))
+            self._field_data["desc_id"].append(-np.ones(fsize))
             anc_nodes = [TreeNode(my_id, i+1, gid+offset, arbor=self)
                          for gid, my_id in enumerate(anc_ids)]
-            offset += anc_ids.size
+            offset += fsize
 
             for link in links:
                 i_des = np.where(link[0] == des_ids)[0][0]
                 i_anc = np.where(link[1] == anc_ids)[0][0]
                 des_nodes[i_des].add_ancestor(anc_nodes[i_anc])
+                self._field_data["desc_id"][-1][i_anc] = \
+                  self._field_data["uid"][-2][i_des]
             pbar.update(i)
         pbar.finish()
 
