@@ -256,7 +256,7 @@ class ArborTF(Arbor):
 
         fields = None
         self._field_data = \
-          dict([(f, []) for f in ["uid", "desc_id"]])#, "tree_id"]])
+          dict([(f, []) for f in ["uid", "desc_id", "tree_id"]])
         self.redshift = []
 
         offset = 0
@@ -291,8 +291,11 @@ class ArborTF(Arbor):
             if my_trees is None:
                 fsize = des_ids.size
                 self._field_data["uid"].append(
-                    np.arange(offset, offset + fsize))
-                self._field_data["desc_id"].append(-np.ones(fsize))
+                    np.arange(offset, offset + fsize, dtype=np.int64))
+                self._field_data["desc_id"].append(
+                    -np.ones(fsize, dtype=np.int64))
+                self._field_data["tree_id"].append(
+                    self._field_data["uid"][0])
                 des_nodes = [TreeNode(my_id, i, gid+offset, arbor=self)
                              for gid, my_id in enumerate(des_ids)]
                 my_trees = des_nodes
@@ -302,8 +305,11 @@ class ArborTF(Arbor):
 
             fsize = anc_ids.size
             self._field_data["uid"].append(
-                np.arange(offset, offset + fsize))
-            self._field_data["desc_id"].append(-np.ones(fsize))
+                np.arange(offset, offset + fsize, dtype=np.int64))
+            self._field_data["desc_id"].append(
+                -np.ones(fsize, dtype=np.int64))
+            self._field_data["tree_id"].append(
+                -np.ones(fsize, dtype=np.int64))
             anc_nodes = [TreeNode(my_id, i+1, gid+offset, arbor=self)
                          for gid, my_id in enumerate(anc_ids)]
             offset += fsize
@@ -314,6 +320,8 @@ class ArborTF(Arbor):
                 des_nodes[i_des].add_ancestor(anc_nodes[i_anc])
                 self._field_data["desc_id"][-1][i_anc] = \
                   self._field_data["uid"][-2][i_des]
+                self._field_data["tree_id"][-1][i_anc] = \
+                  self._field_data["tree_id"][-2][i_des]
             pbar.update(i)
         pbar.finish()
 
