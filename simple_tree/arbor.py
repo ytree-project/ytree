@@ -5,6 +5,8 @@ import numpy as np
 import os
 import yt
 
+from yt.extern.six import \
+    string_types
 from yt.frontends.ytdata.utilities import \
     save_as_dataset, \
     _hdf5_yt_array
@@ -101,13 +103,13 @@ class TreeNode(object):
                 my_node = my_node.arbor.selector(my_node.ancestors)
 
     def tree(self, field):
-        if isinstance(field, str):
+        if isinstance(field, string_types):
             return self.arbor._field_data[field][self._tree_field_indices]
         else:
             return self._tree_nodes[field]
 
     def line(self, field):
-        if isinstance(field, str):
+        if isinstance(field, string_types):
             return self.arbor._field_data[field][self._line_field_indices]
         else:
             return self._line_nodes[field]
@@ -265,6 +267,11 @@ class ArborTF(Arbor):
         for i, fn in enumerate(my_files):
             fh = h5py.File(fn, "r")
             if fields is None:
+                for attr in ["omega_matter", "omega_lambda",
+                             "hubble_constant"]:
+                    setattr(self, attr, fh.attrs[attr])
+                self.unit_registry.modify("h", self.hubble_constant)
+
                 fields = []
                 for field in fh["data"]:
                     if field.startswith("descendent_"):
@@ -374,6 +381,8 @@ class ArborST(Arbor):
 
     def _load_trees(self):
         self.trees = []
+        hfield = None
+        _hfields = ["halo_id", "particle_identifier"]
         root_ids = np.unique(self._field_data["tree_id"]).d.astype(np.int64)
         pbar = yt.get_pbar("Loading trees", root_ids.size)
         for my_i, root_id in enumerate(root_ids):
@@ -381,7 +390,13 @@ class ArborST(Arbor):
             my_tree = {}
             for i in np.where(tree_halos)[0]:
                 desc_id = np.int64(self._field_data["desc_id"][i])
-                halo_id = np.int64(self._field_data["halo_id"][i])
+                if hfield is None:
+                    hfields = [f for f in _hfields
+                               if f in self._field_data]
+                    if len(hfields) == 0:
+                        raise RuntimeError("No halo id field found.")
+                    hfield = hfields[0]
+                halo_id = np.int64(self._field_data[hfield][i])
                 uid = np.int64(self._field_data["uid"][i])
                 if desc_id == -1:
                     level = 0
