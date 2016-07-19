@@ -241,21 +241,31 @@ class ArborCT(Arbor):
 
     def _read_cosmological_parameters(self):
         f = file(self.filename, "r")
-        for i in range(2):
+        i = 0
+        while True:
+            i += 1
             line = f.readline()
+            if line is None or not line.startswith("#"):
+                break
+            if "Omega_M" in line:
+                pars = line[1:].split(";")
+                for j, par in enumerate(["omega_matter",
+                                         "omega_lambda",
+                                         "hubble_constant"]):
+                    v = float(pars[j].split(" = ")[1])
+                    setattr(self, par, v)
+            elif "Full box size" in line:
+                pars = line.split("=")[1].strip().split()
+                self.box_size = tuple(pars)
         f.close()
-        pars = line[1:].split(";")
-        for i, par in enumerate(["omega_matter", "omega_lambda",
-                                 "hubble_constant"]):
-            v = float(pars[i].split(" = ")[1])
-            setattr(self, par, v)
+        self._iheader = i
 
     def _load_field_data(self):
         yt.mylog.info("Loading tree data from %s." % self.filename)
         self._read_cosmological_parameters()
         self.unit_registry.modify("h", self.hubble_constant)
-        data = np.loadtxt(self.filename, skiprows=46, unpack=True,
-                          usecols=_ct_usecol)
+        data = np.loadtxt(self.filename, skiprows=self._iheader,
+                          unpack=True, usecols=_ct_usecol)
         self._field_data = {}
         for field, cols in _ct_fields.items():
             if cols.size == 1:
