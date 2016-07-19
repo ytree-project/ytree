@@ -9,7 +9,8 @@ from yt.extern.six import \
     string_types
 from yt.frontends.ytdata.utilities import \
     save_as_dataset, \
-    _hdf5_yt_array
+    _hdf5_yt_array, \
+    _yt_array_hdf5_attr
 from yt.funcs import \
     get_output_filename
 from yt.units.unit_registry import \
@@ -19,6 +20,8 @@ from yt.utilities.cosmology import \
 
 from .tree_node_selector import \
     tree_node_selector_registry
+from .utilities import \
+    _hdf5_yt_attr
 
 class TreeNode(object):
     def __init__(self, halo_id, level_id, global_id=None, arbor=None):
@@ -125,10 +128,12 @@ class TreeNode(object):
                      "omega_lambda"]:
             if hasattr(self.arbor, attr):
                 ds[attr] = getattr(self.arbor, attr)
+        extra_attrs = {"box_size": self.arbor.box_size}
         data = {}
         for field in fields:
             data[field] = self.tree(field)
-        save_as_dataset(ds, filename, data)
+        save_as_dataset(ds, filename, data,
+                        extra_attrs=extra_attrs)
         return filename
 
 class Arbor(object):
@@ -175,6 +180,8 @@ class Arbor(object):
                      "omega_lambda"]:
             setattr(self, attr, fh.attrs[attr])
         self.unit_registry.modify("h", self.hubble_constant)
+        self.box_size = _hdf5_yt_attr(fh, "box_size",
+                                      unit_registry=self.unit_registry)
         self._field_data = dict([(f, _hdf5_yt_array(fh["data"], f, self))
                                  for f in fh["data"]])
         fh.close()
@@ -331,6 +338,14 @@ class ArborTF(Arbor):
                              "hubble_constant"]:
                     setattr(self, attr, fh.attrs[attr])
                 self.unit_registry.modify("h", self.hubble_constant)
+                self.domain_left_edge = \
+                  _hdf5_yt_attr(fh, "domain_left_edge",
+                                unit_registry=self.unit_registry)
+                self.domain_right_edge = \
+                  _hdf5_yt_attr(fh, "domain_right_edge",
+                                unit_registry=self.unit_registry)
+                self.box_size = (self.domain_right_edge -
+                                 self.domain_left_edge)[0]
 
                 fields = []
                 for field in fh["data"]:
