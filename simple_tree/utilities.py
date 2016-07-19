@@ -25,3 +25,10 @@ def _hdf5_yt_attr(fh, attr, unit_registry=None):
         else:
             val = YTQuantity(val, units, registry=unit_registry)
     return val
+
+def _hdf5_yt_array_lite(fh, field):
+    units = ""
+    if "units" in fh[field].attrs:
+        units = fh[field].attrs["units"]
+    if units == "dimensionless": units = ""
+    return (fh[field].value, units)

@@ -18,6 +18,7 @@ from .tree_node import \
 from .tree_node_selector import \
     tree_node_selector_registry
 from .utilities import \
+    _hdf5_yt_array_lite, \
     _hdf5_yt_attr
 
 class Arbor(object):
@@ -220,7 +221,7 @@ class ArborTF(Arbor):
                 des_ids = fh["data/descendent_particle_identifier"].value
                 for field in fields:
                     self._field_data[field].append(
-                        _hdf5_yt_array(fh, "data/descendent_%s" % field))
+                        _hdf5_yt_array_lite(fh, "data/descendent_%s" % field))
             else:
                 des_ids = anc_ids
 
@@ -228,7 +229,7 @@ class ArborTF(Arbor):
             anc_ids = fh["data/ancestor_particle_identifier"].value
             for field in fields:
                 self._field_data[field].append(
-                    _hdf5_yt_array(fh, "data/ancestor_%s" % field))
+                    _hdf5_yt_array_lite(fh, "data/ancestor_%s" % field))
             links = fh["data/links"].value
             fh.close()
 
@@ -276,11 +277,18 @@ class ArborTF(Arbor):
             pbar = yt.get_pbar("Preparing %s data" % field,
                                len(self._field_data[field]))
             my_data = []
+            units = ""
+            if isinstance(self._field_data[field][0], tuple):
+                units = self._field_data[field][0][1]
+            if units == "dimensionless": units = ""
             for i, level in enumerate(self._field_data[field]):
-                my_data.extend(level)
+                if isinstance(level, tuple):
+                    my_data.extend(level[0])
+                else:
+                    my_data.extend(level)
                 pbar.update(i)
-            if hasattr(my_data[0], "units"):
-                my_data = yt.YTArray(my_data)
+            if units != "":
+                my_data = self.arr(my_data, units)
             else:
                 my_data = np.array(my_data)
             self._field_data[field] = my_data
