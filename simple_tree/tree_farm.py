@@ -16,7 +16,7 @@ from .ancestry_filter import \
     ancestry_filter_registry
 from .ancestry_short import \
     ancestry_short_registry
-from .communication import \
+from .utilities import \
     mpi_gather_list
 from .halo_selector import \
     selector_registry, \
