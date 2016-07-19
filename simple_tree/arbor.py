@@ -56,7 +56,7 @@ class Arbor(object):
     def _set_default_selector(self):
         for field in ["mass", "mvir"]:
             if field in self._field_data:
-                self.set_selector("max_field_value", "mvir")
+                self.set_selector("max_field_value", field)
 
     def _load_field_data(self):
         fh = h5py.File(self.filename, "r")
