@@ -132,8 +132,22 @@ class TreeNode(object):
         return filename
 
 class Arbor(object):
-    def __init__(self):
+    def __init__(self, filename):
+        self.filename = filename
         self.unit_registry = UnitRegistry()
+        self._load_trees()
+        self._set_default_selector()
+        self.cosmology = Cosmology(
+            hubble_constant=self.hubble_constant,
+            omega_matter=self.omega_matter,
+            omega_lambda=self.omega_lambda,
+            unit_registry=self.unit_registry)
+
+    def _set_default_selector(self):
+        pass
+
+    def _load_trees(self):
+        pass
 
     def set_selector(self, selector, *args, **kwargs):
         self.selector = tree_node_selector_registry.find(
@@ -177,19 +191,7 @@ for field, col in _ct_columns:
                                   len(_ct_usecol))
 
 class ArborCT(Arbor):
-    def __init__(self, filename):
-        super(ArborCT, self).__init__()
-        self.filename = filename
-        self._read_cosmological_parameters()
-        self.unit_registry.modify("h", self.hubble_constant)
-        self.cosmology = Cosmology(
-            hubble_constant=self.hubble_constant,
-            omega_matter=self.omega_matter,
-            omega_lambda=self.omega_lambda,
-            unit_registry=self.unit_registry)
-
-        self._load_field_data()
-        self._load_trees()
+    def _set_default_selector(self):
         self.set_selector("max_field_value", "mvir")
 
     def _read_cosmological_parameters(self):
@@ -205,6 +207,8 @@ class ArborCT(Arbor):
 
     def _load_field_data(self):
         yt.mylog.info("Loading tree data from %s." % self.filename)
+        self._read_cosmological_parameters()
+        self.unit_registry.modify("h", self.hubble_constant)
         data = np.loadtxt(self.filename, skiprows=46, unpack=True,
                           usecols=_ct_usecol)
         self._field_data = {}
@@ -221,6 +225,8 @@ class ArborCT(Arbor):
         del self._field_data["a"]
 
     def _load_trees(self):
+        self._load_field_data()
+
         self.trees = []
         root_ids = np.unique(self._field_data["tree_id"])
         pbar = yt.get_pbar("Loading trees", root_ids.size)
@@ -246,14 +252,11 @@ class ArborCT(Arbor):
                       (len(self.trees), self._field_data["uid"].size))
 
 class ArborTF(Arbor):
-    def __init__(self, output_dir):
-        super(ArborTF, self).__init__()
-        self.output_dir = output_dir
-        self._load_trees()
+    def _set_default_selector(self):
         self.set_selector("max_field_value", "mass")
 
     def _load_trees(self):
-        my_files = glob.glob(os.path.join(self.output_dir, "tree_segment_*.h5"))
+        my_files = glob.glob(os.path.join(self.filename, "tree_segment_*.h5"))
         my_files.sort()
 
         fields = None
@@ -353,17 +356,7 @@ class ArborTF(Arbor):
                       (len(self.trees), offset))
 
 class ArborST(Arbor):
-    def __init__(self, filename):
-        super(ArborST, self).__init__()
-        self.filename = filename
-
-        self._load_field_data()
-        self.cosmology = Cosmology(
-            hubble_constant=self.hubble_constant,
-            omega_matter=self.omega_matter,
-            omega_lambda=self.omega_lambda,
-            unit_registry=self.unit_registry)
-        self._load_trees()
+    def _set_default_selector(self):
         for field in ["mass", "mvir"]:
             if field in self._field_data:
                 self.set_selector("max_field_value", "mvir")
@@ -380,6 +373,8 @@ class ArborST(Arbor):
         fh.close()
 
     def _load_trees(self):
+        self._load_field_data()
+
         self.trees = []
         hfield = None
         _hfields = ["halo_id", "particle_identifier"]
