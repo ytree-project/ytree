@@ -143,12 +143,6 @@ class Arbor(object):
             omega_lambda=self.omega_lambda,
             unit_registry=self.unit_registry)
 
-    def _set_default_selector(self):
-        pass
-
-    def _load_trees(self):
-        pass
-
     def set_selector(self, selector, *args, **kwargs):
         self.selector = tree_node_selector_registry.find(
             selector, *args, **kwargs)
@@ -168,6 +162,57 @@ class Arbor(object):
             return self._quan
         self._quan = functools.partial(yt.YTQuantity, registry=self.unit_registry)
         return self._quan
+
+    def _set_default_selector(self):
+        for field in ["mass", "mvir"]:
+            if field in self._field_data:
+                self.set_selector("max_field_value", "mvir")
+
+    def _load_field_data(self):
+        fh = h5py.File(self.filename, "r")
+        for attr in ["hubble_constant",
+                     "omega_matter",
+                     "omega_lambda"]:
+            setattr(self, attr, fh.attrs[attr])
+        self.unit_registry.modify("h", self.hubble_constant)
+        self._field_data = dict([(f, _hdf5_yt_array(fh["data"], f, self))
+                                 for f in fh["data"]])
+        fh.close()
+
+    def _load_trees(self):
+        self._load_field_data()
+
+        self.trees = []
+        hfield = None
+        _hfields = ["halo_id", "particle_identifier"]
+        root_ids = np.unique(self._field_data["tree_id"]).d.astype(np.int64)
+        pbar = yt.get_pbar("Loading trees", root_ids.size)
+        for my_i, root_id in enumerate(root_ids):
+            tree_halos = (root_id == self._field_data["tree_id"])
+            my_tree = {}
+            for i in np.where(tree_halos)[0]:
+                desc_id = np.int64(self._field_data["desc_id"][i])
+                if hfield is None:
+                    hfields = [f for f in _hfields
+                               if f in self._field_data]
+                    if len(hfields) == 0:
+                        raise RuntimeError("No halo id field found.")
+                    hfield = hfields[0]
+                halo_id = np.int64(self._field_data[hfield][i])
+                uid = np.int64(self._field_data["uid"][i])
+                if desc_id == -1:
+                    level = 0
+                else:
+                    level = my_tree[desc_id].level_id + 1
+                my_node = TreeNode(halo_id, level, i, arbor=self)
+                my_tree[uid] = my_node
+                if desc_id >= 0:
+                    my_tree[desc_id].add_ancestor(my_node)
+            self.trees.append(my_tree[root_id])
+            pbar.update(my_i)
+        pbar.finish()
+        yt.mylog.info("Arbor contains %d trees with %d total nodes." %
+                      (len(self.trees), self._field_data["uid"].size))
 
 _ct_columns = (("a",        (0,)),
                ("uid",      (1,)),
@@ -354,55 +399,3 @@ class ArborTF(Arbor):
 
         yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), offset))
-
-class ArborST(Arbor):
-    def _set_default_selector(self):
-        for field in ["mass", "mvir"]:
-            if field in self._field_data:
-                self.set_selector("max_field_value", "mvir")
-
-    def _load_field_data(self):
-        fh = h5py.File(self.filename, "r")
-        for attr in ["hubble_constant",
-                     "omega_matter",
-                     "omega_lambda"]:
-            setattr(self, attr, fh.attrs[attr])
-        self.unit_registry.modify("h", self.hubble_constant)
-        self._field_data = dict([(f, _hdf5_yt_array(fh["data"], f, self))
-                                 for f in fh["data"]])
-        fh.close()
-
-    def _load_trees(self):
-        self._load_field_data()
-
-        self.trees = []
-        hfield = None
-        _hfields = ["halo_id", "particle_identifier"]
-        root_ids = np.unique(self._field_data["tree_id"]).d.astype(np.int64)
-        pbar = yt.get_pbar("Loading trees", root_ids.size)
-        for my_i, root_id in enumerate(root_ids):
-            tree_halos = (root_id == self._field_data["tree_id"])
-            my_tree = {}
-            for i in np.where(tree_halos)[0]:
-                desc_id = np.int64(self._field_data["desc_id"][i])
-                if hfield is None:
-                    hfields = [f for f in _hfields
-                               if f in self._field_data]
-                    if len(hfields) == 0:
-                        raise RuntimeError("No halo id field found.")
-                    hfield = hfields[0]
-                halo_id = np.int64(self._field_data[hfield][i])
-                uid = np.int64(self._field_data["uid"][i])
-                if desc_id == -1:
-                    level = 0
-                else:
-                    level = my_tree[desc_id].level_id + 1
-                my_node = TreeNode(halo_id, level, i, arbor=self)
-                my_tree[uid] = my_node
-                if desc_id >= 0:
-                    my_tree[desc_id].add_ancestor(my_node)
-            self.trees.append(my_tree[root_id])
-            pbar.update(my_i)
-        pbar.finish()
-        yt.mylog.info("Arbor contains %d trees with %d total nodes." %
-                      (len(self.trees), self._field_data["uid"].size))
