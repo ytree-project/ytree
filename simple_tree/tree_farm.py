@@ -1,3 +1,18 @@
+"""
+TreeFarm class and member functions
+
+
+
+"""
+
+#-----------------------------------------------------------------------------
+# Copyright (c) 2016, Britton Smith <brittonsmith@gmail.com>
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
+
 import h5py
 import numpy as np
 import os
@@ -248,7 +263,8 @@ class TreeFarm(object):
 
 def create_halo_data_lists(halos, halo_properties):
     comm = _get_comm(())
-    pbar = yt.get_pbar("Gathering field data from halos", comm.size*len(halos), parallel=True)
+    pbar = yt.get_pbar("Gathering field data from halos",
+                       comm.size*len(halos), parallel=True)
     data = dict([(hp, []) for hp in halo_properties])
     my_i = 0
     for halo in halos:

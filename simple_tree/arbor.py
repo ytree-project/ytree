@@ -1,3 +1,18 @@
+"""
+Arbor class and member functions
+
+
+
+"""
+
+#-----------------------------------------------------------------------------
+# Copyright (c) 2016, Britton Smith <brittonsmith@gmail.com>
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
+
 import functools
 import h5py
 import glob
