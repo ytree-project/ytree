@@ -187,8 +187,8 @@ class ArborTF(Arbor):
 
         fields = None
         self._field_data = \
-          dict([(f, []) for f in ["uid", "desc_id", "tree_id"]])
-        self.redshift = []
+          dict([(f, []) for f in ["uid", "desc_id",
+                                  "tree_id", "redshift"]])
 
         offset = 0
         my_trees = None
@@ -217,16 +217,20 @@ class ArborTF(Arbor):
                 self._field_data.update(dict([(f, []) for f in fields]))
 
             if my_trees is None:
-                self.redshift.append(fh.attrs["descendent_current_redshift"])
                 des_ids = fh["data/descendent_particle_identifier"].value
+                self._field_data["redshift"].append(
+                    fh.attrs["descendent_current_redshift"] *
+                    np.ones(des_ids.size))
                 for field in fields:
                     self._field_data[field].append(
                         _hdf5_yt_array_lite(fh, "data/descendent_%s" % field))
             else:
                 des_ids = anc_ids
 
-            self.redshift.append(fh.attrs["ancestor_current_redshift"])
             anc_ids = fh["data/ancestor_particle_identifier"].value
+            self._field_data["redshift"].append(
+                fh.attrs["ancestor_current_redshift"] *
+                np.ones(anc_ids.size))
             for field in fields:
                 self._field_data[field].append(
                     _hdf5_yt_array_lite(fh, "data/ancestor_%s" % field))
@@ -270,7 +274,6 @@ class ArborTF(Arbor):
             pbar.update(i)
         pbar.finish()
 
-        self.redshift = np.array(self.redshift)
         self.trees = my_trees
 
         for field in self._field_data:
