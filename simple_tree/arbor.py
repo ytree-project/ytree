@@ -21,8 +21,11 @@ import os
 import yt
 
 from yt.frontends.ytdata.utilities import \
+    save_as_dataset, \
     _hdf5_yt_array, \
     _yt_array_hdf5_attr
+from yt.funcs import \
+    get_output_filename
 from yt.units.unit_registry import \
     UnitRegistry
 from yt.utilities.cosmology import \
@@ -125,6 +128,22 @@ class Arbor(object):
         pbar.finish()
         yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), self._field_data["uid"].size))
+
+    def save_arbor(self, filename=None, fields=None):
+        filename = get_output_filename(filename, "arbor", ".h5")
+        if fields is None:
+            fields = self._field_data.keys()
+        ds = {}
+        for attr in ["hubble_constant",
+                     "omega_matter",
+                     "omega_lambda"]:
+            if hasattr(self, attr):
+                ds[attr] = getattr(self, attr)
+        extra_attrs = {"box_size": self.box_size}
+        save_as_dataset(ds, filename, self._field_data,
+                        extra_attrs=extra_attrs)
+        return filename
+
 
 _ct_columns = (("a",        (0,)),
                ("uid",      (1,)),
