@@ -256,14 +256,15 @@ class ArborCT(Arbor):
                     setattr(self, par, v)
             elif "Full box size" in line:
                 pars = line.split("=")[1].strip().split()
-                self.box_size = tuple(pars)
+                box = pars
         f.close()
         self._iheader = i
+        self.unit_registry.modify("h", self.hubble_constant)
+        self.box_size = self.quan(float(box[0]), box[1])
 
     def _load_field_data(self):
         yt.mylog.info("Loading tree data from %s." % self.filename)
         self._read_cosmological_parameters()
-        self.unit_registry.modify("h", self.hubble_constant)
         data = np.loadtxt(self.filename, skiprows=self._iheader,
                           unpack=True, usecols=_ct_usecol)
         self._field_data = {}
@@ -325,7 +326,8 @@ class ArborTF(Arbor):
         for i, fn in enumerate(my_files):
             fh = h5py.File(fn, "r")
             if fields is None:
-                for attr in ["omega_matter", "omega_lambda",
+                for attr in ["omega_matter",
+                             "omega_lambda",
                              "hubble_constant"]:
                     setattr(self, attr, fh.attrs[attr])
                 self.unit_registry.modify("h", self.hubble_constant)
