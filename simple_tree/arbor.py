@@ -220,6 +220,8 @@ _rs_units = {"mvir": "Msun/h",
              "rvir": "kpc/h",
              "position": "Mpc/h",
              "velocity": "km/s"}
+_rs_type = {"halo_id": np.int64,
+            "desc_id": np.int64}
 _rs_usecol = []
 _rs_fields = {}
 for field, col in _rs_columns:
@@ -284,6 +286,9 @@ class ArborRS(ArborCT):
                     self._field_data[field].append(data[cols][0])
                 else:
                     self._field_data[field].append(np.rollaxis(data[cols], 1))
+                if field in _rs_type:
+                    self._field_data[field][-1] = \
+                      self._field_data[field][-1].astype(_rs_type[field])
 
             my_nodes = []
             for halo in range(n_halos):
