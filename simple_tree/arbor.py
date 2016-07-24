@@ -429,8 +429,6 @@ class ArborTF(Arbor):
         self.trees = my_trees
 
         for field in self._field_data:
-            pbar = yt.get_pbar("Preparing %s data" % field,
-                               len(self._field_data[field]))
             my_data = []
             units = ""
             if isinstance(self._field_data[field][0], tuple):
@@ -441,13 +439,11 @@ class ArborTF(Arbor):
                     my_data.extend(level[0])
                 else:
                     my_data.extend(level)
-                pbar.update(i)
             if units != "":
                 my_data = self.arr(my_data, units)
             else:
                 my_data = np.array(my_data)
             self._field_data[field] = my_data
-            pbar.finish()
 
         yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), offset))
