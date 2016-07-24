@@ -15,9 +15,11 @@ simple_tree imports
 
 from arbor import \
     Arbor, \
-    ArborCT, \
-    ArborRS, \
-    ArborTF
+    ArborArbor, \
+    ConsistentTreesArbor, \
+    RockstarArbor, \
+    TreeFarmArbor, \
+    load_arbor
 from tree_farm import \
     TreeFarm
 from ancestry_checker import \

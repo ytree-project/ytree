@@ -20,6 +20,8 @@ import numpy as np
 import os
 import yt
 
+from yt.extern.six import \
+    add_metaclass
 from yt.frontends.ytdata.utilities import \
     save_as_dataset, \
     _hdf5_yt_array, \
@@ -39,6 +41,16 @@ from .utilities import \
     _hdf5_yt_array_lite, \
     _hdf5_yt_attr
 
+arbor_registry = {}
+
+class RegisteredArbor(type):
+    def __init__(cls, name, b, d):
+        type.__init__(cls, name, b, d)
+        arbor_type = name[:name.rfind("Arbor")]
+        if arbor_type:
+            arbor_registry[arbor_type] = cls
+
+@add_metaclass(RegisteredArbor)
 class Arbor(object):
     def __init__(self, filename):
         self.filename = filename
@@ -76,19 +88,6 @@ class Arbor(object):
             if field in self._field_data:
                 self.set_selector("max_field_value", field)
 
-    def _load_field_data(self):
-        fh = h5py.File(self.filename, "r")
-        for attr in ["hubble_constant",
-                     "omega_matter",
-                     "omega_lambda"]:
-            setattr(self, attr, fh.attrs[attr])
-        self.unit_registry.modify("h", self.hubble_constant)
-        self.box_size = _hdf5_yt_attr(fh, "box_size",
-                                      unit_registry=self.unit_registry)
-        self._field_data = dict([(f, _hdf5_yt_array(fh["data"], f, self))
-                                 for f in fh["data"]])
-        fh.close()
-
     def _set_halo_id_field(self):
         _hfields = ["halo_id", "particle_identifier"]
         hfields = [f for f in _hfields
@@ -96,6 +95,9 @@ class Arbor(object):
         if len(hfields) == 0:
             raise RuntimeError("No halo id field found.")
         self._hid_field = hfields[0]
+
+    def _load_field_data(self):
+        pass
 
     def _load_trees(self):
         self._load_field_data()
@@ -144,6 +146,19 @@ class Arbor(object):
                         extra_attrs=extra_attrs)
         return filename
 
+class ArborArbor(Arbor):
+    def _load_field_data(self):
+        fh = h5py.File(self.filename, "r")
+        for attr in ["hubble_constant",
+                     "omega_matter",
+                     "omega_lambda"]:
+            setattr(self, attr, fh.attrs[attr])
+        self.unit_registry.modify("h", self.hubble_constant)
+        self.box_size = _hdf5_yt_attr(fh, "box_size",
+                                      unit_registry=self.unit_registry)
+        self._field_data = dict([(f, _hdf5_yt_array(fh["data"], f, self))
+                                 for f in fh["data"]])
+        fh.close()
 
 _ct_columns = (("a",        (0,)),
                ("uid",      (1,)),
@@ -166,7 +181,7 @@ for field, col in _ct_columns:
     _ct_fields[field] = np.arange(len(_ct_usecol)-len(col),
                                   len(_ct_usecol))
 
-class ArborCT(Arbor):
+class ConsistentTreesArbor(Arbor):
     def _set_default_selector(self):
         self.set_selector("max_field_value", "mvir")
 
@@ -229,7 +244,7 @@ for field, col in _rs_columns:
     _rs_fields[field] = np.arange(len(_rs_usecol)-len(col),
                                   len(_rs_usecol))
 
-class ArborRS(ArborCT):
+class RockstarArbor(Arbor):
     def _read_parameters(self, filename):
         get_pars = not hasattr(self, "hubble_constant")
         f = file(filename, "r")
@@ -331,7 +346,7 @@ class ArborRS(ArborCT):
         yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), offset))
 
-class ArborTF(Arbor):
+class TreeFarmArbor(Arbor):
     def _set_default_selector(self):
         self.set_selector("max_field_value", "mass")
 
@@ -452,3 +467,9 @@ class ArborTF(Arbor):
 
         yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), offset))
+
+def load_arbor(filename, method):
+    if method not in arbor_registry:
+        raise RuntimeError("Invalid method: %s.  Available: %s." %
+                           (method, arbor_registry.keys()))
+    return arbor_registry[method](filename)
