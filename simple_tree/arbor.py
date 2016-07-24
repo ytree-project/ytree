@@ -216,8 +216,11 @@ class ArborTF(Arbor):
         self.set_selector("max_field_value", "mass")
 
     def _load_trees(self):
-        my_files = glob.glob(os.path.join(self.filename, "tree_segment_*.h5"))
-        my_files.sort()
+        prefix = self.filename.rsplit("_", 1)[0]
+        suffix = ".h5"
+        file_count = len(glob.glob("%s_*%s" % (prefix, suffix)))
+        my_files = ["%s_%04d%s" % (prefix, i, suffix)
+                    for i in range(file_count)]
 
         fields = None
         self._field_data = \
