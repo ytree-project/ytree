@@ -16,6 +16,7 @@ simple_tree imports
 from arbor import \
     Arbor, \
     ArborCT, \
+    ArborRS, \
     ArborTF
 from tree_farm import \
     TreeFarm

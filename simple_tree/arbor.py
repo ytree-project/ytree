@@ -206,10 +206,125 @@ class ArborCT(Arbor):
                 self._field_data[field] = np.rollaxis(data[cols], 1)
             if field in _ct_units:
                 self._field_data[field] = \
-                  yt.YTArray(self._field_data[field], _ct_units[field],
-                             registry=self.unit_registry)
+                  self.arr(self._field_data[field], _ct_units[field])
         self._field_data["redshift"] = 1. / self._field_data["a"] - 1.
         del self._field_data["a"]
+
+_rs_columns = (("halo_id",  (0,)),
+               ("desc_id",  (1,)),
+               ("mvir",     (2,)),
+               ("rvir",     (5,)),
+               ("position", (8, 9, 10)),
+               ("velocity", (11, 12, 13)))
+_rs_units = {"mvir": "Msun/h",
+             "rvir": "kpc/h",
+             "position": "Mpc/h",
+             "velocity": "km/s"}
+_rs_usecol = []
+_rs_fields = {}
+for field, col in _rs_columns:
+    _rs_usecol.extend(col)
+    _rs_fields[field] = np.arange(len(_rs_usecol)-len(col),
+                                  len(_rs_usecol))
+
+class ArborRS(ArborCT):
+    def _read_parameters(self, filename):
+        get_pars = not hasattr(self, "hubble_constant")
+        f = file(filename, "r")
+        while True:
+            line = f.readline()
+            if line is None or not line.startswith("#"):
+                break
+            if get_pars and line.startswith("#Om = "):
+                pars = line[1:].split(";")
+                for j, par in enumerate(["omega_matter",
+                                         "omega_lambda",
+                                         "hubble_constant"]):
+                    v = float(pars[j].split(" = ")[1])
+                    setattr(self, par, v)
+            if get_pars and line.startswith("#Box size:"):
+                pars = line.split(":")[1].strip().split()
+                box = pars
+            if line.startswith("#a = "):
+                a = float(line.split("=")[1].strip())
+        f.close()
+        if get_pars:
+            self.unit_registry.modify("h", self.hubble_constant)
+            self.box_size = self.quan(float(box[0]), box[1])
+        return 1. / a - 1.
+
+    def _load_trees(self):
+        prefix = self.filename.rsplit("_", 1)[0]
+        suffix = ".list"
+        file_count = len(glob.glob("%s_*%s" % (prefix, suffix)))
+        my_files = ["%s_%d%s" % (prefix, i, suffix)
+                    for i in range(file_count)[::-1]]
+
+        ex_fields = ["redshift", "uid"]
+        self._field_data = \
+          dict([(f, []) for f in _rs_fields.keys() + ex_fields])
+
+        offset = 0
+        my_trees = []
+        pbar = yt.get_pbar("Load halo catalogs", len(my_files))
+        for i, fn in enumerate(my_files):
+            data = np.loadtxt(fn, unpack=True, usecols=_rs_usecol)
+            z = self._read_parameters(fn)
+            if data.size == 0:
+                pbar.update(i)
+                continue
+
+            n_halos = data.shape[1]
+            self._field_data["redshift"].append(
+                z * np.ones(n_halos))
+            self._field_data["uid"].append(
+                np.arange(offset, offset+n_halos))
+            for field, cols in _rs_fields.items():
+                if cols.size == 1:
+                    self._field_data[field].append(data[cols][0])
+                else:
+                    self._field_data[field].append(np.rollaxis(data[cols], 1))
+
+            my_nodes = []
+            for halo in range(n_halos):
+                my_node = TreeNode(self._field_data["halo_id"][-1][halo], i,
+                                   self._field_data["uid"][-1][halo], self)
+                my_nodes.append(my_node)
+                if self._field_data["desc_id"][-1][halo] == -1 or i == 0:
+                    my_trees.append(my_node)
+
+            if i > 0:
+                des_ids = anc_ids
+                des_nodes = anc_nodes
+            anc_ids = self._field_data["halo_id"][-1]
+            anc_nodes = my_nodes
+
+            offset += n_halos
+            if i == 0:
+                pbar.update(i)
+                continue
+
+            for halo in range(n_halos):
+                des_id = self._field_data["desc_id"][-1][halo]
+                if des_id == -1: continue
+                i_des = np.where(des_id == des_ids)[0][0]
+                des_nodes[i_des].add_ancestor(anc_nodes[halo])
+
+            pbar.update(i)
+        pbar.finish()
+        self.trees = my_trees
+
+        for field in self._field_data:
+            my_data = []
+            for level in self._field_data[field]:
+                my_data.extend(level)
+            if field in _rs_units:
+                self._field_data[field] = self.arr(my_data, _rs_units[field])
+            else:
+                self._field_data[field] = np.array(my_data)
+
+        yt.mylog.info("Arbor contains %d trees with %d total nodes." %
+                      (len(self.trees), offset))
 
 class ArborTF(Arbor):
     def _set_default_selector(self):
