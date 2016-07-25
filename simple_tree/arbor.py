@@ -282,6 +282,7 @@ class RockstarArbor(Arbor):
           dict([(f, []) for f in _rs_fields.keys() + ex_fields])
 
         offset = 0
+        anc_ids = None
         my_trees = []
         pbar = yt.get_pbar("Load halo catalogs", len(my_files))
         for i, fn in enumerate(my_files):
@@ -291,6 +292,8 @@ class RockstarArbor(Arbor):
                 pbar.update(i)
                 continue
 
+            if len(data.shape) == 1:
+                data = np.reshape(data, (data.size, 1))
             n_halos = data.shape[1]
             self._field_data["redshift"].append(
                 z * np.ones(n_halos))
@@ -313,7 +316,7 @@ class RockstarArbor(Arbor):
                 if self._field_data["desc_id"][-1][halo] == -1 or i == 0:
                     my_trees.append(my_node)
 
-            if i > 0:
+            if anc_ids is not None:
                 des_ids = anc_ids
                 des_nodes = anc_nodes
             anc_ids = self._field_data["halo_id"][-1]
