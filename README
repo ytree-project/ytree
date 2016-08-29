@@ -1,3 +1,10 @@
+.. image:: https://readthedocs.org/projects/simple-tree/badge/?version=latest
+:target: http://simple-tree.readthedocs.io/en/latest/?badge=latest
+:alt: Documentation Status
+
+simple_tree
+===========
+
 This is simple_tree, a yt extension for generating and working with
 merger tree data.  Simple_tree can:
 
