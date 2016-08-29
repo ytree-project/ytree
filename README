@@ -1,0 +1,14 @@
+This is simple_tree, a yt extension for generating and working with
+merger tree data.  Simple_tree can:
+
+* create merger trees from Gadget's inline FOF/SUBFIND output
+
+* create merger trees from Rockstar halo catalogs
+
+* read in consistent-trees merger trees
+
+* output all merger trees to a universal, reloadable format
+
+For more information, visit:
+
+simple-tree.readthedocs.org
