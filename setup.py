@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name="simple_tree",
-      version="1.0",
+      version="1.0.0.dev1",
       description="Merger tree and related utilites for Gadget FOF/SUBFIND catalogs and consistent trees outputs.",
       author="Britton Smith",
       author_email="brittonsmith@gmail.com",
