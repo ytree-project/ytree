@@ -1,0 +1,6 @@
+include README* CREDITS COPYING.txt
+recursive-include simple_tree *.py *.txt
+recursive-include doc *.rst *.py *.png
+include doc/README
+include doc/Makefile
+prune doc/build
