@@ -1,3 +1,7 @@
+.. image:: https://drone.io/bitbucket.org/brittonsmith/simple_tree/status.png
+   :target: https://drone.io/bitbucket.org/brittonsmith/simple_tree/latest
+   :alt: Build Status
+
 .. image:: https://readthedocs.org/projects/simple-tree/badge/?version=latest
    :target: http://simple-tree.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
