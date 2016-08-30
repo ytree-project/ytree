@@ -1,4 +1,6 @@
 syntax: glob
 simple_tree.egg-info/*
+build
+dist
 *.pyc
 *~
