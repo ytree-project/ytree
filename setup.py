@@ -14,7 +14,7 @@ setup(name="simple_tree",
           "Development Status :: 2 - Pre-Alpha",
           "Environment :: Console",
           "Intended Audience :: Science/Research",
-          "Topic :: Scientific/Engineering :: Astronomy"
+          "Topic :: Scientific/Engineering :: Astronomy",
           "License :: OSI Approved :: BSD License",
           "Operating System :: MacOS :: MacOS X",
           "Operating System :: POSIX :: AIX",
