@@ -17,15 +17,13 @@ import functools
 import h5py
 import glob
 import numpy as np
-import os
 import yt
 
 from yt.extern.six import \
     add_metaclass
 from yt.frontends.ytdata.utilities import \
     save_as_dataset, \
-    _hdf5_yt_array, \
-    _yt_array_hdf5_attr
+    _hdf5_yt_array
 from yt.funcs import \
     get_output_filename
 from yt.units.unit_registry import \
@@ -279,7 +277,7 @@ class RockstarArbor(Arbor):
 
         ex_fields = ["redshift", "uid"]
         self._field_data = \
-          dict([(f, []) for f in _rs_fields.keys() + ex_fields])
+        dict([(f, []) for f in _rs_fields.keys() + ex_fields])
 
         offset = 0
         anc_ids = None
@@ -362,8 +360,8 @@ class TreeFarmArbor(Arbor):
 
         fields = None
         self._field_data = \
-          dict([(f, []) for f in ["uid", "desc_id",
-                                  "tree_id", "redshift"]])
+        dict([(f, []) for f in ["uid", "desc_id",
+                                "tree_id", "redshift"]])
 
         offset = 0
         my_trees = None
@@ -377,11 +375,11 @@ class TreeFarmArbor(Arbor):
                     setattr(self, attr, fh.attrs[attr])
                 self.unit_registry.modify("h", self.hubble_constant)
                 self.domain_left_edge = \
-                  _hdf5_yt_attr(fh, "domain_left_edge",
-                                unit_registry=self.unit_registry)
+                _hdf5_yt_attr(fh, "domain_left_edge",
+                              unit_registry=self.unit_registry)
                 self.domain_right_edge = \
-                  _hdf5_yt_attr(fh, "domain_right_edge",
-                                unit_registry=self.unit_registry)
+                _hdf5_yt_attr(fh, "domain_right_edge",
+                              unit_registry=self.unit_registry)
                 self.box_size = (self.domain_right_edge -
                                  self.domain_left_edge)[0]
 
@@ -443,9 +441,9 @@ class TreeFarmArbor(Arbor):
                 i_anc = np.where(link[1] == anc_ids)[0][0]
                 des_nodes[i_des].add_ancestor(anc_nodes[i_anc])
                 self._field_data["desc_id"][-1][i_anc] = \
-                  self._field_data["uid"][-2][i_des]
+                self._field_data["uid"][-2][i_des]
                 self._field_data["tree_id"][-1][i_anc] = \
-                  self._field_data["tree_id"][-2][i_des]
+                self._field_data["tree_id"][-2][i_des]
             pbar.update(i)
         pbar.finish()
 

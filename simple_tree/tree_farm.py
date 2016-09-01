@@ -22,8 +22,7 @@ from yt.funcs import \
     ensure_dir, \
     get_output_filename
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
-    _get_comm, \
-    parallel_root_only
+    _get_comm
 
 from .ancestry_checker import \
     ancestry_checker_registry

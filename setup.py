@@ -23,5 +23,5 @@ setup(name="simple_tree",
           "Programming Language :: Python :: 2",
           "Programming Language :: Python :: 2.7",
           ],
-          install_requires=['yt', 'h5py', 'numpy'],
+      install_requires=['yt', 'h5py', 'numpy'],
       )
