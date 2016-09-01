@@ -1,5 +1,8 @@
 syntax: glob
 simple_tree.egg-info/*
+flake8.out
+tests/flake8.out
+.cache
 build
 dist
 *.pyc
