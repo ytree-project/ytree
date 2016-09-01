@@ -281,6 +281,7 @@ class RockstarArbor(Arbor):
 
         offset = 0
         anc_ids = None
+        anc_nodes = None
         my_trees = []
         pbar = yt.get_pbar("Load halo catalogs", len(my_files))
         for i, fn in enumerate(my_files):
@@ -364,6 +365,8 @@ class TreeFarmArbor(Arbor):
                                 "tree_id", "redshift"]])
 
         offset = 0
+        anc_ids = None
+        anc_nodes = None
         my_trees = None
         pbar = yt.get_pbar("Load segment files", len(my_files))
         for i, fn in enumerate(my_files):
