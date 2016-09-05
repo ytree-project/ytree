@@ -49,6 +49,7 @@ class TreeFarm(object):
 
         self.ancestry_filter = None
         self.ancestry_short = None
+        self.comm = _get_comm(())
 
     def set_selector(self, selector, *args, **kwargs):
         self.selector = selector_registry.find(selector, *args, **kwargs)
@@ -76,9 +77,10 @@ class TreeFarm(object):
             candidate = ds2.halo(hc.ptype, candidate_id)
             candidate_member_ids = candidate["member_ids"].d.astype(np.int64)
             if self.ancestry_checker(halo_member_ids, candidate_member_ids):
+                candidate.descendent_identifier = hc.particle_identifier
                 ancestors.append(candidate)
                 if self.ancestry_short is not None and \
-                        self.ancestry_short(hc, candidate):
+                  self.ancestry_short(hc, candidate):
                     break
 
         id_store.extend([ancestor.particle_identifier
@@ -120,11 +122,10 @@ class TreeFarm(object):
             data["ancestor_%s" % field] = ancestor_data[field]
         del descendent_data, ancestor_data
 
-        comm = _get_comm(())
-        if comm.comm is not None:
+        if self.comm.comm is not None:
             for field in data:
                 if yt.is_root(): yt.mylog.info("Communicating field array: %s.", field)
-                data[field] = mpi_gather_list(comm.comm, data[field])
+                data[field] = mpi_gather_list(self.comm.comm, data[field])
 
         if yt.is_root():
             for field in data:
@@ -155,11 +156,10 @@ class TreeFarm(object):
     def trace_ancestors(self, halo_type, root_ids,
                         halo_properties=None, filename=None):
 
-        filename = get_output_filename(filename, "tree", ".h5")
         output_dir = os.path.dirname(filename)
-        if yt.is_root() and len(output_dir) > 0: ensure_dir(output_dir)
+        if yt.is_root() and len(output_dir) > 0:
+            ensure_dir(output_dir)
 
-        comm = _get_comm(())
         all_outputs = self.ts.outputs[::-1]
         ds1 = None
 
@@ -179,34 +179,65 @@ class TreeFarm(object):
                 target_ids = self._load_ancestor_ids(last_segment_file)
 
             id_store = []
-            all_links = []
             target_halos = []
             ancestor_halos = []
 
-            njobs = min(comm.size, len(target_ids))
+            njobs = min(self.comm.size, len(target_ids))
             pbar = yt.get_pbar("Linking halos", len(target_ids), parallel=True)
             my_i = 0
             for halo_id in yt.parallel_objects(target_ids, njobs=njobs):
                 my_halo = ds1.halo(halo_type, halo_id)
 
                 target_halos.append(my_halo)
-                my_ancestors = self.find_ancestors(my_halo, ds2, id_store=id_store)
-                all_links.extend([[my_halo.particle_identifier,
-                                   my_ancestor.particle_identifier]
-                                  for my_ancestor in my_ancestors])
+                my_ancestors = self.find_ancestors(my_halo, ds2,
+                                                   id_store=id_store)
                 ancestor_halos.extend(my_ancestors)
                 my_i += njobs
                 pbar.update(my_i)
             pbar.finish()
 
-            self.save_segment(segment_file, ds1, ds2, target_halos, ancestor_halos,
-                              all_links, halo_properties)
+            if i == 0:
+                for halo in target_halos:
+                    halo.descendent_identifier = -1
+                self.save_catalog(filename, ds1, target_halos,
+                                  halo_properties)
+            self.save_catalog(filename, ds2, ancestor_halos,
+                              halo_properties)
 
             if len(ancestor_halos) == 0:
                 break
 
             ds1 = ds2
             clear_id_cache()
+
+    def save_catalog(self, filename, ds, halos, halo_properties=None):
+        if self.comm is None:
+            rank = 0
+        else:
+            rank = self.comm.rank
+        filename = get_output_filename(
+            filename, "%s.%d" % (str(ds), rank), ".h5")
+
+        if halo_properties is None:
+            my_hp = []
+        else:
+            my_hp = halo_properties[:]
+        fields = ["particle_identifier",
+                  "descendent_identifier",
+                  "particle_mass"] + \
+                 ["particle_position_%s" % ax for ax in "xyz"] + \
+                 ["particle_velocity_%s" % ax for ax in "xyz"]
+        for field in fields:
+            if field not in my_hp:
+                my_hp.append(field)
+
+        data = self.create_halo_data_lists(halos, my_hp)
+        ftypes = dict([(field, ".") for field in data])
+        extra_attrs = {"num_halos": len(halos),
+                       "data_type": "halo_catalog"}
+        yt.save_as_dataset(ds, filename, data, field_types=ftypes,
+                           extra_attrs=extra_attrs)
+        import pdb ; pdb.set_trace()
 
     def trace_descendents(self, halo_type,
                           halo_properties=None, filename=None):
@@ -215,7 +246,6 @@ class TreeFarm(object):
         output_dir = os.path.dirname(filename)
         if yt.is_root() and len(output_dir) > 0: ensure_dir(output_dir)
 
-        comm = _get_comm(())
         all_outputs = self.ts.outputs[:]
         ds2 = None
 
@@ -238,7 +268,7 @@ class TreeFarm(object):
                 target_ids = ad[halo_type, "particle_identifier"].d.astype(np.int64)
                 del ad
 
-                njobs = min(comm.size, len(target_ids))
+                njobs = min(self.comm.size, len(target_ids))
                 pbar = yt.get_pbar("Linking halos", len(target_ids), parallel=True)
                 my_i = 0
                 for halo_id in yt.parallel_objects(target_ids, njobs=njobs):
@@ -260,30 +290,32 @@ class TreeFarm(object):
             ds2 = ds1
             clear_id_cache()
 
-def create_halo_data_lists(halos, halo_properties):
-    comm = _get_comm(())
-    pbar = yt.get_pbar("Gathering field data from halos",
-                       comm.size*len(halos), parallel=True)
-    data = dict([(hp, []) for hp in halo_properties])
-    my_i = 0
-    for halo in halos:
+    def create_halo_data_lists(self, halos, halo_properties):
+        pbar = yt.get_pbar("Gathering field data from halos",
+                           self.comm.size*len(halos), parallel=True)
+        data = dict([(hp, []) for hp in halo_properties])
+        my_i = 0
+        for halo in halos:
+            for hp in halo_properties:
+                data[hp].append(get_halo_property(halo, hp))
+            my_i += self.comm.size
+            pbar.update(my_i)
+        pbar.finish()
+        if len(halos) == 0:
+            return data
         for hp in halo_properties:
-            data[hp].append(get_halo_property(halo, hp))
-        my_i += comm.size
-        pbar.update(my_i)
-    pbar.finish()
-    if len(halos) == 0:
+            if hasattr(data[hp][0], "units"):
+                data[hp] = yt.YTArray(data[hp])
+            else:
+                data[hp] = np.array(data[hp])
+            shape = data[hp].shape
+            if len(shape) > 1 and shape[-1] == 1:
+                data[hp] = np.reshape(data[hp], shape[:-1])
         return data
-    for hp in halo_properties:
-        if hasattr(data[hp][0], "units"):
-            data[hp] = yt.YTArray(data[hp])
-        else:
-            data[hp] = np.array(data[hp])
-    return data
 
 def get_halo_property(halo, halo_property):
     val = getattr(halo, halo_property, None)
     if val is None: val = halo[halo_property]
-    if hasattr(val, "units"):
-        return val.in_cgs()
+    if isinstance(val, yt.YTArray):
+        return val.in_base()
     return val
