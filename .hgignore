@@ -1,5 +1,5 @@
 syntax: glob
-simple_tree.egg-info/*
+ytree.egg-info/*
 flake8.out
 tests/flake8.out
 .cache
