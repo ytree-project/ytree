@@ -103,56 +103,6 @@ class TreeFarm(object):
             self.setup_function(ds)
         return ds
 
-    def save_segment(self, filename, ds1, ds2, descendent_halos, ancestor_halos,
-                     halo_links, halo_properties=None):
-        if halo_properties is None:
-            my_hp = []
-        else:
-            my_hp = halo_properties[:]
-        if "particle_identifier" not in my_hp:
-            my_hp.append("particle_identifier")
-
-        descendent_data = _create_halo_data_lists(descendent_halos, my_hp)
-        ancestor_data = _create_halo_data_lists(ancestor_halos, my_hp)
-
-        data = {"links": halo_links}
-        for field in descendent_data:
-            data["descendent_%s" % field] = descendent_data[field]
-        for field in ancestor_data:
-            data["ancestor_%s" % field] = ancestor_data[field]
-        del descendent_data, ancestor_data
-
-        if self.comm.comm is not None:
-            for field in data:
-                if yt.is_root(): yt.mylog.info("Communicating field array: %s.", field)
-                data[field] = mpi_gather_list(self.comm.comm, data[field])
-
-        if yt.is_root():
-            for field in data:
-                if field in ["links", "descendent_particle_identifier",
-                             "ancestor_particle_identifier"]:
-                    data[field] = np.array(data[field], dtype=np.int64)
-                elif "descendent" in field:
-                    data[field] = ds1.arr(data[field])
-                elif "ancestor" in field:
-                    data[field] = ds2.arr(data[field])
-                else:
-                    raise RuntimeError("Bad field: %s." % field)
-
-            my_ds = dict([(attr, getattr(ds1, attr))
-                          for attr in ["dimensionality",
-                                       "domain_left_edge", "domain_right_edge",
-                                       "domain_dimensions", "periodicity",
-                                       "omega_lambda", "omega_matter",
-                                       "hubble_constant"]])
-            extra_attrs = \
-                dict([("descendent_%s" % attr, getattr(ds1, attr))
-                      for attr in ["current_time", "current_redshift"]])
-            extra_attrs.update(
-                dict([("ancestor_%s" % attr, getattr(ds2, attr))
-                      for attr in ["current_time", "current_redshift"]]))
-            return yt.save_as_dataset(my_ds, filename, data, extra_attrs=extra_attrs)
-
     def trace_ancestors(self, halo_type, root_ids,
                         halo_properties=None, filename=None):
 
