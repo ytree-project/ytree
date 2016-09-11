@@ -112,8 +112,8 @@ class TreeFarm(object):
         if "particle_identifier" not in my_hp:
             my_hp.append("particle_identifier")
 
-        descendent_data = create_halo_data_lists(descendent_halos, my_hp)
-        ancestor_data = create_halo_data_lists(ancestor_halos, my_hp)
+        descendent_data = _create_halo_data_lists(descendent_halos, my_hp)
+        ancestor_data = _create_halo_data_lists(ancestor_halos, my_hp)
 
         data = {"links": halo_links}
         for field in descendent_data:
@@ -163,27 +163,40 @@ class TreeFarm(object):
         all_outputs = self.ts.outputs[::-1]
         ds1 = None
 
-        for i, fn in enumerate(all_outputs[1:]):
-            segment_file = os.path.join(output_dir, "tree_segment_%04d.h5" % i)
-            if os.path.exists(segment_file): continue
+        for i, fn2 in enumerate(all_outputs[1:]):
+            fn1 = all_outputs[i]
+            target_filename = get_output_filename(
+                filename, "%s.%d" % (os.path.basename(fn1), 0), ".h5")
+            catalog_filename = get_output_filename(
+                filename, "%s.%d" % (os.path.basename(fn2), 0), ".h5")
+            if os.path.exists(catalog_filename):
+                continue
 
             if ds1 is None:
-                ds1 = self._load_ds(all_outputs[i])
-            ds2 = self._load_ds(fn)
+                ds1 = self._load_ds(fn1)
+            ds2 = self._load_ds(fn2)
+            if ds2.particle_type_counts.get(halo_type, 0) == 0:
+                yt.mylog.info("%s has no halos of type %s, ending." %
+                              (ds2, halo_type))
+                break
 
             if i == 0:
                 target_ids = root_ids
             else:
-                last_segment_file = os.path.join(output_dir,
-                                                 "tree_segment_%04d.h5" % (i-1))
-                target_ids = self._load_ancestor_ids(last_segment_file)
+                yt.mylog.info("Loading target ids from %s.",
+                              target_filename)
+                ds_target = yt.load(target_filename)
+                target_ids = \
+                  ds_target.r["halos", "particle_identifier"].d.astype(np.int64)
+                del ds_target
 
             id_store = []
             target_halos = []
             ancestor_halos = []
 
             njobs = min(self.comm.size, len(target_ids))
-            pbar = yt.get_pbar("Linking halos", len(target_ids), parallel=True)
+            pbar = yt.get_pbar("Linking halos (%s - %s)" % (ds1, ds2),
+                               len(target_ids), parallel=True)
             my_i = 0
             for halo_id in yt.parallel_objects(target_ids, njobs=njobs):
                 my_halo = ds1.halo(halo_type, halo_id)
@@ -216,12 +229,13 @@ class TreeFarm(object):
         else:
             rank = self.comm.rank
         filename = get_output_filename(
-            filename, "%s.%d" % (str(ds), rank), ".h5")
+            filename, "%s.%d" % (str(ds.basename), rank), ".h5")
 
         if halo_properties is None:
             my_hp = []
         else:
             my_hp = halo_properties[:]
+
         fields = ["particle_identifier",
                   "descendent_identifier",
                   "particle_mass"] + \
@@ -231,13 +245,12 @@ class TreeFarm(object):
             if field not in my_hp:
                 my_hp.append(field)
 
-        data = self.create_halo_data_lists(halos, my_hp)
+        data = self._create_halo_data_lists(halos, my_hp)
         ftypes = dict([(field, ".") for field in data])
         extra_attrs = {"num_halos": len(halos),
                        "data_type": "halo_catalog"}
         yt.save_as_dataset(ds, filename, data, field_types=ftypes,
                            extra_attrs=extra_attrs)
-        import pdb ; pdb.set_trace()
 
     def trace_descendents(self, halo_type,
                           halo_properties=None, filename=None):
@@ -290,7 +303,7 @@ class TreeFarm(object):
             ds2 = ds1
             clear_id_cache()
 
-    def create_halo_data_lists(self, halos, halo_properties):
+    def _create_halo_data_lists(self, halos, halo_properties):
         pbar = yt.get_pbar("Gathering field data from halos",
                            self.comm.size*len(halos), parallel=True)
         data = dict([(hp, []) for hp in halo_properties])
@@ -301,10 +314,8 @@ class TreeFarm(object):
             my_i += self.comm.size
             pbar.update(my_i)
         pbar.finish()
-        if len(halos) == 0:
-            return data
         for hp in halo_properties:
-            if hasattr(data[hp][0], "units"):
+            if data[hp] and hasattr(data[hp][0], "units"):
                 data[hp] = yt.YTArray(data[hp])
             else:
                 data[hp] = np.array(data[hp])
