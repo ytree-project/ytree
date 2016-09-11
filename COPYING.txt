@@ -1,8 +1,8 @@
-===============================
- simple_tree licensing terms
-===============================
+=======================
+ ytree licensing terms
+=======================
 
-simple_tree is licensed under the terms of the Modified BSD License
+ytree is licensed under the terms of the Modified BSD License
 (also known as New or Revised BSD), as follows:
 
 Copyright (c) 2015-, Britton Smith

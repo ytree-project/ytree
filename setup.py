@@ -1,14 +1,14 @@
 from setuptools import setup
 
-setup(name="simple_tree",
+setup(name="ytree",
       version="1.0.0.dev1",
       description="Merger-tree for FoF, Rockstar, and consistent-trees based on yt.",
       author="Britton Smith",
       author_email="brittonsmith@gmail.com",
       license="BSD",
       keywords=["simulation", "merger-tree", "astronomy", "astrophysics"],
-      url="http://bitbucket.org/brittonsmith/simple_tree",
-      packages=["simple_tree"],
+      url="http://bitbucket.org/brittonsmith/ytree",
+      packages=["ytree"],
       include_package_data=True,
       classifiers=[
           "Development Status :: 2 - Pre-Alpha",
