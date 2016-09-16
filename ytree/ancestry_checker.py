@@ -46,7 +46,8 @@ class AncestryChecker(object):
         if self.kwargs is None: self.kwargs = {}
 
     def __call__(self, descendent_ids, ancestor_ids):
-        return self.function(descendent_ids, ancestor_ids, *self.args, **self.kwargs)
+        return self.function(descendent_ids, ancestor_ids,
+                             *self.args, **self.kwargs)
 
 def common_ids(descendent_ids, ancestor_ids, threshold=0.5):
     r"""
