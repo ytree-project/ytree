@@ -135,7 +135,8 @@ class TreeFarm(object):
                               target_filename)
                 ds_target = yt.load(target_filename)
                 target_ids = \
-                  ds_target.r["halos", "particle_identifier"].d.astype(np.int64)
+                  ds_target.r["halos",
+                              "particle_identifier"].d.astype(np.int64)
                 del ds_target
 
             id_store = []
