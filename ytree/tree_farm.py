@@ -248,8 +248,8 @@ class TreeFarm(object):
               ds1.r[halo_type, "particle_identifier"].d.astype(np.int64)
 
             njobs = min(self.comm.size, len(target_ids))
-            pbar = yt.get_pbar("Linking halos", target_ids.size,
-                               parallel=True)
+            pbar = yt.get_pbar("Linking halos (%s - %s)" % (ds1, ds2),
+                               target_ids.size, parallel=True)
             my_i = 0
             for halo_id in yt.parallel_objects(target_ids, njobs=njobs):
                 my_halo = ds1.halo(halo_type, halo_id)
