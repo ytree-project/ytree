@@ -290,13 +290,13 @@ class TreeFarm(object):
         my_i = 0
         for halo in halos:
             for hp in halo_properties:
-                data[hp].append(get_halo_property(halo, hp))
+                data[hp].append(_get_halo_property(halo, hp))
             my_i += self.comm.size
             pbar.update(my_i)
         pbar.finish()
         for hp in halo_properties:
             if data[hp] and hasattr(data[hp][0], "units"):
-                data[hp] = yt.YTArray(data[hp])
+                data[hp] = yt.YTArray(data[hp]).in_base()
             else:
                 data[hp] = np.array(data[hp])
             shape = data[hp].shape
@@ -304,9 +304,7 @@ class TreeFarm(object):
                 data[hp] = np.reshape(data[hp], shape[:-1])
         return data
 
-def get_halo_property(halo, halo_property):
+def _get_halo_property(halo, halo_property):
     val = getattr(halo, halo_property, None)
     if val is None: val = halo[halo_property]
-    if isinstance(val, yt.YTArray):
-        return val.in_base()
     return val
