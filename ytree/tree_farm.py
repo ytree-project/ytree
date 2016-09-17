@@ -64,6 +64,12 @@ class TreeFarm(object):
         self.ancestry_short = \
           ancestry_short_registry.find(ancestry_short, *args, **kwargs)
 
+    def _load_ds(self, filename):
+        ds = yt.load(filename)
+        if self.setup_function is not None:
+            self.setup_function(ds)
+        return ds
+
     def find_ancestors(self, hc, ds2, id_store=None):
         if id_store is None: id_store = []
         halo_member_ids = hc["member_ids"].d.astype(np.int64)
@@ -100,18 +106,6 @@ class TreeFarm(object):
             if self.ancestry_checker(candidate_member_ids, halo_member_ids):
                 hc.descendent_identifier = candidate.particle_identifier
                 break
-
-    def _load_ancestor_ids(self, filename):
-        fh = h5py.File(filename, "r")
-        halo_ids = fh["/data/ancestor_particle_identifier"].value
-        fh.close()
-        return halo_ids
-
-    def _load_ds(self, filename):
-        ds = yt.load(filename)
-        if self.setup_function is not None:
-            self.setup_function(ds)
-        return ds
 
     def trace_ancestors(self, halo_type, root_ids,
                         halo_properties=None, filename=None):
