@@ -173,10 +173,10 @@ class TreeFarm(object):
             if i == 0:
                 for halo in target_halos:
                     halo.descendent_identifier = -1
-                self.save_catalog(filename, ds1, target_halos,
-                                  halo_properties)
-            self.save_catalog(filename, ds2, ancestor_halos,
-                              halo_properties)
+                self._save_catalog(filename, ds1, target_halos,
+                                   halo_properties)
+            self._save_catalog(filename, ds2, ancestor_halos,
+                               halo_properties)
 
             if len(ancestor_halos) == 0:
                 break
@@ -184,7 +184,69 @@ class TreeFarm(object):
             ds1 = ds2
             clear_id_cache()
 
-    def save_catalog(self, filename, ds, halos, halo_properties=None):
+    def trace_descendents(self, halo_type,
+                          halo_properties=None, filename=None):
+
+        output_dir = os.path.dirname(filename)
+        if yt.is_root() and len(output_dir) > 0:
+            ensure_dir(output_dir)
+
+        all_outputs = self.ts.outputs[:]
+        ds1 = ds2 = None
+
+        for i, fn2 in enumerate(all_outputs[1:]):
+            fn1 = all_outputs[i]
+            target_filename = get_output_filename(
+                filename, "%s.%d" % (os.path.basename(fn1), 0), ".h5")
+            catalog_filename = get_output_filename(
+                filename, "%s.%d" % (os.path.basename(fn2), 0), ".h5")
+            if os.path.exists(target_filename):
+                continue
+
+            if ds1 is None:
+                ds1 = self._load_ds(fn1)
+            ds2 = self._load_ds(fn2)
+
+            target_halos = []
+
+            if ds1.index.particle_count[halo_type] == 0:
+                yt.mylog.info("%s has no halos of type %s." %
+                              (ds1, halo_type))
+                self._save_catalog(filename, ds1, target_halos,
+                                   halo_properties)
+                ds1 = ds2
+                continue
+
+            target_ids = \
+              ds1.r[halo_type, "particle_identifier"].d.astype(np.int64)
+
+            njobs = min(self.comm.size, len(target_ids))
+            pbar = yt.get_pbar("Linking halos (%s - %s)" % (ds1, ds2),
+                               target_ids.size, parallel=True)
+            my_i = 0
+            for halo_id in yt.parallel_objects(target_ids, njobs=njobs):
+                my_halo = ds1.halo(halo_type, halo_id)
+
+                target_halos.append(my_halo)
+                self.find_descendent(my_halo, ds2)
+                my_i += njobs
+                pbar.update(my_i)
+            pbar.finish()
+
+            self._save_catalog(filename, ds1, target_halos,
+                               halo_properties)
+            ds1 = ds2
+            clear_id_cache()
+
+        if os.path.exists(catalog_filename):
+            return
+
+        if ds2 is None:
+            ds2 = self._load_ds(fn2)
+        self._save_catalog(filename, ds2, halo_type,
+                           halo_properties)
+
+    def _save_catalog(self, filename, ds, halos, halo_properties=None):
         if self.comm is None:
             rank = 0
         else:
@@ -220,68 +282,6 @@ class TreeFarm(object):
                        "data_type": "halo_catalog"}
         yt.save_as_dataset(ds, filename, data, field_types=ftypes,
                            extra_attrs=extra_attrs)
-
-    def trace_descendents(self, halo_type,
-                          halo_properties=None, filename=None):
-
-        output_dir = os.path.dirname(filename)
-        if yt.is_root() and len(output_dir) > 0:
-            ensure_dir(output_dir)
-
-        all_outputs = self.ts.outputs[:]
-        ds1 = ds2 = None
-
-        for i, fn2 in enumerate(all_outputs[1:]):
-            fn1 = all_outputs[i]
-            target_filename = get_output_filename(
-                filename, "%s.%d" % (os.path.basename(fn1), 0), ".h5")
-            catalog_filename = get_output_filename(
-                filename, "%s.%d" % (os.path.basename(fn2), 0), ".h5")
-            if os.path.exists(target_filename):
-                continue
-
-            if ds1 is None:
-                ds1 = self._load_ds(fn1)
-            ds2 = self._load_ds(fn2)
-
-            target_halos = []
-
-            if ds1.index.particle_count[halo_type] == 0:
-                yt.mylog.info("%s has no halos of type %s." %
-                              (ds1, halo_type))
-                self.save_catalog(filename, ds1, target_halos,
-                                  halo_properties)
-                ds1 = ds2
-                continue
-
-            target_ids = \
-              ds1.r[halo_type, "particle_identifier"].d.astype(np.int64)
-
-            njobs = min(self.comm.size, len(target_ids))
-            pbar = yt.get_pbar("Linking halos (%s - %s)" % (ds1, ds2),
-                               target_ids.size, parallel=True)
-            my_i = 0
-            for halo_id in yt.parallel_objects(target_ids, njobs=njobs):
-                my_halo = ds1.halo(halo_type, halo_id)
-
-                target_halos.append(my_halo)
-                self.find_descendent(my_halo, ds2)
-                my_i += njobs
-                pbar.update(my_i)
-            pbar.finish()
-
-            self.save_catalog(filename, ds1, target_halos,
-                              halo_properties)
-            ds1 = ds2
-            clear_id_cache()
-
-        if os.path.exists(catalog_filename):
-            return
-
-        if ds2 is None:
-            ds2 = self._load_ds(fn2)
-        self.save_catalog(filename, ds2, halo_type,
-                          halo_properties)
 
     def _create_halo_data_lists(self, halos, halo_properties):
         pbar = yt.get_pbar("Gathering field data from halos",
