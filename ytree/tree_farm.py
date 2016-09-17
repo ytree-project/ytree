@@ -206,9 +206,17 @@ class TreeFarm(object):
             if field not in my_hp:
                 my_hp.append(field)
 
-        data = self._create_halo_data_lists(halos, my_hp)
+        if isinstance(halos, list):
+            num_halos = len(halos)
+            data = self._create_halo_data_lists(halos, my_hp)
+        else:
+            num_halos = ds.index.particle_count[halos]
+            data = dict((field, ds.r[halos, field].in_base())
+                        for field in fields
+                        if field != "descendent_identifier")
+            data["descendent_identifier"] = -1 * np.ones(num_halos)
         ftypes = dict([(field, ".") for field in data])
-        extra_attrs = {"num_halos": len(halos),
+        extra_attrs = {"num_halos": num_halos,
                        "data_type": "halo_catalog"}
         yt.save_as_dataset(ds, filename, data, field_types=ftypes,
                            extra_attrs=extra_attrs)
@@ -221,13 +229,15 @@ class TreeFarm(object):
             ensure_dir(output_dir)
 
         all_outputs = self.ts.outputs[:]
-        ds1 = None
+        ds1 = ds2 = None
 
         for i, fn2 in enumerate(all_outputs[1:]):
             fn1 = all_outputs[i]
+            target_filename = get_output_filename(
+                filename, "%s.%d" % (os.path.basename(fn1), 0), ".h5")
             catalog_filename = get_output_filename(
                 filename, "%s.%d" % (os.path.basename(fn2), 0), ".h5")
-            if os.path.exists(catalog_filename):
+            if os.path.exists(target_filename):
                 continue
 
             if ds1 is None:
@@ -265,9 +275,12 @@ class TreeFarm(object):
             ds1 = ds2
             clear_id_cache()
 
-        target_ids = \
-          ds1.r[halo_type, "particle_identifier"].d.astype(np.int64)
-        self.save_catalog(filename, ds1, target_halos,
+        if os.path.exists(catalog_filename):
+            return
+
+        if ds2 is None:
+            ds2 = self._load_ds(fn2)
+        self.save_catalog(filename, ds2, halo_type,
                           halo_properties)
 
     def _create_halo_data_lists(self, halos, halo_properties):
