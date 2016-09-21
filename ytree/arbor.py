@@ -17,6 +17,7 @@ import functools
 import h5py
 import glob
 import numpy as np
+import warnings
 import yt
 
 from yt.extern.six import \
@@ -285,7 +286,11 @@ class RockstarArbor(Arbor):
         my_trees = []
         pbar = yt.get_pbar("Load halo catalogs", len(my_files))
         for i, fn in enumerate(my_files):
-            data = np.loadtxt(fn, unpack=True, usecols=_rs_usecol)
+            with warnings.catch_warnings():
+                # silence empty file warnings
+                warnings.simplefilter("ignore", category=UserWarning,
+                                      append=1, lineno=893)
+                data = np.loadtxt(fn, unpack=True, usecols=_rs_usecol)
             z = self._read_parameters(fn)
             if data.size == 0:
                 pbar.update(i)
