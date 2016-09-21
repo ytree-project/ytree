@@ -15,6 +15,8 @@ utilities
 
 import numpy as np
 import os
+import shutil
+import tempfile
 from yt.units.yt_array import \
     YTArray, \
     YTQuantity
@@ -52,3 +54,19 @@ def not_on_drone(func, *args, **kwargs):
             return
         return func(*args, **kwargs)
     return myfunc
+
+def in_tmpdir(func, *args, **kwargs):
+    """
+    Make a temp dir, cd into it, run operation,
+    return to original location, remove temp dir.
+    """
+
+    def do_in_tmpdir(*args, **kwargs):
+        tmpdir = tempfile.mkdtemp()
+        curdir = os.getcwd()
+        os.chdir(tmpdir)
+        func(*args, **kwargs)
+        os.chdir(curdir)
+        shutil.rmtree(tmpdir)
+
+    return do_in_tmpdir
