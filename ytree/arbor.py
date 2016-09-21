@@ -351,6 +351,10 @@ class RockstarArbor(Arbor):
         self._field_data["tree_id"] = -np.ones(offset)
         for t in self.trees:
             self._field_data["tree_id"][t._tree_field_indices] = t["uid"]
+            for tnode in t.twalk():
+                if tnode.ancestors is None: continue
+                for a in tnode.ancestors:
+                    self._field_data["desc_id"][a.global_id] = tnode["uid"]
         assert (self._field_data["tree_id"] != -1).any()
 
         yt.mylog.info("Arbor contains %d trees with %d total nodes." %
