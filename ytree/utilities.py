@@ -14,6 +14,7 @@ utilities
 #-----------------------------------------------------------------------------
 
 import numpy as np
+import os
 from yt.units.yt_array import \
     YTArray, \
     YTQuantity
@@ -39,3 +40,15 @@ def _hdf5_yt_array_lite(fh, field):
         units = fh[field].attrs["units"]
     if units == "dimensionless": units = ""
     return (fh[field].value, units)
+
+def not_on_drone(func, *args, **kwargs):
+    """
+    Do not run the function if environment variable DRONE=1.
+    """
+
+    env = dict(os.environ)
+    def myfunc():
+        if int(env.get("DRONE", 0)) == 1:
+            return
+        return func(*args, **kwargs)
+    return myfunc
