@@ -278,7 +278,7 @@ class RockstarArbor(Arbor):
 
         ex_fields = ["redshift", "uid"]
         self._field_data = \
-        dict([(f, []) for f in _rs_fields.keys() + ex_fields])
+          dict([(f, []) for f in _rs_fields.keys() + ex_fields])
 
         offset = 0
         anc_ids = None
@@ -299,10 +299,8 @@ class RockstarArbor(Arbor):
             if len(data.shape) == 1:
                 data = np.reshape(data, (data.size, 1))
             n_halos = data.shape[1]
-            self._field_data["redshift"].append(
-                z * np.ones(n_halos))
-            self._field_data["uid"].append(
-                np.arange(offset, offset+n_halos))
+            self._field_data["redshift"].append(z * np.ones(n_halos))
+            self._field_data["uid"].append(np.arange(offset, offset+n_halos))
             for field, cols in _rs_fields.items():
                 if cols.size == 1:
                     self._field_data[field].append(data[cols][0])
@@ -349,6 +347,11 @@ class RockstarArbor(Arbor):
                 self._field_data[field] = self.arr(my_data, _rs_units[field])
             else:
                 self._field_data[field] = np.array(my_data)
+
+        self._field_data["tree_id"] = -np.ones(offset)
+        for t in self.trees:
+            self._field_data["tree_id"][t._tree_field_indices] = t["uid"]
+        assert (self._field_data["tree_id"] != -1).any()
 
         yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), offset))
