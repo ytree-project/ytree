@@ -272,9 +272,11 @@ class RockstarArbor(Arbor):
     def _load_trees(self):
         prefix = self.filename.rsplit("_", 1)[0]
         suffix = ".list"
-        file_count = len(glob.glob("%s_*%s" % (prefix, suffix)))
-        my_files = ["%s_%d%s" % (prefix, i, suffix)
-                    for i in range(file_count)[::-1]]
+        my_files = glob.glob("%s_*%s" % (prefix, suffix))
+        # sort by catalog number
+        my_files.sort(key=lambda x:
+                      int(x[x.find(prefix)+len(prefix)+1:x.rfind(suffix)]),
+                      reverse=True)
 
         ex_fields = ["redshift", "uid"]
         self._field_data = \
