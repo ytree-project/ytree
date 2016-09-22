@@ -482,6 +482,18 @@ class TreeFarmArbor(CatalogArbor):
             np.arange(offset, offset+n_halos))
         return n_halos
 
+    @classmethod
+    def _is_valid(self, *args, **kwargs):
+        fn = args[0]
+        if not fn.endswith(".h5"): return False
+        try:
+            with h5py.File(fn, "r") as f:
+                if f.attrs.get("data_type") != "halo_catalog":
+                    return False
+        except:
+            return False
+        return True
+
 def load(filename, method=None):
     if method is None:
         candidates = []
