@@ -1,3 +1,4 @@
+import numpy as np
 import os
 from yt.testing import \
     requires_file
@@ -28,3 +29,10 @@ def test_ct_arbor():
 
     assert (m1 == m2).all()
     compare_arbors(a1, a2)
+
+    i1 = np.argsort(m1.d)[::-1][0]
+    fn = a1.trees[i1].save_tree()
+    a3 = load(fn)
+    assert isinstance(a3, ArborArbor)
+    for field in a1._field_data:
+        assert (a1.trees[i1].tree(field) == a3.trees[0].tree(field)).all()
