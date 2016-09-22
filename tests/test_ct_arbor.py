@@ -19,7 +19,6 @@ CT = os.path.join(get_test_data_dir(),
 def test_ct_arbor():
     a1 = load(CT)
     assert isinstance(a1, ConsistentTreesArbor)
-
     m1 = a1.arr([t["mvir"] for t in a1.trees])
 
     fn = a1.save_arbor("arbor_ct.h5")

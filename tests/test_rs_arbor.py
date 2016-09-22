@@ -35,4 +35,3 @@ def test_rs_arbor():
     assert isinstance(a3, ArborArbor)
     for field in a1._field_data:
         assert (a1.trees[i1].tree(field) == a3.trees[0].tree(field)).all()
-
