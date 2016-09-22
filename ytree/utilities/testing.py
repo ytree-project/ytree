@@ -17,6 +17,9 @@ import os
 import shutil
 import tempfile
 
+from ytree.config import \
+    ytreecfg
+
 def not_on_drone(func, *args, **kwargs):
     """
     Do not run the function if environment variable DRONE=1.
@@ -53,3 +56,16 @@ def compare_arbors(a1, a2):
     for t1, t2 in zip(a1.trees, a2.trees):
         for field in a1._field_data:
             assert (t1.tree(field) == t2.tree(field)).all()
+
+def get_test_data_dir():
+    """
+    Get the path to the test data from environment variable
+    or config file.
+    """
+
+    env = dict(os.environ)
+    if "YTREE_TEST_DATA_DIR" in env:
+        data_dir = env["YTREE_TEST_DATA_DIR"]
+    else:
+        data_dir = ytreecfg["ytree"].get("test_data_dir", ".")
+    return os.path.expanduser(data_dir)

@@ -3,20 +3,18 @@ from yt.testing import \
     requires_file
 from ytree import \
     load_arbor
-from ytree.config import \
-    ytreecfg
 from ytree.utilities.testing import \
     compare_arbors, \
+    get_test_data_dir, \
     in_tmpdir
 
-test_data_dir = ytreecfg["ytree"].get("test_data_dir", ".")
-CT = os.path.join(test_data_dir,
+CT = os.path.join(get_test_data_dir(),
                   "100Mpc_64/dm_enzo/rockstar_halos/trees/tree_0_0_0.dat")
 
 @in_tmpdir
 @requires_file(CT)
 def test_ct_arbor():
-    a1 = load_arbor(os.path.join(test_data_dir, CT), "ConsistentTrees")
+    a1 = load_arbor(CT, "ConsistentTrees")
     m1 = a1.arr([t["mvir"] for t in a1.trees])
 
     fn = a1.save_arbor("arbor_ct.h5")
