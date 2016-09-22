@@ -13,6 +13,8 @@ Arbor class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from collections import \
+    defaultdict
 import functools
 import h5py
 import glob
@@ -83,7 +85,7 @@ class Arbor(object):
         return self._quan
 
     def _set_default_selector(self):
-        for field in ["mass", "mvir"]:
+        for field in ["particle_mass", "mvir"]:
             if field in self._field_data:
                 self.set_selector("max_field_value", field)
 
@@ -268,11 +270,17 @@ class CatalogArbor(Arbor):
     def _load_field_data(self, *args):
         pass
 
+    def _to_field_array(self, field, data):
+        if len(data) == 0:
+            return np.array(data)
+        if isinstance(data[0], yt.YTArray):
+            self._field_data[field] = self.arr(data)
+        else:
+            self._field_data[field] = np.array(data)
+
     def _load_trees(self):
         my_files = self._get_all_files()
-        ex_fields = ["redshift", "uid"]
-        self._field_data = \
-          dict([(f, []) for f in _rs_fields.keys() + ex_fields])
+        self._field_data = defaultdict(list)
 
         offset = 0
         anc_ids = None
@@ -318,10 +326,7 @@ class CatalogArbor(Arbor):
             my_data = []
             for level in self._field_data[field]:
                 my_data.extend(level)
-            if field in _rs_units:
-                self._field_data[field] = self.arr(my_data, _rs_units[field])
-            else:
-                self._field_data[field] = np.array(my_data)
+            self._to_field_array(field, my_data)
 
         self._field_data["tree_id"] = -np.ones(offset)
         for t in self.trees:
@@ -364,6 +369,12 @@ class RockstarArbor(CatalogArbor):
                       int(x[x.find(prefix)+len(prefix)+1:x.rfind(suffix)]),
                       reverse=True)
         return my_files
+
+    def _to_field_array(self, field, data):
+        if field in _rs_units:
+            self._field_data[field] = self.arr(data, _rs_units[field])
+        else:
+            self._field_data[field] = np.array(data)
 
     def _read_parameters(self, filename):
         get_pars = not hasattr(self, "hubble_constant")
@@ -423,7 +434,53 @@ class RockstarArbor(CatalogArbor):
 
 class TreeFarmArbor(CatalogArbor):
     def _set_default_selector(self):
-        self.set_selector("max_field_value", "mass")
+        self.set_selector("max_field_value", "particle_mass")
+
+    def _get_all_files(self):
+        prefix = self.filename.rsplit("_", 1)[0]
+        suffix = ".h5"
+        my_files = glob.glob("%s_*%s" % (prefix, suffix))
+        # sort by catalog number
+        my_files.sort(key=lambda x:
+                      int(x[x.find(prefix)+len(prefix)+1:x.find(".0")]),
+                      reverse=True)
+        return my_files
+
+    def _load_field_data(self, fn, offset):
+        ds = yt.load(fn)
+
+        if not hasattr(self, "hubble_constant"):
+            for attr in ["hubble_constant",
+                         "omega_matter",
+                         "omega_lambda"]:
+                setattr(self, attr, getattr(ds, attr))
+            self.unit_registry.modify("h", self.hubble_constant)
+            self.box_size = ds.domain_width[0]
+        try:
+            if len(ds.field_list) == 0 or ds.index.total_particles == 0:
+                return 0
+        except ValueError:
+            return 0
+        skip_fields = ["particle_identifier", "descendent_identifier"]
+        add_fields = [("halos", field)
+                      for field in ["particle_position",
+                                    "particle_velocity"]]
+        for field in ds.field_list + add_fields:
+            if field[0] != "halos": continue
+            if "particle_position_" in field[1]: continue
+            if "particle_velocity_" in field[1]: continue
+            if field[1] in skip_fields: continue
+            self._field_data[field[1]].append(ds.r[field].in_base())
+        self._field_data["halo_id"].append(
+          ds.r["halos", "particle_identifier"].d.astype(np.int64))
+        self._field_data["desc_id"].append(
+          ds.r["halos", "descendent_identifier"].d.astype(np.int64))
+        n_halos = self._field_data["halo_id"][-1].size
+        self._field_data["redshift"].append(
+            ds.current_redshift * np.ones(n_halos))
+        self._field_data["uid"].append(
+            np.arange(offset, offset+n_halos))
+        return n_halos
 
 def load(filename, method=None):
     if method is None:
