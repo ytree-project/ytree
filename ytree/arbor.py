@@ -95,9 +95,6 @@ class Arbor(object):
             raise RuntimeError("No halo id field found.")
         self._hid_field = hfields[0]
 
-    def _load_field_data(self):
-        pass
-
     def _load_trees(self):
         pass
 
@@ -122,6 +119,9 @@ class Arbor(object):
         return filename
 
 class MonolithArbor(Arbor):
+    def _load_field_data(self):
+        pass
+
     def _load_trees(self):
         self._load_field_data()
         self._set_halo_id_field()
@@ -262,15 +262,14 @@ class ConsistentTreesArbor(MonolithArbor):
         return True
 
 class CatalogArbor(Arbor):
-    def _load_trees(self):
-        prefix = self.filename.rsplit("_", 1)[0]
-        suffix = ".list"
-        my_files = glob.glob("%s_*%s" % (prefix, suffix))
-        # sort by catalog number
-        my_files.sort(key=lambda x:
-                      int(x[x.find(prefix)+len(prefix)+1:x.rfind(suffix)]),
-                      reverse=True)
+    def _get_all_files(self):
+        pass
 
+    def _load_field_data(self, *args):
+        pass
+
+    def _load_trees(self):
+        my_files = self._get_all_files()
         ex_fields = ["redshift", "uid"]
         self._field_data = \
           dict([(f, []) for f in _rs_fields.keys() + ex_fields])
@@ -281,29 +280,10 @@ class CatalogArbor(Arbor):
         my_trees = []
         pbar = yt.get_pbar("Load halo catalogs", len(my_files))
         for i, fn in enumerate(my_files):
-            with warnings.catch_warnings():
-                # silence empty file warnings
-                warnings.simplefilter("ignore", category=UserWarning,
-                                      append=1, lineno=893)
-                data = np.loadtxt(fn, unpack=True, usecols=_rs_usecol)
-            z = self._read_parameters(fn)
-            if data.size == 0:
+            n_halos = self._load_field_data(fn, offset)
+            if n_halos == 0:
                 pbar.update(i)
                 continue
-
-            if len(data.shape) == 1:
-                data = np.reshape(data, (data.size, 1))
-            n_halos = data.shape[1]
-            self._field_data["redshift"].append(z * np.ones(n_halos))
-            self._field_data["uid"].append(np.arange(offset, offset+n_halos))
-            for field, cols in _rs_fields.items():
-                if cols.size == 1:
-                    self._field_data[field].append(data[cols][0])
-                else:
-                    self._field_data[field].append(np.rollaxis(data[cols], 1))
-                if field in _rs_type:
-                    self._field_data[field][-1] = \
-                      self._field_data[field][-1].astype(_rs_type[field])
 
             my_nodes = []
             for halo in range(n_halos):
@@ -375,6 +355,16 @@ for field, col in _rs_columns:
                                   len(_rs_usecol))
 
 class RockstarArbor(CatalogArbor):
+    def _get_all_files(self):
+        prefix = self.filename.rsplit("_", 1)[0]
+        suffix = ".list"
+        my_files = glob.glob("%s_*%s" % (prefix, suffix))
+        # sort by catalog number
+        my_files.sort(key=lambda x:
+                      int(x[x.find(prefix)+len(prefix)+1:x.rfind(suffix)]),
+                      reverse=True)
+        return my_files
+
     def _read_parameters(self, filename):
         get_pars = not hasattr(self, "hubble_constant")
         f = file(filename, "r")
@@ -399,6 +389,31 @@ class RockstarArbor(CatalogArbor):
             self.unit_registry.modify("h", self.hubble_constant)
             self.box_size = self.quan(float(box[0]), box[1])
         return 1. / a - 1.
+
+    def _load_field_data(self, fn, offset):
+        with warnings.catch_warnings():
+            # silence empty file warnings
+            warnings.simplefilter("ignore", category=UserWarning,
+                                  append=1, lineno=893)
+            data = np.loadtxt(fn, unpack=True, usecols=_rs_usecol)
+        z = self._read_parameters(fn)
+        if data.size == 0:
+            return 0
+
+        if len(data.shape) == 1:
+            data = np.reshape(data, (data.size, 1))
+        n_halos = data.shape[1]
+        self._field_data["redshift"].append(z * np.ones(n_halos))
+        self._field_data["uid"].append(np.arange(offset, offset+n_halos))
+        for field, cols in _rs_fields.items():
+            if cols.size == 1:
+                self._field_data[field].append(data[cols][0])
+            else:
+                self._field_data[field].append(np.rollaxis(data[cols], 1))
+            if field in _rs_type:
+                self._field_data[field][-1] = \
+                  self._field_data[field][-1].astype(_rs_type[field])
+        return n_halos
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
