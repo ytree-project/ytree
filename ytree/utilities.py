@@ -70,3 +70,12 @@ def in_tmpdir(func, *args, **kwargs):
         shutil.rmtree(tmpdir)
 
     return do_in_tmpdir
+
+def compare_arbors(a1, a2):
+    """
+    Compare all fields for all trees in two arbors.
+    """
+
+    for t1, t2 in zip(a1.trees, a2.trees):
+        for field in a1._field_data:
+            assert (t1.tree(field) == t2.tree(field)).all()
