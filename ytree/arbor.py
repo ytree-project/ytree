@@ -99,6 +99,30 @@ class Arbor(object):
         pass
 
     def _load_trees(self):
+        pass
+
+    @classmethod
+    def _is_valid(cls, *args, **kwargs):
+        return False
+
+    def save_arbor(self, filename=None, fields=None):
+        filename = get_output_filename(filename, "arbor", ".h5")
+        if fields is None:
+            fields = self._field_data.keys()
+        ds = {}
+        for attr in ["hubble_constant",
+                     "omega_matter",
+                     "omega_lambda"]:
+            if hasattr(self, attr):
+                ds[attr] = getattr(self, attr)
+        extra_attrs = {"box_size": self.box_size,
+                       "arbor_type": "ArborArbor"}
+        save_as_dataset(ds, filename, self._field_data,
+                        extra_attrs=extra_attrs)
+        return filename
+
+class MonolithArbor(Arbor):
+    def _load_trees(self):
         self._load_field_data()
         self._set_halo_id_field()
 
@@ -130,27 +154,7 @@ class Arbor(object):
         yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), self._field_data["uid"].size))
 
-    @classmethod
-    def _is_valid(cls, *args, **kwargs):
-        return False
-
-    def save_arbor(self, filename=None, fields=None):
-        filename = get_output_filename(filename, "arbor", ".h5")
-        if fields is None:
-            fields = self._field_data.keys()
-        ds = {}
-        for attr in ["hubble_constant",
-                     "omega_matter",
-                     "omega_lambda"]:
-            if hasattr(self, attr):
-                ds[attr] = getattr(self, attr)
-        extra_attrs = {"box_size": self.box_size,
-                       "arbor_type": "ArborArbor"}
-        save_as_dataset(ds, filename, self._field_data,
-                        extra_attrs=extra_attrs)
-        return filename
-
-class ArborArbor(Arbor):
+class ArborArbor(MonolithArbor):
     def _load_field_data(self):
         fh = h5py.File(self.filename, "r")
         for attr in ["hubble_constant",
@@ -197,7 +201,7 @@ for field, col in _ct_columns:
     _ct_fields[field] = np.arange(len(_ct_usecol)-len(col),
                                   len(_ct_usecol))
 
-class ConsistentTreesArbor(Arbor):
+class ConsistentTreesArbor(MonolithArbor):
     def _set_default_selector(self):
         self.set_selector("max_field_value", "mvir")
 
