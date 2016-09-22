@@ -144,7 +144,8 @@ class Arbor(object):
                      "omega_lambda"]:
             if hasattr(self, attr):
                 ds[attr] = getattr(self, attr)
-        extra_attrs = {"box_size": self.box_size}
+        extra_attrs = {"box_size": self.box_size,
+                       "arbor_type": "ArborArbor"}
         save_as_dataset(ds, filename, self._field_data,
                         extra_attrs=extra_attrs)
         return filename
@@ -162,6 +163,18 @@ class ArborArbor(Arbor):
         self._field_data = dict([(f, _hdf5_yt_array(fh["data"], f, self))
                                  for f in fh["data"]])
         fh.close()
+
+    @classmethod
+    def _is_valid(self, *args, **kwargs):
+        fn = args[0]
+        if not fn.endswith(".h5"): return False
+        try:
+            with h5py.File(fn, "r") as f:
+                if f.attrs.get("arbor_type") != "ArborArbor":
+                    return False
+        except:
+            return False
+        return True
 
 _ct_columns = (("a",        (0,)),
                ("uid",      (1,)),
