@@ -261,51 +261,7 @@ class ConsistentTreesArbor(MonolithArbor):
             if not valid: return False
         return True
 
-_rs_columns = (("halo_id",  (0,)),
-               ("desc_id",  (1,)),
-               ("mvir",     (2,)),
-               ("rvir",     (5,)),
-               ("position", (8, 9, 10)),
-               ("velocity", (11, 12, 13)))
-_rs_units = {"mvir": "Msun/h",
-             "rvir": "kpc/h",
-             "position": "Mpc/h",
-             "velocity": "km/s"}
-_rs_type = {"halo_id": np.int64,
-            "desc_id": np.int64}
-_rs_usecol = []
-_rs_fields = {}
-for field, col in _rs_columns:
-    _rs_usecol.extend(col)
-    _rs_fields[field] = np.arange(len(_rs_usecol)-len(col),
-                                  len(_rs_usecol))
-
-class RockstarArbor(Arbor):
-    def _read_parameters(self, filename):
-        get_pars = not hasattr(self, "hubble_constant")
-        f = file(filename, "r")
-        while True:
-            line = f.readline()
-            if line is None or not line.startswith("#"):
-                break
-            if get_pars and line.startswith("#Om = "):
-                pars = line[1:].split(";")
-                for j, par in enumerate(["omega_matter",
-                                         "omega_lambda",
-                                         "hubble_constant"]):
-                    v = float(pars[j].split(" = ")[1])
-                    setattr(self, par, v)
-            if get_pars and line.startswith("#Box size:"):
-                pars = line.split(":")[1].strip().split()
-                box = pars
-            if line.startswith("#a = "):
-                a = float(line.split("=")[1].strip())
-        f.close()
-        if get_pars:
-            self.unit_registry.modify("h", self.hubble_constant)
-            self.box_size = self.quan(float(box[0]), box[1])
-        return 1. / a - 1.
-
+class CatalogArbor(Arbor):
     def _load_trees(self):
         prefix = self.filename.rsplit("_", 1)[0]
         suffix = ".list"
@@ -399,13 +355,58 @@ class RockstarArbor(Arbor):
         yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), offset))
 
+_rs_columns = (("halo_id",  (0,)),
+               ("desc_id",  (1,)),
+               ("mvir",     (2,)),
+               ("rvir",     (5,)),
+               ("position", (8, 9, 10)),
+               ("velocity", (11, 12, 13)))
+_rs_units = {"mvir": "Msun/h",
+             "rvir": "kpc/h",
+             "position": "Mpc/h",
+             "velocity": "km/s"}
+_rs_type = {"halo_id": np.int64,
+            "desc_id": np.int64}
+_rs_usecol = []
+_rs_fields = {}
+for field, col in _rs_columns:
+    _rs_usecol.extend(col)
+    _rs_fields[field] = np.arange(len(_rs_usecol)-len(col),
+                                  len(_rs_usecol))
+
+class RockstarArbor(CatalogArbor):
+    def _read_parameters(self, filename):
+        get_pars = not hasattr(self, "hubble_constant")
+        f = file(filename, "r")
+        while True:
+            line = f.readline()
+            if line is None or not line.startswith("#"):
+                break
+            if get_pars and line.startswith("#Om = "):
+                pars = line[1:].split(";")
+                for j, par in enumerate(["omega_matter",
+                                         "omega_lambda",
+                                         "hubble_constant"]):
+                    v = float(pars[j].split(" = ")[1])
+                    setattr(self, par, v)
+            if get_pars and line.startswith("#Box size:"):
+                pars = line.split(":")[1].strip().split()
+                box = pars
+            if line.startswith("#a = "):
+                a = float(line.split("=")[1].strip())
+        f.close()
+        if get_pars:
+            self.unit_registry.modify("h", self.hubble_constant)
+            self.box_size = self.quan(float(box[0]), box[1])
+        return 1. / a - 1.
+
     @classmethod
     def _is_valid(self, *args, **kwargs):
         fn = args[0]
         if not fn.endswith(".list"): return False
         return True
 
-class TreeFarmArbor(Arbor):
+class TreeFarmArbor(CatalogArbor):
     def _set_default_selector(self):
         self.set_selector("max_field_value", "mass")
 
