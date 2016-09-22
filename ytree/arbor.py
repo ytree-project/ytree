@@ -130,6 +130,10 @@ class Arbor(object):
         yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), self._field_data["uid"].size))
 
+    @classmethod
+    def _is_valid(cls, *args, **kwargs):
+        return False
+
     def save_arbor(self, filename=None, fields=None):
         filename = get_output_filename(filename, "arbor", ".h5")
         if fields is None:
@@ -223,6 +227,22 @@ class ConsistentTreesArbor(Arbor):
                   self.arr(self._field_data[field], _ct_units[field])
         self._field_data["redshift"] = 1. / self._field_data["a"] - 1.
         del self._field_data["a"]
+
+    @classmethod
+    def _is_valid(self, *args, **kwargs):
+        fn = args[0]
+        if not fn.endswith(".dat"): return False
+        with open(fn, "r") as f:
+            valid = False
+            while True:
+                line = f.readline()
+                if line is None or not line.startswith("#"):
+                    break
+                if "Consistent Trees" in line:
+                    valid = True
+                    break
+            if not valid: return False
+        return True
 
 _rs_columns = (("halo_id",  (0,)),
                ("desc_id",  (1,)),
@@ -362,6 +382,12 @@ class RockstarArbor(Arbor):
         yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), offset))
 
+    @classmethod
+    def _is_valid(self, *args, **kwargs):
+        fn = args[0]
+        if not fn.endswith(".list"): return False
+        return True
+
 class TreeFarmArbor(Arbor):
     def _set_default_selector(self):
         self.set_selector("max_field_value", "mass")
@@ -486,8 +512,25 @@ class TreeFarmArbor(Arbor):
         yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), offset))
 
-def load(filename, method):
-    if method not in arbor_registry:
-        raise RuntimeError("Invalid method: %s.  Available: %s." %
-                           (method, arbor_registry.keys()))
+def load(filename, method=None):
+    if method is None:
+        candidates = []
+        for candidate, c in arbor_registry.items():
+            if c._is_valid(filename):
+                candidates.append(candidate)
+        if len(candidates) == 0:
+            yt.mylog.error("Could not determine arbor type for %s." % filename)
+            raise RuntimeError
+        elif len(candidates) > 1:
+            yt.mylog.error("Could not distinguish between these arbor types:")
+            for candidate in candidates:
+                yt.mylog.error("Possible: %s." % candidate)
+            yt.mylog.error("Provide one of these types using the \'method\' keyword.")
+            raise RuntimeError
+        else:
+            method = candidates[0]
+    else:
+        if method not in arbor_registry:
+            raise RuntimeError("Invalid method: %s.  Available: %s." %
+                               (method, arbor_registry.keys()))
     return arbor_registry[method](filename)
