@@ -39,7 +39,7 @@ class TreeFarm(object):
         self.setup_function = setup_function
 
         # set a default selector
-        self.set_selector("sphere", "Group_R_Crit200", factor=5)
+        self.set_selector("all")
 
         # set a default ancestry checker
         self.set_ancestry_checker("common_ids")
