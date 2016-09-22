@@ -39,7 +39,6 @@ from ytree.tree_node import \
 from ytree.tree_node_selector import \
     tree_node_selector_registry
 from ytree.utilities.io import \
-    _hdf5_yt_array_lite, \
     _hdf5_yt_attr
 
 arbor_registry = {}
