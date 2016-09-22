@@ -127,7 +127,8 @@ class TreeNode(object):
                      "omega_lambda"]:
             if hasattr(self.arbor, attr):
                 ds[attr] = getattr(self.arbor, attr)
-        extra_attrs = {"box_size": self.arbor.box_size}
+        extra_attrs = {"box_size": self.arbor.box_size,
+                       "arbor_type": "ArborArbor"}
         data = {}
         for field in fields:
             data[field] = self.tree(field)
