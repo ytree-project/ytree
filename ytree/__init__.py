@@ -19,7 +19,7 @@ from arbor import \
     ConsistentTreesArbor, \
     RockstarArbor, \
     TreeFarmArbor, \
-    load_arbor
+    load
 from tree_farm import \
     TreeFarm
 from ancestry_checker import \

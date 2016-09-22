@@ -486,7 +486,7 @@ class TreeFarmArbor(Arbor):
         yt.mylog.info("Arbor contains %d trees with %d total nodes." %
                       (len(self.trees), offset))
 
-def load_arbor(filename, method):
+def load(filename, method):
     if method not in arbor_registry:
         raise RuntimeError("Invalid method: %s.  Available: %s." %
                            (method, arbor_registry.keys()))
