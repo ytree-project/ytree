@@ -32,11 +32,11 @@ from yt.units.unit_registry import \
 from yt.utilities.cosmology import \
     Cosmology
 
-from .tree_node import \
+from ytree.tree_node import \
     TreeNode
-from .tree_node_selector import \
+from ytree.tree_node_selector import \
     tree_node_selector_registry
-from .utilities import \
+from ytree.utilities.io import \
     _hdf5_yt_array_lite, \
     _hdf5_yt_attr
 

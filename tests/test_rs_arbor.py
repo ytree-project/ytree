@@ -5,7 +5,7 @@ from ytree import \
     load_arbor
 from ytree.config import \
     ytreecfg
-from ytree.utilities import \
+from ytree.utilities.testing import \
     compare_arbors, \
     in_tmpdir
 

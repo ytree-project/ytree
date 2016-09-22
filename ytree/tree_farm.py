@@ -23,13 +23,13 @@ from yt.funcs import \
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm
 
-from .ancestry_checker import \
+from ytree.ancestry_checker import \
     ancestry_checker_registry
-from .ancestry_filter import \
+from ytree.ancestry_filter import \
     ancestry_filter_registry
-from .ancestry_short import \
+from ytree.ancestry_short import \
     ancestry_short_registry
-from .halo_selector import \
+from ytree.halo_selector import \
     selector_registry, \
     clear_id_cache
 
