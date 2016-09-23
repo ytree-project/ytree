@@ -31,10 +31,15 @@ TF16 = os.path.join(
     get_test_data_dir(),
     "/Users/britton/EnzoRuns/ytree_test_data/100Mpc_64/dm_gadget/data",
     "groups_016/fof_subhalo_tab_016.0.hdf5")
+TF25 = os.path.join(
+    get_test_data_dir(),
+    "/Users/britton/EnzoRuns/ytree_test_data/100Mpc_64/dm_gadget/data",
+    "groups_025/fof_subhalo_tab_025.0.hdf5")
 
 @in_tmpdir
 @requires_file(TF16)
-def test_treefarm_forward():
+@requires_file(TF25)
+def test_treefarm():
     fns = os.path.join(
         get_test_data_dir(),
         "100Mpc_64/dm_gadget/data/groups_*/*.0.hdf5")
@@ -55,7 +60,6 @@ def test_treefarm_forward():
     m2 = a2.arr([t["particle_mass"] for t in a2.trees])
 
     assert (m1 == m2).all()
-
     compare_arbors(a1, a2)
 
     i1 = np.argsort(m1.d)[::-1][0]
@@ -64,3 +68,15 @@ def test_treefarm_forward():
     assert isinstance(a3, ArborArbor)
     for field in a1._field_data:
         assert (a1.trees[i1].tree(field) == a3.trees[0].tree(field)).all()
+
+    ds = yt.load(TF25)
+    i_max = np.argmax(ds.r["Group", "particle_mass"].d)
+    my_ids = ds.r["Group", "particle_identifier"][i_max]
+    my_tree.trace_ancestors("Group", my_ids,
+                            filename="my_halos/",
+                            halo_properties=["virial_radius"])
+    a4 = load("my_halos/fof_subhalo_tab_025.0.hdf5.0.h5")
+    assert isinstance(a4, TreeFarmArbor)
+    for field in a4._field_data:
+        if field in ["uid", "desc_id"]: continue
+        assert (a3.trees[0].line(field) == a4.trees[0].line(field)).all()

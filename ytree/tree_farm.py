@@ -19,7 +19,8 @@ import yt
 
 from yt.funcs import \
     ensure_dir, \
-    get_output_filename
+    get_output_filename, \
+    iterable
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm
 
@@ -135,6 +136,12 @@ class TreeFarm(object):
 
             if i == 0:
                 target_ids = root_ids
+                if not iterable(target_ids):
+                    target_ids = np.array([target_ids])
+                if isinstance(target_ids, yt.YTArray):
+                    target_ids = target_ids.d
+                if target_ids.dtype != np.int64:
+                    target_ids = target_ids.astype(np.int64)
             else:
                 yt.mylog.info("Loading target ids from %s.",
                               target_filename)
@@ -148,9 +155,9 @@ class TreeFarm(object):
             target_halos = []
             ancestor_halos = []
 
-            njobs = min(self.comm.size, len(target_ids))
+            njobs = min(self.comm.size, target_ids.size)
             pbar = yt.get_pbar("Linking halos (%s - %s)" % (ds1, ds2),
-                               len(target_ids), parallel=True)
+                               target_ids.size, parallel=True)
             my_i = 0
             for halo_id in yt.parallel_objects(target_ids, njobs=njobs):
                 my_halo = ds1.halo(halo_type, halo_id)
@@ -213,7 +220,7 @@ class TreeFarm(object):
             target_ids = \
               ds1.r[halo_type, "particle_identifier"].d.astype(np.int64)
 
-            njobs = min(self.comm.size, len(target_ids))
+            njobs = min(self.comm.size, target_ids.size)
             pbar = yt.get_pbar("Linking halos (%s - %s)" % (ds1, ds2),
                                target_ids.size, parallel=True)
             my_i = 0
