@@ -22,7 +22,7 @@ def test_rs_arbor():
     m1 = a1.arr([t["mvir"] for t in a1.trees])
 
     fn = a1.save_arbor("arbor_rs.h5")
-    a2 = load(fn, "Arbor")
+    a2 = load(fn)
     assert isinstance(a2, ArborArbor)
     m2 = a2.arr([t["mvir"] for t in a2.trees])
 

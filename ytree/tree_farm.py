@@ -267,7 +267,7 @@ class TreeFarm(object):
         else:
             num_halos = ds.index.particle_count[halos]
             data = dict((field, ds.r[halos, field].in_base())
-                        for field in fields
+                        for field in my_hp
                         if field != "descendent_identifier")
             data["descendent_identifier"] = -1 * np.ones(num_halos)
         ftypes = dict([(field, ".") for field in data])
