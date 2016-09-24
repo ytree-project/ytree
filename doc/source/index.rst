@@ -6,17 +6,60 @@
 Welcome to ytree's documentation!
 =================================
 
-Contents:
+ytree is a merger-tree code based on the `yt <http://yt-project.org/>`_
+analysis toolkit.  ytree can create merger-trees from Gadget FoF/Subfind
+catalogs, either for all halos or for a specific set of halos.  ytree is
+able to load in merger-tree from the following formats:
+
+- `consistent-trees <https://bitbucket.org/pbehroozi/consistent-trees>`_
+- `Rockstar <https://bitbucket.org/gfcstanford/rockstar>`_ halo catalogs
+  without consistent-trees
+- merger-trees made with ytree
+
+All formats can be saved with a universal format that can be reloaded
+with ytree.  Individual trees for single halos can also be saved.  Similar
+to yt, fields queried for halos or trees are returned with units.
+
+Installation
+============
+
+ytree's main dependency is `yt <http://yt-project.org/>`_.  Once you
+have installed yt following the instructions `here
+<http://yt-project.org/#getyt>`_, ytree can be installed using pip.
+
+.. highlight:: none
+
+::
+
+    pip install ytree
+
+And that's it!
+
+Using ytree
+===========
 
 .. toctree::
    :maxdepth: 2
 
+   TreeFarm.rst
+   Arbor.rst
 
+Help
+====
 
-Indices and tables
-==================
+Since ytree is heavily based on `yt <http://yt-project.org/>`_, the best
+way to get help is by joining `yt users list
+<http://lists.spacepope.org/listinfo.cgi/yt-users-spacepope.org>`_.  Feel
+free to post any questions or ideas for development.
 
-* :ref:`genindex`
-* :ref:`modindex`
+Citing ytree
+============
+
+If you use ytree in your work, please cite it as "ytree, written by
+Britton smith" with a footnote pointing to http://ytree.readthedocs.io.
+
+Search
+======
+
 * :ref:`search`
 
