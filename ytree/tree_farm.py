@@ -221,7 +221,7 @@ class TreeFarm(object):
                 break
 
     def trace_ancestors(self, halo_type, root_ids,
-                        halo_properties=None, filename=None):
+                        fields=None, filename=None):
         """
         Trace the ancestry of a given set of halos.
 
@@ -236,7 +236,7 @@ class TreeFarm(object):
         root_ids : integer or array of integers
             The halo IDs from the last halo catalog for the
             targeted halos.
-        halo_properties : optional, list of strings
+        fields : optional, list of strings
             List of additional fields to be saved to halo catalogs.
         filename : optional, string
             Directory in which merger-tree catalogs will be saved.
@@ -306,9 +306,9 @@ class TreeFarm(object):
                 for halo in target_halos:
                     halo.descendent_identifier = -1
                 self._save_catalog(filename, ds1, target_halos,
-                                   halo_properties)
+                                   fields)
             self._save_catalog(filename, ds2, ancestor_halos,
-                               halo_properties)
+                               fields)
 
             if len(ancestor_halos) == 0:
                 break
@@ -317,7 +317,7 @@ class TreeFarm(object):
             clear_id_cache()
 
     def trace_descendents(self, halo_type,
-                          halo_properties=None, filename=None):
+                          fields=None, filename=None):
         """
         Trace the descendents of all halos.
 
@@ -329,7 +329,7 @@ class TreeFarm(object):
         halo_type : string
             The type of halo, typically "FOF" for FoF groups or
             "Subfind" for subhalos.
-        halo_properties : optional, list of strings
+        fields : optional, list of strings
             List of additional fields to be saved to halo catalogs.
         filename : optional, string
             Directory in which merger-tree catalogs will be saved.
@@ -361,7 +361,7 @@ class TreeFarm(object):
                 yt.mylog.info("%s has no halos of type %s." %
                               (ds1, halo_type))
                 self._save_catalog(filename, ds1, target_halos,
-                                   halo_properties)
+                                   fields)
                 ds1 = ds2
                 continue
 
@@ -382,7 +382,7 @@ class TreeFarm(object):
             pbar.finish()
 
             self._save_catalog(filename, ds1, target_halos,
-                               halo_properties)
+                               fields)
             ds1 = ds2
             clear_id_cache()
 
@@ -392,9 +392,9 @@ class TreeFarm(object):
         if ds2 is None:
             ds2 = self._load_ds(fn2)
         self._save_catalog(filename, ds2, halo_type,
-                           halo_properties)
+                           fields)
 
-    def _save_catalog(self, filename, ds, halos, halo_properties=None):
+    def _save_catalog(self, filename, ds, halos, fields=None):
         """
         Save halo catalog with descendent information.
         """
@@ -405,27 +405,28 @@ class TreeFarm(object):
         filename = get_output_filename(
             filename, "%s.%d" % (str(ds.basename), rank), ".h5")
 
-        if halo_properties is None:
-            my_hp = []
+        if fields is None:
+            my_fields = []
         else:
-            my_hp = halo_properties[:]
+            my_fields = fields[:]
 
-        fields = ["particle_identifier",
-                  "descendent_identifier",
-                  "particle_mass"] + \
-                 ["particle_position_%s" % ax for ax in "xyz"] + \
-                 ["particle_velocity_%s" % ax for ax in "xyz"]
-        for field in fields:
-            if field not in my_hp:
-                my_hp.append(field)
+        default_fields = \
+          ["particle_identifier",
+           "descendent_identifier",
+           "particle_mass"] + \
+           ["particle_position_%s" % ax for ax in "xyz"] + \
+           ["particle_velocity_%s" % ax for ax in "xyz"]
+        for field in default_fields:
+            if field not in my_fields:
+                my_fields.append(field)
 
         if isinstance(halos, list):
             num_halos = len(halos)
-            data = self._create_halo_data_lists(halos, my_hp)
+            data = self._create_halo_data_lists(halos, my_fields)
         else:
             num_halos = ds.index.particle_count[halos]
             data = dict((field, ds.r[halos, field].in_base())
-                        for field in my_hp
+                        for field in my_fields
                         if field != "descendent_identifier")
             data["descendent_identifier"] = -1 * np.ones(num_halos)
         ftypes = dict([(field, ".") for field in data])
@@ -434,22 +435,22 @@ class TreeFarm(object):
         yt.save_as_dataset(ds, filename, data, field_types=ftypes,
                            extra_attrs=extra_attrs)
 
-    def _create_halo_data_lists(self, halos, halo_properties):
+    def _create_halo_data_lists(self, halos, fields):
         """
         Given a list of halo containers, return a dictionary
         of field values for all halos.
         """
         pbar = yt.get_pbar("Gathering field data from halos",
                            self.comm.size*len(halos), parallel=True)
-        data = dict([(hp, []) for hp in halo_properties])
+        data = dict([(hp, []) for hp in fields])
         my_i = 0
         for halo in halos:
-            for hp in halo_properties:
+            for hp in fields:
                 data[hp].append(_get_halo_property(halo, hp))
             my_i += self.comm.size
             pbar.update(my_i)
         pbar.finish()
-        for hp in halo_properties:
+        for hp in fields:
             if data[hp] and hasattr(data[hp][0], "units"):
                 data[hp] = yt.YTArray(data[hp]).in_base()
             else:

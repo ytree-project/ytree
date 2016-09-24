@@ -47,7 +47,7 @@ def test_treefarm():
 
     my_tree = TreeFarm(ts, setup_function=setup_ds)
     my_tree.trace_descendents(
-        "Group", halo_properties=["virial_radius"],
+        "Group", fields=["virial_radius"],
         filename="all_halos/")
 
     a1 = load("all_halos/fof_subhalo_tab_016.0.hdf5.0.h5")
@@ -74,7 +74,7 @@ def test_treefarm():
     my_ids = ds.r["Group", "particle_identifier"][i_max]
     my_tree.trace_ancestors("Group", my_ids,
                             filename="my_halos/",
-                            halo_properties=["virial_radius"])
+                            fields=["virial_radius"])
     a4 = load("my_halos/fof_subhalo_tab_025.0.hdf5.0.h5")
     assert isinstance(a4, TreeFarmArbor)
     for field in a4._field_data:
