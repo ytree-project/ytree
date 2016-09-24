@@ -48,7 +48,7 @@ Help
 ====
 
 Since ytree is heavily based on `yt <http://yt-project.org/>`_, the best
-way to get help is by joining `yt users list
+way to get help is by joining the `yt users list
 <http://lists.spacepope.org/listinfo.cgi/yt-users-spacepope.org>`_.  Feel
 free to post any questions or ideas for development.
 
