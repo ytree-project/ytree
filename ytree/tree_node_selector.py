@@ -21,6 +21,17 @@ from yt.utilities.operator_registry import \
 tree_node_selector_registry = OperatorRegistry()
 
 def add_tree_node_selector(name, function):
+    r"""
+    Add a TreeNodeSelector to the registry of known selectors, so they
+    can be chosen with `~ytree.arbor.Arbor.set_selector`.
+
+    Parameters
+    ----------
+    name : string
+        Name of the selector.
+    function : callable
+        The associated function.
+    """
     tree_node_selector_registry[name] = TreeNodeSelector(function)
 
 class TreeNodeSelector(object):
