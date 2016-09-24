@@ -70,7 +70,7 @@ class TreeFarm(object):
             self.setup_function(ds)
         return ds
 
-    def find_ancestors(self, hc, ds2, id_store=None):
+    def _find_ancestors(self, hc, ds2, id_store=None):
         if id_store is None: id_store = []
         halo_member_ids = hc["member_ids"].d.astype(np.int64)
         candidate_ids = self.selector(hc, ds2)
@@ -95,7 +95,7 @@ class TreeFarm(object):
 
         return ancestors
 
-    def find_descendent(self, hc, ds2):
+    def _find_descendent(self, hc, ds2):
         halo_member_ids = hc["member_ids"].d.astype(np.int64)
         candidate_ids = self.selector(hc, ds2)
 
@@ -163,8 +163,8 @@ class TreeFarm(object):
                 my_halo = ds1.halo(halo_type, halo_id)
 
                 target_halos.append(my_halo)
-                my_ancestors = self.find_ancestors(my_halo, ds2,
-                                                   id_store=id_store)
+                my_ancestors = self._find_ancestors(my_halo, ds2,
+                                                    id_store=id_store)
                 ancestor_halos.extend(my_ancestors)
                 my_i += njobs
                 pbar.update(my_i)
@@ -228,7 +228,7 @@ class TreeFarm(object):
                 my_halo = ds1.halo(halo_type, halo_id)
 
                 target_halos.append(my_halo)
-                self.find_descendent(my_halo, ds2)
+                self._find_descendent(my_halo, ds2)
                 my_i += njobs
                 pbar.update(my_i)
             pbar.finish()
