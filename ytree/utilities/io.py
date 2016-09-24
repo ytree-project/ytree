@@ -19,6 +19,11 @@ from yt.units.yt_array import \
     YTQuantity
 
 def _hdf5_yt_attr(fh, attr, unit_registry=None):
+    """
+    Read an hdf5 attribute.  If there exists another attribute
+    named <attr>_units, use that to assign units and return
+    as either a YTArray or YTQuantity.
+    """
     val = fh.attrs[attr]
     units = ""
     ufield = "%s_units" % attr
@@ -34,6 +39,10 @@ def _hdf5_yt_attr(fh, attr, unit_registry=None):
     return val
 
 def _hdf5_yt_array_lite(fh, field):
+    """
+    Read an hdf5 dataset.  If that dataset has a "units" attribute,
+    return that as well, but do not cast as a YTArray.
+    """
     units = ""
     if "units" in fh[field].attrs:
         units = fh[field].attrs["units"]
