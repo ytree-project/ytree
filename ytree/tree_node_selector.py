@@ -26,7 +26,8 @@ def add_tree_node_selector(name, function):
 class TreeNodeSelector(object):
     r"""
     A TreeNodeSelector is responsible for choosing which one of a
-    halo's ancestors to return for accessing fields from trees.
+    halo's ancestors to return for accessing fields from trees with
+    the `~ytree.tree_node.TreeNode.line` function.
 
     Required Arguments
     ------------------

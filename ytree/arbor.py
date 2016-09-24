@@ -44,6 +44,10 @@ from ytree.utilities.io import \
 arbor_registry = {}
 
 class RegisteredArbor(type):
+    """
+    Add to the registry of known Arbor classes to cycle
+    through in the load function.
+    """
     def __init__(cls, name, b, d):
         type.__init__(cls, name, b, d)
         arbor_type = name[:name.rfind("Arbor")]
@@ -52,7 +56,20 @@ class RegisteredArbor(type):
 
 @add_metaclass(RegisteredArbor)
 class Arbor(object):
+    """
+    Base class for all Arbor classes.
+
+    Loads a merger-tree output file or a series of halo catalogs
+    and create trees, stored in a list in `~ytree.arbor.Arbor.trees`.
+    Arbors can be saved in a universal format with
+    `~ytree.arbor.Arbor.save_arbor`.  Also, provide some convenience
+    functions for creating YTArrays and YTQuantities and a cosmology
+    calculator.
+    """
     def __init__(self, filename):
+        """
+        Initialize an Arbor given a single input file.
+        """
         self.filename = filename
         self.unit_registry = UnitRegistry()
         self._load_trees()
@@ -64,31 +81,67 @@ class Arbor(object):
             unit_registry=self.unit_registry)
 
     def set_selector(self, selector, *args, **kwargs):
+        r"""
+        Sets the tree node selector to be used.
+
+        This sets the manner in which halo ancestors are chosen
+        from a list of ancestors when using the
+        `~ytee.tree_node.TreeNode.line` function to query fields
+        for a tree.  The most obvious example is to always select
+        the most massive ancestor so as to trace a halo's main
+        progenitor.
+
+        Parameters
+        ----------
+        selector : string
+            Name of the selector to be used.
+
+        Any additional arguments and keywords to be provided to
+        the selector function should follow.
+
+        """
         self.selector = tree_node_selector_registry.find(
             selector, *args, **kwargs)
 
     _arr = None
     @property
     def arr(self):
+        """
+        Create a YTArray using the Arbor's unit registry.
+        """
         if self._arr is not None:
             return self._arr
-        self._arr = functools.partial(yt.YTArray, registry=self.unit_registry)
+        self._arr = functools.partial(yt.YTArray,
+                                      registry=self.unit_registry)
         return self._arr
 
     _quan = None
     @property
     def quan(self):
+        """
+        Create a YTQuantity using the Arbor's unit registry.
+        """
         if self._quan is not None:
             return self._quan
-        self._quan = functools.partial(yt.YTQuantity, registry=self.unit_registry)
+        self._quan = functools.partial(yt.YTQuantity,
+                                       registry=self.unit_registry)
         return self._quan
 
     def _set_default_selector(self):
+        """
+        Set the default tree node selector.
+
+        Search for a mass-like field and use that with the
+        max_field_value selector.
+        """
         for field in ["particle_mass", "mvir"]:
             if field in self._field_data:
                 self.set_selector("max_field_value", field)
 
     def _set_halo_id_field(self):
+        """
+        Figure out which field represents the halo IDs.
+        """
         _hfields = ["halo_id", "particle_identifier"]
         hfields = [f for f in _hfields
                    if f in self._field_data]
@@ -97,13 +150,41 @@ class Arbor(object):
         self._hid_field = hfields[0]
 
     def _load_trees(self):
+        """
+        Main function responsible for loading the trees.
+        """
         pass
 
     @classmethod
     def _is_valid(cls, *args, **kwargs):
+        """
+        Check if input file works with a specific Arbor class.
+        This is used with `~ytree.arbor.load` function.
+        """
         return False
 
     def save_arbor(self, filename=None, fields=None):
+        r"""
+        Save the arbor to a file.
+
+        The saved arbor can be re-loaded as an arbor.
+
+        Parameters
+        ----------
+        filename : optional, string
+            Output filename.  Include a trailing "/" to indicate
+            a directory.
+            Default: "arbor.h5"
+        fields : optional, list of strings
+            The fields to be saved.  If not given, all
+            fields will be saved.
+
+        Returns
+        -------
+        filename : string
+            The filename of the saved arbor.
+
+        """
         filename = get_output_filename(filename, "arbor", ".h5")
         if fields is None:
             fields = self._field_data.keys()
@@ -120,10 +201,19 @@ class Arbor(object):
         return filename
 
 class MonolithArbor(Arbor):
+    """
+    Base class for Arbors loaded from a single file.
+    """
     def _load_field_data(self):
+        """
+        Load all fields from file, store in self._field_data.
+        """
         pass
 
     def _load_trees(self):
+        """
+        Create the tree structure.
+        """
         self._load_field_data()
         self._set_halo_id_field()
 
@@ -156,7 +246,15 @@ class MonolithArbor(Arbor):
                       (len(self.trees), self._field_data["uid"].size))
 
 class ArborArbor(MonolithArbor):
+    """
+    Class for Arbors created from the `~ytree.arbor.Arbor.save_arbor`
+    or `~ytree.tree_node.TreeNode.save_tree` functions.
+    """
     def _load_field_data(self):
+        """
+        All data stored in a single hdf5 file.  Get cosmological
+        parameters and modify unit registry for hubble constant.
+        """
         fh = h5py.File(self.filename, "r")
         for attr in ["hubble_constant",
                      "omega_matter",
@@ -171,6 +269,10 @@ class ArborArbor(MonolithArbor):
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
+        """
+        File should end in .h5, be loadable as an hdf5 file,
+        and have "arbor_type" attribute.
+        """
         fn = args[0]
         if not fn.endswith(".h5"): return False
         try:
@@ -203,10 +305,20 @@ for field, col in _ct_columns:
                                   len(_ct_usecol))
 
 class ConsistentTreesArbor(MonolithArbor):
+    """
+    Class for Arbors from consistent-trees output files.
+    """
     def _set_default_selector(self):
+        """
+        Mass is "mvir".
+        """
         self.set_selector("max_field_value", "mvir")
 
     def _read_cosmological_parameters(self):
+        """
+        Read all relevant parameters from file header and
+        modify unit registry for hubble constant.
+        """
         f = file(self.filename, "r")
         i = 0
         while True:
@@ -230,6 +342,10 @@ class ConsistentTreesArbor(MonolithArbor):
         self.box_size = self.quan(float(box[0]), box[1])
 
     def _load_field_data(self):
+        """
+        Load all field data using np.loadtxt and assign units
+        that have been defined above.
+        """
         yt.mylog.info("Loading tree data from %s." % self.filename)
         self._read_cosmological_parameters()
         data = np.loadtxt(self.filename, skiprows=self._iheader,
@@ -248,6 +364,10 @@ class ConsistentTreesArbor(MonolithArbor):
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
+        """
+        File should end in .dat and have a line in the header
+        with the string, "Consistent Trees".
+        """
         fn = args[0]
         if not fn.endswith(".dat"): return False
         with open(fn, "r") as f:
@@ -263,13 +383,28 @@ class ConsistentTreesArbor(MonolithArbor):
         return True
 
 class CatalogArbor(Arbor):
+    """
+    Base class for Arbors created from a series of halo catalog
+    files where the descendent ID for each halo has been
+    pre-determined.
+    """
     def _get_all_files(self):
+        """
+        Get all input files based on specific naming convention.
+        """
         pass
 
     def _load_field_data(self, *args):
+        """
+        Load field data from a single halo catalog.
+        """
         pass
 
     def _to_field_array(self, field, data):
+        """
+        Determines how final field arrays are defined, assigns
+        units if they have been pre-defined.
+        """
         if len(data) == 0:
             return np.array(data)
         if isinstance(data[0], yt.YTArray):
@@ -278,6 +413,9 @@ class CatalogArbor(Arbor):
             self._field_data[field] = np.array(data)
 
     def _load_trees(self):
+        """
+        Create the tree structure from the input files.
+        """
         my_files = self._get_all_files()
         self._field_data = defaultdict(list)
 
@@ -359,7 +497,14 @@ for field, col in _rs_columns:
                                   len(_rs_usecol))
 
 class RockstarArbor(CatalogArbor):
+    """
+    Class for Arbors created from Rockstar out_*.list files.
+    Use only descendent IDs to determine tree relationship.
+    """
     def _get_all_files(self):
+        """
+        Get all out_*.list files and put them in reverse order.
+        """
         prefix = self.filename.rsplit("_", 1)[0]
         suffix = ".list"
         my_files = glob.glob("%s_*%s" % (prefix, suffix))
@@ -370,12 +515,20 @@ class RockstarArbor(CatalogArbor):
         return my_files
 
     def _to_field_array(self, field, data):
+        """
+        Use field definitions from above to assign units
+        for field arrays.
+        """
         if field in _rs_units:
             self._field_data[field] = self.arr(data, _rs_units[field])
         else:
             self._field_data[field] = np.array(data)
 
     def _read_parameters(self, filename):
+        """
+        Read header file to get cosmological parameters
+        and modify unit registry for hubble constant.
+        """
         get_pars = not hasattr(self, "hubble_constant")
         f = file(filename, "r")
         while True:
@@ -401,6 +554,10 @@ class RockstarArbor(CatalogArbor):
         return 1. / a - 1.
 
     def _load_field_data(self, fn, offset):
+        """
+        Load field data using np.loadtxt.
+        Create a redshift field and uid field.
+        """
         with warnings.catch_warnings():
             # silence empty file warnings
             warnings.simplefilter("ignore", category=UserWarning,
@@ -427,15 +584,27 @@ class RockstarArbor(CatalogArbor):
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
+        """
+        File should end in .list.
+        """
         fn = args[0]
         if not fn.endswith(".list"): return False
         return True
 
 class TreeFarmArbor(CatalogArbor):
+    """
+    Class for Arbors created with `~ytree.tree_farm.TreeFarm`.
+    """
     def _set_default_selector(self):
+        """
+        Mass is "particle_mass".
+        """
         self.set_selector("max_field_value", "particle_mass")
 
     def _get_all_files(self):
+        """
+        Get all files and put in reverse order.
+        """
         prefix = self.filename.rsplit("_", 1)[0]
         suffix = ".h5"
         my_files = glob.glob("%s_*%s" % (prefix, suffix))
@@ -446,6 +615,14 @@ class TreeFarmArbor(CatalogArbor):
         return my_files
 
     def _load_field_data(self, fn, offset):
+        """
+        Load field data as a yt HaloCatalog dataset.
+        Get cosmological parameters and modify unit registry
+        for hubble constant.
+        Create a redshift field and uid field and rename
+        particle_identifier and descendent_identifier to halo_id
+        and desc_id.
+        """
         ds = yt.load(fn)
 
         if not hasattr(self, "hubble_constant"):
@@ -483,6 +660,10 @@ class TreeFarmArbor(CatalogArbor):
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
+        """
+        File should end in .h5, be loadable as an hdf5 file,
+        and have a "data_type" attribute.
+        """
         fn = args[0]
         if not fn.endswith(".h5"): return False
         try:
@@ -494,6 +675,37 @@ class TreeFarmArbor(CatalogArbor):
         return True
 
 def load(filename, method=None):
+    """
+    Load an Arbor, determine the type automatically.
+
+    Parameters
+    ----------
+    filename : string
+        Input filename.
+    method : optional, string
+        The type of Arbor to be loaded.  Existing types are:
+        Arbor, ConsistentTrees, Rockstar, TreeFar.  If not
+        given, the type will be determined based on characteristics
+        of the input file.
+
+    Returns
+    -------
+    Arbor
+
+    Examples
+    --------
+
+    >>> import ytree
+    >>> # saved Arbor
+    >>> a = ytree.load("arbor.h5")
+    >>> # consistent-trees output
+    >>> a = ytree.load("rockstar_halos/trees/tree_0_0_0.dat")
+    >>> # Rockstar catalogs
+    >>> a = ytree.load("rockstar_halos/out_0.list")
+    >>> # TreeFarm catalogs
+    >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.hdf5.0.h5")
+
+    """
     if method is None:
         candidates = []
         for candidate, c in arbor_registry.items():

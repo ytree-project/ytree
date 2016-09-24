@@ -25,10 +25,25 @@ selector_registry = OperatorRegistry()
 _id_cache = {}
 
 def clear_id_cache():
+    """
+    Some HaloSelectors create a cache for quicker access.
+    This clears that cache.
+    """
     for key in _id_cache.keys():
         del _id_cache[key]
 
 def add_halo_selector(name, function):
+    r"""
+    Add a HaloSelector to the registry of known selectors, so they
+    can be chosen with `~ytree.tree_farm.TreeFarm.set_selector`.
+
+    Parameters
+    ----------
+    name : string
+        Name of the selector.
+    function : callable
+        The associated function.
+    """
     selector_registry[name] = HaloSelector(function)
 
 class HaloSelector(object):
