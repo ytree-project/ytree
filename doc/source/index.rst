@@ -27,9 +27,7 @@ ytree's main dependency is `yt <http://yt-project.org/>`_.  Once you
 have installed yt following the instructions `here
 <http://yt-project.org/#getyt>`_, ytree can be installed using pip.
 
-.. highlight:: none
-
-::
+.. code-block:: bash
 
     pip install ytree
 
@@ -41,8 +39,8 @@ Using ytree
 .. toctree::
    :maxdepth: 2
 
-   TreeFarm.rst
    Arbor.rst
+   TreeFarm.rst
 
 Help
 ====
