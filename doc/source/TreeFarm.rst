@@ -108,6 +108,7 @@ configured to select halos from a sphere centered on the
 current halo.
 
 .. code-block:: python
+   :emphasize-lines: 2
 
    my_tree = TreeFarm(ts)
    my_tree.set_selector("sphere", "virial_radius", factor=5)
@@ -154,10 +155,10 @@ of how to create a new function of this type, see
 `~ytree.ancestry_short.most_massive`.
 
 .. code-block:: python
+   :emphasize-lines: 4, 5
 
    ts = yt.DatasetSeries("data/groups_*/*.0.hdf5")
    my_tree = TreeFarm(ts)
    my_tree.trace_ancestors("Group", my_id, filename="my_halo/")
-
    my_tree.set_ancestry_filter("most_massive")
    my_tree.set_ancestry_short("above_mass_fraction", 0.5)
