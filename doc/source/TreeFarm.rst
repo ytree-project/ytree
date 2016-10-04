@@ -22,7 +22,7 @@ merger-tree will be computed.
    import ytree
 
    ts = yt.DatasetSeries("data/groups_*/*.0.hdf5")
-   my_tree = TreeFarm(ts)
+   my_tree = ytree.TreeFarm(ts)
    my_tree.trace_descendents("Group", filename="all_halos/")
 
 The first argument to ``trace_descendents`` specifies the type
@@ -55,7 +55,7 @@ most massive halo.
    my_id = ds.r["particle_identifier"][i_max]
 
    ts = yt.DatasetSeries("data/groups_*/*.0.hdf5")
-   my_tree = TreeFarm(ts)
+   my_tree = ytree.TreeFarm(ts)
    my_tree.trace_ancestors("Group", my_id, filename="my_halo/")
 
 Just as above, the resulting catalogs can then be loaded into
@@ -84,7 +84,7 @@ for instructions.  Once this is done, a call to
    import ytree
 
    ts = yt.DatasetSeries("data/groups_*/*.0.hdf5")
-   my_tree = TreeFarm(ts)
+   my_tree = ytree.TreeFarm(ts)
    my_tree.trace_descendents("Group", filename="all_halos/")
 
 That script must then be run with mpirun.
@@ -110,7 +110,7 @@ current halo.
 .. code-block:: python
    :emphasize-lines: 2
 
-   my_tree = TreeFarm(ts)
+   my_tree = ytree.TreeFarm(ts)
    my_tree.set_selector("sphere", "virial_radius", factor=5)
    my_tree.trace_descendents("Group", filename="all_halos/")
 
@@ -158,7 +158,7 @@ of how to create a new function of this type, see
    :emphasize-lines: 4, 5
 
    ts = yt.DatasetSeries("data/groups_*/*.0.hdf5")
-   my_tree = TreeFarm(ts)
+   my_tree = ytree.TreeFarm(ts)
    my_tree.trace_ancestors("Group", my_id, filename="my_halo/")
    my_tree.set_ancestry_filter("most_massive")
    my_tree.set_ancestry_short("above_mass_fraction", 0.5)
