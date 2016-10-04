@@ -168,11 +168,11 @@ class TreeFarm(object):
         self.ancestry_short = \
           ancestry_short_registry.find(ancestry_short, *args, **kwargs)
 
-    def _load_ds(self, filename):
+    def _load_ds(self, filename, **kwargs):
         """
         Load a catalog as a yt dataset and call setup function.
         """
-        ds = yt.load(filename)
+        ds = yt.load(filename, **kwargs)
         if self.setup_function is not None:
             self.setup_function(ds)
         return ds
@@ -259,8 +259,8 @@ class TreeFarm(object):
                 continue
 
             if ds1 is None:
-                ds1 = self._load_ds(fn1)
-            ds2 = self._load_ds(fn2)
+                ds1 = self._load_ds(fn1, index_ptype=halo_type)
+            ds2 = self._load_ds(fn2, index_ptype=halo_type)
             if ds2.index.particle_count[halo_type] == 0:
                 yt.mylog.info("%s has no halos of type %s, ending." %
                               (ds2, halo_type))
@@ -352,8 +352,8 @@ class TreeFarm(object):
                 continue
 
             if ds1 is None:
-                ds1 = self._load_ds(fn1)
-            ds2 = self._load_ds(fn2)
+                ds1 = self._load_ds(fn1, index_ptype=halo_type)
+            ds2 = self._load_ds(fn2, index_ptype=halo_type)
 
             target_halos = []
 
@@ -390,7 +390,7 @@ class TreeFarm(object):
             return
 
         if ds2 is None:
-            ds2 = self._load_ds(fn2)
+            ds2 = self._load_ds(fn2, index_ptype=halo_type)
         self._save_catalog(filename, ds2, halo_type,
                            fields)
 
