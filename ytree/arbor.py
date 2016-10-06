@@ -20,17 +20,22 @@ import h5py
 import glob
 import numpy as np
 import warnings
-import yt
 
+from yt.convenience import \
+    load as yt_load
 from yt.extern.six import \
     add_metaclass
 from yt.frontends.ytdata.utilities import \
     save_as_dataset, \
     _hdf5_yt_array
 from yt.funcs import \
+    get_pbar, \
     get_output_filename
 from yt.units.unit_registry import \
     UnitRegistry
+from yt.units.yt_array import \
+    YTArray, \
+    YTQuantity
 from yt.utilities.cosmology import \
     Cosmology
 
@@ -113,7 +118,7 @@ class Arbor(object):
         """
         if self._arr is not None:
             return self._arr
-        self._arr = functools.partial(yt.YTArray,
+        self._arr = functools.partial(YTArray,
                                       registry=self.unit_registry)
         return self._arr
 
@@ -125,7 +130,7 @@ class Arbor(object):
         """
         if self._quan is not None:
             return self._quan
-        self._quan = functools.partial(yt.YTQuantity,
+        self._quan = functools.partial(YTQuantity,
                                        registry=self.unit_registry)
         return self._quan
 
@@ -225,7 +230,7 @@ class MonolithArbor(Arbor):
             all_uid = all_uid.d
         all_uid = all_uid.astype(np.int64)
         root_ids = np.unique(all_uid)
-        pbar = yt.get_pbar("Loading trees", root_ids.size)
+        pbar = get_pbar("Loading trees", root_ids.size)
         for my_i, root_id in enumerate(root_ids):
             tree_halos = (root_id == self._field_data["tree_id"])
             my_tree = {}
@@ -409,7 +414,7 @@ class CatalogArbor(Arbor):
         """
         if len(data) == 0:
             return np.array(data)
-        if isinstance(data[0], yt.YTArray):
+        if isinstance(data[0], YTArray):
             self._field_data[field] = self.arr(data)
         else:
             self._field_data[field] = np.array(data)
@@ -425,7 +430,7 @@ class CatalogArbor(Arbor):
         anc_ids = None
         anc_nodes = None
         my_trees = []
-        pbar = yt.get_pbar("Load halo catalogs", len(my_files))
+        pbar = get_pbar("Load halo catalogs", len(my_files))
         for i, fn in enumerate(my_files):
             n_halos = self._load_field_data(fn, offset)
             if n_halos == 0:
@@ -625,7 +630,7 @@ class TreeFarmArbor(CatalogArbor):
         particle_identifier and descendent_identifier to halo_id
         and desc_id.
         """
-        ds = yt.load(fn)
+        ds = yt_load(fn)
 
         if not hasattr(self, "hubble_constant"):
             for attr in ["hubble_constant",
