@@ -40,6 +40,8 @@ from ytree.tree_node_selector import \
     tree_node_selector_registry
 from ytree.utilities.io import \
     _hdf5_yt_attr
+from ytree.utilities.logger import \
+    ytreeLogger as mylog
 
 arbor_registry = {}
 
@@ -242,8 +244,8 @@ class MonolithArbor(Arbor):
             self.trees.append(my_tree[root_id])
             pbar.update(my_i)
         pbar.finish()
-        yt.mylog.info("Arbor contains %d trees with %d total nodes." %
-                      (len(self.trees), self._field_data["uid"].size))
+        mylog.info("Arbor contains %d trees with %d total nodes." %
+                   (len(self.trees), self._field_data["uid"].size))
 
 class ArborArbor(MonolithArbor):
     """
@@ -346,7 +348,7 @@ class ConsistentTreesArbor(MonolithArbor):
         Load all field data using np.loadtxt and assign units
         that have been defined above.
         """
-        yt.mylog.info("Loading tree data from %s." % self.filename)
+        mylog.info("Loading tree data from %s." % self.filename)
         self._read_cosmological_parameters()
         data = np.loadtxt(self.filename, skiprows=self._iheader,
                           unpack=True, usecols=_ct_usecol)
@@ -474,8 +476,8 @@ class CatalogArbor(Arbor):
                     self._field_data["desc_id"][a.global_id] = tnode["uid"]
         assert (self._field_data["tree_id"] != -1).any()
 
-        yt.mylog.info("Arbor contains %d trees with %d total nodes." %
-                      (len(self.trees), offset))
+        mylog.info("Arbor contains %d trees with %d total nodes." %
+                   (len(self.trees), offset))
 
 _rs_columns = (("halo_id",  (0,)),
                ("desc_id",  (1,)),
@@ -712,13 +714,13 @@ def load(filename, method=None):
             if c._is_valid(filename):
                 candidates.append(candidate)
         if len(candidates) == 0:
-            yt.mylog.error("Could not determine arbor type for %s." % filename)
+            mylog.error("Could not determine arbor type for %s." % filename)
             raise RuntimeError
         elif len(candidates) > 1:
-            yt.mylog.error("Could not distinguish between these arbor types:")
+            mylog.error("Could not distinguish between these arbor types:")
             for candidate in candidates:
-                yt.mylog.error("Possible: %s." % candidate)
-            yt.mylog.error("Provide one of these types using the \'method\' keyword.")
+                mylog.error("Possible: %s." % candidate)
+            mylog.error("Provide one of these types using the \'method\' keyword.")
             raise RuntimeError
         else:
             method = candidates[0]
