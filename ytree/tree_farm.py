@@ -15,14 +15,22 @@ TreeFarm class and member functions
 
 import numpy as np
 import os
-import yt
 
+from yt.convenience import \
+    load as yt_load
+from yt.frontends.ytdata.utilities import \
+    save_as_dataset
 from yt.funcs import \
     ensure_dir, \
+    get_pbar, \
     get_output_filename, \
+    is_root, \
     iterable
+from yt.units.yt_array import \
+    YTArray
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
-    _get_comm
+    _get_comm, \
+    parallel_objects
 
 from ytree.ancestry_checker import \
     ancestry_checker_registry
@@ -174,7 +182,7 @@ class TreeFarm(object):
         """
         Load a catalog as a yt dataset and call setup function.
         """
-        ds = yt.load(filename, **kwargs)
+        ds = yt_load(filename, **kwargs)
         if self.setup_function is not None:
             self.setup_function(ds)
         return ds
@@ -245,7 +253,7 @@ class TreeFarm(object):
         """
 
         output_dir = os.path.dirname(filename)
-        if yt.is_root() and len(output_dir) > 0:
+        if is_root() and len(output_dir) > 0:
             ensure_dir(output_dir)
 
         all_outputs = self.ts.outputs[::-1]
@@ -275,13 +283,13 @@ class TreeFarm(object):
                 target_ids = root_ids
                 if not iterable(target_ids):
                     target_ids = np.array([target_ids])
-                if isinstance(target_ids, yt.YTArray):
+                if isinstance(target_ids, YTArray):
                     target_ids = target_ids.d
                 if target_ids.dtype != np.int64:
                     target_ids = target_ids.astype(np.int64)
             else:
                 mylog.info("Loading target ids from %s.", target_filename)
-                ds_target = yt.load(target_filename)
+                ds_target = yt_load(target_filename)
                 target_ids = \
                   ds_target.r["halos",
                               "particle_identifier"].d.astype(np.int64)
@@ -292,10 +300,10 @@ class TreeFarm(object):
             ancestor_halos = []
 
             njobs = min(self.comm.size, target_ids.size)
-            pbar = yt.get_pbar("Linking halos",
-                               target_ids.size, parallel=True)
+            pbar = get_pbar("Linking halos",
+                            target_ids.size, parallel=True)
             my_i = 0
-            for halo_id in yt.parallel_objects(target_ids, njobs=njobs):
+            for halo_id in parallel_objects(target_ids, njobs=njobs):
                 my_halo = ds1.halo(halo_type, halo_id)
 
                 target_halos.append(my_halo)
@@ -340,7 +348,7 @@ class TreeFarm(object):
         """
 
         output_dir = os.path.dirname(filename)
-        if yt.is_root() and len(output_dir) > 0:
+        if is_root() and len(output_dir) > 0:
             ensure_dir(output_dir)
 
         all_outputs = self.ts.outputs[:]
@@ -372,10 +380,10 @@ class TreeFarm(object):
               ds1.r[halo_type, "particle_identifier"].d.astype(np.int64)
 
             njobs = min(self.comm.size, target_ids.size)
-            pbar = yt.get_pbar("Linking halos",
-                               target_ids.size, parallel=True)
+            pbar = get_pbar("Linking halos",
+                            target_ids.size, parallel=True)
             my_i = 0
-            for halo_id in yt.parallel_objects(target_ids, njobs=njobs):
+            for halo_id in parallel_objects(target_ids, njobs=njobs):
                 my_halo = ds1.halo(halo_type, halo_id)
 
                 target_halos.append(my_halo)
@@ -437,8 +445,8 @@ class TreeFarm(object):
                        "data_type": "halo_catalog"}
         mylog.info("Saving catalog with %d halos to %s." %
                    (len(halos), filename))
-        yt.save_as_dataset(ds, filename, data, field_types=ftypes,
-                           extra_attrs=extra_attrs)
+        save_as_dataset(ds, filename, data, field_types=ftypes,
+                        extra_attrs=extra_attrs)
 
     def _create_halo_data_lists(self, halos, fields):
         """
@@ -447,8 +455,8 @@ class TreeFarm(object):
         """
         data = dict([(hp, []) for hp in fields])
         if len(halos) > 0:
-            pbar = yt.get_pbar("Gathering field data from halos",
-                               self.comm.size*len(halos), parallel=True)
+            pbar = get_pbar("Gathering field data from halos",
+                            self.comm.size*len(halos), parallel=True)
             my_i = 0
             for halo in halos:
                 for hp in fields:
@@ -458,7 +466,7 @@ class TreeFarm(object):
             pbar.finish()
         for hp in fields:
             if data[hp] and hasattr(data[hp][0], "units"):
-                data[hp] = yt.YTArray(data[hp]).in_base()
+                data[hp] = YTArray(data[hp]).in_base()
             else:
                 data[hp] = np.array(data[hp])
             shape = data[hp].shape
