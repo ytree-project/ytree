@@ -480,8 +480,12 @@ def _print_link_info(ds1, ds2):
     Print information about linking datasets.
     """
 
-    mylog.info("Linking: file - %12s to %12s." % (ds1, ds2))
-    mylog.info("Linking: time - %12s to %12s." %
-               (ds1.current_time.to("Gyr"), ds2.current_time.to("Gyr")))
-    mylog.info("Linking: z    - %12s to %12s." %
-               (ds1.current_redshift, ds2.current_redshift))
+    units = {"current_time": "Gyr"}
+    for attr in ["basename", "current_time", "current_redshift"]:
+        v1 = getattr(ds1, attr)
+        v2 = getattr(ds2, attr)
+        if attr in units:
+            v1.convert_to_units(units[attr])
+            v2.convert_to_units(units[attr])
+        s = "Linking: %-20s = %-28s - %-28s" % (attr, v1, v2)
+        mylog.info(s)
