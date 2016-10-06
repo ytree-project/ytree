@@ -212,10 +212,10 @@ class TreeFarm(object):
         halo_member_ids = hc["member_ids"].d.astype(np.int64)
         candidate_ids = self.selector(hc, ds2)
 
+        hc.descendent_identifier = -1
         for candidate_id in candidate_ids:
             candidate = ds2.halo(hc.ptype, candidate_id)
             candidate_member_ids = candidate["member_ids"].d.astype(np.int64)
-            hc.descendent_identifier = -1
             if self.ancestry_checker(candidate_member_ids, halo_member_ids):
                 hc.descendent_identifier = candidate.particle_identifier
                 break
