@@ -33,6 +33,8 @@ from ytree.ancestry_short import \
 from ytree.halo_selector import \
     selector_registry, \
     clear_id_cache
+from ytree.utilities.logger import \
+    ytreeLogger as mylog
 
 class TreeFarm(object):
     r"""
@@ -261,9 +263,12 @@ class TreeFarm(object):
             if ds1 is None:
                 ds1 = self._load_ds(fn1, index_ptype=halo_type)
             ds2 = self._load_ds(fn2, index_ptype=halo_type)
+
+            _print_link_info(ds1, ds2)
+
             if ds2.index.particle_count[halo_type] == 0:
-                yt.mylog.info("%s has no halos of type %s, ending." %
-                              (ds2, halo_type))
+                mylog.info("%s has no halos of type %s, ending." %
+                           (ds2, halo_type))
                 break
 
             if i == 0:
@@ -275,8 +280,7 @@ class TreeFarm(object):
                 if target_ids.dtype != np.int64:
                     target_ids = target_ids.astype(np.int64)
             else:
-                yt.mylog.info("Loading target ids from %s.",
-                              target_filename)
+                mylog.info("Loading target ids from %s.", target_filename)
                 ds_target = yt.load(target_filename)
                 target_ids = \
                   ds_target.r["halos",
@@ -288,7 +292,7 @@ class TreeFarm(object):
             ancestor_halos = []
 
             njobs = min(self.comm.size, target_ids.size)
-            pbar = yt.get_pbar("Linking halos (%s - %s)" % (ds1, ds2),
+            pbar = yt.get_pbar("Linking halos",
                                target_ids.size, parallel=True)
             my_i = 0
             for halo_id in yt.parallel_objects(target_ids, njobs=njobs):
@@ -355,11 +359,10 @@ class TreeFarm(object):
                 ds1 = self._load_ds(fn1, index_ptype=halo_type)
             ds2 = self._load_ds(fn2, index_ptype=halo_type)
 
-            target_halos = []
+            _print_link_info(ds1, ds2)
 
+            target_halos = []
             if ds1.index.particle_count[halo_type] == 0:
-                yt.mylog.info("%s has no halos of type %s." %
-                              (ds1, halo_type))
                 self._save_catalog(filename, ds1, target_halos,
                                    fields)
                 ds1 = ds2
@@ -369,7 +372,7 @@ class TreeFarm(object):
               ds1.r[halo_type, "particle_identifier"].d.astype(np.int64)
 
             njobs = min(self.comm.size, target_ids.size)
-            pbar = yt.get_pbar("Linking halos (%s - %s)" % (ds1, ds2),
+            pbar = yt.get_pbar("Linking halos",
                                target_ids.size, parallel=True)
             my_i = 0
             for halo_id in yt.parallel_objects(target_ids, njobs=njobs):
@@ -432,6 +435,8 @@ class TreeFarm(object):
         ftypes = dict([(field, ".") for field in data])
         extra_attrs = {"num_halos": num_halos,
                        "data_type": "halo_catalog"}
+        mylog.info("Saving catalog with %d halos to %s." %
+                   (len(halos), filename))
         yt.save_as_dataset(ds, filename, data, field_types=ftypes,
                            extra_attrs=extra_attrs)
 
@@ -440,16 +445,17 @@ class TreeFarm(object):
         Given a list of halo containers, return a dictionary
         of field values for all halos.
         """
-        pbar = yt.get_pbar("Gathering field data from halos",
-                           self.comm.size*len(halos), parallel=True)
         data = dict([(hp, []) for hp in fields])
-        my_i = 0
-        for halo in halos:
-            for hp in fields:
-                data[hp].append(_get_halo_property(halo, hp))
-            my_i += self.comm.size
-            pbar.update(my_i)
-        pbar.finish()
+        if len(halos) > 0:
+            pbar = yt.get_pbar("Gathering field data from halos",
+                               self.comm.size*len(halos), parallel=True)
+            my_i = 0
+            for halo in halos:
+                for hp in fields:
+                    data[hp].append(_get_halo_property(halo, hp))
+                my_i += self.comm.size
+                pbar.update(my_i)
+            pbar.finish()
         for hp in fields:
             if data[hp] and hasattr(data[hp][0], "units"):
                 data[hp] = yt.YTArray(data[hp]).in_base()
@@ -468,3 +474,14 @@ def _get_halo_property(halo, halo_property):
     val = getattr(halo, halo_property, None)
     if val is None: val = halo[halo_property]
     return val
+
+def _print_link_info(ds1, ds2):
+    """
+    Print information about linking datasets.
+    """
+
+    mylog.info("Linking: file - %12s to %12s." % (ds1, ds2))
+    mylog.info("Linking: time - %12s to %12s." %
+               (ds1.current_time.to("Gyr"), ds2.current_time.to("Gyr")))
+    mylog.info("Linking: z    - %12s to %12s." %
+               (ds1.current_redshift, ds2.current_redshift))
