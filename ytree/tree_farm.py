@@ -24,7 +24,6 @@ from yt.funcs import \
     ensure_dir, \
     get_pbar, \
     get_output_filename, \
-    is_root, \
     iterable
 from yt.units.yt_array import \
     YTArray
@@ -253,7 +252,7 @@ class TreeFarm(object):
         """
 
         output_dir = os.path.dirname(filename)
-        if is_root() and len(output_dir) > 0:
+        if self.comm.rank == 0 and len(output_dir) > 0:
             ensure_dir(output_dir)
 
         all_outputs = self.ts.outputs[::-1]
@@ -272,7 +271,8 @@ class TreeFarm(object):
                 ds1 = self._load_ds(fn1, index_ptype=halo_type)
             ds2 = self._load_ds(fn2, index_ptype=halo_type)
 
-            _print_link_info(ds1, ds2)
+            if self.comm.rank == 0:
+                _print_link_info(ds1, ds2)
 
             if ds2.index.particle_count[halo_type] == 0:
                 mylog.info("%s has no halos of type %s, ending." %
@@ -348,7 +348,7 @@ class TreeFarm(object):
         """
 
         output_dir = os.path.dirname(filename)
-        if is_root() and len(output_dir) > 0:
+        if self.comm.rank == 0 and len(output_dir) > 0:
             ensure_dir(output_dir)
 
         all_outputs = self.ts.outputs[:]
@@ -367,7 +367,8 @@ class TreeFarm(object):
                 ds1 = self._load_ds(fn1, index_ptype=halo_type)
             ds2 = self._load_ds(fn2, index_ptype=halo_type)
 
-            _print_link_info(ds1, ds2)
+            if self.comm.rank == 0:
+                _print_link_info(ds1, ds2)
 
             target_halos = []
             if ds1.index.particle_count[halo_type] == 0:
