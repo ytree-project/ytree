@@ -41,6 +41,7 @@ from ytree.halo_selector import \
     selector_registry, \
     clear_id_cache
 from ytree.utilities.logger import \
+    set_parallel_logger, \
     ytreeLogger as mylog
 
 class TreeFarm(object):
@@ -111,6 +112,7 @@ class TreeFarm(object):
         self.ancestry_filter = None
         self.ancestry_short = None
         self.comm = _get_comm(())
+        set_parallel_logger(self.comm)
 
     def set_selector(self, selector, *args, **kwargs):
         r"""
@@ -317,10 +319,8 @@ class TreeFarm(object):
             if i == 0:
                 for halo in target_halos:
                     halo.descendent_identifier = -1
-                self._save_catalog(filename, ds1, target_halos,
-                                   fields)
-            self._save_catalog(filename, ds2, ancestor_halos,
-                               fields)
+                self._save_catalog(filename, ds1, target_halos, fields)
+            self._save_catalog(filename, ds2, ancestor_halos, fields)
 
             if len(ancestor_halos) == 0:
                 break
@@ -372,8 +372,7 @@ class TreeFarm(object):
 
             target_halos = []
             if ds1.index.particle_count[halo_type] == 0:
-                self._save_catalog(filename, ds1, target_halos,
-                                   fields)
+                self._save_catalog(filename, ds1, target_halos, fields)
                 ds1 = ds2
                 continue
 
@@ -393,8 +392,7 @@ class TreeFarm(object):
                 pbar.update(my_i)
             pbar.finish()
 
-            self._save_catalog(filename, ds1, target_halos,
-                               fields)
+            self._save_catalog(filename, ds1, target_halos, fields)
             ds1 = ds2
             clear_id_cache()
 
@@ -403,8 +401,8 @@ class TreeFarm(object):
 
         if ds2 is None:
             ds2 = self._load_ds(fn2, index_ptype=halo_type)
-        self._save_catalog(filename, ds2, halo_type,
-                           fields)
+        if self.comm.rank == 0:
+            self._save_catalog(filename, ds2, halo_type, fields)
 
     def _save_catalog(self, filename, ds, halos, fields=None):
         """
@@ -445,7 +443,7 @@ class TreeFarm(object):
         extra_attrs = {"num_halos": num_halos,
                        "data_type": "halo_catalog"}
         mylog.info("Saving catalog with %d halos to %s." %
-                   (len(halos), filename))
+                   (num_halos, filename))
         save_as_dataset(ds, filename, data, field_types=ftypes,
                         extra_attrs=extra_attrs)
 
