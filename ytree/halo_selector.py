@@ -15,6 +15,10 @@ HaloSelector functions
 
 import numpy as np
 
+from yt.funcs import \
+    iterable
+from yt.units.yt_array import \
+    YTQuantity
 from yt.utilities.operator_registry import \
     OperatorRegistry
 from yt.utilities.exceptions import \
@@ -72,7 +76,8 @@ class HaloSelector(object):
     def __call__(self, hc, ds2):
         return self.function(hc, ds2, *self.args, **self.kwargs)
 
-def sphere_selector(hc, ds2, radius_field, factor=1):
+def sphere_selector(hc, ds2, radius_field, factor=1,
+                    min_radius=None):
     r"""
     Select halos within a sphere around the target halo.
 
@@ -87,6 +92,8 @@ def sphere_selector(hc, ds2, radius_field, factor=1):
     factor : float, optional
         Multiplicative factor of the halo radius in which
         potential halos will be gathered.  Default: 1.
+    min_radius : YTQuantity or tuple of (value, unit)
+        An absolute minimum radius for the sphere.
 
     Returns
     -------
@@ -95,11 +102,25 @@ def sphere_selector(hc, ds2, radius_field, factor=1):
 
     """
 
-    radius = (factor * hc[radius_field]).in_units("code_length")
+    if min_radius is not None:
+        if isinstance(min_radius, YTQuantity):
+            pass
+        elif iterable(min_radius) and len(min_radius) == 2:
+            min_radius = ds2.quan(min_radius[0], min_radius[1])
+        else:
+            raise RuntimeError(
+                "min_radius should be YTQuantity or (value, unit) tuple.")
+
+    # Never mix code units from multiple datasets!!!
+    center = ds2.arr(hc.position.to("code_length").d, "code_length")
+    radius = factor * hc[radius_field]
+    radius = ds2.quan(radius.to("code_length").d[0], "code_length")
+    if min_radius is not None: radius = max(radius, min_radius)
+
     try:
-        # Never mix code units from multiple datasets!!!
-        sp = ds2.sphere(hc.position.in_units("code_length").d, radius.d[0])
+        sp = ds2.sphere(center, radius)
         my_ids = sp[(hc.ptype, "particle_identifier")]
+        my_ids = my_ids[np.argsort(sp[(hc.ptype, "particle_radius")])]
         return my_ids.d.astype(np.int64)
     except YTSphereTooSmall:
         return []
