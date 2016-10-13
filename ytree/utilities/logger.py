@@ -38,3 +38,8 @@ ytreeLogger.addHandler(ytree_sh)
 ytreeLogger.setLevel(20)
 ytreeLogger.propagate = False
 
+def set_parallel_logger(comm):
+    if comm.size == 1: return
+    f = logging.Formatter("P%03i %s" % (comm.rank, ufstring))
+    if len(ytreeLogger.handlers) > 0:
+        ytreeLogger.handlers[0].setFormatter(f)
