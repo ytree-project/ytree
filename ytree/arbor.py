@@ -31,6 +31,8 @@ from yt.frontends.ytdata.utilities import \
 from yt.funcs import \
     get_pbar, \
     get_output_filename
+from yt.units.dimensions import \
+    length
 from yt.units.unit_registry import \
     UnitRegistry
 from yt.units.yt_array import \
@@ -86,6 +88,8 @@ class Arbor(object):
             omega_matter=self.omega_matter,
             omega_lambda=self.omega_lambda,
             unit_registry=self.unit_registry)
+        self.unit_registry.add("unitary", float(self.box_size.in_base()),
+                               length)
 
     def set_selector(self, selector, *args, **kwargs):
         r"""
