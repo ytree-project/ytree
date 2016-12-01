@@ -24,7 +24,8 @@ import warnings
 from yt.convenience import \
     load as yt_load
 from yt.extern.six import \
-    add_metaclass
+    add_metaclass, \
+    string_types
 from yt.frontends.ytdata.utilities import \
     save_as_dataset, \
     _hdf5_yt_array
@@ -91,11 +92,18 @@ class Arbor(object):
         self.unit_registry.add("unitary", float(self.box_size.in_base()),
                                length)
 
-    def __getitem__(self, index):
+    def __getitem__(self, key):
         """
-        Return a member of the tree list.
+        If given a string, return an array of field values for the
+        roots of all trees.
+        If given an integer, return a tree from the list of trees.
+
         """
-        return self._trees[index]
+        if isinstance(key, string_types):
+            if key in ("tree", "line"):
+                raise SyntaxError("Argument must be a field or integer.")
+            return self.arr([t[key] for t in self])
+        return self._trees[key]
 
     def __iter__(self):
         """
