@@ -92,6 +92,7 @@ class Arbor(object):
             unit_registry=self.unit_registry)
         self.unit_registry.add("unitary", float(self.box_size.in_base()),
                                length)
+        self._root_field_data = {}
 
     def __getitem__(self, key):
         """
@@ -103,7 +104,9 @@ class Arbor(object):
         if isinstance(key, string_types):
             if key in ("tree", "line"):
                 raise SyntaxError("Argument must be a field or integer.")
-            return self.arr([t[key] for t in self])
+            if key not in self._root_field_data:
+                self._root_field_data[key] = self.arr([t[key] for t in self])
+            return self._root_field_data[key]
         return self._trees[key]
 
     def __iter__(self):
