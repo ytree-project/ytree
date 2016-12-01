@@ -69,7 +69,7 @@ class Arbor(object):
     Base class for all Arbor classes.
 
     Loads a merger-tree output file or a series of halo catalogs
-    and create trees, stored in a list in `~ytree.arbor.Arbor.trees`.
+    and create trees, stored in a list in `~ytree.arbor.Arbor._trees`.
     Arbors can be saved in a universal format with
     `~ytree.arbor.Arbor.save_arbor`.  Also, provide some convenience
     functions for creating YTArrays and YTQuantities and a cosmology
@@ -90,6 +90,32 @@ class Arbor(object):
             unit_registry=self.unit_registry)
         self.unit_registry.add("unitary", float(self.box_size.in_base()),
                                length)
+
+    def __getitem__(self, index):
+        """
+        Return a member of the tree list.
+        """
+        return self._trees[index]
+
+    def __iter__(self):
+        """
+        Iterate over all items in the tree list.
+        """
+        for t in self._trees:
+            yield t
+
+    def __len__(self):
+        """
+        Return length of tree list.
+        """
+        return len(self._trees)
+
+    @property
+    def size(self):
+        """
+        Return length of tree list.
+        """
+        return len(self._trees)
 
     def set_selector(self, selector, *args, **kwargs):
         r"""
@@ -228,7 +254,7 @@ class MonolithArbor(Arbor):
         self._load_field_data()
         self._set_halo_id_field()
 
-        self.trees = []
+        self._trees = []
         all_uid = self._field_data["tree_id"]
         if hasattr(all_uid, "units"):
             all_uid = all_uid.d
@@ -250,11 +276,11 @@ class MonolithArbor(Arbor):
                 my_tree[uid] = my_node
                 if desc_id >= 0:
                     my_tree[desc_id].add_ancestor(my_node)
-            self.trees.append(my_tree[root_id])
+            self._trees.append(my_tree[root_id])
             pbar.update(my_i)
         pbar.finish()
         mylog.info("Arbor contains %d trees with %d total nodes." %
-                   (len(self.trees), self._field_data["uid"].size))
+                   (len(self._trees), self._field_data["uid"].size))
 
 class ArborArbor(MonolithArbor):
     """
@@ -468,7 +494,7 @@ class CatalogArbor(Arbor):
 
             pbar.update(i)
         pbar.finish()
-        self.trees = my_trees
+        self._trees = my_trees
 
         for field in self._field_data:
             my_data = []
@@ -477,7 +503,7 @@ class CatalogArbor(Arbor):
             self._to_field_array(field, my_data)
 
         self._field_data["tree_id"] = -np.ones(offset)
-        for t in self.trees:
+        for t in self._trees:
             self._field_data["tree_id"][t._tree_field_indices] = t["uid"]
             for tnode in t.twalk():
                 if tnode.ancestors is None: continue
@@ -486,7 +512,7 @@ class CatalogArbor(Arbor):
         assert (self._field_data["tree_id"] != -1).any()
 
         mylog.info("Arbor contains %d trees with %d total nodes." %
-                   (len(self.trees), offset))
+                   (len(self._trees), offset))
 
 _rs_columns = (("halo_id",  (0,)),
                ("desc_id",  (1,)),
