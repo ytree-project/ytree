@@ -54,6 +54,16 @@ or
    cd ytree
    pip install -e .
 
+What version do I have?
+=======================
+
+To see what version of `ytree` you are using, do the following:
+
+.. code-block:: python
+
+   import ytree
+   print (ytree.__version__)
+
 Using ytree
 ===========
 
