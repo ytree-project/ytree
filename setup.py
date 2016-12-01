@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name="ytree",
-      version="1.0.1.dev1",
+      version="1.1.0.dev1",
       description="Merger-tree for FoF, Rockstar, and consistent-trees based on yt.",
       author="Britton Smith",
       author_email="brittonsmith@gmail.com",

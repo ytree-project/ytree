@@ -31,4 +31,4 @@ from ancestry_short import \
 from halo_selector import \
     add_halo_selector
 
-__version__ = '1.0.1.dev1'
+__version__ = '1.1.0.dev1'
