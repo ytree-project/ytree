@@ -54,7 +54,7 @@ def compare_arbors(a1, a2):
     """
 
     for t1, t2 in zip(a1, a2):
-        for field in a1._field_data:
+        for field in a1.field_list:
             assert (t1["tree", field] == t2["tree", field]).all()
 
 def get_test_data_dir():

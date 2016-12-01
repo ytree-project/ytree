@@ -33,5 +33,5 @@ def test_rs_arbor():
     fn = a1[i1].save_tree()
     a3 = load(fn)
     assert isinstance(a3, ArborArbor)
-    for field in a1._field_data:
+    for field in a1.field_list:
         assert (a1[i1]["tree", field] == a3[0]["tree", field]).all()

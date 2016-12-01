@@ -83,6 +83,7 @@ class Arbor(object):
         self.filename = filename
         self.unit_registry = UnitRegistry()
         self._load_trees()
+        self.field_list = self._field_data.keys()
         self._set_default_selector()
         self.cosmology = Cosmology(
             hubble_constant=self.hubble_constant,
@@ -232,7 +233,7 @@ class Arbor(object):
         """
         filename = get_output_filename(filename, "arbor", ".h5")
         if fields is None:
-            fields = self._field_data.keys()
+            fields = self.field_list
         ds = {}
         for attr in ["hubble_constant",
                      "omega_matter",

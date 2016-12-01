@@ -66,7 +66,7 @@ def test_treefarm():
     fn = a1[i1].save_tree()
     a3 = load(fn)
     assert isinstance(a3, ArborArbor)
-    for field in a1._field_data:
+    for field in a1.field_list:
         assert (a1[i1]["tree", field] == a3[0]["tree", field]).all()
 
     ds = yt.load(TF25)
@@ -77,6 +77,6 @@ def test_treefarm():
                             fields=["virial_radius"])
     a4 = load("my_halos/fof_subhalo_tab_025.0.hdf5.0.h5")
     assert isinstance(a4, TreeFarmArbor)
-    for field in a4._field_data:
+    for field in a4.field_list:
         if field in ["uid", "desc_id"]: continue
         assert (a3[0]["line", field] == a4[0]["line", field]).all()
