@@ -19,19 +19,19 @@ CT = os.path.join(get_test_data_dir(),
 def test_ct_arbor():
     a1 = load(CT)
     assert isinstance(a1, ConsistentTreesArbor)
-    m1 = a1.arr([t["mvir"] for t in a1.trees])
+    m1 = a1["mvir"]
 
     fn = a1.save_arbor("arbor_ct.h5")
     a2 = load(fn)
     assert isinstance(a2, ArborArbor)
-    m2 = a2.arr([t["mvir"] for t in a2.trees])
+    m2 = a2["mvir"]
 
     assert (m1 == m2).all()
     compare_arbors(a1, a2)
 
     i1 = np.argsort(m1.d)[::-1][0]
-    fn = a1.trees[i1].save_tree()
+    fn = a1[i1].save_tree()
     a3 = load(fn)
     assert isinstance(a3, ArborArbor)
     for field in a1._field_data:
-        assert (a1.trees[i1].tree(field) == a3.trees[0].tree(field)).all()
+        assert (a1[i1]["tree", field] == a3[0]["tree", field]).all()
