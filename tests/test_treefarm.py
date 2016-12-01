@@ -52,22 +52,22 @@ def test_treefarm():
 
     a1 = load("all_halos/fof_subhalo_tab_016.0.hdf5.0.h5")
     assert isinstance(a1, TreeFarmArbor)
-    m1 = a1.arr([t["particle_mass"] for t in a1.trees])
+    m1 = a1["particle_mass"]
 
     fn = a1.save_arbor("arbor_tf.h5")
     a2 = load(fn)
     assert isinstance(a2, ArborArbor)
-    m2 = a2.arr([t["particle_mass"] for t in a2.trees])
+    m2 = a2["particle_mass"]
 
     assert (m1 == m2).all()
     compare_arbors(a1, a2)
 
     i1 = np.argsort(m1.d)[::-1][0]
-    fn = a1.trees[i1].save_tree()
+    fn = a1[i1].save_tree()
     a3 = load(fn)
     assert isinstance(a3, ArborArbor)
     for field in a1._field_data:
-        assert (a1.trees[i1].tree(field) == a3.trees[0].tree(field)).all()
+        assert (a1[i1]["tree", field] == a3[0]["tree", field]).all()
 
     ds = yt.load(TF25)
     i_max = np.argmax(ds.r["Group", "particle_mass"].d)
@@ -79,4 +79,4 @@ def test_treefarm():
     assert isinstance(a4, TreeFarmArbor)
     for field in a4._field_data:
         if field in ["uid", "desc_id"]: continue
-        assert (a3.trees[0].line(field) == a4.trees[0].line(field)).all()
+        assert (a3[0]["line", field] == a4[0]["line", field]).all()
