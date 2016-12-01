@@ -309,7 +309,7 @@ class TreeNode(object):
                        "arbor_type": "ArborArbor"}
         data = {}
         for field in fields:
-            data[field] = self.tree(field)
+            data[field] = self["tree", field]
         save_as_dataset(ds, filename, data,
                         extra_attrs=extra_attrs)
         return filename
