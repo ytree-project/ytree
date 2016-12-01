@@ -55,11 +55,64 @@ class TreeNode(object):
             self.ancestors = []
         self.ancestors.append(ancestor)
 
-    def __getitem__(self, field):
+    def __getitem__(self, key):
         """
-        Return value of field for this TreeNode.
+        Return field vlues for this TreeNode, line, or tree.
+
+        Parameters
+        ----------
+        key : string or tuple
+            If a single string, it can be either a field to be queried or
+            one of "tree" or "line".  If a field, then return the value of
+            the field for this TreeNode.  If "tree" or "line", then return
+            the list of TreeNodes in the tree or line.
+
+            If a tuple, this can be either (string, string) or (string, int),
+            where the first argument must be either "tree" or "line".
+            If second argument is a string, then return the field values
+            for either the tree or the line.  If second argument is an int,
+            then return the nth TreeNode in the tree or line list.
+
+        Examples
+        --------
+        >>> # virial mass for this halo
+        >>> print (my_tree["mvir"].to("Msun/h"))
+
+        >>> # all TreeNodes in the line (most massive progenitors)
+        >>> print (my_tree["line"])
+        >>> # all TreeNodes in the entire tree
+        >>> print (my_tree["tree"])
+
+        >>> # virial masses for the line (most massive progenitors)
+        >>> print (my_tree["line", "mvir"].to("Msun/h"))
+
+        >>> # the 3rd TreeNode in the line
+        >>> print (my_tree["line", 2])
+
+        Returns
+        -------
+        float, ndarray/YTArray, TreeNode
+
         """
-        return self.arbor._field_data[field][self.global_id]
+        arr_types = ("line", "tree")
+        if isinstance(key, tuple):
+            if len(key) != 2:
+                raise SyntaxError(
+                    "Must be either 1 or 2 arguments.")
+            if key[0] not in arr_types:
+                raise SyntaxError(
+                    "First argument must be one of %s." % str(arr_types))
+            return getattr(self, "_%s" % key[0])(key[1])
+        else:
+            if isinstance(key, string_types):
+                # return the line or tree nodes in a list
+                if key in arr_types:
+                    return getattr(self, "_%s_nodes" % key)
+                # return field value for this node
+                else:
+                    return self.arbor._field_data[key][self.global_id]
+            else:
+                raise SyntaxError("Single argument must be a string.")
 
     def __repr__(self):
         return "TreeNode[%d,%d]" % (self.level_id, self.halo_id)
@@ -140,8 +193,8 @@ class TreeNode(object):
         Examples
         --------
 
-        for my_node in my_tree.twalk():
-            print (my_node)
+        >>> for my_node in my_tree.twalk():
+        ...     print (my_node)
 
         """
         yield self
@@ -159,8 +212,8 @@ class TreeNode(object):
         Examples
         --------
 
-        for my_node in my_tree.lwalk():
-            print (my_node)
+        >>> for my_node in my_tree.lwalk():
+        ...     print (my_node)
 
         """
         my_node = self
@@ -171,7 +224,7 @@ class TreeNode(object):
             else:
                 my_node = my_node.arbor.selector(my_node.ancestors)
 
-    def tree(self, field):
+    def _tree(self, field):
         r"""
         Return a requested field for all TreeNodes in the tree
         beneath, starting with this TreeNode.
@@ -183,7 +236,7 @@ class TreeNode(object):
 
         Examples
         --------
-        print (my_tree.tree("mvir").to("Msun/h"))
+        >>> print (my_tree._tree("mvir").to("Msun/h"))
 
         Returns
         -------
@@ -195,7 +248,7 @@ class TreeNode(object):
         else:
             return self._tree_nodes[field]
 
-    def line(self, field):
+    def _line(self, field):
         r"""
         Return a requested field for all TreeNodes in the line,
         starting with this TreeNode.  By default, the line traces
@@ -208,7 +261,7 @@ class TreeNode(object):
 
         Examples
         --------
-        print (my_tree.line("mvir").to("Msun/h"))
+        >>> print (my_tree._line("mvir").to("Msun/h"))
 
         Returns
         -------
