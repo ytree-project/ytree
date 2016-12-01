@@ -72,7 +72,7 @@ Working with Merger-trees
 -------------------------
 
 Once merger-tree data has been loaded into an ``Arbor``, the individual
-trees will be stored in a list in the ``trees`` attribute.
+trees can be accessed by indexing the ``Arbor`` object.
 
 .. code-block:: python
 
@@ -81,10 +81,10 @@ trees will be stored in a list in the ``trees`` attribute.
    yt : [INFO     ] 2016-09-26 15:35:57,279 Loading tree data from tree_0_0_0.dat.
    Loading trees: 100%|████████████████████████| 327/327 [00:00<00:00, 4602.07it/s]
    yt : [INFO     ] 2016-09-26 15:35:57,666 Arbor contains 327 trees with 10405 total nodes.
-   >>> print (len(a.trees))
-   327
-   >>> print (a.trees[0])
+   >>> print (a[0])
    TreeNode[0,0]
+   >>> print (len(a))
+   327
 
 A ``TreeNode`` is one halo in a merger-tree.  The numbers correspond to the
 halo ID and the level in the tree.  Like with ``yt`` data containers, fields
@@ -92,7 +92,7 @@ can be queried in dictionary fashion.
 
 .. code-block:: python
 
-   >>> my_tree = a.trees[0]
+   >>> my_tree = a[0]
    >>> print (my_tree["mvir"])
    1.147e+13 Msun/h
    >>> print (my_tree["redshift"])
@@ -101,6 +101,15 @@ can be queried in dictionary fashion.
    [ 69.95449  60.33949  50.64586] Mpc/h
    >>> print (my_tree["velocity"])
    [ -789.51  1089.31  1089.31] km/s
+
+A list of all available fields can be found in the ``field_list`` of the
+``Arbor``.
+
+.. code-block:: python
+
+   >>> print (a.field_list)
+   ['position', 'uid', 'redshift', 'desc_id', 'rvir', 'halo_id', 'snapshot',
+    'tree_id', 'mvir', 'velocity']
 
 A halo's ancestors are stored as a list in the ``ancestors`` attribute.
 
@@ -112,30 +121,37 @@ A halo's ancestors are stored as a list in the ``ancestors`` attribute.
 Iterating over a Tree
 ^^^^^^^^^^^^^^^^^^^^^
 
-The ``twalk`` function provides an iterator that allows you to loop over
-all halos in the tree.  This will iterate over all ancestors in a recursive
-fashion.
+Iterating over all ancestors in tree can be done as follows:
 
 .. code-block:: python
 
-   >>> for my_node in my_tree.twalk():
+   >>> for my_node in my_tree["tree"]:
    ...     print (my_node)
 
+All fields for the tree can be accessed in a similar fashion:
+
+.. code-block:: python
+
+   >>> print my_tree["tree", "rvir"]
+   [ 463.491  474.158  481.174  484.241  498.883  509.451  516.227  522.961, ...,
+     534.725  510.548  495.242  484.803  480.092  511.818  479.556  442.248
+     465.761  428.618  371.741  266.036  349.49 ] kpc/h
 
 Accessing the Trunk of the Tree
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``line`` function allows one to query fields for the main trunk of the
+Similar to access the full tree with ``tree``, using ``line`` allows one to
+iterate over nodes or query fields for the main trunk of the
 tree.  By default, the "main trunk" follows the most massive progenitor.
 
 .. code-block:: python
 
-   >>> print my_tree.line("mvir")
+   >>> print my_tree["line", "mvir"]
    [  1.14700000e+13   1.20700000e+13   1.23700000e+13   1.23700000e+13, ...,
       6.64000000e+12   5.13100000e+12   3.32000000e+12   1.20700000e+12
       2.71600000e+12] Msun/h
 
-The selection method used by the ``line`` function can be changed by calling
+The selection method used for the tree ``line`` can be changed by calling
 the ``set_selector`` function on the ``Arbor``.  For information on creating
 new selection methods, see the example,
 `~tree.tree_node_selector.max_field_value`.
@@ -144,21 +160,26 @@ new selection methods, see the example,
 
    >>> a.set_selector("min_field_value", "mvir")
 
-Similar to ``twalk``, the ``lwalk`` function provide an iterator over the
-trunk of a tree.
+Similar to walking the ``tree``, one can iterate through the ``line`` as
+follows:
 
 .. code-block:: python
 
-   >>> for my_node in my_tree.lwalk():
+   >>> for my_node in my_tree["line"]:
    ...     print (my_node)
 
-Similar to the ``line`` function, the ``tree`` function provides field
-access to the whole tree.  However, since this is for all ancestors,
-note that these are not necessarily in chronological order.
+Field Values for Roots of All Trees
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Similar to querying fields for trees and nodes, field values for the roots
+of all trees stored in the arbor can be returned as arrays.
 
 .. code-block:: python
 
-   >>> print my_tree.tree("mvir")
+   >>> print a["mvir"]
+   [  1.14700000e+13   9.96000000e+12   3.60100000e+14   2.32400000e+13, ...,
+      1.50900000e+12   1.81100000e+12   1.50900000e+12   1.81100000e+12
+      2.41500000e+12   9.05400000e+11   2.41500000e+12] Msun/h
 
 Saving Arbors and Trees
 -----------------------
