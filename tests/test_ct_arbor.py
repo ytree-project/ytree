@@ -35,3 +35,12 @@ def test_ct_arbor():
     assert isinstance(a3, ArborArbor)
     for field in a1.field_list:
         assert (a1[i1]["tree", field] == a3[0]["tree", field]).all()
+
+    # test saving trees from non-root positions
+    fn = a1[i1]["tree", 1].save_tree()
+    a4 = load(fn)
+    assert (a4[0]["tree", "tree_id"] == a4[0]["tree_id"]).all()
+    assert (a1[i1]["tree", 1]["tree", "desc_id"][1:] == a4[0]["tree", "desc_id"][1:]).all()
+    for field in a1.field_list:
+        if field in ["tree_id", "desc_id"]: continue
+        assert (a1[i1]["tree", 1]["tree", field] == a4[0]["tree", field]).all()

@@ -310,6 +310,12 @@ class TreeNode(object):
         data = {}
         for field in fields:
             data[field] = self["tree", field]
+
+        # If this node is not the root of the tree,
+        # it has to become a root in order to reload it.
+        data["tree_id"][:] = self["uid"]
+        data["desc_id"][0] = -1
+
         save_as_dataset(ds, filename, data,
                         extra_attrs=extra_attrs)
         return filename
