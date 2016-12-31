@@ -12,8 +12,10 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
+from __future__ import absolute_import
+import glob
 import os
+import sys
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -30,7 +32,12 @@ import os
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.imgmath',
 ]
+
+autosummary_generate = glob.glob("reference.rst")
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -91,7 +98,7 @@ exclude_patterns = []
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
-#show_authors = False
+show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'

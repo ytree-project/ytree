@@ -72,6 +72,7 @@ Using ytree
 
    Arbor.rst
    TreeFarm.rst
+   reference.rst
 
 Help
 ====
