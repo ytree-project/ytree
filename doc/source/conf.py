@@ -34,7 +34,6 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
-    'sphinx.ext.imgmath',
 ]
 
 autosummary_generate = glob.glob("reference.rst")
