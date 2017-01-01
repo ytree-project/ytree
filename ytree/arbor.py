@@ -216,7 +216,7 @@ class Arbor(object):
     def _is_valid(cls, *args, **kwargs):
         """
         Check if input file works with a specific Arbor class.
-        This is used with `~ytree.arbor.load` function.
+        This is used with :func:`~ytree.arbor.load` function.
         """
         return False
 
@@ -313,8 +313,8 @@ class MonolithArbor(Arbor):
 
 class ArborArbor(MonolithArbor):
     """
-    Class for Arbors created from the `~ytree.arbor.Arbor.save_arbor`
-    or `~ytree.tree_node.TreeNode.save_tree` functions.
+    Class for Arbors created from the :func:`~ytree.arbor.Arbor.save_arbor`
+    or :func:`~ytree.tree_node.TreeNode.save_tree` functions.
     """
     def _load_field_data(self):
         """
@@ -659,7 +659,7 @@ class RockstarArbor(CatalogArbor):
 
 class TreeFarmArbor(CatalogArbor):
     """
-    Class for Arbors created with `~ytree.tree_farm.TreeFarm`.
+    Class for Arbors created with :class:`~ytree.tree_farm.TreeFarm`.
     """
     def _set_default_selector(self):
         """
