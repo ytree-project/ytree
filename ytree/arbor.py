@@ -71,9 +71,9 @@ class Arbor(object):
     Base class for all Arbor classes.
 
     Loads a merger-tree output file or a series of halo catalogs
-    and create trees, stored in a list in :ref:`~ytree.arbor.Arbor._trees`.
+    and create trees, stored in a list in :func:`~ytree.arbor.Arbor._trees`.
     Arbors can be saved in a universal format with
-    :ref:`~ytree.arbor.Arbor.save_arbor`.  Also, provide some convenience
+    :func:`~ytree.arbor.Arbor.save_arbor`.  Also, provide some convenience
     functions for creating YTArrays and YTQuantities and a cosmology
     calculator.
     """
@@ -136,7 +136,7 @@ class Arbor(object):
 
         This sets the manner in which halo ancestors are chosen
         from a list of ancestors when using the
-        :ref:`~ytee.tree_node.TreeNode._line` function to query fields
+        :func:`~ytee.tree_node.TreeNode._line` function to query fields
         for a tree.  The most obvious example is to always select
         the most massive ancestor so as to trace a halo's main
         progenitor.
@@ -148,6 +148,13 @@ class Arbor(object):
 
         Any additional arguments and keywords to be provided to
         the selector function should follow.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("rockstar_halos/trees/tree_0_0_0.dat")
+        >>> a.set_selector("max_field_value", "mvir")
 
         """
         self.selector = tree_node_selector_registry.find(
