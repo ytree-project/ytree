@@ -316,7 +316,9 @@ class TreeNode(object):
             if hasattr(self.arbor, attr):
                 ds[attr] = getattr(self.arbor, attr)
         extra_attrs = {"box_size": self.arbor.box_size,
-                       "arbor_type": "ArborArbor"}
+                       "arbor_type": "ArborArbor",
+                       "unit_registry_json":
+                       self.arbor.unit_registry.to_json()}
         data = {}
         for field in fields:
             data[field] = self["tree", field]

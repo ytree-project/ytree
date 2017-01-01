@@ -91,8 +91,6 @@ class Arbor(object):
             omega_matter=self.omega_matter,
             omega_lambda=self.omega_lambda,
             unit_registry=self.unit_registry)
-        self.unit_registry.add("unitary", float(self.box_size.in_base()),
-                               length)
         self._root_field_data = {}
 
     def __getitem__(self, key):
@@ -129,6 +127,29 @@ class Arbor(object):
         Return length of tree list.
         """
         return len(self._trees)
+
+    _unit_registry = None
+    @property
+    def unit_registry(self):
+        return self._unit_registry
+
+    @unit_registry.setter
+    def unit_registry(self, value):
+        self._unit_registry = value
+        self._arr = None
+        self._quan = None
+
+    _box_size = None
+    @property
+    def box_size(self):
+        return self._box_size
+
+    @box_size.setter
+    def box_size(self, value):
+        # set unitary as soon as we know the box size
+        self._box_size = value
+        self.unit_registry.add(
+            "unitary", float(self.box_size.in_base()), length)
 
     def set_selector(self, selector, *args, **kwargs):
         r"""
@@ -261,7 +282,8 @@ class Arbor(object):
             if hasattr(self, attr):
                 ds[attr] = getattr(self, attr)
         extra_attrs = {"box_size": self.box_size,
-                       "arbor_type": "ArborArbor"}
+                       "arbor_type": "ArborArbor",
+                       "unit_registry_json": self.unit_registry.to_json()}
         save_as_dataset(ds, filename, self._field_data,
                         extra_attrs=extra_attrs)
         return filename
@@ -326,6 +348,9 @@ class ArborArbor(MonolithArbor):
                      "omega_matter",
                      "omega_lambda"]:
             setattr(self, attr, fh.attrs[attr])
+        if "unit_registry_json" in fh.attrs:
+            self.unit_registry = \
+              UnitRegistry.from_json(fh.attrs["unit_registry_json"])
         self.unit_registry.modify("h", self.hubble_constant)
         self.box_size = _hdf5_yt_attr(fh, "box_size",
                                       unit_registry=self.unit_registry)
@@ -691,6 +716,8 @@ class TreeFarmArbor(CatalogArbor):
         """
         ds = yt_load(fn)
 
+        self.unit_registry = UnitRegistry.from_json(
+            ds.unit_registry.to_json())
         if not hasattr(self, "hubble_constant"):
             for attr in ["hubble_constant",
                          "omega_matter",
@@ -712,7 +739,10 @@ class TreeFarmArbor(CatalogArbor):
             if "particle_position_" in field[1]: continue
             if "particle_velocity_" in field[1]: continue
             if field[1] in skip_fields: continue
-            self._field_data[field[1]].append(ds.r[field].in_base())
+            field_data = ds.r[field]
+            if field_data.units.dimensions is length:
+                field_data.convert_to_units("unitary")
+            self._field_data[field[1]].append(field_data)
         self._field_data["halo_id"].append(
           ds.r["halos", "particle_identifier"].d.astype(np.int64))
         self._field_data["desc_id"].append(
