@@ -33,12 +33,12 @@ Making Merger-Trees
    :toctree: generated/
 
    ~ytree.tree_farm.TreeFarm
+   ~ytree.tree_farm.TreeFarm.trace_ancestors
+   ~ytree.tree_farm.TreeFarm.trace_descendents
    ~ytree.tree_farm.TreeFarm.set_selector
    ~ytree.tree_farm.TreeFarm.set_ancestry_checker
    ~ytree.tree_farm.TreeFarm.set_ancestry_filter
    ~ytree.tree_farm.TreeFarm.set_ancestry_short
-   ~ytree.tree_farm.TreeFarm.trace_ancestors
-   ~ytree.tree_farm.TreeFarm.trace_descendents
    ~ytree.ancestry_checker.AncestryChecker
    ~ytree.ancestry_checker.add_ancestry_checker
    ~ytree.ancestry_checker.common_ids
