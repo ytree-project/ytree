@@ -19,6 +19,7 @@ import functools
 import h5py
 import glob
 import numpy as np
+import os
 import warnings
 
 from yt.convenience import \
@@ -755,24 +756,25 @@ def load(filename, method=None):
     >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.hdf5.0.h5")
 
     """
+    if not os.path.exists(filename):
+        raise IOError("file does not exist: %s." % filename)
     if method is None:
         candidates = []
         for candidate, c in arbor_registry.items():
             if c._is_valid(filename):
                 candidates.append(candidate)
         if len(candidates) == 0:
-            mylog.error("Could not determine arbor type for %s." % filename)
-            raise RuntimeError
+            raise IOError("Could not determine arbor type for %s." % filename)
         elif len(candidates) > 1:
-            mylog.error("Could not distinguish between these arbor types:")
+            errmsg = "Could not distinguish between these arbor types:\n"
             for candidate in candidates:
-                mylog.error("Possible: %s." % candidate)
-            mylog.error("Provide one of these types using the \'method\' keyword.")
-            raise RuntimeError
+                errmsg += "Possible: %s.\n" % candidate
+            errmsg += "Provide one of these types using the \'method\' keyword."
+            raise IOError(errmsg)
         else:
             method = candidates[0]
     else:
         if method not in arbor_registry:
-            raise RuntimeError("Invalid method: %s.  Available: %s." %
-                               (method, arbor_registry.keys()))
+            raise IOError("Invalid method: %s.  Available: %s." %
+                          (method, arbor_registry.keys()))
     return arbor_registry[method](filename)
