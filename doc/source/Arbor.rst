@@ -11,7 +11,7 @@ Loading Merger-tree data
 ------------------------
 
 ``ytree`` can load merger-tree data from multiple sources using
-the `~ytree.arbor.load` command.  This command will guess the correct
+the :ref:`~ytree.arbor.load` command.  This command will guess the correct
 format and read in the data appropriately.  For examples of loading
 each format, see below.
 
@@ -152,9 +152,9 @@ tree.  By default, the "main trunk" follows the most massive progenitor.
       2.71600000e+12] Msun/h
 
 The selection method used for the tree ``line`` can be changed by calling
-the ``set_selector`` function on the ``Arbor``.  For information on creating
-new selection methods, see the example,
-`~tree.tree_node_selector.max_field_value`.
+the :ref:`~ytree.tree_farm.TreeFarm.set_selector` function on the ``Arbor``.
+For information on creating new selection methods, see the example,
+:ref:`~ytree.tree_node_selector.max_field_value`.
 
 .. code-block:: python
 

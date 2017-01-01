@@ -123,7 +123,7 @@ between speed and robustness.
 
 Currently, the "sphere" selector is the only other selection
 method implemented, although others can be created easily.
-For an example, see `~ytree.halo_selector.sphere_selector`.
+For an example, see :ref:`~ytree.halo_selector.sphere_selector`.
 
 Searching for Fewer Ancestors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -143,7 +143,7 @@ keep the most massive ancestor.  This will greatly reduce
 the number of halos included in the merger-tree and,
 therefore, speed up the calculation considerably.  For an
 example of how to create a new filter, see
-`~ytree.ancestry_filter.most_massive`.
+:ref:`~ytree.ancestry_filter.most_massive`.
 
 The filtering will only occur after all candidates have been
 checked for ancestry.  An additional operation an be added to
@@ -152,7 +152,7 @@ In the call to ``set_ancestry_short`` below, the ancestry
 search will end as soon as an ancestor with at least 50% of
 the mass of the target halo has been found.  For an example
 of how to create a new function of this type, see
-`~ytree.ancestry_short.most_massive`.
+:ref:`~ytree.ancestry_short.most_massive`.
 
 .. code-block:: python
    :emphasize-lines: 4, 5

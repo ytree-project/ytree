@@ -294,6 +294,16 @@ class TreeNode(object):
         filename : string
             The filename of the saved arbor.
 
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("rockstar_halos/trees/tree_0_0_0.dat")
+        >>> # save the first tree
+        >>> fn = a[0].save_tree()
+        >>> # reload it
+        >>> a2 = ytree.load(fn)
+
         """
         keyword = "tree_%d_%d" % (self.level_id, self.halo_id)
         filename = get_output_filename(filename, keyword, ".h5")

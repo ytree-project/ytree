@@ -20,6 +20,9 @@ from arbor import \
     RockstarArbor, \
     TreeFarmArbor, \
     load
+from tree_node_selector import \
+    TreeNodeSelector, \
+    add_tree_node_selector
 from tree_farm import \
     TreeFarm
 from ancestry_checker import \
