@@ -236,7 +236,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> print (my_tree._tree("mvir").to("Msun/h"))
+        >>> print (my_tree["tree", "mvir"].to("Msun/h"))
 
         Returns
         -------
@@ -261,7 +261,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> print (my_tree._line("mvir").to("Msun/h"))
+        >>> print (my_tree["line", "mvir"].to("Msun/h"))
 
         Returns
         -------

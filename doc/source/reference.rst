@@ -18,6 +18,8 @@ used to save the entire arbor or individual trees.
    ~ytree.arbor.load
    ~ytree.arbor.Arbor.save_arbor
    ~ytree.tree_node.TreeNode.save_tree
+   ~ytree.tree_node.TreeNode._line
+   ~ytree.tree_node.TreeNode._tree
    ~ytree.arbor.Arbor.set_selector
    ~ytree.tree_node_selector.TreeNodeSelector
    ~ytree.tree_node_selector.add_tree_node_selector
