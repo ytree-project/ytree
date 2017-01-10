@@ -78,9 +78,9 @@ class TreeFarm(object):
     >>> my_tree = ytree.TreeFarm(ts)
     >>> my_tree.trace_descendents("Group", filename="all_halos/")
     >>> a = ytree.load("all_halos/fof_subhalo_tab_000.0.hdf5.0.h5")
-    >>> m = a.arr([t["particle_mass"] for t in a.trees])
+    >>> m = a["particle_mass"]
     >>> i = np.argmax(m)
-    >>> print (a.trees[i].line("particle_mass").to("Msun/h"))
+    >>> print (a.trees[i]["line", "particle_mass").to("Msun/h"))
 
     To create a merger tree for a specific halo or set of halos:
 
@@ -96,7 +96,7 @@ class TreeFarm(object):
     >>> my_tree.set_ancestry_short("above_mass_fraction", 0.5)
     >>> my_tree.trace_ancestors("Group", my_ids, filename="my_halos/")
     >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.hdf5.0.h5")
-    >>> print (a.trees[0].line("particle_mass").to("Msun/h"))
+    >>> print (a[0]["line", "particle_mass").to("Msun/h"))
 
     """
     def __init__(self, time_series, setup_function=None):
