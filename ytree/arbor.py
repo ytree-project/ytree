@@ -120,14 +120,14 @@ class Arbor(object):
         """
         Return length of tree list.
         """
-        return len(self._trees)
+        return self._trees.size
 
     @property
     def size(self):
         """
         Return length of tree list.
         """
-        return len(self._trees)
+        return self._trees.size
 
     _unit_registry = None
     @property
@@ -343,8 +343,9 @@ class MonolithArbor(Arbor):
             self._trees.append(my_tree[root_id])
             pbar.update(my_i)
         pbar.finish()
+        self._trees = np.array(self._trees)
         mylog.info("Arbor contains %d trees with %d total nodes." %
-                   (len(self._trees), self._field_data["uid"].size))
+                   (self._trees.size, self._field_data["uid"].size))
 
 class ArborArbor(MonolithArbor):
     """
@@ -564,7 +565,7 @@ class CatalogArbor(Arbor):
 
             pbar.update(i)
         pbar.finish()
-        self._trees = my_trees
+        self._trees = np.array(my_trees)
 
         for field in self._field_data:
             my_data = []
@@ -582,7 +583,7 @@ class CatalogArbor(Arbor):
         assert (self._field_data["tree_id"] != -1).any()
 
         mylog.info("Arbor contains %d trees with %d total nodes." %
-                   (len(self._trees), offset))
+                   (self._trees.size, offset))
 
 _rs_columns = (("halo_id",  (0,)),
                ("desc_id",  (1,)),
