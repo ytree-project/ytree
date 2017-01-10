@@ -86,12 +86,13 @@ class Arbor(object):
         self._load_trees()
         self.field_list = self._field_data.keys()
         self._set_default_selector()
+        self._root_field_data = {}
+        self._set_comoving_units()
         self.cosmology = Cosmology(
             hubble_constant=self.hubble_constant,
             omega_matter=self.omega_matter,
             omega_lambda=self.omega_lambda,
             unit_registry=self.unit_registry)
-        self._root_field_data = {}
 
     def __getitem__(self, key):
         """
@@ -146,10 +147,22 @@ class Arbor(object):
 
     @box_size.setter
     def box_size(self, value):
-        # set unitary as soon as we know the box size
         self._box_size = value
+        # set unitary as soon as we know the box size
         self.unit_registry.add(
             "unitary", float(self.box_size.in_base()), length)
+
+    def _set_comoving_units(self):
+        """
+        Set "cm" units for explicitly comoving.
+        Note, we are using comoving units all the time since
+        we are dealing with data at multiple redshifts.
+        """
+        for my_unit in ["m", "pc", "AU", "au"]:
+            new_unit = "%scm" % my_unit
+            self._unit_registry.add(
+                new_unit, self._unit_registry.lut[my_unit][0],
+                length, self._unit_registry.lut[my_unit][3])
 
     def set_selector(self, selector, *args, **kwargs):
         r"""
@@ -499,7 +512,10 @@ class CatalogArbor(Arbor):
         if len(data) == 0:
             return np.array(data)
         if isinstance(data[0], YTArray):
-            self._field_data[field] = self.arr(data)
+            # Override the dataset's units with the arbor's
+            # to avoid lingering comoving/proper definitions.
+            self._field_data[field] = \
+              self.arr(data, str(data[0].units))
         else:
             self._field_data[field] = np.array(data)
 
@@ -716,15 +732,16 @@ class TreeFarmArbor(CatalogArbor):
         """
         ds = yt_load(fn)
 
-        self.unit_registry = UnitRegistry.from_json(
-            ds.unit_registry.to_json())
         if not hasattr(self, "hubble_constant"):
             for attr in ["hubble_constant",
                          "omega_matter",
                          "omega_lambda"]:
                 setattr(self, attr, getattr(ds, attr))
             self.unit_registry.modify("h", self.hubble_constant)
-            self.box_size = ds.domain_width[0]
+            # Drop the "cm" suffix because all lengths will
+            # be in comoving units.
+            self.box_size = self.quan(
+                ds.domain_width[0].to("Mpccm/h"), "Mpc/h")
         try:
             if len(ds.field_list) == 0 or ds.index.total_particles == 0:
                 return 0
