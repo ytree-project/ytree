@@ -32,7 +32,7 @@ have installed yt following the instructions `here
     pip install ytree
 
 If you'd like to install the development version or don't want to use
-pip, the mercurial repository for ``ytree`` can be found
+pip, the mercurial repository for ytree can be found
 `here <https://bitbucket.org/brittonsmith/ytree>`__.  To clone the
 repositry, just do:
 
@@ -57,7 +57,7 @@ or
 What version do I have?
 =======================
 
-To see what version of `ytree` you are using, do the following:
+To see what version of ytree you are using, do the following:
 
 .. code-block:: python
 

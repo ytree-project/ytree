@@ -10,7 +10,7 @@ one can do with it.
 Loading Merger-tree data
 ------------------------
 
-``ytree`` can load merger-tree data from multiple sources using
+ytree can load merger-tree data from multiple sources using
 the :func:`~ytree.arbor.load` command.  This command will guess the correct
 format and read in the data appropriately.  For examples of loading
 each format, see below.
