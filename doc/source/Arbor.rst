@@ -15,6 +15,11 @@ the :func:`~ytree.arbor.load` command.  This command will guess the correct
 format and read in the data appropriately.  For examples of loading
 each format, see below.
 
+.. warning::
+
+   All lengths are always in comoving units.  For example, querying a
+   field in "Mpc" will return the same thing as "Mpccm".
+
 Consistent Trees
 ^^^^^^^^^^^^^^^^
 
