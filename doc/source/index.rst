@@ -41,6 +41,7 @@ Using ytree
    Installation.rst
    Arbor.rst
    TreeFarm.rst
+   Conduct.rst
    reference.rst
 
 Help
