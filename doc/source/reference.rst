@@ -52,3 +52,15 @@ Making Merger-Trees
    ~ytree.halo_selector.add_halo_selector
    ~ytree.halo_selector.sphere_selector
    ~ytree.halo_selector.all_selector
+
+Internal Classes
+----------------
+
+   ~ytree.arbor.Arbor
+   ~ytree.arbor.ArborArbor
+   ~ytree.arbor.CatalogArbor
+   ~ytree.arbor.ConsistentTreesArbor
+   ~ytree.arbor.MonolithArbor
+   ~ytree.arbor.RockstarArbor
+   ~ytree.arbor.TreeFarmArbor
+   ~ytree.tree_node.TreeNode
