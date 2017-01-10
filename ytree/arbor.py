@@ -82,6 +82,7 @@ class Arbor(object):
         Initialize an Arbor given a single input file.
         """
         self.filename = filename
+        self.basename = os.path.basename(filename)
         self.unit_registry = UnitRegistry()
         self._load_trees()
         self.field_list = self._field_data.keys()
@@ -93,6 +94,9 @@ class Arbor(object):
             omega_matter=self.omega_matter,
             omega_lambda=self.omega_lambda,
             unit_registry=self.unit_registry)
+
+    def __repr__(self):
+        return self.basename
 
     def __getitem__(self, key):
         """

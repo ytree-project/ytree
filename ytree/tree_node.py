@@ -21,6 +21,8 @@ from yt.frontends.ytdata.utilities import \
     save_as_dataset
 from yt.funcs import \
     get_output_filename
+from yt.utilities.exceptions import \
+    YTFieldNotFound
 
 class TreeNode(object):
     """
@@ -110,6 +112,8 @@ class TreeNode(object):
                     return getattr(self, "_%s_nodes" % key)
                 # return field value for this node
                 else:
+                    if key not in self.arbor._field_data:
+                        raise YTFieldNotFound(key, self.arbor)
                     return self.arbor._field_data[key][self.global_id]
             else:
                 raise SyntaxError("Single argument must be a string.")
