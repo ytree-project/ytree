@@ -42,6 +42,7 @@ Using ytree
    Arbor.rst
    TreeFarm.rst
    Conduct.rst
+   Contributing.rst
    reference.rst
 
 Help

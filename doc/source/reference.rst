@@ -56,6 +56,9 @@ Making Merger-Trees
 Internal Classes
 ----------------
 
+.. autosummary::
+   :toctree: generated/
+
    ~ytree.arbor.Arbor
    ~ytree.arbor.ArborArbor
    ~ytree.arbor.CatalogArbor
