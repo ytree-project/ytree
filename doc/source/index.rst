@@ -20,39 +20,7 @@ All formats can be saved with a universal format that can be reloaded
 with ytree.  Individual trees for single halos can also be saved.  Similar
 to yt, fields queried for halos or trees are returned with units.
 
-Installation
-============
-
-ytree's main dependency is `yt <http://yt-project.org/>`_.  Once you
-have installed yt following the instructions `here
-<http://yt-project.org/#getyt>`__, ytree can be installed using pip.
-
-.. code-block:: bash
-
-    pip install ytree
-
-If you'd like to install the development version or don't want to use
-pip, the mercurial repository for ytree can be found
-`here <https://bitbucket.org/brittonsmith/ytree>`__.  To clone the
-repositry, just do:
-
-.. code-block:: bash
-
-   hg clone https://bitbucket.org/brittonsmith/ytree
-
-Then, install with one of the following two methods:
-
-.. code-block:: bash
-
-   cd ytree
-   python setup.py develop
-
-or
-
-.. code-block:: bash
-
-   cd ytree
-   pip install -e .
+.. include:: Installation.rst
 
 What version do I have?
 =======================
@@ -70,6 +38,7 @@ Using ytree
 .. toctree::
    :maxdepth: 2
 
+   Installation.rst
    Arbor.rst
    TreeFarm.rst
    reference.rst
