@@ -1,0 +1,17 @@
+== Version 1.1 ==
+_Release date - Jan 12, 2017_
+
+  * New feature: New, more yt-like field querying syntax for both arbors
+	and tree nodes.
+  * Enhancement: More robust unit system with restoring of unit registries
+	from stored json.
+  * Enhancement: Added minimum radius to halo sphere selector.
+  * Enhancement: Replaced import of yt for specific imports of all
+	required functions.
+  * Enhancement: Added ytree logger.
+  * Bugfix: Allow non-root trees to be saved and reloaded.
+  * Bugfix: Fix bug allowing trees that end before the final output.
+  * Docs updated and API reference docs added.
+
+== Version 1.0 ==
+_Release date - Sep 26, 2016_
