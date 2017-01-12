@@ -368,7 +368,8 @@ class ArborArbor(MonolithArbor):
             setattr(self, attr, fh.attrs[attr])
         if "unit_registry_json" in fh.attrs:
             self.unit_registry = \
-              UnitRegistry.from_json(fh.attrs["unit_registry_json"])
+              UnitRegistry.from_json(
+                  fh.attrs["unit_registry_json"].astype(str))
         self.unit_registry.modify("h", self.hubble_constant)
         self.box_size = _hdf5_yt_attr(fh, "box_size",
                                       unit_registry=self.unit_registry)
@@ -386,7 +387,9 @@ class ArborArbor(MonolithArbor):
         if not fn.endswith(".h5"): return False
         try:
             with h5py.File(fn, "r") as f:
-                if f.attrs.get("arbor_type") != "ArborArbor":
+                if "arbor_type" not in f.attrs:
+                    return False
+                if f.attrs["arbor_type"].astype(str) != "ArborArbor":
                     return False
         except:
             return False
@@ -428,7 +431,7 @@ class ConsistentTreesArbor(MonolithArbor):
         Read all relevant parameters from file header and
         modify unit registry for hubble constant.
         """
-        f = file(self.filename, "r")
+        f = open(self.filename, "r")
         i = 0
         while True:
             i += 1
@@ -642,7 +645,7 @@ class RockstarArbor(CatalogArbor):
         and modify unit registry for hubble constant.
         """
         get_pars = not hasattr(self, "hubble_constant")
-        f = file(filename, "r")
+        f = open(filename, "r")
         while True:
             line = f.readline()
             if line is None or not line.startswith("#"):
