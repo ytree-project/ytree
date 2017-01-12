@@ -13,25 +13,25 @@ ytree imports
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from arbor import \
+from ytree.arbor import \
     Arbor, \
     ArborArbor, \
     ConsistentTreesArbor, \
     RockstarArbor, \
     TreeFarmArbor, \
     load
-from tree_node_selector import \
+from ytree.tree_node_selector import \
     TreeNodeSelector, \
     add_tree_node_selector
-from tree_farm import \
+from ytree.tree_farm import \
     TreeFarm
-from ancestry_checker import \
+from ytree.ancestry_checker import \
     add_ancestry_checker
-from ancestry_filter import \
+from ytree.ancestry_filter import \
     add_ancestry_filter
-from ancestry_short import \
+from ytree.ancestry_short import \
     add_ancestry_short
-from halo_selector import \
+from ytree.halo_selector import \
     add_halo_selector
 
 __version__ = '1.1.0'
