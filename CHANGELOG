@@ -3,6 +3,7 @@ _Release date - Jan 12, 2017_
 
   * New feature: New, more yt-like field querying syntax for both arbors
 	and tree nodes.
+  * Enhancement: Python3 now supported.
   * Enhancement: More robust unit system with restoring of unit registries
 	from stored json.
   * Enhancement: Added minimum radius to halo sphere selector.
