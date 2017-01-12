@@ -789,7 +789,9 @@ class TreeFarmArbor(CatalogArbor):
         if not fn.endswith(".h5"): return False
         try:
             with h5py.File(fn, "r") as f:
-                if f.attrs.get("data_type") != "halo_catalog":
+                if "data_type" not in f.attrs:
+                    return False
+                if f.attrs["data_type"].astype(str) != "halo_catalog":
                     return False
         except:
             return False
