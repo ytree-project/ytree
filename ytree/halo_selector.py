@@ -33,7 +33,7 @@ def clear_id_cache():
     Some HaloSelectors create a cache for quicker access.
     This clears that cache.
     """
-    for key in _id_cache.keys():
+    for key in list(_id_cache):
         del _id_cache[key]
 
 def add_halo_selector(name, function):
