@@ -9,6 +9,4 @@ pipelines:
   default:
     - step:
         script: # Modify the commands below to build your repository.
-          - pip install -U tox
-          - pip --version
-          - tox --version
+          - bash bp.sh
