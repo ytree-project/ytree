@@ -15,8 +15,9 @@ cd ..
 # download test data
 hg clone https://bitbucket.org/brittonsmith/ytree_test_data
 
-# install ytree now that it's been downloaded
-cd ytree
+# repo has been cloned here
+cd $BITBUCKET_CLONE_DIR
+hg up tip
 pip install -e .
 
 # start the tests themselves
