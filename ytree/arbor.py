@@ -333,8 +333,9 @@ class MonolithArbor(Arbor):
         if hasattr(root_ids, "units"):
             root_ids = root_ids.d
         root_ids = root_ids.astype(np.int64, copy=False)
-        pbar = get_pbar("Loading trees", root_ids.size)
-        for my_i, root_id in enumerate(root_ids):
+        pbar = get_pbar("Loading %d trees" % root_ids.size,
+                        self._field_data["uid"].size)
+        for root_id in root_ids:
             tree_halos = (root_id == self._field_data["tree_id"])
             my_tree = {}
             for i in np.where(tree_halos)[0]:
@@ -344,8 +345,8 @@ class MonolithArbor(Arbor):
                 my_tree[uid] = my_node
                 if desc_id >= 0:
                     my_tree[desc_id].add_ancestor(my_node)
+                pbar.update(1)
             self._trees.append(my_tree[root_id])
-            pbar.update(my_i)
         pbar.finish()
         self._trees = np.array(self._trees)
         mylog.info("Arbor contains %d trees with %d total nodes." %
