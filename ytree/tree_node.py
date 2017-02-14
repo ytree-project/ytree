@@ -33,16 +33,14 @@ class TreeNode(object):
     Arbor that holds it.  It also has a list of its ancestors.
     Fields can be queried for it, its line, and the tree beneath.
     """
-    def __init__(self, halo_id, level_id, global_id=None, arbor=None):
+    def __init__(self, global_id, arbor=None):
         """
         Initialize a TreeNode with at least its halo catalog ID and
         its level in the tree.
         """
-        self.halo_id = halo_id
-        self.level_id = level_id
         self.global_id = global_id
-        self.ancestors = None
         self.arbor = arbor
+        self.ancestors = None
 
     def add_ancestor(self, ancestor):
         """
@@ -119,7 +117,17 @@ class TreeNode(object):
                 raise SyntaxError("Single argument must be a string.")
 
     def __repr__(self):
-        return "TreeNode[%d,%d]" % (self.level_id, self.halo_id)
+        return "TreeNode[%d]" % self.my_id
+
+    _my_id = None
+    @property
+    def my_id(self):
+        if self._my_id is None:
+            if "uid" in self.arbor._field_data:
+                self._my_id = self["uid"]
+            else:
+                self._my_id = self.global_id
+        return self._my_id
 
     _tfi = None
     @property
@@ -288,7 +296,7 @@ class TreeNode(object):
         filename : optional, string
             Output filename.  Include a trailing "/" to indicate
             a directory.
-            Default: "arbor_<level>_<halo_id>.h5"
+            Default: "arbor_<uid>.h5"
         fields : optional, list of strings
             The fields to be saved.  If not given, all
             fields will be saved.
@@ -309,7 +317,7 @@ class TreeNode(object):
         >>> a2 = ytree.load(fn)
 
         """
-        keyword = "tree_%d_%d" % (self.level_id, self.halo_id)
+        keyword = "tree_%d" % self.my_id
         filename = get_output_filename(filename, keyword, ".h5")
         if fields is None:
             fields = self.arbor._field_data.keys()

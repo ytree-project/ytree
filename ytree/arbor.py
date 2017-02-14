@@ -339,13 +339,8 @@ class MonolithArbor(Arbor):
             my_tree = {}
             for i in np.where(tree_halos)[0]:
                 desc_id = np.int64(self._field_data["desc_id"][i])
-                halo_id = np.int64(self._field_data[self._hid_field][i])
                 uid = np.int64(self._field_data["uid"][i])
-                if desc_id == -1:
-                    level = 0
-                else:
-                    level = my_tree[desc_id].level_id + 1
-                my_node = TreeNode(halo_id, level, i, arbor=self)
+                my_node = TreeNode(i, arbor=self)
                 my_tree[uid] = my_node
                 if desc_id >= 0:
                     my_tree[desc_id].add_ancestor(my_node)
@@ -552,8 +547,8 @@ class CatalogArbor(Arbor):
 
             my_nodes = []
             for halo in range(n_halos):
-                my_node = TreeNode(self._field_data["halo_id"][-1][halo], i,
-                                   self._field_data["uid"][-1][halo], self)
+                my_node = TreeNode(self._field_data["uid"][-1][halo],
+                                   arbor=self)
                 my_nodes.append(my_node)
                 if self._field_data["desc_id"][-1][halo] == -1 or i == 0:
                     my_trees.append(my_node)
