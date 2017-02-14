@@ -113,6 +113,12 @@ class Arbor(object):
             return self._root_field_data[key]
         return self._trees[key]
 
+    def _get_field(self, field):
+        """
+        Get field data from cache or from disk.
+        """
+        return self._field_data[field]
+
     def __iter__(self):
         """
         Iterate over all items in the tree list.
@@ -323,11 +329,10 @@ class MonolithArbor(Arbor):
         self._set_halo_id_field()
 
         self._trees = []
-        all_uid = self._field_data["tree_id"]
-        if hasattr(all_uid, "units"):
-            all_uid = all_uid.d
-        all_uid = all_uid.astype(np.int64)
-        root_ids = np.unique(all_uid)
+        root_ids = self._field_data["uid"][self._field_data["desc_id"] == -1]
+        if hasattr(root_ids, "units"):
+            root_ids = root_ids.d
+        root_ids = root_ids.astype(np.int64, copy=False)
         pbar = get_pbar("Loading trees", root_ids.size)
         for my_i, root_id in enumerate(root_ids):
             tree_halos = (root_id == self._field_data["tree_id"])

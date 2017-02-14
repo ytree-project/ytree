@@ -114,7 +114,7 @@ class TreeNode(object):
                 else:
                     if key not in self.arbor._field_data:
                         raise YTFieldNotFound(key, self.arbor)
-                    return self.arbor._field_data[key][self.global_id]
+                    return self.arbor._get_field(key)[self.global_id]
             else:
                 raise SyntaxError("Single argument must be a string.")
 
