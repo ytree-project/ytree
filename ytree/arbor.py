@@ -435,7 +435,8 @@ class ConsistentTreesArbor(MonolithArbor):
         """
 
         fields = []
-        units = {}
+        fi = {}
+        fdb = {}
         rems = ["%s%s%s" % (s[0], t, s[1])
                 for s in [("(", ")"), ("", "")]
                 for t in ["comoving", "physical"]]
@@ -471,7 +472,7 @@ class ConsistentTreesArbor(MonolithArbor):
                 pars = line.split("=")[1].strip().split()
                 box = pars
 
-            elif ":" in line and "(" in line and ")" in line:
+            elif ":" in line:
                 tfields, desc = line[1:].strip().split(":", maxsplit=1)
                 for sep in ["/", ","]:
                     if sep in tfields:
@@ -479,25 +480,36 @@ class ConsistentTreesArbor(MonolithArbor):
                 if not isinstance(tfields, list):
                     tfields = [tfields]
                 for tfield in tfields:
-                    for field in fields:
-                        if "(" in field and ")" in field:
-                            cfield = field[:field.find("(")]
-                        else:
-                            cfield = field
-                        if cfield.lower() == tfield.lower():
-                            punits = desc[desc.find("(")+1:desc.rfind(")")]
-                            for rem in rems:
-                                while rem in punits:
-                                    pre, mid, pos = punits.partition(rem)
-                                    punits = pre + pos
-                            try:
-                                x = self.quan(1, punits)
-                                units[field] = punits
-                            except UnitParseError:
-                                pass
+                    punits = ""
+                    if "(" in line and ")" in line:
+                        punits = desc[desc.find("(")+1:desc.rfind(")")]
+                        for rem in rems:
+                            while rem in punits:
+                                pre, mid, pos = punits.partition(rem)
+                                punits = pre + pos
+                        try:
+                            x = self.quan(1, punits)
+                        except UnitParseError:
+                            pass
+                    fdb[tfield.lower()] = \
+                      {"description": desc.strip(),
+                       "units": punits}
 
             offset = f.tell()
         f.close()
+
+        for i, field in enumerate(fields):
+            if "(" in field and ")" in field:
+                cfield = field[:field.find("(")]
+            else:
+                cfield = field
+            fi[field] = fdb.get(field.lower(),
+                                {"description": "",
+                                 "units": ""})
+            fi[field]["column"] = i
+        self.field_list = fields
+        self.field_info = fi
+
         self.unit_registry.modify("h", self.hubble_constant)
         self.box_size = self.quan(float(box[0]), box[1])
 
