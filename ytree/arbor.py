@@ -428,12 +428,13 @@ class ConsistentTreesArbor(MonolithArbor):
         """
         self.set_selector("max_field_value", "mvir")
 
-    def _read_header(self):
+    def _parse_parameter_file(self):
         """
         Read all relevant parameters from file header and
         modify unit registry for hubble constant.
         """
 
+        self._field_data = {}
         fields = []
         fi = {}
         fdb = {}
@@ -444,6 +445,9 @@ class ConsistentTreesArbor(MonolithArbor):
         f = open(self.filename, "r")
         self._file_size = f.seek(0, 2)
         f.seek(0)
+
+        # Read the first line as a list of all fields.
+        # Do some footwork to remove awkard characters.
         rfl = f.readline()[1:].strip().split()
         for pf in rfl:
             if "(" in pf and ")" in pf:
@@ -455,12 +459,17 @@ class ConsistentTreesArbor(MonolithArbor):
             else:
                 fields.append(pf)
 
-        offset = f.tell()
+        # Now grab a bunch of things from the header.
         while True:
             line = f.readline()
-            if line is None or not line.startswith("#"):
-                self._hoffset = offset
+            if line is None:
+                raise IOError(
+                    "Encountered enexpected EOF reading %s." %
+                    self.filename)
+            elif not line.startswith("#"):
+                n_halos = int(line.strip())
                 break
+            # cosmological parameters
             if "Omega_M" in line:
                 pars = line[1:].split(";")
                 for j, par in enumerate(["omega_matter",
@@ -468,10 +477,13 @@ class ConsistentTreesArbor(MonolithArbor):
                                          "hubble_constant"]):
                     v = float(pars[j].split(" = ")[1])
                     setattr(self, par, v)
+            # box size
             elif "Full box size" in line:
                 pars = line.split("=")[1].strip().split()
                 box = pars
 
+            # These are lines describing the various fields.
+            # Pull them apart and look for units.
             elif ":" in line:
                 tfields, desc = line[1:].strip().split(":", maxsplit=1)
                 for sep in ["/", ","]:
@@ -494,10 +506,24 @@ class ConsistentTreesArbor(MonolithArbor):
                     fdb[tfield.lower()] = \
                       {"description": desc.strip(),
                        "units": punits}
+        self._hoffset = f.tell()
 
-            offset = f.tell()
+        # Create root nodes and calculate file offsets.
+        self._trees = np.empty(n_halos, dtype=np.object)
+        treech = f.read().split("#")
+        offset = self._hoffset + 1 # for the first #
+        last_off = 0
+        for i, treel in enumerate(treech[1:]):
+            loff = treel.find("\n")
+            uid = int(treel[5:loff])
+            offset += len(treech[i]) + loff - last_off + 1
+            last_off = loff
+            my_node = TreeNode(uid, arbor=self)
+            my_node.offset = offset
+            self._trees[i] = my_node
         f.close()
 
+        # Fill the field info with the units found above.
         for i, field in enumerate(fields):
             if "(" in field and ")" in field:
                 cfield = field[:field.find("(")]
@@ -519,7 +545,7 @@ class ConsistentTreesArbor(MonolithArbor):
         that have been defined above.
         """
         mylog.info("Loading tree data from %s." % self.filename)
-        self._read_header()
+        self._parse_parameter_file()
         data = np.loadtxt(self.filename, skiprows=self._iheader,
                           unpack=True, usecols=_ct_usecol)
         self._field_data = {}
