@@ -33,12 +33,12 @@ class TreeNode(object):
     Arbor that holds it.  It also has a list of its ancestors.
     Fields can be queried for it, its line, and the tree beneath.
     """
-    def __init__(self, global_id, arbor=None):
+    def __init__(self, uid, arbor=None):
         """
         Initialize a TreeNode with at least its halo catalog ID and
         its level in the tree.
         """
-        self.global_id = global_id
+        self.uid = uid
         self.arbor = arbor
         self.ancestors = None
 
@@ -112,7 +112,7 @@ class TreeNode(object):
                 else:
                     if key not in self.arbor._field_data:
                         raise YTFieldNotFound(key, self.arbor)
-                    return self.arbor._get_field(key)[self.global_id]
+                    return self.arbor._get_field(key)[self.uid]
             else:
                 raise SyntaxError("Single argument must be a string.")
 
@@ -126,7 +126,7 @@ class TreeNode(object):
             if "uid" in self.arbor._field_data:
                 self._my_id = self["uid"]
             else:
-                self._my_id = self.global_id
+                self._my_id = self.uid
         return self._my_id
 
     _tfi = None
@@ -158,7 +158,7 @@ class TreeNode(object):
         tfi = []
         tn = []
         for my_node in self.twalk():
-            tfi.append(my_node.global_id)
+            tfi.append(my_node.uid)
             tn.append(my_node)
         self._tfi = np.array(tfi)
         self._tn = tn
@@ -192,7 +192,7 @@ class TreeNode(object):
         lfi = []
         ln = []
         for my_node in self.lwalk():
-            lfi.append(my_node.global_id)
+            lfi.append(my_node.uid)
             ln.append(my_node)
         self._lfi = np.array(lfi)
         self._ln = ln

@@ -86,9 +86,9 @@ class Arbor(object):
         self.basename = os.path.basename(filename)
         self.unit_registry = UnitRegistry()
         self._load_trees()
-        self.field_list = self._field_data.keys()
-        self._set_default_selector()
-        self._root_field_data = {}
+        # self.field_list = self._field_data.keys()
+        # self._set_default_selector()
+        # self._root_field_data = {}
         self._set_comoving_units()
         self.cosmology = Cosmology(
             hubble_constant=self.hubble_constant,
@@ -539,26 +539,12 @@ class ConsistentTreesArbor(MonolithArbor):
         self.unit_registry.modify("h", self.hubble_constant)
         self.box_size = self.quan(float(box[0]), box[1])
 
-    def _load_field_data(self):
+    def _load_trees(self):
         """
-        Load all field data using np.loadtxt and assign units
-        that have been defined above.
+        For now, just parse the parameter file.
         """
         mylog.info("Loading tree data from %s." % self.filename)
         self._parse_parameter_file()
-        data = np.loadtxt(self.filename, skiprows=self._iheader,
-                          unpack=True, usecols=_ct_usecol)
-        self._field_data = {}
-        for field, cols in _ct_fields.items():
-            if cols.size == 1:
-                self._field_data[field] = data[cols][0]
-            else:
-                self._field_data[field] = np.rollaxis(data[cols], 1)
-            if field in _ct_units:
-                self._field_data[field] = \
-                  self.arr(self._field_data[field], _ct_units[field])
-        self._field_data["redshift"] = 1. / self._field_data["a"] - 1.
-        del self._field_data["a"]
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
@@ -672,7 +658,7 @@ class CatalogArbor(Arbor):
             for tnode in t.twalk():
                 if tnode.ancestors is None: continue
                 for a in tnode.ancestors:
-                    self._field_data["desc_id"][a.global_id] = tnode["uid"]
+                    self._field_data["desc_id"][a.uid] = tnode["uid"]
         assert (self._field_data["tree_id"] != -1).any()
 
         mylog.info("Arbor contains %d trees with %d total nodes." %
