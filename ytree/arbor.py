@@ -38,6 +38,7 @@ from yt.units.dimensions import \
 from yt.units.unit_registry import \
     UnitRegistry
 from yt.units.yt_array import \
+    UnitParseError, \
     YTArray, \
     YTQuantity
 from yt.utilities.cosmology import \
@@ -427,17 +428,37 @@ class ConsistentTreesArbor(MonolithArbor):
         """
         self.set_selector("max_field_value", "mvir")
 
-    def _read_cosmological_parameters(self):
+    def _read_header(self):
         """
         Read all relevant parameters from file header and
         modify unit registry for hubble constant.
         """
+
+        fields = []
+        units = {}
+        rems = ["%s%s%s" % (s[0], t, s[1])
+                for s in [("(", ")"), ("", "")]
+                for t in ["comoving", "physical"]]
+
         f = open(self.filename, "r")
-        i = 0
+        self._file_size = f.seek(0, 2)
+        f.seek(0)
+        rfl = f.readline()[1:].strip().split()
+        for pf in rfl:
+            if "(" in pf and ")" in pf:
+                bt = pf[pf.find("(")+1:pf.rfind(")")]
+                if bt.isdigit():
+                    fields.append(pf[:pf.find("(")])
+                else:
+                    fields.append(pf)
+            else:
+                fields.append(pf)
+
+        offset = f.tell()
         while True:
-            i += 1
             line = f.readline()
             if line is None or not line.startswith("#"):
+                self._hoffset = offset
                 break
             if "Omega_M" in line:
                 pars = line[1:].split(";")
@@ -449,8 +470,34 @@ class ConsistentTreesArbor(MonolithArbor):
             elif "Full box size" in line:
                 pars = line.split("=")[1].strip().split()
                 box = pars
+
+            elif ":" in line and "(" in line and ")" in line:
+                tfields, desc = line[1:].strip().split(":", maxsplit=1)
+                for sep in ["/", ","]:
+                    if sep in tfields:
+                        tfields = tfields.split(sep)
+                if not isinstance(tfields, list):
+                    tfields = [tfields]
+                for tfield in tfields:
+                    for field in fields:
+                        if "(" in field and ")" in field:
+                            cfield = field[:field.find("(")]
+                        else:
+                            cfield = field
+                        if cfield.lower() == tfield.lower():
+                            punits = desc[desc.find("(")+1:desc.rfind(")")]
+                            for rem in rems:
+                                while rem in punits:
+                                    pre, mid, pos = punits.partition(rem)
+                                    punits = pre + pos
+                            try:
+                                x = self.quan(1, punits)
+                                units[field] = punits
+                            except UnitParseError:
+                                pass
+
+            offset = f.tell()
         f.close()
-        self._iheader = i
         self.unit_registry.modify("h", self.hubble_constant)
         self.box_size = self.quan(float(box[0]), box[1])
 
@@ -460,7 +507,7 @@ class ConsistentTreesArbor(MonolithArbor):
         that have been defined above.
         """
         mylog.info("Loading tree data from %s." % self.filename)
-        self._read_cosmological_parameters()
+        self._read_header()
         data = np.loadtxt(self.filename, skiprows=self._iheader,
                           unpack=True, usecols=_ct_usecol)
         self._field_data = {}
