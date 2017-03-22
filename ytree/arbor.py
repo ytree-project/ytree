@@ -397,27 +397,6 @@ class ArborArbor(MonolithArbor):
             return False
         return True
 
-_ct_columns = (("a",        (0,)),
-               ("uid",      (1,)),
-               ("desc_id",  (3,)),
-               ("mvir",     (10,)),
-               ("rvir",     (11,)),
-               ("position", (17, 18, 19)),
-               ("velocity", (20, 21, 21)),
-               ("tree_id",  (29,)),
-               ("halo_id",  (30,)), # from halo finder
-               ("snapshot", (31,)))
-_ct_units = {"mvir": "Msun/h",
-             "rvir": "kpc/h",
-             "position": "Mpc/h",
-             "velocity": "km/s"}
-_ct_usecol = []
-_ct_fields = {}
-for field, col in _ct_columns:
-    _ct_usecol.extend(col)
-    _ct_fields[field] = np.arange(len(_ct_usecol)-len(col),
-                                  len(_ct_usecol))
-
 class ConsistentTreesArbor(MonolithArbor):
     """
     Class for Arbors from consistent-trees output files.
