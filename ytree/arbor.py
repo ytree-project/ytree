@@ -425,9 +425,6 @@ class ConsistentTreesArbor(MonolithArbor):
                 for t in ["comoving", "physical"]]
 
         f = open(self.filename, "r")
-        self._file_size = f.seek(0, 2)
-        f.seek(0)
-
         # Read the first line as a list of all fields.
         # Do some footwork to remove awkard characters.
         rfl = f.readline()[1:].strip().split()
@@ -518,14 +515,20 @@ class ConsistentTreesArbor(MonolithArbor):
         treech = f.read().split("#")
         offset = self._hoffset + 1 # for the first # symbol
         last_off = 0
+        pbar = get_pbar("Calculating offsets", self._ntrees)
         for i, treel in enumerate(treech[1:]):
             loff = treel.find("\n")
             uid = int(treel[5:loff])
             offset += len(treech[i]) + loff - last_off + 1
             last_off = loff
             my_node = TreeNode(uid, arbor=self)
-            my_node.offset = offset
+            my_node._si = offset
             self._trees[i] = my_node
+            if i > 0:
+                self._trees[i-1]._ei = offset
+            pbar.update(i)
+        pbar.finish()
+        self._trees[-1]._ei = f.seek(0, 2)
         f.close()
 
     @classmethod
