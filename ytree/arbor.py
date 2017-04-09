@@ -107,7 +107,7 @@ class Arbor(object):
 
         """
         if isinstance(key, string_types):
-            if key in ("tree", "line"):
+            if key in ("tree", "prog"):
                 raise SyntaxError("Argument must be a field or integer.")
             if key not in self._root_field_data:
                 self._root_field_data[key] = self.arr([t[key] for t in self])

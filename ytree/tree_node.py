@@ -31,7 +31,8 @@ class TreeNode(object):
     Each TreeNode represents a halo in a tree.  A TreeNode knows
     its halo ID, the level in the tree, and its global ID in the
     Arbor that holds it.  It also has a list of its ancestors.
-    Fields can be queried for it, its line, and the tree beneath.
+    Fields can be queried for it, its progenitor list, and the
+    tree beneath.
     """
     def __init__(self, uid, arbor=None):
         """
@@ -57,44 +58,45 @@ class TreeNode(object):
 
     def __getitem__(self, key):
         """
-        Return field vlues for this TreeNode, line, or tree.
+        Return field vlues for this TreeNode, progenitor list, or tree.
 
         Parameters
         ----------
         key : string or tuple
             If a single string, it can be either a field to be queried or
-            one of "tree" or "line".  If a field, then return the value of
-            the field for this TreeNode.  If "tree" or "line", then return
-            the list of TreeNodes in the tree or line.
+            one of "tree" or "prog".  If a field, then return the value of
+            the field for this TreeNode.  If "tree" or "prog", then return
+            the list of TreeNodes in the tree or progenitor list.
 
             If a tuple, this can be either (string, string) or (string, int),
-            where the first argument must be either "tree" or "line".
+            where the first argument must be either "tree" or "prog".
             If second argument is a string, then return the field values
-            for either the tree or the line.  If second argument is an int,
-            then return the nth TreeNode in the tree or line list.
+            for either the tree or the progenitor list.  If second argument
+            is an int, then return the nth TreeNode in the tree or progenitor
+            list list.
 
         Examples
         --------
         >>> # virial mass for this halo
         >>> print (my_tree["mvir"].to("Msun/h"))
 
-        >>> # all TreeNodes in the line (most massive progenitors)
-        >>> print (my_tree["line"])
+        >>> # all TreeNodes in the progenitor list
+        >>> print (my_tree["prog"])
         >>> # all TreeNodes in the entire tree
         >>> print (my_tree["tree"])
 
-        >>> # virial masses for the line (most massive progenitors)
-        >>> print (my_tree["line", "mvir"].to("Msun/h"))
+        >>> # virial masses for the progenitor list
+        >>> print (my_tree["prog", "mvir"].to("Msun/h"))
 
-        >>> # the 3rd TreeNode in the line
-        >>> print (my_tree["line", 2])
+        >>> # the 3rd TreeNode in the progenitor list
+        >>> print (my_tree["prog", 2])
 
         Returns
         -------
         float, ndarray/YTArray, TreeNode
 
         """
-        arr_types = ("line", "tree")
+        arr_types = ("prog", "tree")
         if isinstance(key, tuple):
             if len(key) != 2:
                 raise SyntaxError(
@@ -105,7 +107,7 @@ class TreeNode(object):
             return getattr(self, "_%s" % key[0])(key[1])
         else:
             if isinstance(key, string_types):
-                # return the line or tree nodes in a list
+                # return the progenitor list or tree nodes in a list
                 if key in arr_types:
                     return getattr(self, "_%s_nodes" % key)
                 # return field value for this node
@@ -165,29 +167,29 @@ class TreeNode(object):
 
     _lfi = None
     @property
-    def _line_field_indices(self):
+    def _prog_field_indices(self):
         """
         Return the field array indices for all TreeNodes in
-        the line, starting with this TreeNode.
+        the progenitor list, starting with this TreeNode.
         """
         if self._lfi is None:
-            self._set_line_attrs()
+            self._set_prog_attrs()
         return self._lfi
 
     _ln = None
     @property
-    def _line_nodes(self):
+    def _prog_nodes(self):
         """
-        Return a list of all TreeNodes in the line, starting
+        Return a list of all TreeNodes in the progenitor list, starting
         with this TreeNode.
         """
         if self._ln is None:
-            self._set_line_attrs()
+            self._set_prog_attrs()
         return self._ln
 
-    def _set_line_attrs(self):
+    def _set_prog_attrs(self):
         """
-        Prepare the line list and field indices.
+        Prepare the progenitor list list and field indices.
         """
         lfi = []
         ln = []
@@ -218,7 +220,7 @@ class TreeNode(object):
 
     def lwalk(self):
         r"""
-        An iterator over all TreeNodes in the line,
+        An iterator over all TreeNodes in the progenitor list,
         starting with this TreeNode.
 
         Examples
@@ -260,10 +262,10 @@ class TreeNode(object):
         else:
             return self._tree_nodes[field]
 
-    def _line(self, field):
+    def _prog(self, field):
         r"""
-        Return a requested field for all TreeNodes in the line,
-        starting with this TreeNode.  By default, the line traces
+        Return a requested field for all TreeNodes in the progenitor list,
+        starting with this TreeNode.  By default, the progenitor list traces
         the most massive progenitor in the tree.
 
         Parameters
@@ -273,7 +275,7 @@ class TreeNode(object):
 
         Examples
         --------
-        >>> print (my_tree["line", "mvir"].to("Msun/h"))
+        >>> print (my_tree["prog", "mvir"].to("Msun/h"))
 
         Returns
         -------
@@ -281,9 +283,9 @@ class TreeNode(object):
 
         """
         if isinstance(field, string_types):
-            return self.arbor._field_data[field][self._line_field_indices]
+            return self.arbor._field_data[field][self._prog_field_indices]
         else:
-            return self._line_nodes[field]
+            return self._prog_nodes[field]
 
     def save_tree(self, filename=None, fields=None):
         r"""
