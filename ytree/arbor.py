@@ -72,7 +72,7 @@ class Arbor(object):
     Base class for all Arbor classes.
 
     Loads a merger-tree output file or a series of halo catalogs
-    and create trees, stored in a list in :func:`~ytree.arbor.Arbor._trees`.
+    and create trees, stored in an array in :func:`~ytree.arbor.Arbor.trees`.
     Arbors can be saved in a universal format with
     :func:`~ytree.arbor.Arbor.save_arbor`.  Also, provide some convenience
     functions for creating YTArrays and YTQuantities and a cosmology
@@ -82,10 +82,12 @@ class Arbor(object):
         """
         Initialize an Arbor given a single input file.
         """
+
         self.filename = filename
         self.basename = os.path.basename(filename)
         self.unit_registry = UnitRegistry()
-        self._load_trees()
+        self._parse_parameter_file()
+
         # self.field_list = self._field_data.keys()
         # self._set_default_selector()
         # self._root_field_data = {}
@@ -95,6 +97,13 @@ class Arbor(object):
             omega_matter=self.omega_matter,
             omega_lambda=self.omega_lambda,
             unit_registry=self.unit_registry)
+
+    _trees = None
+    @property
+    def trees(self):
+        if self._trees is None:
+            self._plant_trees()
+        return self._trees
 
     def __repr__(self):
         return self.basename
@@ -112,7 +121,7 @@ class Arbor(object):
             if key not in self._root_field_data:
                 self._root_field_data[key] = self.arr([t[key] for t in self])
             return self._root_field_data[key]
-        return self._trees[key]
+        return self.trees[key]
 
     def _get_field(self, field):
         """
@@ -124,21 +133,21 @@ class Arbor(object):
         """
         Iterate over all items in the tree list.
         """
-        for t in self._trees:
+        for t in self.trees:
             yield t
 
     def __len__(self):
         """
         Return length of tree list.
         """
-        return self._trees.size
+        return self.trees.size
 
     @property
     def size(self):
         """
         Return length of tree list.
         """
-        return self._trees.size
+        return self.trees.size
 
     _unit_registry = None
     @property
@@ -250,12 +259,6 @@ class Arbor(object):
         if len(hfields) == 0:
             raise RuntimeError("No halo id field found.")
         self._hid_field = hfields[0]
-
-    def _load_trees(self):
-        """
-        Main function responsible for loading the trees.
-        """
-        pass
 
     @classmethod
     def _is_valid(cls, *args, **kwargs):
@@ -446,7 +449,7 @@ class ConsistentTreesArbor(MonolithArbor):
                     "Encountered enexpected EOF reading %s." %
                     self.filename)
             elif not line.startswith("#"):
-                n_halos = int(line.strip())
+                self._ntrees = int(line.strip())
                 break
             # cosmological parameters
             if "Omega_M" in line:
@@ -486,20 +489,6 @@ class ConsistentTreesArbor(MonolithArbor):
                       {"description": desc.strip(),
                        "units": punits}
         self._hoffset = f.tell()
-
-        # Create root nodes and calculate file offsets.
-        self._trees = np.empty(n_halos, dtype=np.object)
-        treech = f.read().split("#")
-        offset = self._hoffset + 1 # for the first #
-        last_off = 0
-        for i, treel in enumerate(treech[1:]):
-            loff = treel.find("\n")
-            uid = int(treel[5:loff])
-            offset += len(treech[i]) + loff - last_off + 1
-            last_off = loff
-            my_node = TreeNode(uid, arbor=self)
-            my_node.offset = offset
-            self._trees[i] = my_node
         f.close()
 
         # Fill the field info with the units found above.
@@ -518,12 +507,26 @@ class ConsistentTreesArbor(MonolithArbor):
         self.unit_registry.modify("h", self.hubble_constant)
         self.box_size = self.quan(float(box[0]), box[1])
 
-    def _load_trees(self):
+    def _plant_trees(self):
         """
-        For now, just parse the parameter file.
+        Create the list of root tree nodes.
         """
-        mylog.info("Loading tree data from %s." % self.filename)
-        self._parse_parameter_file()
+
+        f = open(self.filename, "r")
+        f.seek(self._hoffset)
+        self._trees = np.empty(self._ntrees, dtype=np.object)
+        treech = f.read().split("#")
+        offset = self._hoffset + 1 # for the first # symbol
+        last_off = 0
+        for i, treel in enumerate(treech[1:]):
+            loff = treel.find("\n")
+            uid = int(treel[5:loff])
+            offset += len(treech[i]) + loff - last_off + 1
+            last_off = loff
+            my_node = TreeNode(uid, arbor=self)
+            my_node.offset = offset
+            self._trees[i] = my_node
+        f.close()
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
