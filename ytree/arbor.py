@@ -509,27 +509,42 @@ class ConsistentTreesArbor(MonolithArbor):
         Create the list of root tree nodes.
         """
 
+        lkey = len("tree ")+1
+        block_size = 32768
+
         f = open(self.filename, "r")
+        file_size = f.seek(0, 2)
+        pbar = get_pbar("Loading tree roots", file_size)
         f.seek(self._hoffset)
         self._trees = np.empty(self._ntrees, dtype=np.object)
-        treech = f.read().split("#")
-        offset = self._hoffset + 1 # for the first # symbol
-        last_off = 0
-        pbar = get_pbar("Calculating offsets", self._ntrees)
-        for i, treel in enumerate(treech[1:]):
-            loff = treel.find("\n")
-            uid = int(treel[5:loff])
-            offset += len(treech[i]) + loff - last_off + 1
-            last_off = loff
-            my_node = TreeNode(uid, arbor=self)
-            my_node._si = offset
-            self._trees[i] = my_node
-            if i > 0:
-                self._trees[i-1]._ei = offset
-            pbar.update(i)
-        pbar.finish()
-        self._trees[-1]._ei = f.seek(0, 2)
+
+        offset = self._hoffset
+        itree = 0
+        nblocks = np.ceil(float(file_size) /
+                          block_size).astype(np.int64)
+        for ib in range(nblocks):
+            my_block = min(block_size, file_size - offset)
+            buff = f.read(my_block)
+            lihash = -1
+            for ih in range(buff.count("#")):
+                ihash = buff.find("#", lihash+1)
+                inl = buff.find("\n", ihash+1)
+                if inl < 0:
+                    buff += f.readline()
+                    inl = len(buff)
+                uid = int(buff[ihash+lkey:inl])
+                lihash = ihash
+                my_node = TreeNode(uid, arbor=self)
+                my_node._si = offset + inl + 1
+                self._trees[itree] = my_node
+                if itree > 0:
+                    self._trees[itree-1]._ei = my_node._si
+                itree += 1
+            offset = f.tell()
+            pbar.update(offset)
+        self._trees[-1]._ei = offset
         f.close()
+        pbar.finish()
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
