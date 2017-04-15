@@ -160,6 +160,19 @@ class Arbor(object):
         self._arr = None
         self._quan = None
 
+    _hubble_constant = None
+    @property
+    def hubble_constant(self):
+        return self._hubble_constant
+
+    @hubble_constant.setter
+    def hubble_constant(self, value):
+        self._hubble_constant = value
+        # reset the unit registry lut while preserving other changes
+        self.unit_registry = UnitRegistry.from_json(
+            self.unit_registry.to_json())
+        self.unit_registry.modify("h", self.hubble_constant)
+
     _box_size = None
     @property
     def box_size(self):
@@ -375,7 +388,6 @@ class ArborArbor(MonolithArbor):
             self.unit_registry = \
               UnitRegistry.from_json(
                   fh.attrs["unit_registry_json"].astype(str))
-        self.unit_registry.modify("h", self.hubble_constant)
         self.box_size = _hdf5_yt_attr(fh, "box_size",
                                       unit_registry=self.unit_registry)
         self._field_data = dict([(f, _hdf5_yt_array(fh["data"], f, self))
@@ -501,7 +513,6 @@ class ConsistentTreesArbor(MonolithArbor):
         self.field_list = fields
         self.field_info = fi
 
-        self.unit_registry.modify("h", self.hubble_constant)
         self.box_size = self.quan(float(box[0]), box[1])
 
     def _plant_trees(self):
@@ -736,7 +747,6 @@ class RockstarArbor(CatalogArbor):
                 a = float(line.split("=")[1].strip())
         f.close()
         if get_pars:
-            self.unit_registry.modify("h", self.hubble_constant)
             self.box_size = self.quan(float(box[0]), box[1])
         return 1. / a - 1.
 
@@ -817,7 +827,6 @@ class TreeFarmArbor(CatalogArbor):
                          "omega_matter",
                          "omega_lambda"]:
                 setattr(self, attr, getattr(ds, attr))
-            self.unit_registry.modify("h", self.hubble_constant)
             # Drop the "cm" suffix because all lengths will
             # be in comoving units.
             self.box_size = self.quan(
