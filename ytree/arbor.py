@@ -484,6 +484,7 @@ class ConsistentTreesArbor(MonolithArbor):
                     tfields = [tfields]
                 for tfield in tfields:
                     punits = ""
+                    fdb[tfield.lower()] = {"description": desc.strip()}
                     if "(" in line and ")" in line:
                         punits = desc[desc.find("(")+1:desc.rfind(")")]
                         for rem in rems:
@@ -493,10 +494,8 @@ class ConsistentTreesArbor(MonolithArbor):
                         try:
                             x = self.quan(1, punits)
                         except UnitParseError:
-                            pass
-                    fdb[tfield.lower()] = \
-                      {"description": desc.strip(),
-                       "units": punits}
+                            punits = ""
+                        fdb[tfield.lower()]["units"] = punits
         self._hoffset = f.tell()
         f.close()
 
