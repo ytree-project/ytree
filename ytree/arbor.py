@@ -273,6 +273,11 @@ class Arbor(object):
             raise RuntimeError("No halo id field found.")
         self._hid_field = hfields[0]
 
+    def _get_root_fields(self, root_node, fields, f=None):
+        field_data = self._read_fields(root_node, fields)
+        tree_node._root_field_data.update(
+            dict((field, field_data[field][0]) for field in fields))
+
     @classmethod
     def _is_valid(cls, *args, **kwargs):
         """
@@ -416,6 +421,89 @@ class ConsistentTreesArbor(MonolithArbor):
     """
     Class for Arbors from consistent-trees output files.
     """
+
+    def _read_fields(self, root_node, fields, dtypes=None,
+                     f=None, root_only=False):
+        if dtypes is None:
+            dtypes = {}
+
+        if f is None:
+            close = True
+            f = open(self.filename, "r")
+        f.seek(root_node._si)
+        if root_only:
+            data = [f.readline()]
+        else:
+            data = f.read(
+                root_node._ei -
+                root_node._si).split("\n")
+        if close:
+            f.close()
+
+        nhalos = len(data)
+        field_data = {}
+        fi = self.field_info
+        for field in fields:
+            field_data[field] = \
+              np.empty(nhalos, dtype=dtypes.get(field, float))
+
+        for i, datum in enumerate(data):
+            ldata = datum.strip().split()
+            for field in fields:
+                dtype = dtypes.get(field, float)
+                field_data[field][i] = dtype(ldata[fi[field]["column"]])
+
+        for field in fields:
+            units = fi[field].get("units", "")
+            if units != "":
+                print (field, units)
+                field_data[field] = self.arr(field_data[field], units)
+
+        return field_data
+
+    def _build_tree(self, root_node, fields=None, f=None):
+        if fields is None:
+            fields = []
+        else:
+            fields = fields.copy()
+        for field in ["id", "desc_id"]:
+            if field not in fields:
+                fields.append(field)
+
+        idtype  = np.int64
+        dtypes  = {"id": idtype, "desc_id": idtype}
+        field_data = self._read_fields(root_node, fields,
+                                       dtypes=dtypes)
+        uids    = field_data.pop("id")
+        descids = field_data.pop("desc_id")
+        nhalos  = uids.size
+        nodes   = np.empty(nhalos, dtype=np.object)
+        uidmap  = {}
+        for i in range(nhalos):
+            nodes[i] = TreeNode(uids[i], arbor=self)
+
+        # replace first halo with the root node
+        root_node.uids    = uids
+        root_node.descids = descids
+        root_node.nodes   = nodes
+        nodes[0]          = root_node
+        for i, node in enumerate(nodes):
+            node.treeid = i
+            node.root = root_node
+            descid = descids[i]
+            uidmap[uids[i]] = i
+            if descid != -1:
+                desc = nodes[uidmap[descids[i]]]
+                desc.add_ancestor(node)
+                node.descendent = desc
+
+        root_node._tree_field_data.update(field_data)
+        for field in field_data:
+            if field in root_node._root_field_data:
+                continue
+            root_node._root_field_data[field] = \
+              root_node._tree_field_data[field][0]
+
     def _set_default_selector(self):
         """
         Mass is "mvir".
@@ -545,10 +633,13 @@ class ConsistentTreesArbor(MonolithArbor):
                 uid = int(buff[ihash+lkey:inl])
                 lihash = ihash
                 my_node = TreeNode(uid, arbor=self)
+                my_node.root = -1
+                my_node._root_field_data = {}
+                my_node._tree_field_data = {}
                 my_node._si = offset + inl + 1
                 self._trees[itree] = my_node
                 if itree > 0:
-                    self._trees[itree-1]._ei = my_node._si
+                    self._trees[itree-1]._ei = offset + ihash - 1
                 itree += 1
             offset = f.tell()
             pbar.update(offset)
