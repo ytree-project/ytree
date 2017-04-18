@@ -34,4 +34,4 @@ from ytree.ancestry_short import \
 from ytree.halo_selector import \
     add_halo_selector
 
-__version__ = '1.1.0'
+__version__ = '2.0.0.dev1'
