@@ -87,10 +87,8 @@ class Arbor(object):
         self.basename = os.path.basename(filename)
         self.unit_registry = UnitRegistry()
         self._parse_parameter_file()
-
-        # self.field_list = self._field_data.keys()
-        # self._set_default_selector()
-        # self._root_field_data = {}
+        self._set_default_selector()
+        self._root_field_data = {}
         self._set_comoving_units()
         self.cosmology = Cosmology(
             hubble_constant=self.hubble_constant,
@@ -122,12 +120,6 @@ class Arbor(object):
                 self._root_field_data[key] = self.arr([t[key] for t in self])
             return self._root_field_data[key]
         return self.trees[key]
-
-    def _get_field(self, field):
-        """
-        Get field data from cache or from disk.
-        """
-        return self._field_data[field]
 
     def __iter__(self):
         """
@@ -273,10 +265,39 @@ class Arbor(object):
             raise RuntimeError("No halo id field found.")
         self._hid_field = hfields[0]
 
-    def _get_root_fields(self, root_node, fields, f=None):
-        field_data = self._read_fields(root_node, fields)
-        tree_node._root_field_data.update(
-            dict((field, field_data[field][0]) for field in fields))
+    def _get_fields(self, tree_node, fields, root_only=True, f=None):
+        """
+        Load field data for a node or a tree into storage structures
+        if not present.
+        """
+        if tree_node.root == -1:
+            root_node = tree_node
+        else:
+            root_node = tree_node.root
+            root_only = False
+
+        if root_only:
+            fcache = root_node._root_field_data
+        else:
+            fcache = root_node._tree_field_data
+
+        fields_to_read = []
+        for field in fields:
+            if field not in fcache:
+                fields_to_read.append(field)
+
+        if fields_to_read:
+            field_data = self._read_fields(
+                root_node, fields_to_read, root_only=root_only, f=f)
+            self._store_fields(root_node, field_data, root_only)
+
+    def _store_fields(self, root_node, field_data, root_only=False):
+        if not field_data: return
+        root_field_data = dict([(field, field_data[field][0])
+                                for field in field_data])
+        if not root_only:
+            root_node._tree_field_data.update(field_data)
+        root_node._root_field_data.update(root_field_data)
 
     @classmethod
     def _is_valid(cls, *args, **kwargs):
@@ -456,12 +477,11 @@ class ConsistentTreesArbor(MonolithArbor):
         for field in fields:
             units = fi[field].get("units", "")
             if units != "":
-                print (field, units)
                 field_data[field] = self.arr(field_data[field], units)
 
         return field_data
 
-    def _build_tree(self, root_node, fields=None, f=None):
+    def _grow_tree(self, root_node, fields=None, f=None):
         if fields is None:
             fields = []
         else:
@@ -497,18 +517,13 @@ class ConsistentTreesArbor(MonolithArbor):
                 desc.add_ancestor(node)
                 node.descendent = desc
 
-        root_node._tree_field_data.update(field_data)
-        for field in field_data:
-            if field in root_node._root_field_data:
-                continue
-            root_node._root_field_data[field] = \
-              root_node._tree_field_data[field][0]
+        self._store_fields(root_node, field_data, root_only=False)
 
     def _set_default_selector(self):
         """
         Mass is "mvir".
         """
-        self.set_selector("max_field_value", "mvir")
+        self.set_selector("max_field_value", "Mvir")
 
     def _parse_parameter_file(self):
         """

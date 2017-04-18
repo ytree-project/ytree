@@ -41,7 +41,6 @@ class TreeNode(object):
         """
         self.uid = uid
         self.arbor = arbor
-        self.ancestors = None
 
     def add_ancestor(self, ancestor):
         """
@@ -52,13 +51,23 @@ class TreeNode(object):
         ancestor : TreeNode
             The ancestor TreeNode.
         """
-        if self.ancestors is None:
-            self.ancestors = []
-        self.ancestors.append(ancestor)
+        if self._ancestors is None:
+            self._ancestors = []
+        self._ancestors.append(ancestor)
+
+    _ancestors = None
+    @property
+    def ancestors(self):
+        self._check_build()
+        return self._ancestors
+
+    def _check_build(self):
+        if self.root == -1:
+            self.arbor._grow_tree(self)
 
     def __getitem__(self, key):
         """
-        Return field vlues for this TreeNode, progenitor list, or tree.
+        Return field values for this TreeNode, progenitor list, or tree.
 
         Parameters
         ----------
@@ -101,20 +110,31 @@ class TreeNode(object):
             if len(key) != 2:
                 raise SyntaxError(
                     "Must be either 1 or 2 arguments.")
-            if key[0] not in arr_types:
+            ftype, field = key
+            if ftype not in arr_types:
                 raise SyntaxError(
                     "First argument must be one of %s." % str(arr_types))
-            return getattr(self, "_%s" % key[0])(key[1])
+            self._check_build()
+            self.arbor._get_fields(self, [field], root_only=False)
+
+            # field is an actual field
+            if isinstance(field, string_types):
+                indices = getattr(self, "_%s_field_indices" % ftype)
+                return self.root._tree_field_data[field][indices]
+            else:
+                raise SyntaxError("Second argument must be a string.")
+
         else:
             if isinstance(key, string_types):
                 # return the progenitor list or tree nodes in a list
                 if key in arr_types:
                     return getattr(self, "_%s_nodes" % key)
                 # return field value for this node
+                self.arbor._get_fields(self, [key])
+                if self.root == -1 or self.root == self:
+                    return self._root_field_data[key]
                 else:
-                    if key not in self.arbor._field_data:
-                        raise YTFieldNotFound(key, self.arbor)
-                    return self.arbor._get_field(key)[self.uid]
+                    return self.root._tree_field_data[key][self.treeid]
             else:
                 raise SyntaxError("Single argument must be a string.")
 
@@ -160,32 +180,32 @@ class TreeNode(object):
         tfi = []
         tn = []
         for my_node in self.twalk():
-            tfi.append(my_node.uid)
+            tfi.append(my_node.treeid)
             tn.append(my_node)
         self._tfi = np.array(tfi)
-        self._tn = tn
+        self._tn = np.array(tn)
 
-    _lfi = None
+    _pfi = None
     @property
     def _prog_field_indices(self):
         """
         Return the field array indices for all TreeNodes in
         the progenitor list, starting with this TreeNode.
         """
-        if self._lfi is None:
+        if self._pfi is None:
             self._set_prog_attrs()
-        return self._lfi
+        return self._pfi
 
-    _ln = None
+    _pn = None
     @property
     def _prog_nodes(self):
         """
         Return a list of all TreeNodes in the progenitor list, starting
         with this TreeNode.
         """
-        if self._ln is None:
+        if self._pn is None:
             self._set_prog_attrs()
-        return self._ln
+        return self._pn
 
     def _set_prog_attrs(self):
         """
@@ -194,10 +214,10 @@ class TreeNode(object):
         lfi = []
         ln = []
         for my_node in self.lwalk():
-            lfi.append(my_node.uid)
+            lfi.append(my_node.treeid)
             ln.append(my_node)
-        self._lfi = np.array(lfi)
-        self._ln = ln
+        self._pfi = np.array(lfi)
+        self._pn = np.array(ln)
 
     def twalk(self):
         r"""
@@ -211,6 +231,7 @@ class TreeNode(object):
         ...     print (my_node)
 
         """
+        self._check_build()
         yield self
         if self.ancestors is None:
             return
@@ -230,6 +251,7 @@ class TreeNode(object):
         ...     print (my_node)
 
         """
+        self._check_build()
         my_node = self
         while my_node is not None:
             yield my_node
@@ -237,55 +259,6 @@ class TreeNode(object):
                 my_node = None
             else:
                 my_node = my_node.arbor.selector(my_node.ancestors)
-
-    def _tree(self, field):
-        r"""
-        Return a requested field for all TreeNodes in the tree
-        beneath, starting with this TreeNode.
-
-        Parameters
-        ----------
-        field : string
-            The field to be queried.
-
-        Examples
-        --------
-        >>> print (my_tree["tree", "mvir"].to("Msun/h"))
-
-        Returns
-        -------
-        ndarray or YTArray
-
-        """
-        if isinstance(field, string_types):
-            return self.arbor._field_data[field][self._tree_field_indices]
-        else:
-            return self._tree_nodes[field]
-
-    def _prog(self, field):
-        r"""
-        Return a requested field for all TreeNodes in the progenitor list,
-        starting with this TreeNode.  By default, the progenitor list traces
-        the most massive progenitor in the tree.
-
-        Parameters
-        ----------
-        field : string
-            The field to be queried.
-
-        Examples
-        --------
-        >>> print (my_tree["prog", "mvir"].to("Msun/h"))
-
-        Returns
-        -------
-        ndarray or YTArray
-
-        """
-        if isinstance(field, string_types):
-            return self.arbor._field_data[field][self._prog_field_indices]
-        else:
-            return self._prog_nodes[field]
 
     def save_tree(self, filename=None, fields=None):
         r"""
