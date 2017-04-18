@@ -116,8 +116,7 @@ class Arbor(object):
         if isinstance(key, string_types):
             if key in ("tree", "prog"):
                 raise SyntaxError("Argument must be a field or integer.")
-            if key not in self._root_field_data:
-                self._root_field_data[key] = self.arr([t[key] for t in self])
+            self._get_root_fields([key])
             return self._root_field_data[key]
         return self.trees[key]
 
@@ -264,6 +263,33 @@ class Arbor(object):
         if len(hfields) == 0:
             raise RuntimeError("No halo id field found.")
         self._hid_field = hfields[0]
+
+    def _get_root_fields(self, fields):
+        fields_to_read = []
+        for field in fields:
+            if field not in self._root_field_data:
+                fields_to_read.append(field)
+        if not fields_to_read:
+            return
+
+        f = open(self.filename, "r")
+        for node in self.trees:
+            self._get_fields(node, fields_to_read,
+                             root_only=True, f=f)
+        f.close()
+
+        fi = self.field_info
+        field_data = {}
+        for field in fields_to_read:
+            units = self.field_info[field].get("units", "")
+            field_data[field] = np.empty(self.trees.size)
+            if units:
+                field_data[field] = \
+                  self.arr(field_data[field], units)
+            for i in range(self.trees.size):
+                field_data[field][i] = \
+                  self.trees[i]._root_field_data[field]
+        self._root_field_data.update(field_data)
 
     def _get_fields(self, tree_node, fields, root_only=True, f=None):
         """
@@ -448,6 +474,7 @@ class ConsistentTreesArbor(MonolithArbor):
         if dtypes is None:
             dtypes = {}
 
+        close = False
         if f is None:
             close = True
             f = open(self.filename, "r")
