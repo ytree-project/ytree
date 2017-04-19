@@ -23,15 +23,5 @@ from ytree.arbor import \
 from ytree.tree_node_selector import \
     TreeNodeSelector, \
     add_tree_node_selector
-from ytree.tree_farm import \
-    TreeFarm
-from ytree.ancestry_checker import \
-    add_ancestry_checker
-from ytree.ancestry_filter import \
-    add_ancestry_filter
-from ytree.ancestry_short import \
-    add_ancestry_short
-from ytree.halo_selector import \
-    add_halo_selector
 
 __version__ = '2.0.0.dev1'
