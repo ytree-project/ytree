@@ -44,9 +44,9 @@ from yt.units.yt_array import \
 from yt.utilities.cosmology import \
     Cosmology
 
-from ytree.tree_node import \
+from ytree.arbor.tree_node import \
     TreeNode
-from ytree.tree_node_selector import \
+from ytree.arbor.tree_node_selector import \
     tree_node_selector_registry
 from ytree.utilities.io import \
     _hdf5_yt_attr
