@@ -183,7 +183,7 @@ class ConsistentTreesArbor(MonolithArbor):
                                 pre, mid, pos = punits.partition(rem)
                                 punits = pre + pos
                         try:
-                            x = self.quan(1, punits)
+                            self.quan(1, punits)
                         except UnitParseError:
                             punits = ""
                         fdb[tfield.lower()]["units"] = punits
@@ -196,7 +196,7 @@ class ConsistentTreesArbor(MonolithArbor):
                 cfield = field[:field.find("(")]
             else:
                 cfield = field
-            fi[field] = fdb.get(field.lower(),
+            fi[field] = fdb.get(cfield.lower(),
                                 {"description": "",
                                  "units": ""})
             fi[field]["column"] = i

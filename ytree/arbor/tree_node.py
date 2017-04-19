@@ -21,8 +21,6 @@ from yt.frontends.ytdata.utilities import \
     save_as_dataset
 from yt.funcs import \
     get_output_filename
-from yt.utilities.exceptions import \
-    YTFieldNotFound
 
 class TreeNode(object):
     """

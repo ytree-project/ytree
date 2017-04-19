@@ -19,6 +19,7 @@ _frontends = [
     "consistent_trees",
     "rockstar",
     "tree_farm",
+    "ytree",
 ]
 
 class _frontend_container:

@@ -73,4 +73,5 @@ def common_ids(descendent_ids, ancestor_ids, threshold=0.5):
     common = np.intersect1d(descendent_ids, ancestor_ids)
     return common.size > threshold * ancestor_ids.size
 
+
 add_ancestry_checker("common_ids", common_ids)

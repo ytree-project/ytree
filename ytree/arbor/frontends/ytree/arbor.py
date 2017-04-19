@@ -15,10 +15,17 @@ YTreeArbor class and member functions
 
 import h5py
 
-from yt.arbor.arbor import \
-    MonolithArbor
+from yt.frontends.ytdata.utilities import \
+    _hdf5_yt_array
+from yt.units.unit_registry import \
+    UnitRegistry
 
-class ArborArbor(MonolithArbor):
+from ytree.arbor.arbor import \
+    MonolithArbor
+from ytree.utilities.io import \
+    _hdf5_yt_attr
+
+class YTreeArbor(MonolithArbor):
     """
     Class for Arbors created from the :func:`~ytree.arbor.Arbor.save_arbor`
     or :func:`~ytree.tree_node.TreeNode.save_tree` functions.
@@ -55,7 +62,7 @@ class ArborArbor(MonolithArbor):
             with h5py.File(fn, "r") as f:
                 if "arbor_type" not in f.attrs:
                     return False
-                if f.attrs["arbor_type"].astype(str) != "ArborArbor":
+                if f.attrs["arbor_type"].astype(str) != "YTreeArbor":
                     return False
         except:
             return False

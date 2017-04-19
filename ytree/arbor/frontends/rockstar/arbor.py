@@ -13,7 +13,9 @@ RockstarArbor class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import glob
 import numpy as np
+import warnings
 
 from ytree.arbor.arbor import \
     CatalogArbor

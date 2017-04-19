@@ -70,4 +70,5 @@ def most_massive(halo, ancestors):
     i_max = np.argmax([my_halo.mass for my_halo in ancestors])
     return [ancestors[i_max]]
 
+
 add_ancestry_filter("most_massive", most_massive)

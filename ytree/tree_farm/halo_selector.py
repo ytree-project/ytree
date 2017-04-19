@@ -125,6 +125,7 @@ def sphere_selector(hc, ds2, radius_field, factor=1,
     except YTSphereTooSmall:
         return []
 
+
 add_halo_selector("sphere", sphere_selector)
 
 def all_selector(hc, ds2):
@@ -151,5 +152,6 @@ def all_selector(hc, ds2):
     my_ids = ad[hc.ptype, "particle_identifier"].d.astype(np.int64)
     _id_cache["all"] = my_ids
     return my_ids
+
 
 add_halo_selector("all", all_selector)

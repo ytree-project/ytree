@@ -26,6 +26,7 @@ def not_on_drone(func, *args, **kwargs):
     """
 
     env = dict(os.environ)
+
     def myfunc():
         if int(env.get("DRONE", 0)) == 1:
             return

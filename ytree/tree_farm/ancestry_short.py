@@ -46,6 +46,7 @@ class AncestryShort(object):
     def __call__(self, halo, ancestor):
         return self.function(halo, ancestor, *self.args, **self.kwargs)
 
+
 def above_mass_fraction(halo, ancestor, fraction):
     r"""
     Return only the most massive ancestor.
@@ -63,5 +64,6 @@ def above_mass_fraction(halo, ancestor, fraction):
 
     """
     return ancestor.mass > fraction * halo.mass
+
 
 add_ancestry_short("above_mass_fraction", above_mass_fraction)

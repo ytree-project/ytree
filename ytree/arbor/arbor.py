@@ -16,20 +16,14 @@ Arbor class and member functions
 from collections import \
     defaultdict
 import functools
-import h5py
-import glob
 import numpy as np
 import os
-import warnings
 
-from yt.convenience import \
-    load as yt_load
 from yt.extern.six import \
     add_metaclass, \
     string_types
 from yt.frontends.ytdata.utilities import \
-    save_as_dataset, \
-    _hdf5_yt_array
+    save_as_dataset
 from yt.funcs import \
     get_pbar, \
     get_output_filename
@@ -38,7 +32,6 @@ from yt.units.dimensions import \
 from yt.units.unit_registry import \
     UnitRegistry
 from yt.units.yt_array import \
-    UnitParseError, \
     YTArray, \
     YTQuantity
 from yt.utilities.cosmology import \
@@ -48,8 +41,6 @@ from ytree.arbor.tree_node import \
     TreeNode
 from ytree.arbor.tree_node_selector import \
     tree_node_selector_registry
-from ytree.utilities.io import \
-    _hdf5_yt_attr
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
@@ -278,10 +269,10 @@ class Arbor(object):
                              root_only=True, f=f)
         f.close()
 
-        fi = self.field_info
         field_data = {}
+        fi = self.field_info
         for field in fields_to_read:
-            units = self.field_info[field].get("units", "")
+            units = fi[field].get("units", "")
             field_data[field] = np.empty(self.trees.size)
             if units:
                 field_data[field] = \
