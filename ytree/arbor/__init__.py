@@ -16,10 +16,12 @@ arbor imports
 from ytree.arbor.arbor import \
     Arbor, \
     ArborArbor, \
-    ConsistentTreesArbor, \
     RockstarArbor, \
     TreeFarmArbor, \
     load
 from ytree.arbor.tree_node_selector import \
     TreeNodeSelector, \
     add_tree_node_selector
+
+from ytree.arbor.frontends.api import _frontend_container
+frontends = _frontend_container()
