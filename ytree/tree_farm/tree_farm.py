@@ -31,13 +31,13 @@ from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm, \
     parallel_objects
 
-from ytree.ancestry_checker import \
+from ytree.tree_farm.ancestry_checker import \
     ancestry_checker_registry
-from ytree.ancestry_filter import \
+from ytree.tree_farm.ancestry_filter import \
     ancestry_filter_registry
-from ytree.ancestry_short import \
+from ytree.tree_farm.ancestry_short import \
     ancestry_short_registry
-from ytree.halo_selector import \
+from ytree.tree_farm.halo_selector import \
     selector_registry, \
     clear_id_cache
 from ytree.utilities.logger import \
