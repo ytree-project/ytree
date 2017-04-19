@@ -374,7 +374,7 @@ class Arbor(object):
             if hasattr(self, attr):
                 ds[attr] = getattr(self, attr)
         extra_attrs = {"box_size": self.box_size,
-                       "arbor_type": "ArborArbor",
+                       "arbor_type": "YTreeArbor",
                        "unit_registry_json": self.unit_registry.to_json()}
         save_as_dataset(ds, filename, self._field_data,
                         extra_attrs=extra_attrs)
@@ -420,49 +420,6 @@ class MonolithArbor(Arbor):
         self._trees = np.array(self._trees)
         mylog.info("Arbor contains %d trees with %d total nodes." %
                    (self._trees.size, self._field_data["uid"].size))
-
-class ArborArbor(MonolithArbor):
-    """
-    Class for Arbors created from the :func:`~ytree.arbor.Arbor.save_arbor`
-    or :func:`~ytree.tree_node.TreeNode.save_tree` functions.
-    """
-    def _load_field_data(self):
-        """
-        All data stored in a single hdf5 file.  Get cosmological
-        parameters and modify unit registry for hubble constant.
-        """
-        fh = h5py.File(self.filename, "r")
-        for attr in ["hubble_constant",
-                     "omega_matter",
-                     "omega_lambda"]:
-            setattr(self, attr, fh.attrs[attr])
-        if "unit_registry_json" in fh.attrs:
-            self.unit_registry = \
-              UnitRegistry.from_json(
-                  fh.attrs["unit_registry_json"].astype(str))
-        self.box_size = _hdf5_yt_attr(fh, "box_size",
-                                      unit_registry=self.unit_registry)
-        self._field_data = dict([(f, _hdf5_yt_array(fh["data"], f, self))
-                                 for f in fh["data"]])
-        fh.close()
-
-    @classmethod
-    def _is_valid(self, *args, **kwargs):
-        """
-        File should end in .h5, be loadable as an hdf5 file,
-        and have "arbor_type" attribute.
-        """
-        fn = args[0]
-        if not fn.endswith(".h5"): return False
-        try:
-            with h5py.File(fn, "r") as f:
-                if "arbor_type" not in f.attrs:
-                    return False
-                if f.attrs["arbor_type"].astype(str) != "ArborArbor":
-                    return False
-        except:
-            return False
-        return True
 
 class CatalogArbor(Arbor):
     """
