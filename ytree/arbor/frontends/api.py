@@ -17,6 +17,7 @@ import importlib
 
 _frontends = [
     "consistent_trees",
+    "rockstar",
 ]
 
 class _frontend_container:
