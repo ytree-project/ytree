@@ -244,17 +244,6 @@ class Arbor(object):
             if field in self._field_data:
                 self.set_selector("max_field_value", field)
 
-    def _set_halo_id_field(self):
-        """
-        Figure out which field represents the halo IDs.
-        """
-        _hfields = ["halo_id", "particle_identifier"]
-        hfields = [f for f in _hfields
-                   if f in self._field_data]
-        if len(hfields) == 0:
-            raise RuntimeError("No halo id field found.")
-        self._hid_field = hfields[0]
-
     def _get_root_fields(self, fields):
         fields_to_read = []
         for field in fields:
