@@ -37,10 +37,15 @@ from yt.units.yt_array import \
 from yt.utilities.cosmology import \
     Cosmology
 
+from ytree.arbor.fields import \
+    FakeFieldContainer
 from ytree.arbor.tree_node import \
     TreeNode
 from ytree.arbor.tree_node_selector import \
     tree_node_selector_registry
+from ytree.utilities.exceptions import \
+    ArborFieldCircularDependency, \
+    ArborFieldNotFound
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
@@ -79,13 +84,14 @@ class Arbor(object):
         self.unit_registry = UnitRegistry()
         self._parse_parameter_file()
         self._set_default_selector()
-        self._root_field_data = {}
         self._set_comoving_units()
         self.cosmology = Cosmology(
             hubble_constant=self.hubble_constant,
             omega_matter=self.omega_matter,
             omega_lambda=self.omega_lambda,
             unit_registry=self.unit_registry)
+        self._root_field_data = {}
+        self.derived_field_list = []
 
     _trees = None
     @property
@@ -244,7 +250,86 @@ class Arbor(object):
             if field in self._field_data:
                 self.set_selector("max_field_value", field)
 
+    def add_alias_field(self, alias, field, units=None):
+        r"""
+        Add a field as an alias to another field.
+
+        Parameters
+        ----------
+        alias : string
+            Alias name.
+        field : string
+            The field to be aliased.
+        units : optional, string
+            Units in which the field will be returned.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("tree_0_0_0.dat")
+        >>> # "Mvir" exists on disk
+        >>> a.add_alias_field("mass", "Mvir", units="Msun")
+        >>> print (a["mass"])
+
+        """
+        if field not in self.field_info:
+            raise RuntimeError(
+                "Field not available: %s (dependency for %s)." %
+                (field, alias))
+        if units is None:
+            units = self.field_info[field].get("units", "")
+        self.derived_field_list.append(alias)
+        self.field_info[alias] = \
+          {"type": "alias", "units": units,
+           "dependencies": [field]}
+
+    def add_derived_field(self, name, function,
+                          units=None, description=None):
+        r"""
+        Add a field that is a function of other fields.
+
+        Parameters
+        ----------
+        name : string
+            Field name.
+        function : callable
+            The function to be called to generate the field.
+            This function should take two arguments, the
+            arbor and the data structure containing the
+            dependent fields.  See below for an example.
+        units : optional, string
+            The units in which the field will be returned.
+        description : optional, string
+            A short description of the field.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("tree_0_0_0.dat")
+        >>> def _redshift(arbor, data):
+        ...     return 1. / data["scale"] - 1
+        ...
+        >>> a.add_derived_field("redshift", _redshift)
+        >>> print (a["redshift"])
+
+        """
+        if units is None:
+            units = ""
+        fc = FakeFieldContainer(self, name=name)
+        rv = function(self, fc)
+        rv.convert_to_units(units)
+        self.derived_field_list.append(name)
+        self.field_info[name] = \
+          {"type": "derived", "function": function,
+           "units": units, "description": description,
+           "dependencies": list(fc.keys())}
+
     def _get_root_fields(self, fields):
+        """
+        Get fields for the root nodes of all trees.
+        """
         fields_to_read = []
         for field in fields:
             if field not in self._root_field_data:
@@ -272,9 +357,28 @@ class Arbor(object):
         self._root_field_data.update(field_data)
 
     def _get_fields(self, tree_node, fields, root_only=True, f=None):
-        """
-        Load field data for a node or a tree into storage structures
-        if not present.
+        r"""
+        Load field data for a node or a tree into storage structures.
+
+        This is the primary function for generating fields.
+        Resolve dependencies, read in any fields needed from disk,
+        then generate all derived fields.
+
+        Parameters
+        ----------
+        tree_node : TreeNode
+            Tree for which the fields will be generated.
+        fields : list of strings
+            The list of fields to be generated.
+        root_only : optional, bool
+            If True, only read/generate field for the root node
+            in the tree.  If False, generate for the whole tree.
+            Default: True.
+        f : optional, file
+            If not None, read data from the open file and do not
+            close.  If None, open the file and close after reading.
+            This can be used to speed up reading for multiple trees.
+
         """
         if tree_node.root == -1:
             root_node = tree_node
@@ -287,17 +391,63 @@ class Arbor(object):
         else:
             fcache = root_node._tree_field_data
 
+        fi = self.field_info
         fields_to_read = []
-        for field in fields:
-            if field not in fcache:
-                fields_to_read.append(field)
+        fields_to_generate = []
+        fields_to_resolve = fields.copy()
 
+        # Resolve field dependencies.
+        while len(fields_to_resolve) > 0:
+            field = fields_to_resolve.pop(0)
+            if field in fcache:
+                continue
+            if field not in fi:
+                raise ArborFieldNotFound(field, self)
+            ftype = fi[field].get("type", None)
+            if ftype == "derived" or ftype == "alias":
+                deps = fi[field]["dependencies"]
+                if field in deps:
+                    raise ArborFieldCircularDependency(field, self)
+                fields_to_resolve.extend(
+                    set(deps).difference(set(fields_to_resolve)))
+                if field not in fields_to_generate:
+                    fields_to_generate.append(field)
+            else:
+                if field not in fields_to_read:
+                    fields_to_read.append(field)
+
+        # Read in fields we need that are on disk.
         if fields_to_read:
             field_data = self._read_fields(
                 root_node, fields_to_read, root_only=root_only, f=f)
-            self._store_fields(root_node, field_data, root_only)
+            self._store_fields(root_node, field_data,
+                               root_only=root_only)
+
+        # Generate all derived fields/aliases, but
+        # only after dependencies have been generated.
+        while len(fields_to_generate) > 0:
+            field = fields_to_generate.pop(0)
+            deps = set(fi[field]["dependencies"])
+            need = deps.difference(fcache)
+            # have not created all dependencies yet, try again later
+            if need:
+                fields_to_generate.append(field)
+            # all dependencies present, generate the field
+            else:
+                units = fi[field].get("units", "")
+                ftype = fi[field]["type"]
+                if ftype == "alias":
+                    data = fcache[fi[field]["dependencies"][0]].to(units)
+                elif ftype == "derived":
+                    data = fi[field]["function"](self, fcache).to(units)
+                fdata = {field: data}
+                self._store_fields(root_node, fdata,
+                                   root_only=root_only)
 
     def _store_fields(self, root_node, field_data, root_only=False):
+        """
+        Store field data in the provided dictionary.
+        """
         if not field_data: return
         root_field_data = dict([(field, field_data[field][0])
                                 for field in field_data])
