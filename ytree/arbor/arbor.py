@@ -189,12 +189,9 @@ class Arbor(object):
         r"""
         Sets the tree node selector to be used.
 
-        This sets the manner in which halo ancestors are chosen
-        from a list of ancestors when using the
-        :func:`~ytee.tree_node.TreeNode._line` function to query fields
-        for a tree.  The most obvious example is to always select
-        the most massive ancestor so as to trace a halo's main
-        progenitor.
+        This sets the manner in which halo progenitors are
+        chosen from a list of ancestors.  The most obvious example
+        is to select the most massive ancestor.
 
         Parameters
         ----------
