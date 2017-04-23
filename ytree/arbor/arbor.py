@@ -439,7 +439,9 @@ class Arbor(object):
                 if ftype == "alias":
                     data = fcache[fi[field]["dependencies"][0]].to(units)
                 elif ftype == "derived":
-                    data = fi[field]["function"](self, fcache).to(units)
+                    data = fi[field]["function"](self, fcache)
+                    if hasattr(data, "units"):
+                        data.convert_to_units(units)
                 fdata = {field: data}
                 self._store_fields(root_node, fdata,
                                    root_only=root_only)
