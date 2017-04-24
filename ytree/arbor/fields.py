@@ -17,6 +17,9 @@ from collections import \
     defaultdict
 import numpy as np
 
+from ytree.utilities.exceptions import \
+    ArborFieldDependencyNotFound
+
 class FakeFieldContainer(defaultdict):
     def __init__(self, arbor, name=None):
         self.arbor = arbor
@@ -24,9 +27,8 @@ class FakeFieldContainer(defaultdict):
 
     def __missing__(self, key):
         if key not in self.arbor.field_info:
-            raise RuntimeError(
-                "Field not available: %s (dependency for %s)." %
-                (key, self.name))
+            raise ArborFieldDependencyNotFound(
+                self.name, key, self.arbor)
         units = self.arbor.field_info[key].get("units", "")
         self[key] = self.arbor.arr(np.ones(1), units)
         return self[key]
