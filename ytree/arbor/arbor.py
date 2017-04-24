@@ -26,7 +26,8 @@ from yt.frontends.ytdata.utilities import \
     save_as_dataset
 from yt.funcs import \
     get_pbar, \
-    get_output_filename
+    get_output_filename, \
+    just_one
 from yt.units.dimensions import \
     length
 from yt.units.unit_registry import \
@@ -448,8 +449,9 @@ class Arbor(object):
         Store field data in the provided dictionary.
         """
         if not field_data: return
-        root_field_data = dict([(field, field_data[field][0])
-                                for field in field_data])
+        root_field_data = dict(
+            [(field, just_one(field_data[field]))
+             for field in field_data])
         if not root_only:
             root_node._tree_field_data.update(field_data)
         root_node._root_field_data.update(root_field_data)
