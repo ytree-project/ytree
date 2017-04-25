@@ -27,7 +27,7 @@ class ArborFieldDependencyNotFound(Exception):
     def __str__(self):
         return ("Field dependency not found: \"%s\" " + \
                 "(dependency for \"%s\") in %s.") % \
-                (self.dependency, self.field, self.arbor)
+            (self.dependency, self.field, self.arbor)
 
 class ArborFieldCircularDependency(ArborFieldException):
     def __str__(self):
