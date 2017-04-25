@@ -85,12 +85,7 @@ class Arbor(object):
         self.unit_registry = UnitRegistry()
         self._parse_parameter_file()
         self._set_default_selector()
-        self._set_comoving_units()
-        self.cosmology = Cosmology(
-            hubble_constant=self.hubble_constant,
-            omega_matter=self.omega_matter,
-            omega_lambda=self.omega_lambda,
-            unit_registry=self.unit_registry)
+        self._set_units()
         self._root_field_data = {}
         self.derived_field_list = []
 
@@ -174,7 +169,7 @@ class Arbor(object):
         self.unit_registry.add(
             "unitary", float(self.box_size.in_base()), length)
 
-    def _set_comoving_units(self):
+    def _set_units(self):
         """
         Set "cm" units for explicitly comoving.
         Note, we are using comoving units all the time since
@@ -185,6 +180,12 @@ class Arbor(object):
             self._unit_registry.add(
                 new_unit, self._unit_registry.lut[my_unit][0],
                 length, self._unit_registry.lut[my_unit][3])
+
+        self.cosmology = Cosmology(
+            hubble_constant=self.hubble_constant,
+            omega_matter=self.omega_matter,
+            omega_lambda=self.omega_lambda,
+            unit_registry=self.unit_registry)
 
     def set_selector(self, selector, *args, **kwargs):
         r"""
