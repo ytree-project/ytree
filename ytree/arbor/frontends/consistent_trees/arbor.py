@@ -27,49 +27,13 @@ from ytree.arbor.tree_node import \
 
 class ConsistentTreesArbor(MonolithArbor):
     """
-    Class for Arbors from consistent-trees output files.
+    Arbors from consistent-trees output files.
     """
 
-    def _read_fields(self, root_node, fields, dtypes=None,
-                     f=None, root_only=False):
-        if dtypes is None:
-            dtypes = {}
-
-        close = False
-        if f is None:
-            close = True
-            f = open(self.filename, "r")
-        f.seek(root_node._si)
-        if root_only:
-            data = [f.readline()]
-        else:
-            data = f.read(
-                root_node._ei -
-                root_node._si).split("\n")
-        if close:
-            f.close()
-
-        nhalos = len(data)
-        field_data = {}
-        fi = self.field_info
-        for field in fields:
-            field_data[field] = \
-              np.empty(nhalos, dtype=dtypes.get(field, float))
-
-        for i, datum in enumerate(data):
-            ldata = datum.strip().split()
-            for field in fields:
-                dtype = dtypes.get(field, float)
-                field_data[field][i] = dtype(ldata[fi[field]["column"]])
-
-        for field in fields:
-            units = fi[field].get("units", "")
-            if units != "":
-                field_data[field] = self.arr(field_data[field], units)
-
-        return field_data
-
     def _grow_tree(self, root_node, fields=None, f=None):
+        """
+        Build a single tree and read in any fields.
+        """
         if fields is None:
             fields = []
         else:
@@ -106,12 +70,6 @@ class ConsistentTreesArbor(MonolithArbor):
                 node.descendent = desc
 
         self._store_fields(root_node, field_data, root_only=False)
-
-    def _set_default_selector(self):
-        """
-        Mass is "mvir".
-        """
-        self.set_selector("max_field_value", "Mvir")
 
     def _parse_parameter_file(self):
         """
@@ -249,6 +207,48 @@ class ConsistentTreesArbor(MonolithArbor):
         self._trees[-1]._ei = offset
         f.close()
         pbar.finish()
+
+    def _read_fields(self, root_node, fields, dtypes=None,
+                     f=None, root_only=False):
+        """
+        Read fields from disk for a single tree.
+        """
+        if dtypes is None:
+            dtypes = {}
+
+        close = False
+        if f is None:
+            close = True
+            f = open(self.filename, "r")
+        f.seek(root_node._si)
+        if root_only:
+            data = [f.readline()]
+        else:
+            data = f.read(
+                root_node._ei -
+                root_node._si).split("\n")
+        if close:
+            f.close()
+
+        nhalos = len(data)
+        field_data = {}
+        fi = self.field_info
+        for field in fields:
+            field_data[field] = \
+              np.empty(nhalos, dtype=dtypes.get(field, float))
+
+        for i, datum in enumerate(data):
+            ldata = datum.strip().split()
+            for field in fields:
+                dtype = dtypes.get(field, float)
+                field_data[field][i] = dtype(ldata[fi[field]["column"]])
+
+        for field in fields:
+            units = fi[field].get("units", "")
+            if units != "":
+                field_data[field] = self.arr(field_data[field], units)
+
+        return field_data
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
