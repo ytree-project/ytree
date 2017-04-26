@@ -22,6 +22,9 @@ from yt.frontends.ytdata.utilities import \
 from yt.funcs import \
     get_output_filename
 
+from ytree.arbor.fields import \
+    FieldContainer
+
 class TreeNode(object):
     """
     Class for objects stored in Arbors.
@@ -32,13 +35,19 @@ class TreeNode(object):
     Fields can be queried for it, its progenitor list, and the
     tree beneath.
     """
-    def __init__(self, uid, arbor=None):
+    def __init__(self, uid, arbor=None, root=False):
         """
         Initialize a TreeNode with at least its halo catalog ID and
         its level in the tree.
         """
         self.uid = uid
         self.arbor = arbor
+        if root:
+            self.root = -1
+            self._root_field_data = FieldContainer(arbor)
+            self._tree_field_data = FieldContainer(arbor)
+        else:
+            self.root = None
 
     def add_ancestor(self, ancestor):
         """

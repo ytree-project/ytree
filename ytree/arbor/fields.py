@@ -20,6 +20,13 @@ import numpy as np
 from ytree.utilities.exceptions import \
     ArborFieldDependencyNotFound
 
+class FieldContainer(dict):
+    def __init__(self, arbor, mapping=None):
+        if mapping is None:
+            mapping = ""
+        self.arbor = arbor
+        dict.__init__(self, mapping)
+
 class FakeFieldContainer(defaultdict):
     def __init__(self, arbor, name=None):
         self.arbor = arbor

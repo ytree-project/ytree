@@ -193,10 +193,7 @@ class ConsistentTreesArbor(MonolithArbor):
                     inl = len(buff)
                 uid = int(buff[ihash+lkey:inl])
                 lihash = ihash
-                my_node = TreeNode(uid, arbor=self)
-                my_node.root = -1
-                my_node._root_field_data = {}
-                my_node._tree_field_data = {}
+                my_node = TreeNode(uid, arbor=self, root=True)
                 my_node._si = offset + inl + 1
                 self._trees[itree] = my_node
                 if itree > 0:

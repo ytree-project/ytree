@@ -39,7 +39,8 @@ from yt.utilities.cosmology import \
     Cosmology
 
 from ytree.arbor.fields import \
-    FakeFieldContainer
+    FakeFieldContainer, \
+    FieldContainer
 from ytree.arbor.tree_node import \
     TreeNode
 from ytree.arbor.tree_node_selector import \
@@ -84,10 +85,10 @@ class Arbor(object):
         self.basename = os.path.basename(filename)
         self.unit_registry = UnitRegistry()
         self._parse_parameter_file()
-        self._set_default_selector()
         self._set_units()
-        self._root_field_data = {}
+        self._root_field_data = FieldContainer(self)
         self.derived_field_list = []
+        self._set_default_selector()
 
     _trees = None
     @property
@@ -208,7 +209,7 @@ class Arbor(object):
 
         >>> import ytree
         >>> a = ytree.load("rockstar_halos/trees/tree_0_0_0.dat")
-        >>> a.set_selector("max_field_value", "mvir")
+        >>> a.set_selector("max_field_value", "mass")
 
         """
         self.selector = tree_node_selector_registry.find(
@@ -240,14 +241,9 @@ class Arbor(object):
 
     def _set_default_selector(self):
         """
-        Set the default tree node selector.
-
-        Search for a mass-like field and use that with the
-        max_field_value selector.
+        Set the default tree node selector as maximum mass.
         """
-        for field in ["particle_mass", "mvir"]:
-            if field in self._field_data:
-                self.set_selector("max_field_value", field)
+        self.set_selector("max_field_value", "mass")
 
     def add_alias_field(self, alias, field, units=None):
         r"""
@@ -317,7 +313,7 @@ class Arbor(object):
         if units is None:
             units = ""
         fc = FakeFieldContainer(self, name=name)
-        rv = function(self, fc)
+        rv = function(fc)
         rv.convert_to_units(units)
         self.derived_field_list.append(name)
         self.field_info[name] = \
@@ -438,7 +434,7 @@ class Arbor(object):
                 if ftype == "alias":
                     data = fcache[fi[field]["dependencies"][0]].to(units)
                 elif ftype == "derived":
-                    data = fi[field]["function"](self, fcache)
+                    data = fi[field]["function"](fcache)
                     if hasattr(data, "units"):
                         data.convert_to_units(units)
                 fdata = {field: data}
