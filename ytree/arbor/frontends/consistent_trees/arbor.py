@@ -88,7 +88,8 @@ class ConsistentTreesArbor(MonolithArbor):
         fdb = {}
         rems = ["%s%s%s" % (s[0], t, s[1])
                 for s in [("(", ")"), ("", "")]
-                for t in ["comoving", "physical"]]
+                for t in ["physical, peculiar",
+                          "comoving", "physical"]]
 
         f = open(self.filename, "r")
         # Read the first line as a list of all fields.
@@ -114,6 +115,7 @@ class ConsistentTreesArbor(MonolithArbor):
             elif not line.startswith("#"):
                 self._ntrees = int(line.strip())
                 break
+
             # cosmological parameters
             if "Omega_M" in line:
                 pars = line[1:].split(";")
@@ -122,6 +124,7 @@ class ConsistentTreesArbor(MonolithArbor):
                                          "hubble_constant"]):
                     v = float(pars[j].split(" = ")[1])
                     setattr(self, par, v)
+
             # box size
             elif "Full box size" in line:
                 pars = line.split("=")[1].strip().split()
@@ -131,25 +134,36 @@ class ConsistentTreesArbor(MonolithArbor):
             # Pull them apart and look for units.
             elif ":" in line:
                 tfields, desc = line[1:].strip().split(":", maxsplit=1)
+
+                # Units are enclosed in parentheses.
+                # Pull out what's enclosed and remove things like
+                # "comoving" and "physical".
+                if "(" in line and ")" in line:
+                    punits = desc[desc.find("(")+1:desc.rfind(")")]
+                    for rem in rems:
+                        while rem in punits:
+                            pre, mid, pos = punits.partition(rem)
+                            punits = pre + pos
+                    try:
+                        self.quan(1, punits)
+                    except UnitParseError:
+                        punits = ""
+                else:
+                    punits = ""
+
+                # Multiple fields together on the same line.
                 for sep in ["/", ","]:
                     if sep in tfields:
                         tfields = tfields.split(sep)
+                        break
                 if not isinstance(tfields, list):
                     tfields = [tfields]
+
+                # Assign units and description.
                 for tfield in tfields:
-                    punits = ""
-                    fdb[tfield.lower()] = {"description": desc.strip()}
-                    if "(" in line and ")" in line:
-                        punits = desc[desc.find("(")+1:desc.rfind(")")]
-                        for rem in rems:
-                            while rem in punits:
-                                pre, mid, pos = punits.partition(rem)
-                                punits = pre + pos
-                        try:
-                            self.quan(1, punits)
-                        except UnitParseError:
-                            punits = ""
-                        fdb[tfield.lower()]["units"] = punits
+                    fdb[tfield.lower()] = {"description": desc.strip(),
+                                           "units": punits}
+
         self._hoffset = f.tell()
         f.close()
 
