@@ -25,10 +25,15 @@ from ytree.arbor.arbor import \
 from ytree.arbor.tree_node import \
     TreeNode
 
+from ytree.arbor.frontends.consistent_trees.fields import \
+    ConsistentTreesFieldInfo
+
 class ConsistentTreesArbor(MonolithArbor):
     """
     Arbors from consistent-trees output files.
     """
+
+    _field_info_class = ConsistentTreesFieldInfo
 
     def _grow_tree(self, root_node, fields=None, f=None):
         """
@@ -159,7 +164,7 @@ class ConsistentTreesArbor(MonolithArbor):
                                  "units": ""})
             fi[field]["column"] = i
         self.field_list = fields
-        self.field_info = fi
+        self.field_info.update(fi)
 
         self.box_size = self.quan(float(box[0]), box[1])
 

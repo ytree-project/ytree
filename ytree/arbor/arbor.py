@@ -76,6 +76,9 @@ class Arbor(object):
     functions for creating YTArrays and YTQuantities and a cosmology
     calculator.
     """
+
+    _field_info_class = None
+
     def __init__(self, filename):
         """
         Initialize an Arbor given a single input file.
@@ -87,7 +90,7 @@ class Arbor(object):
         self._parse_parameter_file()
         self._set_units()
         self._root_field_data = FieldContainer(self)
-        self.derived_field_list = []
+        self._setup_fields()
         self._set_default_selector()
 
     _trees = None
@@ -126,6 +129,14 @@ class Arbor(object):
         Return length of tree list.
         """
         return self.trees.size
+
+    _field_info = None
+    @property
+    def field_info(self):
+        if self._field_info is None and \
+          self._field_info_class is not None:
+            self._field_info = self._field_info_class(self)
+        return self._field_info
 
     @property
     def size(self):
@@ -169,6 +180,10 @@ class Arbor(object):
         # set unitary as soon as we know the box size
         self.unit_registry.add(
             "unitary", float(self.box_size.in_base()), length)
+
+    def _setup_fields(self):
+        self.derived_field_list = []
+        self.field_info.setup_aliases()
 
     def _set_units(self):
         """
