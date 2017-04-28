@@ -1,5 +1,5 @@
 """
-Arbor fields
+Arbor field-related classes
 
 
 
@@ -29,6 +29,12 @@ class FieldInfoContainer(dict):
         for alias in self.alias_fields:
             self.arbor.add_alias_field(
                 alias[0], alias[1], units=alias[2])
+
+    def setup_derived_fields(self):
+        def _redshift(data):
+            return 1. / data["scale_factor"] - 1.
+        self.arbor.add_derived_field(
+            "redshift", _redshift, units="", force_add=False)
 
 class FieldContainer(dict):
     def __init__(self, arbor):

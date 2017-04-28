@@ -184,6 +184,7 @@ class Arbor(object):
     def _setup_fields(self):
         self.derived_field_list = []
         self.field_info.setup_aliases()
+        self.field_info.setup_derived_fields()
 
     def _set_units(self):
         """
@@ -260,7 +261,8 @@ class Arbor(object):
         """
         self.set_selector("max_field_value", "mass")
 
-    def add_alias_field(self, alias, field, units=None):
+    def add_alias_field(self, alias, field, units=None,
+                        force_add=True):
         r"""
         Add a field as an alias to another field.
 
@@ -272,6 +274,11 @@ class Arbor(object):
             The field to be aliased.
         units : optional, string
             Units in which the field will be returned.
+        force_add : optional, bool
+            If True, add field even if it already exists
+            and warn the user.  If False, silently do
+            nothing.
+            Default: True.
 
         Examples
         --------
@@ -283,19 +290,35 @@ class Arbor(object):
         >>> print (a["mass"])
 
         """
+
+        if alias in self.field_info:
+            if force_add:
+                ftype = self.field_info[alias].get("type", "on-disk")
+                if ftype in ["alias", "derived"]:
+                    fl = self.derived_field_list
+                else:
+                    fl = self.field_list
+                mylog.warn(
+                    ("Overriding field \"%s\" that already " +
+                     "exists as %s field.") % (alias, ftype))
+                fl.pop(fl.index(alias))
+            else:
+                return
+
         if field not in self.field_info:
             raise RuntimeError(
                 "Field not available: %s (dependency for %s)." %
                 (field, alias))
         if units is None:
-            units = self.field_info[field].get("units", "")
+            units = self.field_info[field].get("units")
         self.derived_field_list.append(alias)
         self.field_info[alias] = \
           {"type": "alias", "units": units,
            "dependencies": [field]}
 
     def add_derived_field(self, name, function,
-                          units=None, description=None):
+                          units=None, description=None,
+                          force_add=True):
         r"""
         Add a field that is a function of other fields.
 
@@ -312,6 +335,11 @@ class Arbor(object):
             The units in which the field will be returned.
         description : optional, string
             A short description of the field.
+        force_add : optional, bool
+            If True, add field even if it already exists
+            and warn the user.  If False, silently do
+            nothing.
+            Default: True.
 
         Examples
         --------
@@ -325,6 +353,22 @@ class Arbor(object):
         >>> print (a["redshift"])
 
         """
+
+        if name in self.field_info:
+            if force_add:
+                ftype = self.field_info[name].get("type", "on-disk")
+                print (ftype)
+                if ftype in ["alias", "derived"]:
+                    fl = self.derived_field_list
+                else:
+                    fl = self.field_list
+                mylog.warn(
+                    ("Overriding field \"%s\" that already " +
+                     "exists as %s field.") % (name, ftype))
+                fl.pop(fl.index(name))
+            else:
+                return
+
         if units is None:
             units = ""
         fc = FakeFieldContainer(self, name=name)
@@ -413,7 +457,7 @@ class Arbor(object):
                 continue
             if field not in fi:
                 raise ArborFieldNotFound(field, self)
-            ftype = fi[field].get("type", None)
+            ftype = fi[field].get("type")
             if ftype == "derived" or ftype == "alias":
                 deps = fi[field]["dependencies"]
                 if field in deps:
@@ -444,14 +488,14 @@ class Arbor(object):
                 fields_to_generate.append(field)
             # all dependencies present, generate the field
             else:
-                units = fi[field].get("units", "")
+                units = fi[field].get("units")
                 ftype = fi[field]["type"]
                 if ftype == "alias":
-                    data = fcache[fi[field]["dependencies"][0]].to(units)
+                    data = fcache[fi[field]["dependencies"][0]]
                 elif ftype == "derived":
                     data = fi[field]["function"](fcache)
-                    if hasattr(data, "units"):
-                        data.convert_to_units(units)
+                if hasattr(data, "units") and units is not None:
+                    data.convert_to_units(units)
                 fdata = {field: data}
                 self._store_fields(root_node, fdata,
                                    root_only=root_only)
