@@ -93,6 +93,22 @@ class Arbor(object):
         self._setup_fields()
         self._set_default_selector()
 
+    def _plant_trees(self):
+        pass
+
+    def _grow_tree(self, **kwargs):
+        pass
+
+    def _grow_trees(self, root_nodes=None, **kwargs):
+        if root_nodes is None:
+            root_nodes = self.trees
+
+        pbar = get_pbar("Growing trees", len(root_nodes))
+        for node in root_nodes:
+            self._grow_tree(node, **kwargs)
+            pbar.update(1)
+        pbar.finish()
+
     _trees = None
     @property
     def trees(self):

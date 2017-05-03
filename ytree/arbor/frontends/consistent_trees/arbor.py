@@ -76,6 +76,12 @@ class ConsistentTreesArbor(MonolithArbor):
 
         self._store_fields(root_node, field_data, root_only=False)
 
+    def _grow_trees(self, root_nodes=None, fields=None):
+        f = open(self.filename, "r")
+        super(ConsistentTreesArbor, self)._grow_trees(
+            root_nodes=root_nodes, fields=fields, f=f)
+        f.close()
+
     def _parse_parameter_file(self):
         """
         Read all relevant parameters from file header and
