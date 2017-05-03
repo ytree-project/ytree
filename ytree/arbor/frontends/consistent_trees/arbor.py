@@ -50,7 +50,7 @@ class ConsistentTreesArbor(MonolithArbor):
         idtype  = np.int64
         dtypes  = {"id": idtype, "desc_id": idtype}
         field_data = self._read_fields(root_node, fields,
-                                       dtypes=dtypes)
+                                       dtypes=dtypes, f=f)
         uids    = field_data.pop("id")
         descids = field_data.pop("desc_id")
         nhalos  = uids.size
@@ -243,6 +243,8 @@ class ConsistentTreesArbor(MonolithArbor):
             data = f.read(
                 root_node._ei -
                 root_node._si).split("\n")
+            if len(data[-1]) == 0:
+                data.pop()
         if close:
             f.close()
 
@@ -255,6 +257,7 @@ class ConsistentTreesArbor(MonolithArbor):
 
         for i, datum in enumerate(data):
             ldata = datum.strip().split()
+            if len(ldata) == 0: continue
             for field in fields:
                 dtype = dtypes.get(field, float)
                 field_data[field][i] = dtype(ldata[fi[field]["column"]])
