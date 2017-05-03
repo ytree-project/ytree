@@ -21,14 +21,14 @@ from yt.units.yt_array import \
     UnitParseError
 
 from ytree.arbor.arbor import \
-    MonolithArbor
+    Arbor
 from ytree.arbor.tree_node import \
     TreeNode
 
 from ytree.arbor.frontends.consistent_trees.fields import \
     ConsistentTreesFieldInfo
 
-class ConsistentTreesArbor(MonolithArbor):
+class ConsistentTreesArbor(Arbor):
     """
     Arbors from consistent-trees output files.
     """
