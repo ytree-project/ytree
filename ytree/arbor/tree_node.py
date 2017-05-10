@@ -49,6 +49,21 @@ class TreeNode(object):
         else:
             self.root = None
 
+    def reset(self):
+        """
+        If a root node, remove tree-related data structures.
+        If not root node, do nothing.
+        """
+
+        if self.root is None or self.root == -1:
+            return
+        for attr in ["uids", "descids", "nodes", "_ancestors"]:
+            if getattr(self, attr, None) is not None:
+                setattr(self, attr, None)
+        for attr in ["_root_field_data", "_tree_field_data"]:
+            getattr(self, attr).clear()
+        self.root = -1
+
     def add_ancestor(self, ancestor):
         """
         Add another TreeNode to the list of ancestors.
