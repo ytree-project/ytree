@@ -54,10 +54,11 @@ class ConsistentTreesArbor(Arbor):
             nodes[i] = TreeNode(uids[i], arbor=self)
 
         # replace first halo with the root node
-        root_node.uids    = uids
-        root_node.descids = descids
-        root_node.nodes   = nodes
-        nodes[0]          = root_node
+        root_node.tree_size = uids.size
+        root_node.uids      = uids
+        root_node.descids   = descids
+        root_node.nodes     = nodes
+        nodes[0]            = root_node
         for i, node in enumerate(nodes):
             node.treeid     = i
             node.root       = root_node

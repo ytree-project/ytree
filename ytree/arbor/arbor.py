@@ -25,6 +25,7 @@ from yt.extern.six import \
 from yt.frontends.ytdata.utilities import \
     save_as_dataset
 from yt.funcs import \
+    ensure_dir, \
     get_pbar, \
     get_output_filename, \
     just_one
@@ -548,7 +549,8 @@ class Arbor(object):
         """
         return False
 
-    def save_arbor(self, filename=None, fields=None):
+    def save_arbor(self, filename="arbor", trees=None, fields=None,
+                   max_file_size=524288):
         r"""
         Save the arbor to a file.
 
@@ -557,9 +559,9 @@ class Arbor(object):
         Parameters
         ----------
         filename : optional, string
-            Output filename.  Include a trailing "/" to indicate
-            a directory.
-            Default: "arbor.h5"
+            Output file keyword.  Main header file will be named
+            <filename>/<filename>.h5.
+            Default: "arbor".
         fields : optional, list of strings
             The fields to be saved.  If not given, all
             fields will be saved.
@@ -579,9 +581,15 @@ class Arbor(object):
         >>> a2 = ytree.load(fn)
 
         """
-        filename = get_output_filename(filename, "arbor", ".h5")
+
+        if trees is None:
+            trees = self.trees
+
         if fields is None:
+            fields = list(self._root_field_data.keys())
+        elif fields == "all":
             fields = self.field_list
+
         ds = {}
         for attr in ["hubble_constant",
                      "omega_matter",
@@ -591,9 +599,47 @@ class Arbor(object):
         extra_attrs = {"box_size": self.box_size,
                        "arbor_type": "YTreeArbor",
                        "unit_registry_json": self.unit_registry.to_json()}
-        save_as_dataset(ds, filename, self._field_data,
+
+        self._grow_trees()
+
+        # determine file layout
+        nn = 0
+        nt = 0
+        nnodes = []
+        ntrees = []
+        tree_size = np.array([tree.tree_size for tree in self.trees])
+        for ts in tree_size:
+            nn += ts
+            nt += 1
+            if nn > max_file_size:
+                nnodes.append(nn-ts)
+                ntrees.append(nt-1)
+                nn = ts
+                nt = 1
+        if nn > 0:
+            nnodes.append(nn)
+            ntrees.append(nt)
+        nfiles = len(nnodes)
+        nnodes = np.array(nnodes)
+        ntrees = np.array(ntrees)
+        tree_end_index   = ntrees.cumsum()
+        tree_start_index = tree_end_index - ntrees
+
+        # write header file
+        extra_attrs["total_files"] = nfiles
+        extra_attrs["total_trees"] = self.trees.size
+        extra_attrs["total_nodes"] = tree_size.sum()
+        data = {"tree_start_index": tree_start_index,
+                "tree_end_index"  : tree_end_index,
+                "tree_number"     : ntrees}
+        ftypes = dict((f, ".") for f in data)
+        ensure_dir(filename)
+        header_filename = os.path.join(filename, "%s.h5" % filename)
+        save_as_dataset(ds, header_filename, data,
+                        field_types=ftypes,
                         extra_attrs=extra_attrs)
-        return filename
+
+        return header_filename
 
 class MonolithArbor(Arbor):
     """
