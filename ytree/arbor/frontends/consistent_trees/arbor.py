@@ -39,20 +39,14 @@ class ConsistentTreesArbor(Arbor):
         """
         Build a single tree and read in any fields.
         """
-        if fields is None:
-            fields = []
-        else:
-            fields = fields.copy()
-        for field in ["id", "desc_id"]:
-            if field not in fields:
-                fields.append(field)
 
         idtype  = np.int64
+        grow_fields = ["id", "desc_id"]
         dtypes  = {"id": idtype, "desc_id": idtype}
-        field_data = self._read_fields(root_node, fields,
+        field_data = self._read_fields(root_node, grow_fields,
                                        dtypes=dtypes, f=f)
-        uids    = field_data.pop("id")
-        descids = field_data.pop("desc_id")
+        uids    = field_data["id"]
+        descids = field_data["desc_id"]
         nhalos  = uids.size
         nodes   = np.empty(nhalos, dtype=np.object)
         uidmap  = {}
@@ -74,7 +68,9 @@ class ConsistentTreesArbor(Arbor):
                 desc.add_ancestor(node)
                 node.descendent = desc
 
-        self._store_fields(root_node, field_data, root_only=False)
+        if fields is not None:
+            self._get_fields(root_node, fields,
+                             root_only=False, f=f)
 
     def _grow_trees(self, root_nodes=None, fields=None):
         f = open(self.filename, "r")
