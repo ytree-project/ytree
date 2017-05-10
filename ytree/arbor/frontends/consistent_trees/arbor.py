@@ -40,11 +40,11 @@ class ConsistentTreesArbor(Arbor):
         Build a single tree and read in any fields.
         """
 
-        idtype  = np.int64
+        idtype      = np.int64
         grow_fields = ["id", "desc_id"]
-        dtypes  = {"id": idtype, "desc_id": idtype}
-        field_data = self._read_fields(root_node, grow_fields,
-                                       dtypes=dtypes, f=f)
+        dtypes      = {"id": idtype, "desc_id": idtype}
+        field_data  = self._read_fields(root_node, grow_fields,
+                                        dtypes=dtypes, f=f)
         uids    = field_data["id"]
         descids = field_data["desc_id"]
         nhalos  = uids.size
@@ -59,9 +59,9 @@ class ConsistentTreesArbor(Arbor):
         root_node.nodes   = nodes
         nodes[0]          = root_node
         for i, node in enumerate(nodes):
-            node.treeid = i
-            node.root = root_node
-            descid = descids[i]
+            node.treeid     = i
+            node.root       = root_node
+            descid          = descids[i]
             uidmap[uids[i]] = i
             if descid != -1:
                 desc = nodes[uidmap[descids[i]]]
