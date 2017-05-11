@@ -80,10 +80,32 @@ class TreeNode(object):
     _ancestors = None
     @property
     def ancestors(self):
-        self._check_build()
+        self._setup()
         return self._ancestors
 
-    def _check_build(self):
+    def _grow_tree(self):
+        if hasattr(self, "uids"): return
+        self._setup()
+        nhalos  = self.uids.size
+        nodes   = np.empty(nhalos, dtype=np.object)
+        uidmap  = {}
+        for i in range(nhalos):
+            nodes[i] = TreeNode(uids[i], arbor=self)
+
+        # replace first halo with the root node
+        root_node.nodes     = nodes
+        nodes[0]            = root_node
+        for i, node in enumerate(nodes):
+            node.treeid     = i
+            node.root       = root_node
+            descid          = descids[i]
+            uidmap[uids[i]] = i
+            if descid != -1:
+                desc = nodes[uidmap[descids[i]]]
+                desc.add_ancestor(node)
+                node.descendent = desc
+
+    def _setup(self):
         if self.root == -1:
             self.arbor._setup_tree(self)
 
@@ -136,7 +158,7 @@ class TreeNode(object):
             if ftype not in arr_types:
                 raise SyntaxError(
                     "First argument must be one of %s." % str(arr_types))
-            self._check_build()
+            self._setup()
             self.arbor._get_fields(self, [field], root_only=False)
 
             # field is an actual field
@@ -235,7 +257,8 @@ class TreeNode(object):
         """
         lfi = []
         ln = []
-        for my_node in self.lwalk():
+        self._grow_tree()
+        for my_node in self.pwalk():
             lfi.append(my_node.treeid)
             ln.append(my_node)
         self._pfi = np.array(lfi)
@@ -253,7 +276,7 @@ class TreeNode(object):
         ...     print (my_node)
 
         """
-        self._check_build()
+        self._setup()
         yield self
         if self.ancestors is None:
             return
@@ -261,7 +284,7 @@ class TreeNode(object):
             for a_node in ancestor.twalk():
                 yield a_node
 
-    def lwalk(self):
+    def pwalk(self):
         r"""
         An iterator over all TreeNodes in the progenitor list,
         starting with this TreeNode.
@@ -269,11 +292,11 @@ class TreeNode(object):
         Examples
         --------
 
-        >>> for my_node in my_tree.lwalk():
+        >>> for my_node in my_tree.pwalk():
         ...     print (my_node)
 
         """
-        self._check_build()
+        self._grow_tree()
         my_node = self
         while my_node is not None:
             yield my_node

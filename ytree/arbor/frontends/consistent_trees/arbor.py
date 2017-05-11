@@ -43,7 +43,7 @@ class ConsistentTreesArbor(Arbor):
 
     def _setup_tree(self, root_node, f=None):
         """
-        Build a single tree and read in any fields.
+        Setup up field storage and list of ids, desc_ids.
         """
 
         idtype      = np.int64
@@ -53,27 +53,9 @@ class ConsistentTreesArbor(Arbor):
                                         dtypes=dtypes, f=f)
         uids    = field_data["id"]
         descids = field_data["desc_id"]
-        nhalos  = uids.size
-        nodes   = np.empty(nhalos, dtype=np.object)
-        uidmap  = {}
-        for i in range(nhalos):
-            nodes[i] = TreeNode(uids[i], arbor=self)
-
-        # replace first halo with the root node
-        root_node.tree_size = uids.size
         root_node.uids      = uids
         root_node.descids   = descids
-        root_node.nodes     = nodes
-        nodes[0]            = root_node
-        for i, node in enumerate(nodes):
-            node.treeid     = i
-            node.root       = root_node
-            descid          = descids[i]
-            uidmap[uids[i]] = i
-            if descid != -1:
-                desc = nodes[uidmap[descids[i]]]
-                desc.add_ancestor(node)
-                node.descendent = desc
+        root_node.tree_size = uids.size
 
     def _setup_trees(self, **kwargs):
         f = open(self.filename, "r")
