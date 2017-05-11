@@ -84,24 +84,24 @@ class TreeNode(object):
         return self._ancestors
 
     def _grow_tree(self):
-        if hasattr(self, "uids"): return
+        if hasattr(self, "nodes"): return
         self._setup()
         nhalos  = self.uids.size
         nodes   = np.empty(nhalos, dtype=np.object)
         uidmap  = {}
         for i in range(nhalos):
-            nodes[i] = TreeNode(uids[i], arbor=self)
+            nodes[i] = TreeNode(self.uids[i], arbor=self.arbor)
 
         # replace first halo with the root node
-        root_node.nodes     = nodes
-        nodes[0]            = root_node
+        self.nodes = nodes
+        nodes[0]   = self
         for i, node in enumerate(nodes):
             node.treeid     = i
-            node.root       = root_node
-            descid          = descids[i]
-            uidmap[uids[i]] = i
+            node.root       = self
+            descid          = self.descids[i]
+            uidmap[self.uids[i]] = i
             if descid != -1:
-                desc = nodes[uidmap[descids[i]]]
+                desc = nodes[uidmap[self.descids[i]]]
                 desc.add_ancestor(node)
                 node.descendent = desc
 
@@ -159,7 +159,7 @@ class TreeNode(object):
                 raise SyntaxError(
                     "First argument must be one of %s." % str(arr_types))
             self._setup()
-            self.arbor._get_fields(self, [field], root_only=False)
+            self.arbor._get_fields(self, fields=[field], root_only=False)
 
             # field is an actual field
             if isinstance(field, string_types):
@@ -174,7 +174,7 @@ class TreeNode(object):
                 if key in arr_types:
                     return getattr(self, "_%s_nodes" % key)
                 # return field value for this node
-                self.arbor._get_fields(self, [key])
+                self.arbor._get_fields(self, fields=[key])
                 if self.root == -1 or self.root == self:
                     return self._root_field_data[key]
                 else:
@@ -183,17 +183,7 @@ class TreeNode(object):
                 raise SyntaxError("Single argument must be a string.")
 
     def __repr__(self):
-        return "TreeNode[%d]" % self.my_id
-
-    _my_id = None
-    @property
-    def my_id(self):
-        if self._my_id is None:
-            if "uid" in self.arbor._field_data:
-                self._my_id = self["uid"]
-            else:
-                self._my_id = self.uid
-        return self._my_id
+        return "TreeNode[%d]" % self.uid
 
     _tfi = None
     @property
@@ -221,6 +211,7 @@ class TreeNode(object):
         """
         Prepare the TreeNode list and field indices.
         """
+        self._grow_tree()
         tfi = []
         tn = []
         for my_node in self.twalk():
@@ -255,9 +246,9 @@ class TreeNode(object):
         """
         Prepare the progenitor list list and field indices.
         """
+        self._grow_tree()
         lfi = []
         ln = []
-        self._grow_tree()
         for my_node in self.pwalk():
             lfi.append(my_node.treeid)
             ln.append(my_node)
@@ -338,7 +329,7 @@ class TreeNode(object):
 
         """
         raise NotImplementedError
-        keyword = "tree_%d" % self.my_id
+        keyword = "tree_%d" % self.uid
         filename = get_output_filename(filename, keyword, ".h5")
         if fields is None:
             fields = self.arbor._field_data.keys()
