@@ -41,7 +41,7 @@ class ConsistentTreesArbor(Arbor):
             fields, f=f)
         f.close()
 
-    def _grow_tree(self, root_node, f=None):
+    def _setup_tree(self, root_node, f=None):
         """
         Build a single tree and read in any fields.
         """
@@ -75,10 +75,10 @@ class ConsistentTreesArbor(Arbor):
                 desc.add_ancestor(node)
                 node.descendent = desc
 
-    def _grow_trees(self, **kwargs):
+    def _setup_trees(self, **kwargs):
         f = open(self.filename, "r")
         kwargs["f"] = f
-        super(ConsistentTreesArbor, self)._grow_trees(
+        super(ConsistentTreesArbor, self)._setup_trees(
             **kwargs)
         f.close()
 

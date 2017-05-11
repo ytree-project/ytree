@@ -97,16 +97,16 @@ class Arbor(object):
     def _plant_trees(self):
         pass
 
-    def _grow_tree(self, **kwargs):
+    def _setup_tree(self, **kwargs):
         pass
 
-    def _grow_trees(self, **kwargs):
+    def _setup_trees(self, **kwargs):
         root_nodes = kwargs.pop("root_nodes", None)
         if root_nodes is None:
             root_nodes = self.trees
         pbar = get_pbar("Growing trees", len(root_nodes))
         for node in root_nodes:
-            self._grow_tree(node, **kwargs)
+            self._setup_tree(node, **kwargs)
             pbar.update(1)
         pbar.finish()
 
@@ -613,7 +613,7 @@ class Arbor(object):
                        "arbor_type": "YTreeArbor",
                        "unit_registry_json": self.unit_registry.to_json()}
 
-        self._grow_trees()
+        self._setup_trees()
 
         # determine file layout
         nn = 0

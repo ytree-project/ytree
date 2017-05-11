@@ -85,7 +85,7 @@ class TreeNode(object):
 
     def _check_build(self):
         if self.root == -1:
-            self.arbor._grow_tree(self)
+            self.arbor._setup_tree(self)
 
     def __getitem__(self, key):
         """
