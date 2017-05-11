@@ -337,6 +337,7 @@ class TreeNode(object):
         >>> a2 = ytree.load(fn)
 
         """
+        raise NotImplementedError
         keyword = "tree_%d" % self.my_id
         filename = get_output_filename(filename, keyword, ".h5")
         if fields is None:
