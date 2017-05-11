@@ -35,7 +35,13 @@ class ConsistentTreesArbor(Arbor):
 
     _field_info_class = ConsistentTreesFieldInfo
 
-    def _grow_tree(self, root_node, fields=None, f=None):
+    def _get_root_fields(self, fields):
+        f = open(self.filename, "r")
+        super(ConsistentTreesArbor, self)._get_root_fields(
+            fields, f=f)
+        f.close()
+
+    def _grow_tree(self, root_node, f=None):
         """
         Build a single tree and read in any fields.
         """
@@ -69,14 +75,18 @@ class ConsistentTreesArbor(Arbor):
                 desc.add_ancestor(node)
                 node.descendent = desc
 
-        if fields is not None:
-            self._get_fields(root_node, fields,
-                             root_only=False, f=f)
-
-    def _grow_trees(self, root_nodes=None, fields=None):
+    def _grow_trees(self, **kwargs):
         f = open(self.filename, "r")
+        kwargs["f"] = f
         super(ConsistentTreesArbor, self)._grow_trees(
-            root_nodes=root_nodes, fields=fields, f=f)
+            **kwargs)
+        f.close()
+
+    def _get_fields_trees(self, **kwargs):
+        f = open(self.filename, "r")
+        kwargs["f"] = f
+        super(ConsistentTreesArbor, self)._get_fields_trees(
+            **kwargs)
         f.close()
 
     def _parse_parameter_file(self):

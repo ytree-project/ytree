@@ -100,13 +100,24 @@ class Arbor(object):
     def _grow_tree(self, **kwargs):
         pass
 
-    def _grow_trees(self, root_nodes=None, **kwargs):
+    def _grow_trees(self, **kwargs):
+        root_nodes = kwargs.pop("root_nodes", None)
         if root_nodes is None:
             root_nodes = self.trees
-
         pbar = get_pbar("Growing trees", len(root_nodes))
         for node in root_nodes:
             self._grow_tree(node, **kwargs)
+            pbar.update(1)
+        pbar.finish()
+
+    def _get_fields_trees(self, **kwargs):
+        root_nodes = kwargs.pop("root_nodes", None)
+        if root_nodes is None:
+            root_nodes = self.trees
+        kwargs["root_only"] = False
+        pbar = get_pbar("Getting fields", len(root_nodes))
+        for node in root_nodes:
+            self._get_fields(node, **kwargs)
             pbar.update(1)
         pbar.finish()
 
@@ -397,7 +408,7 @@ class Arbor(object):
            "units": units, "description": description,
            "dependencies": list(fc.keys())}
 
-    def _get_root_fields(self, fields):
+    def _get_root_fields(self, fields, **kwargs):
         """
         Get fields for the root nodes of all trees.
         """
@@ -408,11 +419,9 @@ class Arbor(object):
         if not fields_to_read:
             return
 
-        f = open(self.filename, "r")
         for node in self.trees:
-            self._get_fields(node, fields_to_read,
-                             root_only=True, f=f)
-        f.close()
+            self._get_fields(node, fields=fields_to_read,
+                             root_only=True, **kwargs)
 
         field_data = {}
         fi = self.field_info
@@ -427,7 +436,7 @@ class Arbor(object):
                   self.trees[i]._root_field_data[field]
         self._root_field_data.update(field_data)
 
-    def _get_fields(self, tree_node, fields, root_only=True, f=None):
+    def _get_fields(self, tree_node, fields=None, root_only=True, f=None):
         r"""
         Load field data for a node or a tree into storage structures.
 
@@ -451,6 +460,10 @@ class Arbor(object):
             This can be used to speed up reading for multiple trees.
 
         """
+
+        if fields is None or len(fields) == 0:
+            return
+
         if tree_node.root == -1:
             root_node = tree_node
         else:
@@ -629,15 +642,45 @@ class Arbor(object):
         extra_attrs["total_files"] = nfiles
         extra_attrs["total_trees"] = self.trees.size
         extra_attrs["total_nodes"] = tree_size.sum()
-        data = {"tree_start_index": tree_start_index,
-                "tree_end_index"  : tree_end_index,
-                "tree_number"     : ntrees}
-        ftypes = dict((f, ".") for f in data)
+        hdata = {"tree_start_index": tree_start_index,
+                 "tree_end_index"  : tree_end_index,
+                 "tree_size"       : ntrees}
+        htypes = dict((f, ".") for f in hdata)
         ensure_dir(filename)
         header_filename = os.path.join(filename, "%s.h5" % filename)
-        save_as_dataset(ds, header_filename, data,
-                        field_types=ftypes,
+        save_as_dataset(ds, header_filename, hdata,
+                        field_types=htypes,
                         extra_attrs=extra_attrs)
+
+        for i in range(nfiles):
+            my_nodes = self.trees[tree_start_index[i]:tree_end_index[i]]
+            self._get_fields_trees(root_nodes=my_nodes, fields=fields)
+            fdata = dict((field, np.empty(nnodes[i])) for field in fields)
+            my_tree_size  = tree_size[tree_start_index[i]:tree_end_index[i]]
+            my_tree_end   = my_tree_size.cumsum()
+            my_tree_start = my_tree_end - my_tree_size
+            pbar = get_pbar("Creating field arrays [%d/%d]" %
+                            (i+1, nfiles), len(fields)*nnodes[i])
+            c = 0
+            for field in fields:
+                for di, node in enumerate(my_nodes):
+                    fdata[field][my_tree_start[di]:my_tree_end[di]] = \
+                      node._tree_field_data[field]
+                    c += my_tree_size[di]
+                    pbar.update(c)
+            pbar.finish()
+            fdata["tree_start_index"] = my_tree_start
+            fdata["tree_end_index"]   = my_tree_end
+            fdata["tree_size"]        = my_tree_size
+            ftypes = dict((f, "data") for f in fields)
+            for ft in ["tree_start_index",
+                      "tree_end_index",
+                      "tree_size"]:
+                ftypes[ft] = "index"
+            my_filename = os.path.join(
+                filename, "%s_%04d.h5" % (filename, i))
+            save_as_dataset({}, my_filename, fdata,
+                            field_types=ftypes)
 
         return header_filename
 
