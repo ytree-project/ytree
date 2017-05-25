@@ -639,6 +639,8 @@ class Arbor(object):
         tree_start_index = tree_end_index - ntrees
 
         # write header file
+        fieldnames = [field.replace("/", "_") for field in fields]
+        extra_attrs["fields"]      = fieldnames
         extra_attrs["total_files"] = nfiles
         extra_attrs["total_trees"] = self.trees.size
         extra_attrs["total_nodes"] = tree_size.sum()
@@ -652,19 +654,20 @@ class Arbor(object):
                         field_types=htypes,
                         extra_attrs=extra_attrs)
 
+        ftypes = dict((f, "data") for f in fieldnames)
         for i in range(nfiles):
             my_nodes = self.trees[tree_start_index[i]:tree_end_index[i]]
             self._get_fields_trees(root_nodes=my_nodes, fields=fields)
-            fdata = dict((field, np.empty(nnodes[i])) for field in fields)
+            fdata = dict((field, np.empty(nnodes[i])) for field in fieldnames)
             my_tree_size  = tree_size[tree_start_index[i]:tree_end_index[i]]
             my_tree_end   = my_tree_size.cumsum()
             my_tree_start = my_tree_end - my_tree_size
             pbar = get_pbar("Creating field arrays [%d/%d]" %
                             (i+1, nfiles), len(fields)*nnodes[i])
             c = 0
-            for field in fields:
+            for field, fieldname in zip(fields, fieldnames):
                 for di, node in enumerate(my_nodes):
-                    fdata[field][my_tree_start[di]:my_tree_end[di]] = \
+                    fdata[fieldname][my_tree_start[di]:my_tree_end[di]] = \
                       node._tree_field_data[field]
                     c += my_tree_size[di]
                     pbar.update(c)
@@ -672,7 +675,6 @@ class Arbor(object):
             fdata["tree_start_index"] = my_tree_start
             fdata["tree_end_index"]   = my_tree_end
             fdata["tree_size"]        = my_tree_size
-            ftypes = dict((f, "data") for f in fields)
             for ft in ["tree_start_index",
                       "tree_end_index",
                       "tree_size"]:
