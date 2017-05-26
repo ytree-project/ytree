@@ -6,7 +6,7 @@ Arbor class and member functions
 """
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2016, Britton Smith <brittonsmith@gmail.com>
+# Copyright (c) 2016-2017, Britton Smith <brittonsmith@gmail.com>
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -16,6 +16,7 @@ Arbor class and member functions
 from collections import \
     defaultdict
 import functools
+import json
 import numpy as np
 import os
 
@@ -41,7 +42,8 @@ from yt.utilities.cosmology import \
 
 from ytree.arbor.fields import \
     FakeFieldContainer, \
-    FieldContainer
+    FieldContainer, \
+    FieldInfoContainer
 from ytree.arbor.tree_node import \
     TreeNode
 from ytree.arbor.tree_node_selector import \
@@ -78,11 +80,11 @@ class Arbor(object):
     calculator.
     """
 
-    _field_info_class = None
+    _field_info_class = FieldInfoContainer
 
     def __init__(self, filename):
         """
-        Initialize an Arbor given a single input file.
+        Initialize an Arbor given an input file.
         """
 
         self.filename = filename
@@ -93,6 +95,9 @@ class Arbor(object):
         self._root_field_data = FieldContainer(self)
         self._setup_fields()
         self._set_default_selector()
+
+    def _parse_parameter_file(self):
+        pass
 
     def _plant_trees(self):
         pass
@@ -343,6 +348,9 @@ class Arbor(object):
         self.field_info[alias] = \
           {"type": "alias", "units": units,
            "dependencies": [field]}
+        if "aliases" not in self.field_info[field]:
+            self.field_info[field]["aliases"] = []
+            self.field_info[field]["aliases"].append(alias)
 
     def add_derived_field(self, name, function,
                           units=None, description=None,
@@ -562,7 +570,7 @@ class Arbor(object):
         """
         return False
 
-    def save_arbor(self, filename="arbor", trees=None, fields=None,
+    def save_arbor(self, filename="arbor", fields=None, trees=None,
                    max_file_size=524288):
         r"""
         Save the arbor to a file.
@@ -598,10 +606,12 @@ class Arbor(object):
         if trees is None:
             trees = self.trees
 
-        if fields is None:
-            fields = list(self._root_field_data.keys())
-        elif fields == "all":
-            fields = self.field_list
+        if fields in [None, "all"]:
+            # If a field has an alias, get that instead.
+            fields = []
+            for field in self.field_list:
+                fields.extend(
+                    self.field_info[field].get("aliases", [field]))
 
         ds = {}
         for attr in ["hubble_constant",
@@ -640,7 +650,14 @@ class Arbor(object):
 
         # write header file
         fieldnames = [field.replace("/", "_") for field in fields]
-        extra_attrs["fields"]      = fieldnames
+        myfi = {}
+        for field, fieldname in zip(fields, fieldnames):
+            fi = self.field_info[field]
+            myfi[fieldname] = \
+              dict((key, fi[key])
+                   for key in ["units", "description"]
+                   if key in fi)
+        extra_attrs["field_info"] = json.dumps(myfi)
         extra_attrs["total_files"] = nfiles
         extra_attrs["total_trees"] = self.trees.size
         extra_attrs["total_nodes"] = tree_size.sum()

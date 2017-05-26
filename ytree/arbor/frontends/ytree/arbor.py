@@ -6,7 +6,7 @@ YTreeArbor class and member functions
 """
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2016, Britton Smith <brittonsmith@gmail.com>
+# Copyright (c) 2016-2017, Britton Smith <brittonsmith@gmail.com>
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -14,6 +14,7 @@ YTreeArbor class and member functions
 #-----------------------------------------------------------------------------
 
 import h5py
+import json
 
 from yt.frontends.ytdata.utilities import \
     _hdf5_yt_array
@@ -30,11 +31,8 @@ class YTreeArbor(MonolithArbor):
     Class for Arbors created from the :func:`~ytree.arbor.Arbor.save_arbor`
     or :func:`~ytree.tree_node.TreeNode.save_tree` functions.
     """
-    def _load_field_data(self):
-        """
-        All data stored in a single hdf5 file.  Get cosmological
-        parameters and modify unit registry for hubble constant.
-        """
+
+    def _parse_parameter_file(self):
         fh = h5py.File(self.filename, "r")
         for attr in ["hubble_constant",
                      "omega_matter",
@@ -46,8 +44,7 @@ class YTreeArbor(MonolithArbor):
                   fh.attrs["unit_registry_json"].astype(str))
         self.box_size = _hdf5_yt_attr(fh, "box_size",
                                       unit_registry=self.unit_registry)
-        self._field_data = dict([(f, _hdf5_yt_array(fh["data"], f, self))
-                                 for f in fh["data"]])
+        self.field_info.update(json.loads(fh.attrs["field_info"]))
         fh.close()
 
     @classmethod

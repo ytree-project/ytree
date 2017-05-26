@@ -77,7 +77,6 @@ class ConsistentTreesArbor(Arbor):
         modify unit registry for hubble constant.
         """
 
-        self._field_data = {}
         fields = []
         fi = {}
         fdb = {}
