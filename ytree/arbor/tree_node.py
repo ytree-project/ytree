@@ -80,11 +80,13 @@ class TreeNode(object):
     _ancestors = None
     @property
     def ancestors(self):
-        self._setup()
+        if self.root == -1:
+            self._grow_tree()
         return self._ancestors
 
     def _grow_tree(self):
-        if hasattr(self, "nodes"): return
+        # skip this if not a root or if already grown
+        if hasattr(self, "treeid"): return
         self._setup()
         nhalos  = self.uids.size
         nodes   = np.empty(nhalos, dtype=np.object)
@@ -96,9 +98,9 @@ class TreeNode(object):
         self.nodes = nodes
         nodes[0]   = self
         for i, node in enumerate(nodes):
-            node.treeid     = i
-            node.root       = self
-            descid          = self.descids[i]
+            node.treeid = i
+            node.root   = self
+            descid      = self.descids[i]
             uidmap[self.uids[i]] = i
             if descid != -1:
                 desc = nodes[uidmap[self.descids[i]]]
@@ -106,8 +108,10 @@ class TreeNode(object):
                 node.descendent = desc
 
     def _setup(self):
-        if self.root == -1:
-            self.arbor._setup_tree(self)
+        # skip if this is not a root or if already setup
+        if self.root != -1 or hasattr(self, "uids"):
+            return
+        self.arbor._setup_tree(self)
 
     def __getitem__(self, key):
         """
