@@ -15,6 +15,7 @@ YTreeArbor class and member functions
 
 import h5py
 import json
+import numpy as np
 
 from yt.frontends.ytdata.utilities import \
     _hdf5_yt_array
@@ -23,6 +24,8 @@ from yt.units.unit_registry import \
 
 from ytree.arbor.arbor import \
     MonolithArbor
+from ytree.arbor.tree_node import \
+    TreeNode
 from ytree.utilities.io import \
     _hdf5_yt_attr
 
@@ -46,6 +49,16 @@ class YTreeArbor(MonolithArbor):
                                       unit_registry=self.unit_registry)
         self.field_info.update(json.loads(fh.attrs["field_info"]))
         fh.close()
+
+    def _plant_trees(self):
+        fh = h5py.File(self.filename, "r")
+        ntrees = fh.attrs["total_trees"]
+        uids = fh["root"]["id"].value.astype(np.int64)
+        fh.close()
+
+        self._trees = np.empty(ntrees, dtype=np.object)
+        for i in range(ntrees):
+            self._trees[i] = TreeNode(uids[i], arbor=self, root=True)
 
     @classmethod
     def _is_valid(self, *args, **kwargs):

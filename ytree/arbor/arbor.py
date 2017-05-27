@@ -97,13 +97,23 @@ class Arbor(object):
         self._set_default_selector()
 
     def _parse_parameter_file(self):
-        pass
+        """
+        Read relevant parameters from parameter file or file header
+        and detect fields.
+        """
+        raise NotImplementedError
 
     def _plant_trees(self):
-        pass
+        """
+        Create the list of root tree nodes.
+        """
+        raise NotImplementedError
 
     def _setup_tree(self, **kwargs):
-        pass
+        """
+        Setup up field storage and list of ids, desc_ids for a tree.
+        """
+        raise NotImplementedError
 
     def _setup_trees(self, **kwargs):
         root_nodes = kwargs.pop("root_nodes", None)
@@ -427,9 +437,12 @@ class Arbor(object):
         if not fields_to_read:
             return
 
+        pbar = get_pbar("Getting root fields", self.trees.size)
         for node in self.trees:
             self._get_fields(node, fields=fields_to_read,
                              root_only=True, **kwargs)
+            pbar.update()
+        pbar.finish()
 
         field_data = {}
         fi = self.field_info
@@ -624,6 +637,7 @@ class Arbor(object):
                        "unit_registry_json": self.unit_registry.to_json()}
 
         self._setup_trees()
+        self._get_root_fields(fields)
 
         # determine file layout
         nn = 0
@@ -651,12 +665,16 @@ class Arbor(object):
         # write header file
         fieldnames = [field.replace("/", "_") for field in fields]
         myfi = {}
+        rdata = {}
+        rtypes = {}
         for field, fieldname in zip(fields, fieldnames):
             fi = self.field_info[field]
             myfi[fieldname] = \
               dict((key, fi[key])
                    for key in ["units", "description"]
                    if key in fi)
+            rdata[fieldname] = self._root_field_data[field]
+            rtypes[fieldname] = "root"
         extra_attrs["field_info"] = json.dumps(myfi)
         extra_attrs["total_files"] = nfiles
         extra_attrs["total_trees"] = self.trees.size
@@ -664,7 +682,10 @@ class Arbor(object):
         hdata = {"tree_start_index": tree_start_index,
                  "tree_end_index"  : tree_end_index,
                  "tree_size"       : ntrees}
-        htypes = dict((f, ".") for f in hdata)
+        hdata.update(rdata)
+        htypes = dict((f, "index") for f in hdata)
+        htypes.update(rtypes)
+
         ensure_dir(filename)
         header_filename = os.path.join(filename, "%s.h5" % filename)
         save_as_dataset(ds, header_filename, hdata,

@@ -42,10 +42,6 @@ class ConsistentTreesArbor(Arbor):
         f.close()
 
     def _setup_tree(self, root_node, f=None):
-        """
-        Setup up field storage and list of ids, desc_ids.
-        """
-
         idtype      = np.int64
         grow_fields = ["id", "desc_id"]
         dtypes      = {"id": idtype, "desc_id": idtype}
@@ -72,11 +68,6 @@ class ConsistentTreesArbor(Arbor):
         f.close()
 
     def _parse_parameter_file(self):
-        """
-        Read all relevant parameters from file header and
-        modify unit registry for hubble constant.
-        """
-
         fields = []
         fi = {}
         fdb = {}
@@ -173,14 +164,9 @@ class ConsistentTreesArbor(Arbor):
             fi[field]["column"] = i
         self.field_list = fields
         self.field_info.update(fi)
-
         self.box_size = self.quan(float(box[0]), box[1])
 
     def _plant_trees(self):
-        """
-        Create the list of root tree nodes.
-        """
-
         lkey = len("tree ")+1
         block_size = 32768
 
