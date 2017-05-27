@@ -23,13 +23,13 @@ from yt.units.unit_registry import \
     UnitRegistry
 
 from ytree.arbor.arbor import \
-    MonolithArbor
+    Arbor
 from ytree.arbor.tree_node import \
     TreeNode
 from ytree.utilities.io import \
     _hdf5_yt_attr
 
-class YTreeArbor(MonolithArbor):
+class YTreeArbor(Arbor):
     """
     Class for Arbors created from the :func:`~ytree.arbor.Arbor.save_arbor`
     or :func:`~ytree.tree_node.TreeNode.save_tree` functions.

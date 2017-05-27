@@ -63,7 +63,6 @@ Internal Classes
    ~ytree.arbor.ArborArbor
    ~ytree.arbor.CatalogArbor
    ~ytree.arbor.ConsistentTreesArbor
-   ~ytree.arbor.MonolithArbor
    ~ytree.arbor.RockstarArbor
    ~ytree.arbor.TreeFarmArbor
    ~ytree.tree_node.TreeNode

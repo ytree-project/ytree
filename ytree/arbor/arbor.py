@@ -730,47 +730,6 @@ class Arbor(object):
 
         return header_filename
 
-class MonolithArbor(Arbor):
-    """
-    Base class for Arbors loaded from a single file.
-    """
-    def _load_field_data(self):
-        """
-        Load all fields from file, store in self._field_data.
-        """
-        pass
-
-    def _load_trees(self):
-        """
-        Create the tree structure.
-        """
-        self._load_field_data()
-        self._set_halo_id_field()
-
-        self._trees = []
-        root_ids = self._field_data["uid"][self._field_data["desc_id"] == -1]
-        if hasattr(root_ids, "units"):
-            root_ids = root_ids.d
-        root_ids = root_ids.astype(np.int64, copy=False)
-        pbar = get_pbar("Loading %d trees" % root_ids.size,
-                        self._field_data["uid"].size)
-        for root_id in root_ids:
-            tree_halos = (root_id == self._field_data["tree_id"])
-            my_tree = {}
-            for i in np.where(tree_halos)[0]:
-                desc_id = np.int64(self._field_data["desc_id"][i])
-                uid = np.int64(self._field_data["uid"][i])
-                my_node = TreeNode(i, arbor=self)
-                my_tree[uid] = my_node
-                if desc_id >= 0:
-                    my_tree[desc_id].add_ancestor(my_node)
-                pbar.update(1)
-            self._trees.append(my_tree[root_id])
-        pbar.finish()
-        self._trees = np.array(self._trees)
-        mylog.info("Arbor contains %d trees with %d total nodes." %
-                   (self._trees.size, self._field_data["uid"].size))
-
 class CatalogArbor(Arbor):
     """
     Base class for Arbors created from a series of halo catalog
