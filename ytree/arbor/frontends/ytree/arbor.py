@@ -51,6 +51,7 @@ class YTreeArbor(Arbor):
         self.box_size = _hdf5_yt_attr(fh, "box_size",
                                       unit_registry=self.unit_registry)
         self.field_info.update(json.loads(fh.attrs["field_info"]))
+        self.field_list = list(self.field_info.keys())
         fh.close()
 
     def _plant_trees(self):
