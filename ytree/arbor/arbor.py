@@ -109,11 +109,17 @@ class Arbor(object):
         """
         raise NotImplementedError
 
-    def _setup_tree(self, *args, **kwargs):
-        """
-        Setup up field storage and list of ids, desc_ids for a tree.
-        """
-        raise NotImplementedError
+    def _setup_tree(self, root_node, f=None):
+        idtype      = np.int64
+        grow_fields = ["id", "desc_id"]
+        dtypes      = {"id": idtype, "desc_id": idtype}
+        field_data  = self._read_fields(root_node, grow_fields,
+                                        dtypes=dtypes, f=f)
+        uids    = field_data["id"]
+        descids = field_data["desc_id"]
+        root_node.uids      = uids
+        root_node.descids   = descids
+        root_node.tree_size = uids.size
 
     def _setup_trees(self, **kwargs):
         root_nodes = kwargs.pop("root_nodes", None)
