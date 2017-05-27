@@ -109,7 +109,7 @@ class Arbor(object):
         """
         raise NotImplementedError
 
-    def _setup_tree(self, **kwargs):
+    def _setup_tree(self, *args, **kwargs):
         """
         Setup up field storage and list of ids, desc_ids for a tree.
         """
@@ -674,7 +674,7 @@ class Arbor(object):
                    for key in ["units", "description"]
                    if key in fi)
             rdata[fieldname] = self._root_field_data[field]
-            rtypes[fieldname] = "root"
+            rtypes[fieldname] = "data"
         extra_attrs["field_info"] = json.dumps(myfi)
         extra_attrs["total_files"] = nfiles
         extra_attrs["total_trees"] = self.trees.size

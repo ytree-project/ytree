@@ -34,8 +34,11 @@ class YTreeArbor(MonolithArbor):
     Class for Arbors created from the :func:`~ytree.arbor.Arbor.save_arbor`
     or :func:`~ytree.tree_node.TreeNode.save_tree` functions.
     """
+    _suffix = ".h5"
 
     def _parse_parameter_file(self):
+        self._prefix = \
+          self.filename[:self.filename.rfind(self._suffix)]
         fh = h5py.File(self.filename, "r")
         for attr in ["hubble_constant",
                      "omega_matter",
@@ -52,13 +55,51 @@ class YTreeArbor(MonolithArbor):
 
     def _plant_trees(self):
         fh = h5py.File(self.filename, "r")
-        ntrees = fh.attrs["total_trees"]
-        uids = fh["root"]["id"].value.astype(np.int64)
+        ntrees   = fh.attrs["total_trees"]
+        uids     = fh["data"]["id"].value.astype(np.int64)
+        self._si = fh["index"]["tree_start_index"].value
+        self._ei = fh["index"]["tree_end_index"].value
         fh.close()
 
         self._trees = np.empty(ntrees, dtype=np.object)
         for i in range(ntrees):
-            self._trees[i] = TreeNode(uids[i], arbor=self, root=True)
+            my_node        = TreeNode(uids[i], arbor=self, root=True)
+            my_node._ai    = i
+            self._trees[i] = my_node
+
+    def _read_fields(self, root_node, fields, dtypes=None,
+                     f=None, root_only=False):
+        if dtypes is None:
+            dtypes = {}
+
+        if f is None:
+            close = True
+            fi = np.digitize(root_node._ai, self._ei)
+            fn = "%s_%04d%s" % (self._prefix, fi, self._suffix)
+            fh = h5py.File(fn, "r")
+        else:
+            close = False
+
+        start_index = fh["index/tree_start_index"].value
+        end_index   = fh["index/tree_end_index"].value
+        ii = root_node._ai - self._si[fi]
+
+        field_data = {}
+        fi = self.field_info
+        for field in fields:
+            data = fh["data/%s" % field][start_index[ii]:end_index[ii]]
+            dtype = dtypes.get(field)
+            if dtype is not None:
+                data = data.astype(dtype)
+            units = fi[field].get("units", "")
+            if units != "":
+                data = self.arr(data, units)
+            field_data[field] = data
+
+        if close:
+            fh.close()
+
+        return field_data
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
@@ -67,7 +108,7 @@ class YTreeArbor(MonolithArbor):
         and have "arbor_type" attribute.
         """
         fn = args[0]
-        if not fn.endswith(".h5"): return False
+        if not fn.endswith(self._suffix): return False
         try:
             with h5py.File(fn, "r") as f:
                 if "arbor_type" not in f.attrs:
