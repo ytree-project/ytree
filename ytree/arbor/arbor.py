@@ -52,6 +52,7 @@ from ytree.utilities.exceptions import \
     ArborFieldCircularDependency, \
     ArborFieldNotFound
 from ytree.utilities.logger import \
+    fake_pbar, \
     ytreeLogger as mylog
 
 arbor_registry = {}
@@ -121,24 +122,19 @@ class Arbor(object):
         root_node.descids   = descids
         root_node.tree_size = uids.size
 
-    def _setup_trees(self, **kwargs):
+    def _node_io_loop(self, func, *args, **kwargs):
         root_nodes = kwargs.pop("root_nodes", None)
         if root_nodes is None:
             root_nodes = self.trees
-        pbar = get_pbar("Growing trees", len(root_nodes))
-        for node in root_nodes:
-            self._setup_tree(node, **kwargs)
-            pbar.update(1)
-        pbar.finish()
+        pbar = kwargs.pop("pbar", None)
+        if pbar is None:
+            mypbar = fake_pbar
+        else:
+            mypbar = get_pbar
 
-    def _get_fields_trees(self, **kwargs):
-        root_nodes = kwargs.pop("root_nodes", None)
-        if root_nodes is None:
-            root_nodes = self.trees
-        kwargs["root_only"] = False
-        pbar = get_pbar("Getting fields", len(root_nodes))
+        pbar = mypbar(pbar, len(root_nodes))
         for node in root_nodes:
-            self._get_fields(node, **kwargs)
+            func(node, *args, **kwargs)
             pbar.update(1)
         pbar.finish()
 
@@ -642,7 +638,8 @@ class Arbor(object):
                        "arbor_type": "YTreeArbor",
                        "unit_registry_json": self.unit_registry.to_json()}
 
-        self._setup_trees()
+        self._node_io_loop(self._setup_tree,
+                           pbar="Growing trees")
         self._get_root_fields(fields)
 
         # determine file layout
@@ -701,7 +698,10 @@ class Arbor(object):
         ftypes = dict((f, "data") for f in fieldnames)
         for i in range(nfiles):
             my_nodes = self.trees[tree_start_index[i]:tree_end_index[i]]
-            self._get_fields_trees(root_nodes=my_nodes, fields=fields)
+            self._node_io_loop(
+                self._get_fields,
+                pbar="Getting fields [%d/%d]" % (i+1, nfiles),
+                root_nodes=my_nodes, fields=fields, root_only=False)
             fdata = dict((field, np.empty(nnodes[i])) for field in fieldnames)
             my_tree_size  = tree_size[tree_start_index[i]:tree_end_index[i]]
             my_tree_end   = my_tree_size.cumsum()

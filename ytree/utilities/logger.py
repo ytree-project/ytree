@@ -43,3 +43,11 @@ def set_parallel_logger(comm):
     f = logging.Formatter("P%03i %s" % (comm.rank, ufstring))
     if len(ytreeLogger.handlers) > 0:
         ytreeLogger.handlers[0].setFormatter(f)
+
+class fake_pbar(object):
+    def __init__(self, *args):
+        pass
+    def update(self, *args):
+        pass
+    def finish(self):
+        pass

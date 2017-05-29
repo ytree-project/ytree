@@ -41,18 +41,11 @@ class ConsistentTreesArbor(Arbor):
             fields, f=f)
         f.close()
 
-    def _setup_trees(self, **kwargs):
+    def _node_io_loop(self, func, *args, **kwargs):
         f = open(self.filename, "r")
         kwargs["f"] = f
-        super(ConsistentTreesArbor, self)._setup_trees(
-            **kwargs)
-        f.close()
-
-    def _get_fields_trees(self, **kwargs):
-        f = open(self.filename, "r")
-        kwargs["f"] = f
-        super(ConsistentTreesArbor, self)._get_fields_trees(
-            **kwargs)
+        super(ConsistentTreesArbor, self)._node_io_loop(
+            func, *args, **kwargs)
         f.close()
 
     def _parse_parameter_file(self):
