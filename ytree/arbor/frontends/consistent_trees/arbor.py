@@ -35,12 +35,6 @@ class ConsistentTreesArbor(Arbor):
 
     _field_info_class = ConsistentTreesFieldInfo
 
-    def _get_root_fields(self, fields):
-        f = open(self.filename, "r")
-        super(ConsistentTreesArbor, self)._get_root_fields(
-            fields, f=f)
-        f.close()
-
     def _node_io_loop(self, func, *args, **kwargs):
         f = open(self.filename, "r")
         kwargs["f"] = f

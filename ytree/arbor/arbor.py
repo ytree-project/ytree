@@ -439,12 +439,9 @@ class Arbor(object):
         if not fields_to_read:
             return
 
-        pbar = get_pbar("Getting root fields", self.trees.size)
-        for node in self.trees:
-            self._get_fields(node, fields=fields_to_read,
-                             root_only=True, **kwargs)
-            pbar.update()
-        pbar.finish()
+        self._node_io_loop(
+            self._get_fields, pbar="Getting root fields",
+            fields=fields_to_read, root_only=True)
 
         field_data = {}
         fi = self.field_info
