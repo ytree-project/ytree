@@ -36,6 +36,37 @@ class FieldInfoContainer(dict):
         self.arbor.add_derived_field(
             "redshift", _redshift, units="", force_add=False)
 
+    def resolve_field_dependencies(self, fields, fcache=None):
+        """
+        Divide fields into those to be read and those to generate.
+        """
+        if fcache is None:
+            fcache = {}
+        fields_to_read = []
+        fields_to_generate = []
+        fields_to_resolve = fields.copy()
+
+        while len(fields_to_resolve) > 0:
+            field = fields_to_resolve.pop(0)
+            if field in fcache:
+                continue
+            if field not in self:
+                raise ArborFieldNotFound(field, self.arbor)
+            ftype = self[field].get("type")
+            if ftype == "derived" or ftype == "alias":
+                deps = self[field]["dependencies"]
+                if field in deps:
+                    raise ArborFieldCircularDependency(
+                        field, self.arbor)
+                fields_to_resolve.extend(
+                    set(deps).difference(set(fields_to_resolve)))
+                if field not in fields_to_generate:
+                    fields_to_generate.append(field)
+            else:
+                if field not in fields_to_read:
+                    fields_to_read.append(field)
+        return fields_to_read, fields_to_generate
+
 class FieldContainer(dict):
     def __init__(self, arbor):
         self.arbor = arbor

@@ -499,7 +499,7 @@ class Arbor(object):
 
         # Resolve field dependencies.
         fields_to_read, fields_to_generate = \
-          self._resolve_field_dependencies(fields, fcache=fcache)
+          fi.resolve_field_dependencies(fields, fcache=fcache)
 
         # Read in fields we need that are on disk.
         if fields_to_read:
@@ -530,37 +530,6 @@ class Arbor(object):
                 fdata = {field: data}
                 self._store_fields(root_node, fdata,
                                    root_only=root_only)
-
-    def _resolve_field_dependencies(self, fields, fcache=None):
-        """
-        Divide fields into those to be read and those to generate.
-        """
-        if fcache is None:
-            fcache = {}
-        fi = self.field_info
-        fields_to_read = []
-        fields_to_generate = []
-        fields_to_resolve = fields.copy()
-
-        while len(fields_to_resolve) > 0:
-            field = fields_to_resolve.pop(0)
-            if field in fcache:
-                continue
-            if field not in fi:
-                raise ArborFieldNotFound(field, self)
-            ftype = fi[field].get("type")
-            if ftype == "derived" or ftype == "alias":
-                deps = fi[field]["dependencies"]
-                if field in deps:
-                    raise ArborFieldCircularDependency(field, self)
-                fields_to_resolve.extend(
-                    set(deps).difference(set(fields_to_resolve)))
-                if field not in fields_to_generate:
-                    fields_to_generate.append(field)
-            else:
-                if field not in fields_to_read:
-                    fields_to_read.append(field)
-        return fields_to_read, fields_to_generate
 
     def _store_fields(self, root_node, field_data, root_only=False):
         """
