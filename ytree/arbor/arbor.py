@@ -27,9 +27,7 @@ from yt.frontends.ytdata.utilities import \
     save_as_dataset
 from yt.funcs import \
     ensure_dir, \
-    get_pbar, \
-    get_output_filename, \
-    just_one
+    get_pbar
 from yt.units.dimensions import \
     length
 from yt.units.unit_registry import \
@@ -44,13 +42,13 @@ from ytree.arbor.fields import \
     FakeFieldContainer, \
     FieldContainer, \
     FieldInfoContainer
+from ytree.arbor.io import \
+    FallbackRootFieldIO, \
+    TreeFieldIO
 from ytree.arbor.tree_node import \
     TreeNode
 from ytree.arbor.tree_node_selector import \
     tree_node_selector_registry
-from ytree.utilities.exceptions import \
-    ArborFieldCircularDependency, \
-    ArborFieldNotFound
 from ytree.utilities.logger import \
     fake_pbar, \
     ytreeLogger as mylog
@@ -82,6 +80,8 @@ class Arbor(object):
     """
 
     _field_info_class = FieldInfoContainer
+    _root_field_io_class = FallbackRootFieldIO
+    _tree_field_io_class = TreeFieldIO
 
     def __init__(self, filename):
         """
@@ -96,6 +96,8 @@ class Arbor(object):
         self._root_field_data = FieldContainer(self)
         self._setup_fields()
         self._set_default_selector()
+        self._node_io = self._tree_field_io_class(self)
+        self._root_io = self._root_field_io_class(self)
 
     def _parse_parameter_file(self):
         """
@@ -114,8 +116,8 @@ class Arbor(object):
         idtype      = np.int64
         grow_fields = ["id", "desc_id"]
         dtypes      = {"id": idtype, "desc_id": idtype}
-        field_data  = self._read_fields(root_node, grow_fields,
-                                        dtypes=dtypes, f=f)
+        field_data  = self._node_io._read_fields(root_node, grow_fields,
+                                                 dtypes=dtypes, f=f)
         uids    = field_data["id"]
         descids = field_data["desc_id"]
         root_node.uids      = uids
@@ -158,7 +160,7 @@ class Arbor(object):
         if isinstance(key, string_types):
             if key in ("tree", "prog"):
                 raise SyntaxError("Argument must be a field or integer.")
-            self._get_root_fields([key])
+            self._root_io.get_fields(self, fields=[key])
             return self._root_field_data[key]
         return self.trees[key]
 
@@ -428,121 +430,6 @@ class Arbor(object):
            "units": units, "description": description,
            "dependencies": list(fc.keys())}
 
-    def _get_root_fields(self, fields, **kwargs):
-        """
-        Get fields for the root nodes of all trees.
-        """
-        fields_to_read = []
-        for field in fields:
-            if field not in self._root_field_data:
-                fields_to_read.append(field)
-        if not fields_to_read:
-            return
-
-        self._node_io_loop(
-            self._get_fields, pbar="Getting root fields",
-            fields=fields_to_read, root_only=True)
-
-        field_data = {}
-        fi = self.field_info
-        for field in fields_to_read:
-            units = fi[field].get("units", "")
-            field_data[field] = np.empty(self.trees.size)
-            if units:
-                field_data[field] = \
-                  self.arr(field_data[field], units)
-            for i in range(self.trees.size):
-                field_data[field][i] = \
-                  self.trees[i]._root_field_data[field]
-        self._root_field_data.update(field_data)
-
-    def _get_fields(self, tree_node, fields=None, root_only=True, f=None):
-        r"""
-        Load field data for a node or a tree into storage structures.
-
-        This is the primary function for generating fields.
-        Resolve dependencies, read in any fields needed from disk,
-        then generate all derived fields.
-
-        Parameters
-        ----------
-        tree_node : TreeNode
-            Tree for which the fields will be generated.
-        fields : list of strings
-            The list of fields to be generated.
-        root_only : optional, bool
-            If True, only read/generate field for the root node
-            in the tree.  If False, generate for the whole tree.
-            Default: True.
-        f : optional, file
-            If not None, read data from the open file and do not
-            close.  If None, open the file and close after reading.
-            This can be used to speed up reading for multiple trees.
-
-        """
-
-        if fields is None or len(fields) == 0:
-            return
-
-        if tree_node.root == -1:
-            root_node = tree_node
-        else:
-            root_node = tree_node.root
-            root_only = False
-
-        if root_only:
-            fcache = root_node._root_field_data
-        else:
-            fcache = root_node._tree_field_data
-
-        fi = self.field_info
-
-        # Resolve field dependencies.
-        fields_to_read, fields_to_generate = \
-          fi.resolve_field_dependencies(fields, fcache=fcache)
-
-        # Read in fields we need that are on disk.
-        if fields_to_read:
-            field_data = self._read_fields(
-                root_node, fields_to_read, root_only=root_only, f=f)
-            self._store_fields(root_node, field_data,
-                               root_only=root_only)
-
-        # Generate all derived fields/aliases, but
-        # only after dependencies have been generated.
-        while len(fields_to_generate) > 0:
-            field = fields_to_generate.pop(0)
-            deps = set(fi[field]["dependencies"])
-            need = deps.difference(fcache)
-            # have not created all dependencies yet, try again later
-            if need:
-                fields_to_generate.append(field)
-            # all dependencies present, generate the field
-            else:
-                units = fi[field].get("units")
-                ftype = fi[field]["type"]
-                if ftype == "alias":
-                    data = fcache[fi[field]["dependencies"][0]]
-                elif ftype == "derived":
-                    data = fi[field]["function"](fcache)
-                if hasattr(data, "units") and units is not None:
-                    data.convert_to_units(units)
-                fdata = {field: data}
-                self._store_fields(root_node, fdata,
-                                   root_only=root_only)
-
-    def _store_fields(self, root_node, field_data, root_only=False):
-        """
-        Store field data in the provided dictionary.
-        """
-        if not field_data: return
-        root_field_data = dict(
-            [(field, just_one(field_data[field]))
-             for field in field_data])
-        if not root_only:
-            root_node._tree_field_data.update(field_data)
-        root_node._root_field_data.update(root_field_data)
-
     @classmethod
     def _is_valid(cls, *args, **kwargs):
         """
@@ -606,7 +493,7 @@ class Arbor(object):
 
         self._node_io_loop(self._setup_tree,
                            pbar="Growing trees")
-        self._get_root_fields(fields)
+        self._root_io.get_fields(self, fields=fields)
 
         # determine file layout
         nn = 0
@@ -665,7 +552,7 @@ class Arbor(object):
         for i in range(nfiles):
             my_nodes = self.trees[tree_start_index[i]:tree_end_index[i]]
             self._node_io_loop(
-                self._get_fields,
+                self._node_io.get_fields,
                 pbar="Getting fields [%d/%d]" % (i+1, nfiles),
                 root_nodes=my_nodes, fields=fields, root_only=False)
             fdata = dict((field, np.empty(nnodes[i])) for field in fieldnames)

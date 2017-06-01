@@ -18,7 +18,9 @@ from collections import \
 import numpy as np
 
 from ytree.utilities.exceptions import \
-    ArborFieldDependencyNotFound
+    ArborFieldCircularDependency, \
+    ArborFieldDependencyNotFound, \
+    ArborFieldNotFound
 
 class FieldInfoContainer(dict):
     alias_fields = ()

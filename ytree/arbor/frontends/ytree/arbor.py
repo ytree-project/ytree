@@ -17,13 +17,14 @@ import h5py
 import json
 import numpy as np
 
-from yt.frontends.ytdata.utilities import \
-    _hdf5_yt_array
 from yt.units.unit_registry import \
     UnitRegistry
 
 from ytree.arbor.arbor import \
     Arbor
+from ytree.arbor.frontends.ytree.io import \
+    YTreeRootFieldIO, \
+    YTreeTreeFieldIO
 from ytree.arbor.tree_node import \
     TreeNode
 from ytree.utilities.io import \
@@ -34,6 +35,8 @@ class YTreeArbor(Arbor):
     Class for Arbors created from the :func:`~ytree.arbor.Arbor.save_arbor`
     or :func:`~ytree.tree_node.TreeNode.save_tree` functions.
     """
+    _root_field_io_class = YTreeRootFieldIO
+    _tree_field_io_class = YTreeTreeFieldIO
     _suffix = ".h5"
 
     def _parse_parameter_file(self):
@@ -67,40 +70,6 @@ class YTreeArbor(Arbor):
             my_node        = TreeNode(uids[i], arbor=self, root=True)
             my_node._ai    = i
             self._trees[i] = my_node
-
-    def _read_fields(self, root_node, fields, dtypes=None,
-                     f=None, root_only=False):
-        if dtypes is None:
-            dtypes = {}
-
-        if f is None:
-            close = True
-            fi = np.digitize(root_node._ai, self._ei)
-            fn = "%s_%04d%s" % (self._prefix, fi, self._suffix)
-            fh = h5py.File(fn, "r")
-        else:
-            close = False
-
-        start_index = fh["index/tree_start_index"].value
-        end_index   = fh["index/tree_end_index"].value
-        ii = root_node._ai - self._si[fi]
-
-        field_data = {}
-        fi = self.field_info
-        for field in fields:
-            data = fh["data/%s" % field][start_index[ii]:end_index[ii]]
-            dtype = dtypes.get(field)
-            if dtype is not None:
-                data = data.astype(dtype)
-            units = fi[field].get("units", "")
-            if units != "":
-                data = self.arr(data, units)
-            field_data[field] = data
-
-        if close:
-            fh.close()
-
-        return field_data
 
     @classmethod
     def _is_valid(self, *args, **kwargs):

@@ -163,7 +163,7 @@ class TreeNode(object):
                 raise SyntaxError(
                     "First argument must be one of %s." % str(arr_types))
             self._setup()
-            self.arbor._get_fields(self, fields=[field], root_only=False)
+            self.arbor._node_io.get_fields(self, fields=[field], root_only=False)
 
             # field is an actual field
             if isinstance(field, string_types):
@@ -178,7 +178,7 @@ class TreeNode(object):
                 if key in arr_types:
                     return getattr(self, "_%s_nodes" % key)
                 # return field value for this node
-                self.arbor._get_fields(self, fields=[key])
+                self.arbor._node_io.get_fields(self, fields=[key])
                 if self.root == -1 or self.root == self:
                     return self._root_field_data[key]
                 else:
