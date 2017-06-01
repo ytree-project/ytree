@@ -6,7 +6,7 @@ ConsistentTreesArbor io classes and member functions
 """
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2016-2017, Britton Smith <brittonsmith@gmail.com>
+# Copyright (c) 2017, Britton Smith <brittonsmith@gmail.com>
 #
 # Distributed under the terms of the Modified BSD License.
 #
