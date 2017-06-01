@@ -18,6 +18,9 @@ import numpy as np
 from yt.funcs import \
     just_one
 
+from ytree.utilities.exceptions import \
+    ArborAnalysisFieldNotGenerated
+
 class FieldIO(object):
     """
     Base class for FieldIO classes.
@@ -28,17 +31,24 @@ class FieldIO(object):
     def __init__(self, arbor):
         self.arbor = arbor
 
+    def _initialize_analysis_field(self, storage_object,
+                                   name, units, **kwargs):
+        """
+        Create a zero array of appropriate size to be filled in later.
+        """
+        raise NotImplementedError
+
     def _determine_field_storage(self, data_object, **kwargs):
         """
         Figure out which objects are responsible for storing field data.
         """
-        pass
+        raise NotImplementedError
 
     def _store_fields(self, storage_object, field_data, **kwargs):
         """
         Store the field data in the proper place.
         """
-        pass
+        raise NotImplementedError
 
     def get_fields(self, data_object, fields=None, **kwargs):
         """
@@ -67,6 +77,12 @@ class FieldIO(object):
         # only after dependencies have been generated.
         while len(fields_to_generate) > 0:
             field = fields_to_generate.pop(0)
+            if fi[field]["type"] == "analysis":
+                if field not in fields:
+                    raise ArborAnalysisFieldNotGenerated(field, self.arbor)
+                self._initialize_analysis_field(
+                    storage_object, field, fi[field]["units"])
+                continue
             deps = set(fi[field]["dependencies"])
             need = deps.difference(fcache)
             # have not created all dependencies yet, try again later
@@ -86,6 +102,14 @@ class FieldIO(object):
                 self._store_fields(storage_object, fdata, **kwargs)
 
 class TreeFieldIO(FieldIO):
+    def _initialize_analysis_field(self, storage_object,
+                                   name, units, **kwargs):
+        storage_object._setup()
+        data = np.zeros(storage_object.uids.size)
+        if units != "":
+            data = self.arbor.arr(data, units)
+        storage_object._tree_field_data[name] = data
+
     def _determine_field_storage(self, data_object, **kwargs):
         root_only = kwargs.get("root_only", True)
 

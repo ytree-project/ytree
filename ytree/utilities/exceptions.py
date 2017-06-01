@@ -25,7 +25,7 @@ class ArborFieldDependencyNotFound(Exception):
         self.arbor = arbor
 
     def __str__(self):
-        return ("Field dependency not found: \"%s\" " + \
+        return ("Field dependency not found: \"%s\" "
                 "(dependency for \"%s\") in %s.") % \
             (self.dependency, self.field, self.arbor)
 
@@ -37,4 +37,15 @@ class ArborFieldCircularDependency(ArborFieldException):
 class ArborFieldNotFound(ArborFieldException):
     def __str__(self):
         return "Field not found: \"%s\" in %s." % \
+          (self.field, self.arbor)
+
+class ArborFieldAlreadyExists(ArborFieldException):
+    def __str__(self):
+        return "Field already exists: \"%s\" in %s." % \
+          (self.field, self.arbor)
+
+class ArborAnalysisFieldNotGenerated(ArborFieldException):
+    def __str__(self):
+        return ("Analysis field \"%s\" needed but "
+                "not yet generated in %s.") % \
           (self.field, self.arbor)

@@ -113,6 +113,12 @@ class TreeNode(object):
             return
         self.arbor._setup_tree(self)
 
+    def __setitem__(self, key, value):
+        self.arbor._node_io.get_fields(self, fields=[key],
+                                       root_only=False)
+        data = self.root._tree_field_data[key]
+        data[self.treeid] = value
+
     def __getitem__(self, key):
         """
         Return field values for this TreeNode, progenitor list, or tree.
@@ -180,6 +186,9 @@ class TreeNode(object):
                 # return field value for this node
                 self.arbor._node_io.get_fields(self, fields=[key])
                 if self.root == -1 or self.root == self:
+                    # temporary hack for analysis fields
+                    if self.arbor.field_info[key]["type"] == "analysis":
+                        return self.root._tree_field_data[key][self.treeid]
                     return self._root_field_data[key]
                 else:
                     return self.root._tree_field_data[key][self.treeid]

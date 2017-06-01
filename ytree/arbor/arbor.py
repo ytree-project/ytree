@@ -49,6 +49,9 @@ from ytree.arbor.tree_node import \
     TreeNode
 from ytree.arbor.tree_node_selector import \
     tree_node_selector_registry
+from ytree.utilities.exceptions import \
+    ArborFieldAlreadyExists, \
+    ArborFieldDependencyNotFound
 from ytree.utilities.logger import \
     fake_pbar, \
     ytreeLogger as mylog
@@ -308,6 +311,33 @@ class Arbor(object):
         """
         self.set_selector("max_field_value", "mass")
 
+    def add_analysis_field(self, name, units):
+        r"""
+        Add an empty field to be filled by analysis operations.
+
+        Parameters
+        ----------
+        name : string
+            Field name.
+        units : string
+            Field units.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("tree_0_0_0.dat")
+        >>> a.add_analysis_field("robots", "Msun * kpc")
+        >>> # Set field for some halo.
+        >>> a[0]["tree"][7]["robots"] = 1979.816
+        """
+
+        if name in self.field_info:
+            raise ArborFieldAlreadyExists(name, arbor=self)
+
+        self.field_info[name] = {"type": "analysis",
+                                 "units": units}
+
     def add_alias_field(self, alias, field, units=None,
                         force_add=True):
         r"""
@@ -353,9 +383,9 @@ class Arbor(object):
                 return
 
         if field not in self.field_info:
-            raise RuntimeError(
-                "Field not available: %s (dependency for %s)." %
-                (field, alias))
+            raise ArborFieldDependencyNotFound(
+                field, alias, arbor=self)
+
         if units is None:
             units = self.field_info[field].get("units")
         self.derived_field_list.append(alias)

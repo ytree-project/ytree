@@ -64,6 +64,8 @@ class FieldInfoContainer(dict):
                     set(deps).difference(set(fields_to_resolve)))
                 if field not in fields_to_generate:
                     fields_to_generate.append(field)
+            elif ftype == "analysis":
+                fields_to_generate.append(field)
             else:
                 if field not in fields_to_read:
                     fields_to_read.append(field)
