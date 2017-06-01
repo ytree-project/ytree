@@ -233,6 +233,7 @@ class Arbor(object):
 
     def _setup_fields(self):
         self.derived_field_list = []
+        self.analysis_field_list = []
         self.field_info.setup_aliases()
         self.field_info.setup_derived_fields()
 
@@ -335,6 +336,7 @@ class Arbor(object):
         if name in self.field_info:
             raise ArborFieldAlreadyExists(name, arbor=self)
 
+        self.analysis_field_list.append(name)
         self.field_info[name] = {"type": "analysis",
                                  "units": units}
 
@@ -437,7 +439,6 @@ class Arbor(object):
         if name in self.field_info:
             if force_add:
                 ftype = self.field_info[name].get("type", "on-disk")
-                print (ftype)
                 if ftype in ["alias", "derived"]:
                     fl = self.derived_field_list
                 else:
@@ -507,7 +508,7 @@ class Arbor(object):
         if fields in [None, "all"]:
             # If a field has an alias, get that instead.
             fields = []
-            for field in self.field_list:
+            for field in self.field_list + self.analysis_field_list:
                 fields.extend(
                     self.field_info[field].get("aliases", [field]))
 

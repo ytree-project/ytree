@@ -88,15 +88,14 @@ class TreeNode(object):
         # skip this if not a root or if already grown
         if hasattr(self, "treeid"): return
         self._setup()
-        nhalos  = self.uids.size
-        nodes   = np.empty(nhalos, dtype=np.object)
-        uidmap  = {}
-        for i in range(nhalos):
+        nhalos   = self.uids.size
+        nodes    = np.empty(nhalos, dtype=np.object)
+        uidmap   = {}
+        nodes[0] = self
+        for i in range(1, nhalos):
             nodes[i] = TreeNode(self.uids[i], arbor=self.arbor)
 
-        # replace first halo with the root node
         self.nodes = nodes
-        nodes[0]   = self
         for i, node in enumerate(nodes):
             node.treeid = i
             node.root   = self
@@ -114,10 +113,16 @@ class TreeNode(object):
         self.arbor._setup_tree(self)
 
     def __setitem__(self, key, value):
+        if self.root == -1:
+            root = self
+            treeid = 0
+        else:
+            root = self.root
+            treeid = self.treeid
         self.arbor._node_io.get_fields(self, fields=[key],
                                        root_only=False)
-        data = self.root._tree_field_data[key]
-        data[self.treeid] = value
+        data = root._tree_field_data[key]
+        data[treeid] = value
 
     def __getitem__(self, key):
         """
@@ -188,7 +193,7 @@ class TreeNode(object):
                 if self.root == -1 or self.root == self:
                     # temporary hack for analysis fields
                     if self.arbor.field_info[key]["type"] == "analysis":
-                        return self.root._tree_field_data[key][self.treeid]
+                        return self._tree_field_data[key][0]
                     return self._root_field_data[key]
                 else:
                     return self.root._tree_field_data[key][self.treeid]

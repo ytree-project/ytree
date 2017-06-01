@@ -104,6 +104,8 @@ class FieldIO(object):
 class TreeFieldIO(FieldIO):
     def _initialize_analysis_field(self, storage_object,
                                    name, units, **kwargs):
+        if name in storage_object._tree_field_data:
+            return
         storage_object._setup()
         data = np.zeros(storage_object.uids.size)
         if units != "":
@@ -154,20 +156,25 @@ class FallbackRootFieldIO(FieldIO):
         if fields is None or len(fields) == 0:
             return
 
-        fields_to_read = []
+        fi = self.arbor.field_info
+
+        fields_to_get = []
         for field in fields:
             if field not in data_object._root_field_data:
-                fields_to_read.append(field)
-        if not fields_to_read:
+                if fi[field]["type"] == "analysis":
+                    raise SyntaxError(
+                        "Analysis fields are only accessible from trees.")
+                fields_to_get.append(field)
+        if not fields_to_get:
             return
 
-        self.arbor._node_io_loop(
-            self.arbor._node_io.get_fields, pbar="Getting root fields",
-            fields=fields_to_read, root_only=True)
+        if fields_to_get:
+            self.arbor._node_io_loop(
+                self.arbor._node_io.get_fields, pbar="Getting root fields",
+                fields=fields_to_get, root_only=True)
 
         field_data = {}
-        fi = self.arbor.field_info
-        for field in fields_to_read:
+        for field in fields_to_get:
             units = fi[field].get("units", "")
             field_data[field] = np.empty(self.arbor.trees.size)
             if units:
@@ -177,4 +184,3 @@ class FallbackRootFieldIO(FieldIO):
                 field_data[field][i] = \
                   self.arbor.trees[i]._root_field_data[field]
         data_object._root_field_data.update(field_data)
-
