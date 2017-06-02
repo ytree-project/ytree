@@ -312,6 +312,27 @@ class Arbor(object):
         """
         self.set_selector("max_field_value", "mass")
 
+    def select_halos(self, criteria, trees=None, select_from="tree"):
+        """
+        Select halos from the arbor based on a set of criteria given as a string.
+        """
+
+        if select_from not in ["tree", "prog"]:
+            raise SyntaxError(
+                "Keyword \"select_from\" must be either \"tree\" or \"prog\".")
+
+        if trees is None:
+            trees = self.trees
+
+        halos = []
+        pbar = get_pbar("Selecting halos", self.trees.size)
+        for tree in trees:
+            my_filter = eval(criteria)
+            halos.extend(tree[select_from][my_filter])
+            pbar.update(1)
+        pbar.finish()
+        return np.array(halos)
+
     def add_analysis_field(self, name, units):
         r"""
         Add an empty field to be filled by analysis operations.
