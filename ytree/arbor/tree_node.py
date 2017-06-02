@@ -49,6 +49,10 @@ class TreeNode(object):
         else:
             self.root = None
 
+    @property
+    def is_root(self):
+        return self.root in [-1, self]
+
     def reset(self):
         """
         If a root node, remove tree-related data structures.
@@ -190,9 +194,9 @@ class TreeNode(object):
                     return getattr(self, "_%s_nodes" % key)
                 # return field value for this node
                 self.arbor._node_io.get_fields(self, fields=[key])
-                if self.root == -1 or self.root == self:
+                if self.is_root:
                     # temporary hack for analysis fields
-                    if self.arbor.field_info[key]["type"] == "analysis":
+                    if self.arbor.field_info[key].get("type") == "analysis":
                         return self._tree_field_data[key][0]
                     return self._root_field_data[key]
                 else:

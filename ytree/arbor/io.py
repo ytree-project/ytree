@@ -20,6 +20,8 @@ from yt.funcs import \
 
 from ytree.utilities.exceptions import \
     ArborAnalysisFieldNotGenerated
+from ytree.utilities.logger import \
+    ytreeLogger as mylog
 
 class FieldIO(object):
     """
@@ -77,7 +79,7 @@ class FieldIO(object):
         # only after dependencies have been generated.
         while len(fields_to_generate) > 0:
             field = fields_to_generate.pop(0)
-            if fi[field]["type"] == "analysis":
+            if fi[field].get("type") == "analysis":
                 if field not in fields:
                     raise ArborAnalysisFieldNotGenerated(field, self.arbor)
                 self._initialize_analysis_field(
@@ -115,7 +117,7 @@ class TreeFieldIO(FieldIO):
     def _determine_field_storage(self, data_object, **kwargs):
         root_only = kwargs.get("root_only", True)
 
-        if data_object.root == -1:
+        if data_object.is_root:
             storage_object = data_object
         else:
             storage_object = data_object.root
@@ -161,9 +163,11 @@ class FallbackRootFieldIO(FieldIO):
         fields_to_get = []
         for field in fields:
             if field not in data_object._root_field_data:
-                if fi[field]["type"] == "analysis":
-                    raise SyntaxError(
-                        "Analysis fields are only accessible from trees.")
+                if fi[field].get("type") == "analysis":
+                    mylog.warn(
+                        ("Accessing analysis field \"%s\" as root field. " +
+                         "Any changes made will not be reflected here.") %
+                         field)
                 fields_to_get.append(field)
         if not fields_to_get:
             return
@@ -181,6 +185,10 @@ class FallbackRootFieldIO(FieldIO):
                 field_data[field] = \
                   self.arbor.arr(field_data[field], units)
             for i in range(self.arbor.trees.size):
-                field_data[field][i] = \
-                  self.arbor.trees[i]._root_field_data[field]
+                if fi[field].get("type") == "analysis":
+                    field_data[field][i] = \
+                      self.arbor.trees[i]._tree_field_data[field][0]
+                else:
+                    field_data[field][i] = \
+                      self.arbor.trees[i]._root_field_data[field]
         data_object._root_field_data.update(field_data)
