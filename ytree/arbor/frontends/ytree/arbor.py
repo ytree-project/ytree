@@ -39,6 +39,28 @@ class YTreeArbor(Arbor):
     _tree_field_io_class = YTreeTreeFieldIO
     _suffix = ".h5"
 
+    def _node_io_loop(self, func, *args, **kwargs):
+        root_nodes = kwargs.pop("root_nodes", None)
+        if root_nodes is None:
+            root_nodes = self.trees
+        opbar = kwargs.pop("pbar", None)
+
+        ai = np.array([node._ai for node in root_nodes])
+        dfi = np.digitize(ai, self._ei)
+        udfi = np.unique(dfi)
+
+        for i in udfi:
+            if opbar is not None:
+                kwargs["pbar"] = "%s [%d/%d]" % (opbar, i+1, udfi.size)
+            my_nodes = root_nodes[dfi == i]
+            kwargs["root_nodes"] = my_nodes
+
+            fn = "%s_%04d%s" % (self._prefix, i, self._suffix)
+            f = h5py.File(fn, "r")
+            kwargs["f"] = f
+            super(YTreeArbor, self)._node_io_loop(func, *args, **kwargs)
+            f.close()
+
     def _parse_parameter_file(self):
         self._prefix = \
           self.filename[:self.filename.rfind(self._suffix)]

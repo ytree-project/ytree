@@ -26,22 +26,22 @@ class YTreeTreeFieldIO(TreeFieldIO):
         if dtypes is None:
             dtypes = {}
 
+        dfi = np.digitize(root_node._ai, self.arbor._ei)
         if f is None:
             close = True
-            fi = np.digitize(root_node._ai, self.arbor._ei)
-            fn = "%s_%04d%s" % (self.arbor._prefix, fi, self.arbor._suffix)
-            fh = h5py.File(fn, "r")
+            fn = "%s_%04d%s" % (self.arbor._prefix, dfi, self.arbor._suffix)
+            f = h5py.File(fn, "r")
         else:
             close = False
 
-        start_index = fh["index/tree_start_index"].value
-        end_index   = fh["index/tree_end_index"].value
-        ii = root_node._ai - self.arbor._si[fi]
+        start_index = f["index/tree_start_index"].value
+        end_index   = f["index/tree_end_index"].value
+        ii = root_node._ai - self.arbor._si[dfi]
 
         field_data = {}
         fi = self.arbor.field_info
         for field in fields:
-            data = fh["data/%s" % field][start_index[ii]:end_index[ii]]
+            data = f["data/%s" % field][start_index[ii]:end_index[ii]]
             dtype = dtypes.get(field)
             if dtype is not None:
                 data = data.astype(dtype)
@@ -51,7 +51,7 @@ class YTreeTreeFieldIO(TreeFieldIO):
             field_data[field] = data
 
         if close:
-            fh.close()
+            f.close()
 
         return field_data
 
