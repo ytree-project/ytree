@@ -312,7 +312,8 @@ class Arbor(object):
         """
         self.set_selector("max_field_value", "mass")
 
-    def select_halos(self, criteria, trees=None, select_from="tree"):
+    def select_halos(self, criteria, trees=None, select_from="tree",
+                     fields=None):
         """
         Select halos from the arbor based on a set of criteria given as a string.
         """
@@ -323,6 +324,18 @@ class Arbor(object):
 
         if trees is None:
             trees = self.trees
+
+        if fields is None:
+            fields = []
+
+        self._node_io_loop(self._setup_tree, root_nodes=trees,
+                           pbar="Setting up trees")
+        if fields:
+            self._node_io_loop(
+                self._node_io.get_fields,
+                pbar="Getting fields",
+                root_nodes=trees, fields=fields, root_only=False)
+
 
         halos = []
         pbar = get_pbar("Selecting halos", self.trees.size)
@@ -525,6 +538,8 @@ class Arbor(object):
 
         if trees is None:
             trees = self.trees
+        else:
+            raise NotImplementedError
 
         if fields in [None, "all"]:
             # If a field has an alias, get that instead.
@@ -544,7 +559,7 @@ class Arbor(object):
                        "unit_registry_json": self.unit_registry.to_json()}
 
         self._node_io_loop(self._setup_tree,
-                           pbar="Growing trees")
+                           pbar="Setting up trees")
         self._root_io.get_fields(self, fields=fields)
 
         # determine file layout
