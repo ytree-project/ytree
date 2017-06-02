@@ -111,9 +111,6 @@ class TreeNode(object):
                 node.descendent = desc
 
     def _setup(self):
-        # skip if this is not a root or if already setup
-        if self.root != -1 or hasattr(self, "uids"):
-            return
         self.arbor._setup_tree(self)
 
     def __setitem__(self, key, value):

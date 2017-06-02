@@ -116,6 +116,9 @@ class Arbor(object):
         raise NotImplementedError
 
     def _setup_tree(self, root_node, f=None):
+        # skip if this is not a root or if already setup
+        if root_node.root != -1 or hasattr(root_node, "uids"):
+            return
         idtype      = np.int64
         grow_fields = ["id", "desc_id"]
         dtypes      = {"id": idtype, "desc_id": idtype}
