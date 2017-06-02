@@ -54,6 +54,7 @@ class YTreeArbor(Arbor):
                 kwargs["pbar"] = "%s [%d/%d]" % (opbar, i+1, udfi.size)
             my_nodes = root_nodes[dfi == i]
             kwargs["root_nodes"] = my_nodes
+            kwargs["fcache"] = {}
 
             fn = "%s_%04d%s" % (self._prefix, i, self._suffix)
             f = h5py.File(fn, "r")

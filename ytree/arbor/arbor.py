@@ -115,7 +115,7 @@ class Arbor(object):
         """
         raise NotImplementedError
 
-    def _setup_tree(self, root_node, f=None):
+    def _setup_tree(self, root_node, **kwargs):
         # skip if this is not a root or if already setup
         if root_node.root != -1 or hasattr(root_node, "uids"):
             return
@@ -123,7 +123,7 @@ class Arbor(object):
         grow_fields = ["id", "desc_id"]
         dtypes      = {"id": idtype, "desc_id": idtype}
         field_data  = self._node_io._read_fields(root_node, grow_fields,
-                                                 dtypes=dtypes, f=f)
+                                                 dtypes=dtypes, **kwargs)
         uids    = field_data["id"]
         descids = field_data["desc_id"]
         root_node.uids      = uids

@@ -22,9 +22,12 @@ from ytree.arbor.io import \
 
 class YTreeTreeFieldIO(TreeFieldIO):
     def _read_fields(self, root_node, fields, dtypes=None,
-                     f=None, root_only=False):
+                     f=None, root_only=False, fcache=None):
         if dtypes is None:
             dtypes = {}
+
+        if fcache is None:
+            fcache = {}
 
         dfi = np.digitize(root_node._ai, self.arbor._ei)
         if f is None:
@@ -41,14 +44,17 @@ class YTreeTreeFieldIO(TreeFieldIO):
         field_data = {}
         fi = self.arbor.field_info
         for field in fields:
-            data = f["data/%s" % field][start_index[ii]:end_index[ii]]
-            dtype = dtypes.get(field)
-            if dtype is not None:
-                data = data.astype(dtype)
-            units = fi[field].get("units", "")
-            if units != "":
-                data = self.arbor.arr(data, units)
-            field_data[field] = data
+            if field not in fcache:
+                fdata = f["data/%s" % field].value
+                dtype = dtypes.get(field)
+                if dtype is not None:
+                    fdata = fdata.astype(dtype)
+                units = fi[field].get("units", "")
+                if units != "":
+                    fdata = self.arbor.arr(fdata, units)
+                fcache[field] = fdata
+            field_data[field] = \
+              fcache[field][start_index[ii]:end_index[ii]]
 
         if close:
             f.close()
