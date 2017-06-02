@@ -60,6 +60,11 @@ class FieldIO(object):
         if fields is None or len(fields) == 0:
             return
 
+        # hack to make sure root_only is False if this is not a root
+        if isinstance(self, TreeFieldIO) and \
+          not data_object.is_root:
+            kwargs["root_only"] = False
+
         storage_object, fcache = \
           self._determine_field_storage(data_object, **kwargs)
 
