@@ -96,7 +96,7 @@ class ConsistentTreesArbor(Arbor):
             # These are lines describing the various fields.
             # Pull them apart and look for units.
             elif ":" in line:
-                tfields, desc = line[1:].strip().split(":", maxsplit=1)
+                tfields, desc = line[1:].strip().split(":", 1)
 
                 # Units are enclosed in parentheses.
                 # Pull out what's enclosed and remove things like
@@ -149,7 +149,8 @@ class ConsistentTreesArbor(Arbor):
         block_size = 32768
 
         f = open(self.filename, "r")
-        file_size = f.seek(0, 2)
+        f.seek(0, 2)
+        file_size = f.tell()
         pbar = get_pbar("Loading tree roots", file_size)
         f.seek(self._hoffset)
         self._trees = np.empty(self._ntrees, dtype=np.object)

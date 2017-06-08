@@ -46,7 +46,7 @@ class FieldInfoContainer(dict):
             fcache = {}
         fields_to_read = []
         fields_to_generate = []
-        fields_to_resolve = fields.copy()
+        fields_to_resolve = fields[:]
 
         while len(fields_to_resolve) > 0:
             field = fields_to_resolve.pop(0)
