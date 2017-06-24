@@ -391,9 +391,9 @@ class Arbor(object):
         units : optional, string
             Units in which the field will be returned.
         force_add : optional, bool
-            If True, add field even if it already exists
-            and warn the user.  If False, silently do
-            nothing.
+            If True, add field even if it already exists and warn the
+            user and raise an exception if dependencies do not exist.
+            If False, silently do nothing in both instances.
             Default: True.
 
         Examples
@@ -422,8 +422,11 @@ class Arbor(object):
                 return
 
         if field not in self.field_info:
-            raise ArborFieldDependencyNotFound(
-                field, alias, arbor=self)
+            if force_add:
+                raise ArborFieldDependencyNotFound(
+                    field, alias, arbor=self)
+            else:
+                return
 
         if units is None:
             units = self.field_info[field].get("units")
@@ -455,9 +458,9 @@ class Arbor(object):
         description : optional, string
             A short description of the field.
         force_add : optional, bool
-            If True, add field even if it already exists
-            and warn the user.  If False, silently do
-            nothing.
+            If True, add field even if it already exists and warn the
+            user and raise an exception if dependencies do not exist.
+            If False, silently do nothing in both instances.
             Default: True.
 
         Examples
@@ -490,7 +493,13 @@ class Arbor(object):
         if units is None:
             units = ""
         fc = FakeFieldContainer(self, name=name)
-        rv = function(fc)
+        try:
+            rv = function(fc)
+        except ArborFieldDependencyNotFound as e:
+            if force_add:
+                raise e
+            else:
+                return
         rv.convert_to_units(units)
         self.derived_field_list.append(name)
         self.field_info[name] = \
