@@ -25,25 +25,6 @@ from ytree.arbor.arbor import \
 from ytree.arbor.frontends.rockstar.fields import \
     setup_field_groups
 
-_rs_columns = (("halo_id",  (0,)),
-               ("desc_id",  (1,)),
-               ("mvir",     (2,)),
-               ("rvir",     (5,)),
-               ("position", (8, 9, 10)),
-               ("velocity", (11, 12, 13)))
-_rs_units = {"mvir": "Msun/h",
-             "rvir": "kpc/h",
-             "position": "Mpc/h",
-             "velocity": "km/s"}
-_rs_type = {"halo_id": np.int64,
-            "desc_id": np.int64}
-_rs_usecol = []
-_rs_fields = {}
-for field, col in _rs_columns:
-    _rs_usecol.extend(col)
-    _rs_fields[field] = np.arange(len(_rs_usecol)-len(col),
-                                  len(_rs_usecol))
-
 class RockstarArbor(CatalogArbor):
     """
     Class for Arbors created from Rockstar out_*.list files.
@@ -104,6 +85,7 @@ class RockstarArbor(CatalogArbor):
             fi[field] = {"column": i, "units": units}
         self.field_list = fields
         self.field_info.update(fi)
+        self._get_all_files()
 
     def _get_all_files(self):
         """
@@ -113,20 +95,11 @@ class RockstarArbor(CatalogArbor):
         suffix = ".list"
         my_files = glob.glob("%s_*%s" % (prefix, suffix))
         # sort by catalog number
-        my_files.sort(key=lambda x:
-                      int(x[x.find(prefix)+len(prefix)+1:x.rfind(suffix)]),
-                      reverse=True)
-        return my_files
-
-    def _to_field_array(self, field, data):
-        """
-        Use field definitions from above to assign units
-        for field arrays.
-        """
-        if field in _rs_units:
-            self._field_data[field] = self.arr(data, _rs_units[field])
-        else:
-            self._field_data[field] = np.array(data)
+        my_files.sort(
+            key=lambda x:
+            int(x[x.find(prefix)+len(prefix)+1:x.rfind(suffix)]),
+            reverse=True)
+        self.data_files = my_files
 
     def _load_field_data(self, fn, offset):
         """
