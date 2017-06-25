@@ -17,8 +17,13 @@ import glob
 import numpy as np
 import warnings
 
+from yt.units.yt_array import \
+    UnitParseError
+
 from ytree.arbor.arbor import \
     CatalogArbor
+from ytree.arbor.frontends.rockstar.fields import \
+    setup_field_groups
 
 _rs_columns = (("halo_id",  (0,)),
                ("desc_id",  (1,)),
@@ -44,6 +49,62 @@ class RockstarArbor(CatalogArbor):
     Class for Arbors created from Rockstar out_*.list files.
     Use only descendent IDs to determine tree relationship.
     """
+
+    def _parse_parameter_file(self):
+        fgroups = setup_field_groups()
+        rems = ["%s%s%s" % (s[0], t, s[1])
+                for s in [("(", ")"), ("", "")]
+                for t in ["physical, peculiar",
+                          "comoving", "physical"]]
+
+        f = open(self.filename, "r")
+        # Read the first line as a list of all fields.
+        fields = f.readline()[1:].strip().split()
+
+        # Get box size, cosmological parameters, and units.
+        while True:
+            line = f.readline()
+            if line is None or not line.startswith("#"):
+                break
+            elif line.startswith("#Om = "):
+                pars = line[1:].split(";")
+                for j, par in enumerate(["omega_matter",
+                                         "omega_lambda",
+                                         "hubble_constant"]):
+                    v = float(pars[j].split(" = ")[1])
+                    setattr(self, par, v)
+            elif line.startswith("#Box size:"):
+                pars = line.split(":")[1].strip().split()
+                self.box_size = self.quan(float(pars[0]), pars[1])
+            # Looking for <quantities> in <units>
+            elif line.startswith("#Units:"):
+                if " in " not in line: continue
+                quan, punits = line[8:].strip().split(" in ", 2)
+                for rem in rems:
+                    while rem in punits:
+                        pre, mid, pos = punits.partition(rem)
+                        punits = pre + pos
+                try:
+                    self.quan(1, punits)
+                except UnitParseError:
+                    punits = ""
+                for group in fgroups:
+                    if group.in_group(quan):
+                        group.units = punits
+                        break
+        f.close()
+
+        fi = {}
+        for i, field in enumerate(fields):
+            for group in fgroups:
+                units = ""
+                if group.in_group(field):
+                    units = getattr(group, "units", "")
+                    break
+            fi[field] = {"column": i, "units": units}
+        self.field_list = fields
+        self.field_info.update(fi)
+
     def _get_all_files(self):
         """
         Get all out_*.list files and put them in reverse order.
@@ -66,34 +127,6 @@ class RockstarArbor(CatalogArbor):
             self._field_data[field] = self.arr(data, _rs_units[field])
         else:
             self._field_data[field] = np.array(data)
-
-    def _read_parameters(self, filename):
-        """
-        Read header file to get cosmological parameters
-        and modify unit registry for hubble constant.
-        """
-        get_pars = not hasattr(self, "hubble_constant")
-        f = open(filename, "r")
-        while True:
-            line = f.readline()
-            if line is None or not line.startswith("#"):
-                break
-            if get_pars and line.startswith("#Om = "):
-                pars = line[1:].split(";")
-                for j, par in enumerate(["omega_matter",
-                                         "omega_lambda",
-                                         "hubble_constant"]):
-                    v = float(pars[j].split(" = ")[1])
-                    setattr(self, par, v)
-            if get_pars and line.startswith("#Box size:"):
-                pars = line.split(":")[1].strip().split()
-                box = pars
-            if line.startswith("#a = "):
-                a = float(line.split("=")[1].strip())
-        f.close()
-        if get_pars:
-            self.box_size = self.quan(float(box[0]), box[1])
-        return 1. / a - 1.
 
     def _load_field_data(self, fn, offset):
         """
@@ -132,3 +165,20 @@ class RockstarArbor(CatalogArbor):
         fn = args[0]
         if not fn.endswith(".list"): return False
         return True
+
+def _read_expansion_faction(filename):
+    """
+    Get the expansion factor from the file header.
+    """
+    f = open(filename, "r")
+    while True:
+        line = f.readline()
+        if line is None or not line.startswith("#"):
+            break
+        if line.startswith("#a = "):
+            f.close()
+            return float(line.split("=")[1].strip())
+    f.close()
+    raise IOError(
+        "Could not find expansion factor in header: %s." %
+        filename)
