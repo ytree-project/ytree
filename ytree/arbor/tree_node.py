@@ -89,6 +89,10 @@ class TreeNode(object):
         return self._ancestors
 
     def _grow_tree(self):
+        """
+        Create an array of TreeNodes hanging off the root node
+        and assemble the tree structure.
+        """
         # skip this if not a root or if already grown
         if hasattr(self, "treeid"): return
         self._setup()
