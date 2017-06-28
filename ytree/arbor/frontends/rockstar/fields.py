@@ -13,8 +13,33 @@ RockstarArbor fields
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from ytree.arbor.fields import \
+    FieldInfoContainer
 from ytree.arbor.frontends.rockstar.misc import \
     Group
+
+p_unit = "unitary"
+r_unit = "kpc"
+v_unit = "km/s"
+
+class RockstarFieldInfo(FieldInfoContainer):
+    alias_fields = (
+        ("mass", "Mvir", "Msun"),
+        ("virial_mass", "Mvir", "Msun"),
+        ("virial_radius", "Rvir", r_unit),
+        ("scale_radius", "Rs", r_unit),
+        ("velocity_dispersion", "Vrms", v_unit),
+        ("position_x", "X", p_unit),
+        ("position_y", "Y", p_unit),
+        ("position_z", "Z", p_unit),
+        ("velocity_x", "VX", v_unit),
+        ("velocity_y", "VY", v_unit),
+        ("velocity_z", "VZ", v_unit),
+        ("angular_momentum_x", "JX", None),
+        ("angular_momentum_y", "JY", None),
+        ("angular_momentum_z", "JZ", None),
+        ("spin_parameter", "Spin", None),
+    )
 
 def setup_field_groups():
     m = Group("masses")
