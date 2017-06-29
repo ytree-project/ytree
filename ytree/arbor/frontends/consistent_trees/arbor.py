@@ -157,10 +157,11 @@ class ConsistentTreesArbor(Arbor):
 
         offset = self._hoffset
         itree = 0
-        nblocks = np.ceil(float(file_size) /
+        nblocks = np.ceil(float(file_size-self._hoffset) /
                           block_size).astype(np.int64)
         for ib in range(nblocks):
             my_block = min(block_size, file_size - offset)
+            if my_block <= 0: break
             buff = f.read(my_block)
             lihash = -1
             for ih in range(buff.count("#")):
