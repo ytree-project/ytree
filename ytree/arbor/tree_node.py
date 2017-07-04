@@ -85,37 +85,43 @@ class TreeNode(object):
     @property
     def ancestors(self):
         if self.root == -1:
-            self._grow_tree()
+            self.arbor._grow_tree(self)
         return self._ancestors
 
-    def _grow_tree(self):
-        """
-        Create an array of TreeNodes hanging off the root node
-        and assemble the tree structure.
-        """
-        # skip this if not a root or if already grown
-        if hasattr(self, "treeid"): return
-        self._setup()
-        nhalos   = self.uids.size
-        nodes    = np.empty(nhalos, dtype=np.object)
-        uidmap   = {}
-        nodes[0] = self
-        for i in range(1, nhalos):
-            nodes[i] = TreeNode(self.uids[i], arbor=self.arbor)
+    _uids = None
+    @property
+    def uids(self):
+        if not self.is_root:
+            return None
+        if self._uids is None:
+            self.arbor._setup_tree(self)
+        return self._uids
 
-        self.nodes = nodes
-        for i, node in enumerate(nodes):
-            node.treeid = i
-            node.root   = self
-            descid      = self.descids[i]
-            uidmap[self.uids[i]] = i
-            if descid != -1:
-                desc = nodes[uidmap[self.descids[i]]]
-                desc.add_ancestor(node)
-                node.descendent = desc
+    _descids = None
+    @property
+    def descids(self):
+        if not self.is_root:
+            return None
+        if self._descids is None:
+            self.arbor._setup_tree(self)
+        return self._descids
 
-    def _setup(self):
-        self.arbor._setup_tree(self)
+    _tree_size = None
+    @property
+    def tree_size(self):
+        if not self.is_root:
+            return None
+        if self._tree_size is None:
+            self.arbor._setup_tree(self)
+        return self._tree_size
+
+    _nodes = None
+    @property
+    def nodes(self):
+        if not self.is_root:
+            return None
+        self.arbor._create_nodes(self)
+        return self._nodes
 
     def __setitem__(self, key, value):
         if self.root == -1:
@@ -178,7 +184,7 @@ class TreeNode(object):
             if ftype not in arr_types:
                 raise SyntaxError(
                     "First argument must be one of %s." % str(arr_types))
-            self._setup()
+            self.arbor._setup_tree(self)
             self.arbor._node_io.get_fields(self, fields=[field], root_only=False)
 
             # field is an actual field
@@ -234,7 +240,7 @@ class TreeNode(object):
         """
         Prepare the TreeNode list and field indices.
         """
-        self._grow_tree()
+        self.arbor._grow_tree(self)
         tfi = []
         tn = []
         for my_node in self.twalk():
@@ -269,7 +275,7 @@ class TreeNode(object):
         """
         Prepare the progenitor list list and field indices.
         """
-        self._grow_tree()
+        self.arbor._grow_tree(self)
         lfi = []
         ln = []
         for my_node in self.pwalk():
@@ -290,7 +296,7 @@ class TreeNode(object):
         ...     print (my_node)
 
         """
-        self._setup()
+        self.arbor._grow_tree(self)
         yield self
         if self.ancestors is None:
             return
@@ -310,7 +316,7 @@ class TreeNode(object):
         ...     print (my_node)
 
         """
-        self._grow_tree()
+        self.arbor._grow_tree(self)
         my_node = self
         while my_node is not None:
             yield my_node

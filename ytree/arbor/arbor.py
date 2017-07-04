@@ -115,20 +115,63 @@ class Arbor(object):
         """
         raise NotImplementedError
 
-    def _setup_tree(self, root_node, **kwargs):
+    def is_setup(self, tree_node):
+        return tree_node.root != -1 or \
+          tree_node._uids is not None
+
+    def _setup_tree(self, tree_node, **kwargs):
+        """
+        Create arrays of uids and descids and attach them to the
+        root node.
+        """
         # skip if this is not a root or if already setup
-        if root_node.root != -1 or hasattr(root_node, "uids"):
+        if self.is_setup(tree_node):
             return
+
         idtype      = np.int64
         grow_fields = ["id", "desc_id"]
         dtypes      = {"id": idtype, "desc_id": idtype}
-        field_data  = self._node_io._read_fields(root_node, grow_fields,
+        field_data  = self._node_io._read_fields(tree_node, grow_fields,
                                                  dtypes=dtypes, **kwargs)
         uids    = field_data["id"]
         descids = field_data["desc_id"]
-        root_node.uids      = uids
-        root_node.descids   = descids
-        root_node.tree_size = uids.size
+        tree_node._uids      = uids
+        tree_node._descids   = descids
+        tree_node._tree_size = uids.size
+
+    def is_grown(self, tree_node):
+        return hasattr(tree_node, "treeid")
+
+    def _grow_tree(self, tree_node):
+        """
+        Create an array of TreeNodes hanging off the root node
+        and assemble the tree structure.
+        """
+        # skip this if not a root or if already grown
+        if self.is_grown(tree_node):
+            return
+
+        self._setup_tree(tree_node)
+        nhalos   = tree_node.uids.size
+        nodes    = np.empty(nhalos, dtype=np.object)
+        nodes[0] = tree_node
+        for i in range(1, nhalos):
+            nodes[i] = TreeNode(tree_node.uids[i], arbor=self)
+        tree_node._nodes = nodes
+
+        uidmap   = {}
+        for i, node in enumerate(nodes):
+            node.treeid = i
+            node.root   = tree_node
+            descid      = tree_node.descids[i]
+            uidmap[tree_node.uids[i]] = i
+            if descid != -1:
+                desc = nodes[uidmap[tree_node.descids[i]]]
+                desc.add_ancestor(node)
+                node.descendent = desc
+
+    def _create_nodes(self, tree_node):
+        self._grow_tree(tree_node)
 
     def _node_io_loop(self, func, *args, **kwargs):
         root_nodes = kwargs.pop("root_nodes", None)
@@ -668,97 +711,77 @@ class CatalogArbor(Arbor):
     files where the descendent ID for each halo has been
     pre-determined.
     """
-    def _get_all_files(self):
+    def _get_data_files(self):
         """
         Get all input files based on specific naming convention.
         """
+        raise NotImplementedError
+
+    def _plant_trees(self):
+        fields = ["ID", "DescID"]
+        dtypes = dict((field, np.int64) for field in fields)
+        uid = 0
+        trees = []
+        nfiles = len(self.data_files)
+        for i, data_file in enumerate(self.data_files):
+            data = data_file._read_fields(fields, dtypes=dtypes)
+            nhalos = len(data["ID"])
+            batch = np.empty(nhalos, dtype=object)
+            ancs = defaultdict(list)
+            for it in range(nhalos):
+                descid = data["DescID"][it]
+                root = i == 0 or descid == -1
+                tree_node = TreeNode(uid, arbor=self, root=root)
+                tree_node._fi = it
+                tree_node.data_file = data_file
+                batch[it] = tree_node
+                if root:
+                    trees.append(tree_node)
+                else:
+                    ancs[descid].append(tree_node)
+                uid += 1
+            data_file.trees = batch
+            if i > 0:
+                for descid, ancestors in ancs.items():
+                    descendent = descs[descid]
+                    descendent._ancestors = ancestors
+                    for ancestor in ancestors:
+                        ancestor.descendent = descendent
+            if i < nfiles - 1:
+                # assume IDs can be used for indexing
+                lids = np.array(data["ID"])
+                lsort = lids.argsort()
+                lids = lids[lsort]
+                descs = batch[lsort]
+        self._trees = np.array(trees)
+
+    def _setup_tree(self, tree_node):
+        if self.is_setup(tree_node):
+            return
+
+        nodes   = []
+        uids    = []
+        descids = [-1]
+        for i, node in enumerate(tree_node.twalk()):
+            node.treeid = i
+            node.root   = tree_node
+            nodes.append(node)
+            uids.append(node.uid)
+            if i > 0:
+                descids.append(node.descendent.uid)
+        tree_node._nodes     = np.array(nodes)
+        tree_node._uids      = np.array(uids)
+        tree_node._descids   = np.array(descids)
+        tree_node._tree_size = tree_node._uids.size
+
+    def _create_nodes(self, tree_node):
+        self._setup_tree(tree_node)
+
+    def _grow_tree(self, tree_node):
         pass
 
-    def _load_field_data(self, *args):
-        """
-        Load field data from a single halo catalog.
-        """
-        pass
-
-    def _to_field_array(self, field, data):
-        """
-        Determines how final field arrays are defined, assigns
-        units if they have been pre-defined.
-        """
-        if len(data) == 0:
-            return np.array(data)
-        if isinstance(data[0], YTArray):
-            # Override the dataset's units with the arbor's
-            # to avoid lingering comoving/proper definitions.
-            self._field_data[field] = \
-              self.arr(data, str(data[0].units))
-        else:
-            self._field_data[field] = np.array(data)
-
-    def _load_trees(self):
-        """
-        Create the tree structure from the input files.
-        """
-        my_files = self._get_all_files()
-        self._field_data = defaultdict(list)
-
-        offset = 0
-        anc_ids = None
-        anc_nodes = None
-        my_trees = []
-        pbar = get_pbar("Load halo catalogs", len(my_files))
-        for i, fn in enumerate(my_files):
-            n_halos = self._load_field_data(fn, offset)
-            if n_halos == 0:
-                pbar.update(i)
-                continue
-
-            my_nodes = []
-            for halo in range(n_halos):
-                my_node = TreeNode(self._field_data["uid"][-1][halo],
-                                   arbor=self)
-                my_nodes.append(my_node)
-                if self._field_data["desc_id"][-1][halo] == -1 or i == 0:
-                    my_trees.append(my_node)
-
-            if anc_ids is not None:
-                des_ids = anc_ids
-                des_nodes = anc_nodes
-            anc_ids = self._field_data["halo_id"][-1]
-            anc_nodes = my_nodes
-
-            offset += n_halos
-            if i == 0:
-                pbar.update(i)
-                continue
-
-            for halo in range(n_halos):
-                des_id = self._field_data["desc_id"][-1][halo]
-                if des_id == -1: continue
-                i_des = np.where(des_id == des_ids)[0][0]
-                des_nodes[i_des].add_ancestor(anc_nodes[halo])
-
-            pbar.update(i)
-        pbar.finish()
-        self._trees = np.array(my_trees)
-
-        for field in self._field_data:
-            my_data = []
-            for level in self._field_data[field]:
-                my_data.extend(level)
-            self._to_field_array(field, my_data)
-
-        self._field_data["tree_id"] = -np.ones(offset)
-        for t in self._trees:
-            self._field_data["tree_id"][t._tree_field_indices] = t["uid"]
-            for tnode in t.twalk():
-                if tnode.ancestors is None: continue
-                for a in tnode.ancestors:
-                    self._field_data["desc_id"][a.uid] = tnode["uid"]
-        assert (self._field_data["tree_id"] != -1).any()
-
-        mylog.info("Arbor contains %d trees with %d total nodes." %
-                   (self._trees.size, offset))
+    def is_grown(self, tree_node):
+        return True
 
 def load(filename, method=None):
     """
