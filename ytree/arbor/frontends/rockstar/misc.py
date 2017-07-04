@@ -64,9 +64,11 @@ def f_text_block(f, block_size=32768, file_size=None, sep="\n"):
                 continue
             else:
                 line = lbuff + buff[linl+1:inl]
+                loc = offset - len(lbuff) + linl + 1
                 lbuff = ""
                 linl = inl
-                yield line
+                yield line, loc
         lbuff += buff[linl+1:]
     if lbuff:
-        yield lbuff
+        loc = f.tell() - len(lbuff)
+        yield lbuff, loc

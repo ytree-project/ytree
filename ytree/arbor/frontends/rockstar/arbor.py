@@ -13,6 +13,8 @@ RockstarArbor class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from collections import \
+    defaultdict
 import glob
 import numpy as np
 import warnings
@@ -23,13 +25,21 @@ from yt.units.yt_array import \
 from ytree.arbor.arbor import \
     CatalogArbor
 from ytree.arbor.frontends.rockstar.fields import \
+    RockstarFieldInfo, \
     setup_field_groups
+from ytree.arbor.frontends.rockstar.io import \
+    RockstarDataFile
+from ytree.arbor.tree_node import \
+    TreeNode
 
 class RockstarArbor(CatalogArbor):
     """
     Class for Arbors created from Rockstar out_*.list files.
     Use only descendent IDs to determine tree relationship.
     """
+
+    _field_info_class = RockstarFieldInfo
+    _data_file_class = RockstarDataFile
 
     def _parse_parameter_file(self):
         fgroups = setup_field_groups()
@@ -85,11 +95,11 @@ class RockstarArbor(CatalogArbor):
             fi[field] = {"column": i, "units": units}
         self.field_list = fields
         self.field_info.update(fi)
-        self._get_all_files()
+        self._get_data_files()
 
-    def _get_all_files(self):
+    def _get_data_files(self):
         """
-        Get all out_*.list files and put them in reverse order.
+        Get all out_*.list files and sort them in reverse order.
         """
         prefix = self.filename.rsplit("_", 1)[0]
         suffix = ".list"
@@ -99,36 +109,8 @@ class RockstarArbor(CatalogArbor):
             key=lambda x:
             int(x[x.find(prefix)+len(prefix)+1:x.rfind(suffix)]),
             reverse=True)
-        self.data_files = my_files
-
-    def _load_field_data(self, fn, offset):
-        """
-        Load field data using np.loadtxt.
-        Create a redshift field and uid field.
-        """
-        with warnings.catch_warnings():
-            # silence empty file warnings
-            warnings.simplefilter("ignore", category=UserWarning,
-                                  append=1, lineno=893)
-            data = np.loadtxt(fn, unpack=True, usecols=_rs_usecol)
-        z = self._read_parameters(fn)
-        if data.size == 0:
-            return 0
-
-        if len(data.shape) == 1:
-            data = np.reshape(data, (data.size, 1))
-        n_halos = data.shape[1]
-        self._field_data["redshift"].append(z * np.ones(n_halos))
-        self._field_data["uid"].append(np.arange(offset, offset+n_halos))
-        for field, cols in _rs_fields.items():
-            if cols.size == 1:
-                self._field_data[field].append(data[cols][0])
-            else:
-                self._field_data[field].append(np.rollaxis(data[cols], 1))
-            if field in _rs_type:
-                self._field_data[field][-1] = \
-                  self._field_data[field][-1].astype(_rs_type[field])
-        return n_halos
+        self.data_files = \
+          [self._data_file_class(f, self) for f in my_files]
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
@@ -138,20 +120,3 @@ class RockstarArbor(CatalogArbor):
         fn = args[0]
         if not fn.endswith(".list"): return False
         return True
-
-def _read_expansion_faction(filename):
-    """
-    Get the expansion factor from the file header.
-    """
-    f = open(filename, "r")
-    while True:
-        line = f.readline()
-        if line is None or not line.startswith("#"):
-            break
-        if line.startswith("#a = "):
-            f.close()
-            return float(line.split("=")[1].strip())
-    f.close()
-    raise IOError(
-        "Could not find expansion factor in header: %s." %
-        filename)
