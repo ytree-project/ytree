@@ -28,7 +28,8 @@ from ytree.arbor.frontends.rockstar.fields import \
     RockstarFieldInfo, \
     setup_field_groups
 from ytree.arbor.frontends.rockstar.io import \
-    RockstarDataFile
+    RockstarDataFile, \
+    RockstarTreeFieldIO
 from ytree.arbor.tree_node import \
     TreeNode
 
@@ -40,6 +41,7 @@ class RockstarArbor(CatalogArbor):
 
     _field_info_class = RockstarFieldInfo
     _data_file_class = RockstarDataFile
+    _tree_field_io_class = RockstarTreeFieldIO
 
     def _parse_parameter_file(self):
         fgroups = setup_field_groups()

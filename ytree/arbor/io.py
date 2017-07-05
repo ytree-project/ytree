@@ -46,6 +46,12 @@ class FieldIO(object):
         """
         raise NotImplementedError
 
+    def _read_fields(self, *args, **kwargs):
+        """
+        Read fields from disk.
+        """
+        raise NotImplementedError
+
     def _store_fields(self, storage_object, field_data, **kwargs):
         """
         Store the field data in the proper place.

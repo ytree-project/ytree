@@ -13,6 +13,7 @@ RockstarArbor io classes and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from collections import defaultdict
 import numpy as np
 
 from ytree.arbor.io import \
@@ -21,6 +22,9 @@ from ytree.arbor.frontends.rockstar.misc import \
     f_text_block
 
 class RockstarDataFile(object):
+
+    _default_dtype = np.float32
+
     def __init__(self, filename, arbor):
         self.filename = filename
         self.arbor = arbor
@@ -45,57 +49,82 @@ class RockstarDataFile(object):
         f.close()
 
     def _read_fields(self, fields, tree_nodes=None, dtypes=None):
-        if tree_nodes is not None:
-            raise NotImplementedError
-
-        my_dtypes = dict((field, np.float32) for field in fields)
         if dtypes is None:
             dtypes = {}
-        my_dtypes.update(dtypes)
 
         fi = self.arbor.field_info
-        field_data = dict((field, []) for field in fields)
 
-        offsets = []
-        f = open(self.filename, "r")
-        f.seek(self._hoffset)
-        file_size = self.file_size - self._hoffset
-        for line, offset in f_text_block(f, file_size=file_size):
-            offsets.append(offset)
-            sline = line.split()
-            for field in fields:
-                field_data[field].append(
-                  my_dtypes[field](sline[fi[field]["column"]]))
-        f.close()
-        if self.offsets is None:
-            self.offsets = np.array(offsets)
+        if tree_nodes is not None:
+            ntrees = len(tree_nodes)
+            field_data = \
+              dict((field,
+                    np.empty(ntrees,
+                             dtype=dtypes.get(field, self._default_dtype)))
+                    for field in fields)
+            f = open(self.filename, "r")
+            for i in range(ntrees):
+                f.seek(self.offsets[tree_nodes[i]._fi])
+                line = f.readline()
+                sline = line.split()
+                for field in fields:
+                    dtype = dtypes.get(field, self._default_dtype)
+                    field_data[field][i] = dtype(sline[fi[field]["column"]])
+            f.close()
+
+        else:
+            field_data = dict((field, []) for field in fields)
+            offsets = []
+            f = open(self.filename, "r")
+            f.seek(self._hoffset)
+            file_size = self.file_size - self._hoffset
+            for line, offset in f_text_block(f, file_size=file_size):
+                offsets.append(offset)
+                sline = line.split()
+                for field in fields:
+                    dtype = dtypes.get(field, self._default_dtype)
+                    field_data[field].append(dtype(sline[fi[field]["column"]]))
+            f.close()
+            if self.offsets is None:
+                self.offsets = np.array(offsets)
+
         return field_data
 
 class RockstarTreeFieldIO(TreeFieldIO):
+
+    _default_dtype = np.float32
+
     def _read_fields(self, root_node, fields, dtypes=None,
-                     f=None, root_only=False):
+                     root_only=False):
         """
         Read fields from disk for a single tree.
         """
+
         if dtypes is None:
             dtypes = {}
 
-        raise NotImplementedError
-
-        nhalos = len(data)
+        nhalos = root_node.tree_size
         field_data = {}
-        fi = self.arbor.field_info
         for field in fields:
             field_data[field] = \
-              np.empty(nhalos, dtype=dtypes.get(field, float))
+              np.empty(nhalos, dtype=dtypes.get(field, self._default_dtype))
 
-        for i, datum in enumerate(data):
-            ldata = datum.strip().split()
-            if len(ldata) == 0: continue
+        if root_only:
+            my_nodes = [root_node]
+        else:
+            my_nodes = root_node.nodes
+
+        data_files = defaultdict(list)
+        for node in my_nodes:
+            data_files[node.data_file].append(node)
+
+        for data_file, nodes in data_files.items():
+            my_data = data_file._read_fields(fields, tree_nodes=nodes,
+                                             dtypes=dtypes)
             for field in fields:
-                dtype = dtypes.get(field, float)
-                field_data[field][i] = dtype(ldata[fi[field]["column"]])
+                for i, node in enumerate(nodes):
+                    field_data[field][node.treeid] = my_data[field][i]
 
+        fi = self.arbor.field_info
         for field in fields:
             units = fi[field].get("units", "")
             if units != "":
