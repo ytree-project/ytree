@@ -95,6 +95,11 @@ class RockstarArbor(CatalogArbor):
                     units = getattr(group, "units", "")
                     break
             fi[field] = {"column": i, "units": units}
+
+        # the scale factor comes from the catalog file header
+        fields.append("scale_factor")
+        fi["scale_factor"] = {"column": "header", "units": ""}
+
         self.field_list = fields
         self.field_info.update(fi)
         self._get_data_files()

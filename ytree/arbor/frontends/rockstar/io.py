@@ -53,6 +53,12 @@ class RockstarDataFile(object):
             dtypes = {}
 
         fi = self.arbor.field_info
+        hfields = [field for field in fields
+                   if fi[field]["column"] == "header"]
+        rfields = set(fields).difference(hfields)
+
+        hfield_values = dict((field, getattr(self, field))
+                             for field in hfields)
 
         if tree_nodes is not None:
             ntrees = len(tree_nodes)
@@ -61,12 +67,18 @@ class RockstarDataFile(object):
                     np.empty(ntrees,
                              dtype=dtypes.get(field, self._default_dtype)))
                     for field in fields)
+
+            # fields from the file header
+            for field in hfields:
+                field_data[field][:] = hfield_values[field]
+
+            # fields from the actual data
             f = open(self.filename, "r")
             for i in range(ntrees):
                 f.seek(self.offsets[tree_nodes[i]._fi])
                 line = f.readline()
                 sline = line.split()
-                for field in fields:
+                for field in rfields:
                     dtype = dtypes.get(field, self._default_dtype)
                     field_data[field][i] = dtype(sline[fi[field]["column"]])
             f.close()
@@ -80,7 +92,9 @@ class RockstarDataFile(object):
             for line, offset in f_text_block(f, file_size=file_size):
                 offsets.append(offset)
                 sline = line.split()
-                for field in fields:
+                for field in hfields:
+                    field_data[field].append(hfield_values[field])
+                for field in rfields:
                     dtype = dtypes.get(field, self._default_dtype)
                     field_data[field].append(dtype(sline[fi[field]["column"]]))
             f.close()
