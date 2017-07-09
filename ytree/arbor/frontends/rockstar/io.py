@@ -56,7 +56,25 @@ class RockstarDataFile(CatalogDataFile):
         hfield_values = dict((field, getattr(self, field))
                              for field in hfields)
 
-        if tree_nodes is not None:
+        if tree_nodes is None:
+            field_data = dict((field, []) for field in fields)
+            offsets = []
+            f = open(self.filename, "r")
+            f.seek(self._hoffset)
+            file_size = self.file_size - self._hoffset
+            for line, offset in f_text_block(f, file_size=file_size):
+                offsets.append(offset)
+                sline = line.split()
+                for field in hfields:
+                    field_data[field].append(hfield_values[field])
+                for field in rfields:
+                    dtype = dtypes.get(field, self._default_dtype)
+                    field_data[field].append(dtype(sline[fi[field]["column"]]))
+            f.close()
+            if self.offsets is None:
+                self.offsets = np.array(offsets)
+
+        else:
             ntrees = len(tree_nodes)
             field_data = \
               dict((field,
@@ -78,24 +96,6 @@ class RockstarDataFile(CatalogDataFile):
                     dtype = dtypes.get(field, self._default_dtype)
                     field_data[field][i] = dtype(sline[fi[field]["column"]])
             f.close()
-
-        else:
-            field_data = dict((field, []) for field in fields)
-            offsets = []
-            f = open(self.filename, "r")
-            f.seek(self._hoffset)
-            file_size = self.file_size - self._hoffset
-            for line, offset in f_text_block(f, file_size=file_size):
-                offsets.append(offset)
-                sline = line.split()
-                for field in hfields:
-                    field_data[field].append(hfield_values[field])
-                for field in rfields:
-                    dtype = dtypes.get(field, self._default_dtype)
-                    field_data[field].append(dtype(sline[fi[field]["column"]]))
-            f.close()
-            if self.offsets is None:
-                self.offsets = np.array(offsets)
 
         return field_data
 
