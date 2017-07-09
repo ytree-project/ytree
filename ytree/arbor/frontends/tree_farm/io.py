@@ -13,7 +13,6 @@ TreeFarmArbor io classes and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from collections import defaultdict
 import h5py
 import numpy as np
 
@@ -22,6 +21,9 @@ from ytree.arbor.io import \
     TreeFieldIO
 
 class TreeFarmDataFile(CatalogDataFile):
+
+    _default_dtype = np.float64
+
     def _parse_header(self):
         fh = h5py.File(self.filename, "r")
         self.redshift = fh.attrs["current_redshift"]
@@ -67,44 +69,4 @@ class TreeFarmDataFile(CatalogDataFile):
 
 class TreeFarmTreeFieldIO(TreeFieldIO):
 
-    _default_dtype = np.float32
-
-    def _read_fields(self, root_node, fields, dtypes=None,
-                     root_only=False):
-        """
-        Read fields from disk for a single tree.
-        """
-
-        if dtypes is None:
-            dtypes = {}
-
-        nhalos = root_node.tree_size
-        field_data = {}
-        for field in fields:
-            field_data[field] = \
-              np.empty(nhalos, dtype=dtypes.get(field, self._default_dtype))
-
-        if root_only:
-            my_nodes = [root_node]
-        else:
-            my_nodes = root_node.nodes
-
-        data_files = defaultdict(list)
-        for node in my_nodes:
-            data_files[node.data_file].append(node)
-
-        for data_file, nodes in data_files.items():
-            my_data = data_file._read_fields(fields, tree_nodes=nodes,
-                                             dtypes=dtypes)
-            for field in fields:
-                for i, node in enumerate(nodes):
-                    field_data[field][node.treeid] = my_data[field][i]
-
-        fi = self.arbor.field_info
-        for field in fields:
-            units = fi[field].get("units", "")
-            if units != "":
-                field_data[field] = \
-                  self.arbor.arr(field_data[field], units)
-
-        return field_data
+    _default_dtype = np.float64
