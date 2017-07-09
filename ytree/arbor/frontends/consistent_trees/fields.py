@@ -16,6 +16,7 @@ ConsistentTreesArbor fields
 from ytree.arbor.fields import \
     FieldInfoContainer
 
+m_unit = "Msun"
 p_unit = "unitary"
 r_unit = "kpc"
 v_unit = "km/s"
@@ -23,8 +24,8 @@ v_unit = "km/s"
 class ConsistentTreesFieldInfo(FieldInfoContainer):
     alias_fields = (
         ("scale_factor", "scale", None),
-        ("mass", "Mvir", "Msun"),
-        ("virial_mass", "Mvir", "Msun"),
+        ("mass", "Mvir", m_unit),
+        ("virial_mass", "Mvir", m_unit),
         ("virial_radius", "Rvir", r_unit),
         ("scale_radius", "rs", r_unit),
         ("velocity_dispersion", "vrms", v_unit),

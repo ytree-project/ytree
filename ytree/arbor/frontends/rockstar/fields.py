@@ -18,14 +18,17 @@ from ytree.arbor.fields import \
 from ytree.arbor.frontends.rockstar.misc import \
     Group
 
+m_unit = "Msun"
 p_unit = "unitary"
 r_unit = "kpc"
 v_unit = "km/s"
 
 class RockstarFieldInfo(FieldInfoContainer):
     alias_fields = (
-        ("mass", "Mvir", "Msun"),
-        ("virial_mass", "Mvir", "Msun"),
+        ("halo_id", "ID", None),
+        ("desc_id", "DescID", None),
+        ("mass", "Mvir", m_unit),
+        ("virial_mass", "Mvir", m_unit),
         ("virial_radius", "Rvir", r_unit),
         ("scale_radius", "Rs", r_unit),
         ("velocity_dispersion", "Vrms", v_unit),
