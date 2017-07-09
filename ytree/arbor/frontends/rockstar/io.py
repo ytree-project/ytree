@@ -17,19 +17,15 @@ from collections import defaultdict
 import numpy as np
 
 from ytree.arbor.io import \
+    CatalogDataFile, \
     TreeFieldIO
 from ytree.arbor.frontends.rockstar.misc import \
     f_text_block
 
-class RockstarDataFile(object):
-
-    _default_dtype = np.float32
-
+class RockstarDataFile(CatalogDataFile):
     def __init__(self, filename, arbor):
-        self.filename = filename
-        self.arbor = arbor
         self.offsets = None
-        self._parse_header()
+        super(RockstarDataFile, self).__init__(filename, arbor)
 
     def _parse_header(self):
         f = open(self.filename, "r")

@@ -39,6 +39,7 @@ class RockstarArbor(CatalogArbor):
     Use only descendent IDs to determine tree relationship.
     """
 
+    _suffix = ".list"
     _field_info_class = RockstarFieldInfo
     _data_file_class = RockstarDataFile
     _tree_field_io_class = RockstarTreeFieldIO
@@ -103,21 +104,6 @@ class RockstarArbor(CatalogArbor):
         self.field_list = fields
         self.field_info.update(fi)
         self._get_data_files()
-
-    def _get_data_files(self):
-        """
-        Get all out_*.list files and sort them in reverse order.
-        """
-        prefix = self.filename.rsplit("_", 1)[0]
-        suffix = ".list"
-        my_files = glob.glob("%s_*%s" % (prefix, suffix))
-        # sort by catalog number
-        my_files.sort(
-            key=lambda x:
-            int(x[x.find(prefix)+len(prefix)+1:x.rfind(suffix)]),
-            reverse=True)
-        self.data_files = \
-          [self._data_file_class(f, self) for f in my_files]
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
