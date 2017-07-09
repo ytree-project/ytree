@@ -203,3 +203,24 @@ class FallbackRootFieldIO(FieldIO):
                     field_data[field][i] = \
                       self.arbor.trees[i]._root_field_data[field]
         data_object._root_field_data.update(field_data)
+
+class CatalogDataFile(object):
+    """
+    Base class for halo catalog files.
+    """
+
+    _default_dtype = np.float32
+
+    def __init__(self, filename, arbor):
+        self.filename = filename
+        self.arbor = arbor
+        self._parse_header()
+
+    def _parse_header(self):
+        raise NotImplementedError
+
+    def _read_fields(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def __repr__(self):
+        return self.filename
