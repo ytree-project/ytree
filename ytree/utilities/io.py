@@ -29,6 +29,8 @@ def _hdf5_yt_attr(fh, attr, unit_registry=None):
     ufield = "%s_units" % attr
     if ufield in fh.attrs:
         units = fh.attrs[ufield]
+        if isinstance(units, bytes):
+            units = units.decode("utf")
     if units == "dimensionless":
         units = ""
     if units != "":
