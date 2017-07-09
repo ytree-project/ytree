@@ -735,18 +735,20 @@ class CatalogArbor(Arbor):
         return int(f[f.find(prefix)+len(prefix)+1:f.rfind(suffix)]),
 
     def _plant_trees(self):
-        fields = ["ID", "DescID"]
+        fields, _ = \
+          self.field_info.resolve_field_dependencies(["halo_id", "desc_id"])
+        halo_id_f, desc_id_f = fields
         dtypes = dict((field, np.int64) for field in fields)
         uid = 0
         trees = []
         nfiles = len(self.data_files)
         for i, data_file in enumerate(self.data_files):
             data = data_file._read_fields(fields, dtypes=dtypes)
-            nhalos = len(data["ID"])
+            nhalos = len(data[halo_id_f])
             batch = np.empty(nhalos, dtype=object)
             ancs = defaultdict(list)
             for it in range(nhalos):
-                descid = data["DescID"][it]
+                descid = data[desc_id_f][it]
                 root = i == 0 or descid == -1
                 tree_node = TreeNode(uid, arbor=self, root=root)
                 tree_node._fi = it
@@ -766,7 +768,7 @@ class CatalogArbor(Arbor):
                         ancestor.descendent = descendent
             if i < nfiles - 1:
                 # assume IDs can be used for indexing
-                lids = np.array(data["ID"])
+                lids = np.array(data[halo_id_f])
                 lsort = lids.argsort()
                 lids = lids[lsort]
                 descs = batch[lsort]
