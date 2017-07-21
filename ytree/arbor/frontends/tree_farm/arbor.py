@@ -72,10 +72,16 @@ class TreeFarmArbor(CatalogArbor):
 
         self.field_list = fields
         self.field_info.update(fi)
-        self._get_data_files()
 
-    def _get_file_index(self, f, prefix, suffix):
-        return int(f[f.find(prefix)+len(prefix)+1:f.find(".0")])
+    def _get_data_files(self):
+        prefix = self.filename.rsplit("_", 1)[0]
+        suffix = ".0" + self._suffix
+        nd = len(glob.glob("%s_*%s" % (prefix, suffix)))
+        my_files = [glob.glob("%s_%03d*%s" % (prefix, i, self._suffix))
+                    for i in range(nd)]
+        my_files = my_files[::-1]
+        self.data_files = [[self._data_file_class(f, self)
+                            for f in fl] for fl in my_files]
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
@@ -84,7 +90,8 @@ class TreeFarmArbor(CatalogArbor):
         and have a "data_type" attribute.
         """
         fn = args[0]
-        if not fn.endswith(".h5"): return False
+        if not fn.endswith(self._suffix):
+            return False
         try:
             with h5py.File(fn, "r") as f:
                 if "data_type" not in f.attrs:
