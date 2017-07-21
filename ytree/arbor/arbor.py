@@ -731,36 +731,53 @@ class CatalogArbor(Arbor):
         uid = 0
         trees = []
         nfiles = len(self.data_files)
-        for i, data_file in enumerate(self.data_files):
-            data = data_file._read_fields(fields, dtypes=dtypes)
-            nhalos = len(data[halo_id_f])
-            batch = np.empty(nhalos, dtype=object)
+        for i, dfl in enumerate(self.data_files):
+            if not isinstance(dfl, list):
+                dfl = [dfl]
+
+            batches = []
+            bsize = []
+            hids = []
             ancs = defaultdict(list)
-            for it in range(nhalos):
-                descid = data[desc_id_f][it]
-                root = i == 0 or descid == -1
-                tree_node = TreeNode(uid, arbor=self, root=root)
-                tree_node._fi = it
-                tree_node.data_file = data_file
-                batch[it] = tree_node
-                if root:
-                    trees.append(tree_node)
-                else:
-                    ancs[descid].append(tree_node)
-                uid += 1
-            data_file.trees = batch
+            for data_file in dfl:
+                data = data_file._read_fields(fields, dtypes=dtypes)
+                nhalos = len(data[halo_id_f])
+                batch = np.empty(nhalos, dtype=object)
+
+                for it in range(nhalos):
+                    descid = data[desc_id_f][it]
+                    root = i == 0 or descid == -1
+                    tree_node = TreeNode(uid, arbor=self, root=root)
+                    tree_node._fi = it
+                    tree_node.data_file = data_file
+                    batch[it] = tree_node
+                    if root:
+                        trees.append(tree_node)
+                    else:
+                        ancs[descid].append(tree_node)
+                    uid += 1
+                data_file.trees = batch
+                batches.append(batch)
+                bsize.append(batch.size)
+                hids.append(data[halo_id_f])
+
             if i > 0:
                 for descid, ancestors in ancs.items():
-                    descendent = descs[descid]
+                    # this will not be fast
+                    descendent = descs[descid == lastids][0]
                     descendent._ancestors = ancestors
                     for ancestor in ancestors:
                         ancestor.descendent = descendent
+
             if i < nfiles - 1:
-                # assume IDs can be used for indexing
-                lids = np.array(data[halo_id_f])
-                lsort = lids.argsort()
-                lids = lids[lsort]
-                descs = batch[lsort]
+                descs = np.empty(sum(bsize), dtype=object)
+                lastids = np.empty(descs.size, dtype=np.int64)
+                ib = 0
+                for batch, hid, bs in zip(batches, hids, bsize):
+                    descs[ib:ib+bs] = batch
+                    lastids[ib:ib+bs] = hid
+                    ib += bs
+
         self._trees = np.array(trees)
 
     def _setup_tree(self, tree_node):
