@@ -263,9 +263,9 @@ class TreeFarm(object):
         for i, fn2 in enumerate(all_outputs[1:]):
             fn1 = all_outputs[i]
             target_filename = get_output_filename(
-                filename, "%s.%d" % (os.path.basename(fn1), 0), ".h5")
+                filename, "%s.%d" % (_get_tree_basename(fn1), 0), ".h5")
             catalog_filename = get_output_filename(
-                filename, "%s.%d" % (os.path.basename(fn2), 0), ".h5")
+                filename, "%s.%d" % (_get_tree_basename(fn2), 0), ".h5")
             if os.path.exists(catalog_filename):
                 continue
 
@@ -357,9 +357,9 @@ class TreeFarm(object):
         for i, fn2 in enumerate(all_outputs[1:]):
             fn1 = all_outputs[i]
             target_filename = get_output_filename(
-                filename, "%s.%d" % (os.path.basename(fn1), 0), ".h5")
+                filename, "%s.%d" % (_get_tree_basename(fn1), 0), ".h5")
             catalog_filename = get_output_filename(
-                filename, "%s.%d" % (os.path.basename(fn2), 0), ".h5")
+                filename, "%s.%d" % (_get_tree_basename(fn2), 0), ".h5")
             if os.path.exists(target_filename):
                 continue
 
@@ -413,7 +413,7 @@ class TreeFarm(object):
         else:
             rank = self.comm.rank
         filename = get_output_filename(
-            filename, "%s.%d" % (str(ds.basename), rank), ".h5")
+            filename, "%s.%d" % (_get_tree_basename(ds), rank), ".h5")
 
         if fields is None:
             my_fields = []
@@ -472,6 +472,10 @@ class TreeFarm(object):
             if len(shape) > 1 and shape[-1] == 1:
                 data[hp] = np.reshape(data[hp], shape[:-1])
         return data
+
+def _get_tree_basename(fn):
+    myfn = getattr(fn, "basename", fn)
+    return os.path.basename(myfn).split(".", 1)[0]
 
 def _get_halo_property(halo, halo_property):
     """
