@@ -198,6 +198,7 @@ class TreeNode(object):
             if isinstance(key, string_types):
                 # return the progenitor list or tree nodes in a list
                 if key in arr_types:
+                    self.arbor._setup_tree(self)
                     return getattr(self, "_%s_nodes" % key)
                 # return field value for this node
                 self.arbor._node_io.get_fields(self, fields=[key])
