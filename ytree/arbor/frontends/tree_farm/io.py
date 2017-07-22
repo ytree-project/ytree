@@ -28,7 +28,29 @@ class TreeFarmDataFile(CatalogDataFile):
         fh = h5py.File(self.filename, "r")
         self.redshift = fh.attrs["current_redshift"]
         self.nhalos   = fh.attrs["num_halos"]
+        # Files with no halos won't have the units.
+        # Keep trying until we get one.
+        if not hasattr(self.arbor, "fields"):
+            self._setup_field_info(fh)
         fh.close()
+
+    def _setup_field_info(self, fh):
+        fields = list(fh.keys())
+        fi = {}
+        for field in fields:
+            if fh[field].size == 0:
+                # Zero-sized arrays won't have units, so don't bother.
+                return
+            units = fh[field].attrs["units"]
+            if isinstance(units, bytes):
+                units = units.decode("utf")
+            fi[field] = {"source": "file", "units": units}
+
+        fields.append("redshift")
+        fi["redshift"] = {"source": "header", "units": ""}
+
+        self.arbor.field_list = fields
+        self.arbor.field_info.update(fi)
 
     def _read_fields(self, fields, tree_nodes=None, dtypes=None):
         if dtypes is None:

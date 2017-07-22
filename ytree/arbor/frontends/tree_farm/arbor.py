@@ -58,20 +58,7 @@ class TreeFarmArbor(CatalogArbor):
         # be in comoving units.
         self.box_size = self.quan(
             (right - left)[0].to("Mpccm/h"), "Mpc/h")
-
-        fields = list(fh.keys())
-        fi = {}
-        for field in fields:
-            units = fh[field].attrs["units"]
-            if isinstance(units, bytes):
-                units = units.decode("utf")
-            fi[field] = {"source": "file", "units": units}
-
-        fields.append("redshift")
-        fi["redshift"] = {"source": "header", "units": ""}
-
-        self.field_list = fields
-        self.field_info.update(fi)
+        fh.close()
 
     def _get_data_files(self):
         prefix = self.filename.rsplit("_", 1)[0]

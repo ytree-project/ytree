@@ -717,8 +717,9 @@ class CatalogArbor(Arbor):
     _data_file_class = None
 
     def __init__(self, filename):
-        super(CatalogArbor, self).__init__(filename)
+        self.filename = filename
         self._get_data_files()
+        super(CatalogArbor, self).__init__(filename)
 
     def _get_data_files(self):
         raise NotImplementedError
