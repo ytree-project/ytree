@@ -29,8 +29,13 @@ class FieldInfoContainer(dict):
 
     def setup_aliases(self):
         for alias in self.alias_fields:
-            self.arbor.add_alias_field(
-                alias[0], alias[1], units=alias[2])
+            aliasname, fieldname, units = alias
+            if not isinstance(fieldname, tuple):
+                fieldname = (fieldname,)
+            for fname in fieldname:
+                self.arbor.add_alias_field(
+                    aliasname, fname, units=units,
+                    force_add=False)
 
     def setup_derived_fields(self):
         def _redshift(data):

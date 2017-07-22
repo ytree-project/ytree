@@ -22,6 +22,8 @@ from yt.units.unit_registry import \
 
 from ytree.arbor.arbor import \
     Arbor
+from ytree.arbor.frontends.arborarbor.fields import \
+    ArborArborFieldInfo
 from ytree.arbor.frontends.arborarbor.io import \
     ArborArborRootFieldIO, \
     ArborArborTreeFieldIO
@@ -34,6 +36,8 @@ class ArborArbor(Arbor):
     """
     Class for Arbors created with ytree version 1.1.0 or earlier.
     """
+
+    _field_info_class = ArborArborFieldInfo
     _root_field_io_class = ArborArborRootFieldIO
     _tree_field_io_class = ArborArborTreeFieldIO
 
