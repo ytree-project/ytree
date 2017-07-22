@@ -16,7 +16,6 @@ Arbor class and member functions
 from collections import \
     defaultdict
 import functools
-import glob
 import json
 import numpy as np
 import os
@@ -732,6 +731,7 @@ class CatalogArbor(Arbor):
         uid = 0
         trees = []
         nfiles = len(self.data_files)
+        descs = lastids = None
         for i, dfl in enumerate(self.data_files):
             if not isinstance(dfl, list):
                 dfl = [dfl]

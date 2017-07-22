@@ -15,7 +15,6 @@ TreeFarmArbor class and member functions
 
 import glob
 import h5py
-import numpy as np
 
 from yt.units.unit_registry import \
     UnitRegistry

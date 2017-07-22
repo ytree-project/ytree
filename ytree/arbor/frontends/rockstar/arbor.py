@@ -13,11 +13,7 @@ RockstarArbor class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from collections import \
-    defaultdict
 import glob
-import numpy as np
-import warnings
 
 from yt.units.yt_array import \
     UnitParseError
@@ -29,8 +25,6 @@ from ytree.arbor.frontends.rockstar.fields import \
     setup_field_groups
 from ytree.arbor.frontends.rockstar.io import \
     RockstarDataFile
-from ytree.arbor.tree_node import \
-    TreeNode
 
 class RockstarArbor(CatalogArbor):
     """

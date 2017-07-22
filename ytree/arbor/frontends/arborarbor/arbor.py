@@ -14,7 +14,6 @@ ArborArbor class and member functions
 #-----------------------------------------------------------------------------
 
 import h5py
-import json
 import numpy as np
 
 from yt.units.unit_registry import \
