@@ -101,7 +101,8 @@ class YTreeArbor(Arbor):
         and have "arbor_type" attribute.
         """
         fn = args[0]
-        if not fn.endswith(self._suffix): return False
+        if not fn.endswith(self._suffix):
+            return False
         try:
             with h5py.File(fn, "r") as f:
                 if "arbor_type" not in f.attrs:

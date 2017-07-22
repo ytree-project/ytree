@@ -16,6 +16,7 @@ API for yt.frontends
 import importlib
 
 _frontends = [
+    "arborarbor",
     "consistent_trees",
     "rockstar",
     "tree_farm",
