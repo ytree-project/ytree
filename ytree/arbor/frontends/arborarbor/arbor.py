@@ -77,19 +77,16 @@ class ArborArbor(Arbor):
         fh = h5py.File(self.filename, "r")
         uids    = fh["data"]["uid"].value.astype(np.int64)
         descids = fh["data"]["desc_id"].value.astype(np.int64)
+        treeids = fh["data"]["tree_id"].value.astype(np.int64)
         fh.close()
 
         roots = np.where(descids == -1)[0]
         ntrees = roots.size
         self._trees = np.empty(ntrees, dtype=np.object)
         for i, root in enumerate(roots):
-            my_node        = TreeNode(uids[i], arbor=self, root=True)
-            my_node._si    = root
-            if i < ntrees - 1:
-                my_node._ei = roots[i+1]
-            else:
-                my_node._ei = uids.size
-            my_node._tree_size = my_node._ei - my_node._si
+            my_node     = TreeNode(uids[i], arbor=self, root=True)
+            my_node._fi = np.where(root == treeids)[0]
+            my_node._tree_size = my_node._fi.size
             self._trees[i] = my_node
         self._field_cache = {}
         self._field_cache["uid"] = uids
@@ -101,10 +98,9 @@ class ArborArbor(Arbor):
         if self.is_setup(tree_node):
             return
 
-        si = tree_node._si
-        ei = tree_node._ei
-        tree_node._uids    = self._field_cache["uid"][si:ei]
-        tree_node._descids = self._field_cache["desc_id"][si:ei]
+        ifield = tree_node._fi
+        tree_node._uids    = self._field_cache["uid"][ifield]
+        tree_node._descids = self._field_cache["desc_id"][ifield]
 
     @classmethod
     def _is_valid(self, *args, **kwargs):

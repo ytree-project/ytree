@@ -34,8 +34,7 @@ class ArborArborTreeFieldIO(TreeFieldIO):
         else:
             close = False
 
-        si = root_node._si
-        ei = root_node._ei
+        ifield = root_node._fi
 
         field_data = {}
         fi = self.arbor.field_info
@@ -56,7 +55,7 @@ class ArborArborTreeFieldIO(TreeFieldIO):
                     if units != "":
                         rdata = self.arbor.arr(rdata, units)
                     self.arbor._field_cache[field] = rdata
-                fcache[field] = rdata[si:ei]
+                fcache[field] = rdata[ifield]
             field_data[field] = fcache[field]
 
         if close:
