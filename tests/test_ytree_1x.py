@@ -27,7 +27,7 @@ import ytree
 def generate_results_file(a, fn, fields):
     fh = h5py.File(fn, "w")
     for t in a:
-        tgroup = fh.create_group("group_%d" % t["uid"])
+        tgroup = fh.create_group("group_%d" % t.uid)
         groups = ["prog", "tree"]
         groupnames = ["line", "tree"]
         for gtype, gname in zip(groups, groupnames):
@@ -59,5 +59,30 @@ class YTree1xTest(TempDirTest):
             a = ytree.load(arbor_filename)
             generate_results_file(a, basename, tfields)
             compare_hdf5(basename, filename,
+                         compare=assert_array_rel_equal,
+                         decimals=15)
+
+    def test_1x_tree_farms(self):
+        tree_farm_filenames = \
+          glob.glob(os.path.join(test_data_dir,
+                                 "ytree_1x/arbors/tree_farm*"))
+
+        fields = ["redshift", "particle_mass"]
+        for filename in tree_farm_filenames:
+            basename = os.path.basename(filename)
+            arbor_glob = \
+              os.path.join(test_data_dir, "ytree_1x/arbors",
+                           basename, "*.h5")
+            arbor_filename = glob.glob(arbor_glob)[0]
+
+            results_filename = \
+              os.path.join(test_data_dir, "ytree_1x/results",
+                           "%s.h5" % basename)
+
+            a = ytree.load(arbor_filename)
+            basename = "%s.h5" % os.path.basename(filename)
+            generate_results_file(a, basename, fields)
+            compare_hdf5(basename, results_filename,
+                         compare_groups=False,
                          compare=assert_array_rel_equal,
                          decimals=15)
