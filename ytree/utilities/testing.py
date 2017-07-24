@@ -60,7 +60,8 @@ def compare_arbors(a1, a2, group="tree", fields=None):
         for field in fields:
             assert (t1[group, field] == t2[group, field]).all()
 
-def compare_hdf5(fh1, fh2, compare=None, **kwargs):
+def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
+                 **kwargs):
     """
     Compare all datasets between two hdf5 files.
     """
@@ -72,13 +73,15 @@ def compare_hdf5(fh1, fh2, compare=None, **kwargs):
     if isinstance(fh2, str):
         fh2 = h5py.File(fh2, "r")
 
-    assert sorted(list(fh1.keys())) == sorted(list(fh2.keys())), \
-      "%s and %s have different datasets in group %s." % \
-      (fh1.file.filename, fh2.file.filename, fh1.name)
+    if compare_groups:
+        assert sorted(list(fh1.keys())) == sorted(list(fh2.keys())), \
+          "%s and %s have different datasets in group %s." % \
+          (fh1.file.filename, fh2.file.filename, fh1.name)
 
     for key in fh1.keys():
         if isinstance(fh1[key], h5py.Group):
             compare_hdf5(fh1[key], fh2[key],
+                         compare_groups=compare_groups,
                          compare=compare, **kwargs)
         else:
             err_msg = "%s field not equal for %s and %s" % \
