@@ -84,7 +84,7 @@ class ArborArbor(Arbor):
         ntrees = roots.size
         self._trees = np.empty(ntrees, dtype=np.object)
         for i, root in enumerate(roots):
-            my_node     = TreeNode(uids[i], arbor=self, root=True)
+            my_node     = TreeNode(root, arbor=self, root=True)
             my_node._fi = np.where(root == treeids)[0]
             my_node._tree_size = my_node._fi.size
             self._trees[i] = my_node
