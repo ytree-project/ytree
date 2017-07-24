@@ -13,6 +13,8 @@ TreeFarmArbor class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from collections import \
+    defaultdict
 import glob
 import h5py
 
@@ -60,12 +62,15 @@ class TreeFarmArbor(CatalogArbor):
         fh.close()
 
     def _get_data_files(self):
-        prefix = self.filename.rsplit("_", 1)[0]
+        prefix = self.filename.rsplit("_", 1)[0] + "_"
         suffix = ".0" + self._suffix
-        nd = len(glob.glob("%s_*%s" % (prefix, suffix)))
-        my_files = [glob.glob("%s_%03d*%s" % (prefix, i, self._suffix))
-                    for i in range(nd)]
-        my_files = my_files[::-1]
+        files = glob.glob("%s*%s" % (prefix, suffix))
+        fids = defaultdict(list)
+        for my_file in files:
+            fid = int(my_file[len(prefix):-len(suffix)])
+            fids[fid].append(my_file)
+        my_files = [fids[fid]
+                    for fid in sorted(fids.keys(), reverse=True)]
         self.data_files = [[self._data_file_class(f, self)
                             for f in fl] for fl in my_files]
 
