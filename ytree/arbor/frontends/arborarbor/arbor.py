@@ -80,7 +80,7 @@ class ArborArbor(Arbor):
         treeids = fh["data"]["tree_id"].value.astype(np.int64)
         fh.close()
 
-        roots = np.where(descids == -1)[0]
+        roots = uids[descids == -1]
         ntrees = roots.size
         self._trees = np.empty(ntrees, dtype=np.object)
         for i, root in enumerate(roots):
