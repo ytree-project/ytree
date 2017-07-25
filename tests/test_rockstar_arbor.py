@@ -1,4 +1,4 @@
-import numpy as np
+# import numpy as np
 import os
 from yt.testing import \
     requires_file

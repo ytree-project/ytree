@@ -39,7 +39,7 @@ class FieldInfoContainer(dict):
 
         # Fields with "/" in the name don't play well with hdf5.
         for field in self.arbor.field_list:
-            if not "/" in field:
+            if "/" not in field:
                 continue
             alias = field.replace("/", "_")
             self.arbor.add_alias_field(alias, field)
