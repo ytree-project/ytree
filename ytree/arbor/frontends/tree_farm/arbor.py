@@ -63,8 +63,8 @@ class TreeFarmArbor(CatalogArbor):
 
     def _get_data_files(self):
         prefix = self.filename.rsplit("_", 1)[0] + "_"
+        files = glob.glob("%s*%s" % (prefix, self._suffix))
         suffix = ".0" + self._suffix
-        files = glob.glob("%s*%s" % (prefix, suffix))
         fids = defaultdict(list)
         for my_file in files:
             fid = int(my_file[len(prefix):-len(suffix)])
