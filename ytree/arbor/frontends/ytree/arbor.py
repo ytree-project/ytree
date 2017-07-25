@@ -83,7 +83,7 @@ class YTreeArbor(Arbor):
     def _plant_trees(self):
         fh = h5py.File(self.filename, "r")
         ntrees   = fh.attrs["total_trees"]
-        uids     = fh["data"]["id"].value.astype(np.int64)
+        uids     = fh["data"]["uid"].value.astype(np.int64)
         self._si = fh["index"]["tree_start_index"].value
         self._ei = fh["index"]["tree_end_index"].value
         fh.close()

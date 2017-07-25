@@ -129,15 +129,15 @@ class Arbor(object):
             return
 
         idtype      = np.int64
-        grow_fields = ["id", "desc_id"]
-        dtypes      = {"id": idtype, "desc_id": idtype}
-        field_data  = self._node_io._read_fields(tree_node, grow_fields,
+        fields, _ = \
+          self.field_info.resolve_field_dependencies(["uid", "desc_uid"])
+        halo_id_f, desc_id_f = fields
+        dtypes      = {halo_id_f: idtype, desc_id_f: idtype}
+        field_data  = self._node_io._read_fields(tree_node, fields,
                                                  dtypes=dtypes, **kwargs)
-        uids    = field_data["id"]
-        descids = field_data["desc_id"]
-        tree_node._uids      = uids
-        tree_node._descids   = descids
-        tree_node._tree_size = uids.size
+        tree_node._uids      = field_data[halo_id_f]
+        tree_node._descids   = field_data[desc_id_f]
+        tree_node._tree_size = tree_node._uids.size
 
     def is_grown(self, tree_node):
         return hasattr(tree_node, "treeid")
@@ -720,9 +720,10 @@ class CatalogArbor(Arbor):
         self._get_data_files()
         super(CatalogArbor, self).__init__(filename)
         if "uid" not in self.field_list:
-            self.field_list.append("uid")
-            self.field_info["uid"] = {"units": "",
-                                      "source": "arbor"}
+            for field in "uid", "desc_uid":
+                self.field_list.append(field)
+                self.field_info[field] = {"units": "",
+                                          "source": "arbor"}
 
     def _get_data_files(self):
         raise NotImplementedError
@@ -761,6 +762,7 @@ class CatalogArbor(Arbor):
                         if self.field_info["uid"]["source"] == "arbor":
                             tree_node._root_field_data["uid"] = \
                               tree_node.uid
+                            tree_node._root_field_data["desc_uid"] = -1
                     else:
                         ancs[descid].append(tree_node)
                     uid += 1
@@ -810,6 +812,7 @@ class CatalogArbor(Arbor):
         # the conventional way.
         if self.field_info["uid"]["source"] == "arbor":
             tree_node._tree_field_data["uid"] = tree_node._uids
+            tree_node._tree_field_data["desc_uid"] = tree_node._descids
 
     def _create_nodes(self, tree_node):
         self._setup_tree(tree_node)
