@@ -123,7 +123,7 @@ class TreeFieldIO(FieldIO):
                                    name, units, **kwargs):
         if name in storage_object._tree_field_data:
             return
-        storage_object._setup()
+        storage_object.arbor._setup_tree(storage_object)
         data = np.zeros(storage_object.uids.size)
         if units != "":
             data = self.arbor.arr(data, units)
