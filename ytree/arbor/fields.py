@@ -37,6 +37,13 @@ class FieldInfoContainer(dict):
                     aliasname, fname, units=units,
                     force_add=False)
 
+        # Fields with "/" in the name don't play well with hdf5.
+        for field in self.arbor.field_list:
+            if not "/" in field:
+                continue
+            alias = field.replace("/", "_")
+            self.arbor.add_alias_field(alias, field)
+
     def setup_derived_fields(self):
         def _redshift(data):
             return 1. / data["scale_factor"] - 1.
