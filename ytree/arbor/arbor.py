@@ -719,6 +719,10 @@ class CatalogArbor(Arbor):
         self.filename = filename
         self._get_data_files()
         super(CatalogArbor, self).__init__(filename)
+        if "uid" not in self.field_list:
+            self.field_list.append("uid")
+            self.field_info["uid"] = {"units": "",
+                                      "source": "arbor"}
 
     def _get_data_files(self):
         raise NotImplementedError
@@ -754,6 +758,9 @@ class CatalogArbor(Arbor):
                     batch[it] = tree_node
                     if root:
                         trees.append(tree_node)
+                        if self.field_info["uid"]["source"] == "arbor":
+                            tree_node._root_field_data["uid"] = \
+                              tree_node.uid
                     else:
                         ancs[descid].append(tree_node)
                     uid += 1
@@ -799,6 +806,10 @@ class CatalogArbor(Arbor):
         tree_node._uids      = np.array(uids)
         tree_node._descids   = np.array(descids)
         tree_node._tree_size = tree_node._uids.size
+        # This should bypass any attempt to get this field in
+        # the conventional way.
+        if self.field_info["uid"]["source"] == "arbor":
+            tree_node._tree_field_data["uid"] = tree_node._uids
 
     def _create_nodes(self, tree_node):
         self._setup_tree(tree_node)
