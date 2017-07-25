@@ -16,14 +16,14 @@ import ytree
 CT = os.path.join(test_data_dir,
                   "rockstar_halos/trees/tree_0_0_0.dat")
 
-class CTArborTest(TempDirTest):
+class ConsistentTreesArborTest(TempDirTest):
     @requires_file(CT)
     def test_ct_arbor(self):
         a1 = ytree.load(CT)
         assert isinstance(a1, ConsistentTreesArbor)
         m1 = a1["mass"]
 
-        fn = a1.save_arbor("arbor_ct.h5")
+        fn = a1.save_arbor("arbor_ct")
         a2 = ytree.load(fn)
         assert isinstance(a2, YTreeArbor)
         m2 = a2["mass"]
