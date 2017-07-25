@@ -23,6 +23,7 @@ v_unit = "km/s"
 
 class ConsistentTreesFieldInfo(FieldInfoContainer):
     alias_fields = (
+        ("uid", "id", None),
         ("scale_factor", "scale", None),
         ("mass", "Mvir", m_unit),
         ("virial_mass", "Mvir", m_unit),
