@@ -2,8 +2,6 @@ language: python
 sudo: false
 cache:
   pip: true
-  directories:
-    - $HOME/.ccache  # https://github.com/travis-ci/travis-ci/issues/5853
 
 addons:
   apt:
