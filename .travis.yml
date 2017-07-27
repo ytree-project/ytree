@@ -34,8 +34,6 @@ before_install:
 
 install:
   - |
-    # setup environment
-    ccache -s
     # Upgrade pip and setuptools and wheel to get clean install
     pip install --upgrade pip
     pip install --upgrade wheel
