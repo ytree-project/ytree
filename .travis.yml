@@ -46,7 +46,7 @@ install:
     pip install mock $NUMPY $SCIPY $H5PY $CYTHON $MATPLOTLIB $SYMPY $FASTCACHE $IPYTHON flake8 pytest
     # install yt
     git clone https://github.com/yt-project/yt /tmp/yt
-    push /tmp/yt
+    pushd /tmp/yt
     pip install -e .
     popd
     # install ytree
