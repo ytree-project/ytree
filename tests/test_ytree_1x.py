@@ -16,6 +16,8 @@ tests for backward compatibility with ytree 1.x
 import glob
 import h5py
 import os
+from yt.testing import \
+    requires_file
 from ytree.utilities.testing import \
     assert_array_rel_equal, \
     compare_hdf5, \
@@ -23,6 +25,8 @@ from ytree.utilities.testing import \
     TempDirTest
 
 import ytree
+
+ytree_1x_data = os.path.join(test_data_dir, "ytree_1x")
 
 def generate_results_file(a, fn, fields):
     fh = h5py.File(fn, "w")
@@ -40,6 +44,7 @@ def generate_results_file(a, fn, fields):
     fh.close()
 
 class YTree1xTest(TempDirTest):
+    @requires_file(ytree_1x_data)
     def test_1x_arbors(self):
         results_filenames = \
           glob.glob(os.path.join(test_data_dir,
@@ -62,6 +67,7 @@ class YTree1xTest(TempDirTest):
                          compare=assert_array_rel_equal,
                          decimals=15)
 
+    @requires_file(ytree_1x_data)
     def test_1x_tree_farms(self):
         tree_farm_filenames = \
           glob.glob(os.path.join(test_data_dir,
