@@ -69,8 +69,8 @@ class TreeFarmArbor(CatalogArbor):
         for my_file in files:
             fid = int(my_file[len(prefix):-len(suffix)])
             fids[fid].append(my_file)
-        my_files = [fids[fid]
-                    for fid in sorted(fids.keys(), reverse=True)]
+        my_files = [fids[myfid]
+                    for myfid in sorted(fids.keys(), reverse=True)]
         self.data_files = [[self._data_file_class(f, self)
                             for f in fl] for fl in my_files]
 
