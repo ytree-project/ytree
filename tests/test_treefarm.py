@@ -2,8 +2,6 @@ import numpy as np
 import os
 import yt
 
-from yt.testing import \
-    requires_file
 from ytree.arbor.frontends.ytree import \
     YTreeArbor
 from ytree.arbor.frontends.tree_farm import \
@@ -12,6 +10,7 @@ from ytree.tree_farm import \
     TreeFarm
 from ytree.utilities.testing import \
     compare_arbors, \
+    requires_file, \
     test_data_dir, \
     TempDirTest
 

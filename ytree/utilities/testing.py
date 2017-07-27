@@ -98,3 +98,16 @@ def assert_array_rel_equal(a1, a2, decimals=16, **kwargs):
     Wraps assert_rel_equal with, but decimals is a keyword arg.
     """
     assert_rel_equal(a1, a2, decimals, **kwargs)
+
+def requires_file(req_file):
+
+    def ffalse(func):
+        return None
+
+    def ftrue(func):
+        return func
+
+    if os.path.exists(req_file):
+        return ftrue
+    else:
+        return ffalse

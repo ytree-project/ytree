@@ -16,11 +16,10 @@ tests for backward compatibility with ytree 1.x
 import glob
 import h5py
 import os
-from yt.testing import \
-    requires_file
 from ytree.utilities.testing import \
     assert_array_rel_equal, \
     compare_hdf5, \
+    requires_file, \
     test_data_dir, \
     TempDirTest
 

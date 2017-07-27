@@ -1,7 +1,5 @@
 # import numpy as np
 import os
-from yt.testing import \
-    requires_file
 from ytree.arbor.frontends.rockstar import \
     RockstarArbor
 from ytree.arbor.frontends.rockstar.misc import \
@@ -10,6 +8,7 @@ from ytree.arbor.frontends.ytree import \
     YTreeArbor
 from ytree.utilities.testing import \
     compare_arbors, \
+    requires_file, \
     test_data_dir, \
     TempDirTest
 
