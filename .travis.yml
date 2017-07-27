@@ -24,36 +24,14 @@ env:
 matrix:
   include:
     - python: 2.7
-      env: NUMPY=numpy==1.10.4 CYTHON=cython==0.24 MATPLOTLIB=matplotlib==1.5.3 SYMPY=sympy==1.0 H5PY= SCIPY= FASTCACHE= IPYTHON=ipython==1.0
-    - python: 2.7
-    - python: 3.4
     - python: 3.5
     - python: 3.6
-    - os: osx
-      osx_image: xcode7.3
-      language: generic  # https://github.com/travis-ci/travis-ci/issues/2312
-      cache:
-        pip: false
-        directories:
-          - $HOME/Library/Caches/pip
-          # `cache` does not support `env`-like `global` so copy-paste from top
-          - $HOME/.ccache  # https://github.com/travis-ci/travis-ci/issues/5853
 
 before_install:
   - |
-    if [[ $TRAVIS_OS_NAME != 'osx' ]]; then
-      pip install --upgrade virtualenv
-      python -m virtualenv venv
-      source venv/bin/activate
-      export PATH=/usr/lib/ccache:$PATH
-    else
-      brew update
-      brew install ccache hdf5
-      export PATH=/usr/local/opt/ccache/libexec:$PATH
-    fi
     mkdir -p $HOME/.config/ytree
     echo "[ytree]" > $HOME/.config/ytree/ytreerc
-    echo "test_data_dir = $HOME/ytree_test"
+    echo "test_data_dir = $HOME/ytree_test" >> $HOME/.config/ytree/ytreerc
     cat $HOME/.config/ytree/ytreerc
 
 install:
@@ -67,10 +45,7 @@ install:
     # Install dependencies
     pip install mock $NUMPY $SCIPY $H5PY $CYTHON $MATPLOTLIB $SYMPY $FASTCACHE $IPYTHON flake8 pytest
     # install yt
-    git clone github.com:yt-project/yt $HOME/yt
-    pushd $HOME/yt
-    pip install -e .
-    popd
+    git clone github.com:yt-project/yt /tmp/yt && push /tmp/yt && pip install -e . && popd
     # install ytree
     pip install -e .
 
