@@ -33,7 +33,7 @@ before_install:
     cat $HOME/.config/ytree/ytreerc
     # download test data
     curl -# -O http://www.roe.ac.uk/~brs/data/ytree_test.tar.gz
-    tar xvfz ytree_test.tar.gz
+    tar xfz ytree_test.tar.gz
 
 install:
   - |
