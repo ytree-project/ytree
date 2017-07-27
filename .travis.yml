@@ -32,8 +32,8 @@ before_install:
     echo "test_data_dir = $HOME/ytree_test" >> $HOME/.config/ytree/ytreerc
     cat $HOME/.config/ytree/ytreerc
     # download test data
-    curl -# -O http://www.roe.ac.uk/~brs/data/ytree_test.tar.gz
-    tar xfz ytree_test.tar.gz
+    curl -# -o $HOME/ytree_test.tar.gz http://www.roe.ac.uk/~brs/data/ytree_test.tar.gz
+    tar xfz $HOME/ytree_test.tar.gz -C $HOME
 
 install:
   - |
