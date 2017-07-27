@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/brittonsmith/ytree.svg?branch=master
+   :target: https://travis-ci.org/brittonsmith/ytree
+   :alt: Build Status
 .. image:: https://readthedocs.org/projects/ytree/badge/?version=latest
    :target: http://ytree.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
@@ -18,4 +21,4 @@ merger tree data.  ytree can:
 
 For more information, visit:
 
-http://ytree.readthedocs.org
+http://ytree.readthedocs.io
