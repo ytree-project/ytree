@@ -17,6 +17,8 @@ import h5py
 import json
 import numpy as np
 
+from yt.funcs import \
+    parse_h5_attr
 from yt.units.unit_registry import \
     UnitRegistry
 
@@ -73,13 +75,11 @@ class YTreeArbor(Arbor):
         if "unit_registry_json" in fh.attrs:
             self.unit_registry = \
               UnitRegistry.from_json(
-                  fh.attrs["unit_registry_json"].astype(str))
-        self.box_size = _hdf5_yt_attr(fh, "box_size",
-                                      unit_registry=self.unit_registry)
-        fi_json = fh.attrs["field_info"]
-        if isinstance(fi_json, bytes):
-            fi_json = fi_json.decode("utf")
-        self.field_info.update(json.loads(fi_json))
+                  parse_h5_attr(fh, "unit_registry_json"))
+        self.box_size = _hdf5_yt_attr(
+            fh, "box_size", unit_registry=self.unit_registry)
+        self.field_info.update(
+            json.loads(parse_h5_attr(fh, "field_info")))
         self.field_list = list(self.field_info.keys())
         fh.close()
 

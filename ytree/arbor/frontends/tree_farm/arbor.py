@@ -18,6 +18,8 @@ from collections import \
 import glob
 import h5py
 
+from yt.funcs import \
+    parse_h5_attr
 from yt.units.unit_registry import \
     UnitRegistry
 
@@ -50,7 +52,7 @@ class TreeFarmArbor(CatalogArbor):
             setattr(self, attr, fh.attrs[attr])
 
         my_ur = UnitRegistry.from_json(
-            fh.attrs["unit_registry_json"])
+            parse_h5_attr(fh, "unit_registry_json"))
         right = _hdf5_yt_attr(fh, "domain_right_edge",
                               unit_registry=my_ur)
         left  = _hdf5_yt_attr(fh, "domain_left_edge",
