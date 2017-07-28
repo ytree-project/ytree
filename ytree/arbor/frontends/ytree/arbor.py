@@ -76,7 +76,10 @@ class YTreeArbor(Arbor):
                   fh.attrs["unit_registry_json"].astype(str))
         self.box_size = _hdf5_yt_attr(fh, "box_size",
                                       unit_registry=self.unit_registry)
-        self.field_info.update(json.loads(fh.attrs["field_info"]))
+        fi_json = fh.attrs["field_info"]
+        if isinstance(fi_json, bytes):
+            fi_json = fi_json.decode("utf")
+        self.field_info.update(json.loads(fi_json))
         self.field_list = list(self.field_info.keys())
         fh.close()
 
