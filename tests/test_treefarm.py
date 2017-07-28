@@ -59,8 +59,7 @@ class TreeFarmTest(TempDirTest):
         m2 = a2["mass"]
 
         assert (m1 == m2).all()
-        for gtype in ["tree", "prog"]:
-            compare_arbors(a2, a1, group=gtype)
+        compare_arbors(a2, a1)
 
     @requires_file(TFA)
     def test_tree_farm_arbor_ancestors(self):
@@ -74,8 +73,7 @@ class TreeFarmTest(TempDirTest):
         m2 = a2["mass"]
 
         assert (m1 == m2).all()
-        for gtype in ["tree", "prog"]:
-            compare_arbors(a2, a1, group=gtype)
+        compare_arbors(a2, a1)
 
     @requires_file(FOF20)
     def test_tree_farm_descendents(self):
@@ -97,8 +95,7 @@ class TreeFarmTest(TempDirTest):
         m2 = a2["mass"]
 
         assert (m1 == m2).all()
-        for gtype in ["tree", "prog"]:
-            compare_arbors(a2, a1, group=gtype)
+        compare_arbors(a2, a1)
 
     @requires_file(FOF40)
     def test_tree_farm_ancestors(self):
@@ -129,8 +126,7 @@ class TreeFarmTest(TempDirTest):
         m2 = a2["mass"]
 
         assert (m1 == m2).all()
-        for gtype in ["tree", "prog"]:
-            compare_arbors(a2, a1, group=gtype)
+        compare_arbors(a2, a1)
 
     #     i1 = np.argsort(m1.d)[::-1][0]
     #     fn = a1[i1].save_tree()
