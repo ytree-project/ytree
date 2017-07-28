@@ -28,8 +28,7 @@ class ConsistentTreesArborTest(TempDirTest):
         m2 = a2["mass"]
 
         assert (m1 == m2).all()
-        for gtype in ["tree", "prog"]:
-            compare_arbors(a2, a1, group=gtype)
+        compare_arbors(a2, a1)
 
         # i1 = np.argsort(m1.d)[::-1][0]
         # fn = a1[i1].save_tree()
