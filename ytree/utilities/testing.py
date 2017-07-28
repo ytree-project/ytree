@@ -133,9 +133,9 @@ def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
 
     if compare is None:
         compare = assert_array_equal
-    if isinstance(fh1, str):
+    if not isinstance(fh1, h5py.Group):
         fh1 = h5py.File(fh1, "r")
-    if isinstance(fh2, str):
+    if not isinstance(fh2, h5py.Group):
         fh2 = h5py.File(fh2, "r")
 
     if compare_groups:
