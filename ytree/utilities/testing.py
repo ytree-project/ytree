@@ -49,16 +49,23 @@ class TempDirTest(TestCase):
         os.chdir(self.curdir)
         shutil.rmtree(self.tmpdir)
 
-def compare_arbors(a1, a2, group="tree", fields=None):
+def compare_arbors(a1, a2, groups=None, fields=None):
     """
     Compare all fields for all trees in two arbors.
     """
+
+    if groups is None:
+        groups = ["tree", "prog"]
+
     if fields is None:
         fields = a1.field_list
 
     for t1, t2 in zip(a1, a2):
         for field in fields:
-            assert (t1[group, field] == t2[group, field]).all()
+            for group in groups:
+                assert (t1[group, field] == t2[group, field]).all()
+        t1.clear_fields()
+        t2.clear_fields()
 
 def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
                  **kwargs):
