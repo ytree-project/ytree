@@ -24,6 +24,10 @@ from unittest import \
 from yt.testing import \
     assert_rel_equal
 
+from ytree.arbor.arbor import \
+    load
+from ytree.arbor.frontends.ytree import \
+    YTreeArbor
 from ytree.config import \
     ytreecfg
 
@@ -33,6 +37,19 @@ else:
     test_data_dir = ytreecfg["ytree"].get("test_data_dir", ".")
 generate_results = \
   int(os.environ.get("YTREE_GENERATE_TEST_RESULTS", 0)) == 1
+
+def requires_file(req_file):
+
+    def ffalse(func):
+        return None
+
+    def ftrue(func):
+        return func
+
+    if os.path.exists(req_file):
+        return ftrue
+    else:
+        return ffalse
 
 class TempDirTest(TestCase):
     """
@@ -49,6 +66,37 @@ class TempDirTest(TestCase):
         os.chdir(self.curdir)
         shutil.rmtree(self.tmpdir)
 
+class ArborTest(object):
+    """
+    Do some standard tests on an arbor.
+    """
+
+    arbor_type = None
+    test_filename = None
+
+    _arbor = None
+    @property
+    def arbor(self):
+        if self._arbor is None:
+            if not os.path.exists(self.test_filename):
+                test_filename = \
+                  os.path.join(test_data_dir, self.test_filename)
+                if os.path.exists(test_filename):
+                    self.test_filename = test_filename
+                else:
+                    self.skipTest("test file missing")
+            self._arbor = load(self.test_filename)
+        return self._arbor
+
+    def test_arbor_type(self):
+        assert isinstance(self.arbor, self.arbor_type)
+
+    def test_save_and_reload(self):
+        fn = self.arbor.save_arbor()
+        save_arbor = load(fn)
+        assert isinstance(save_arbor, YTreeArbor)
+        compare_arbors(save_arbor, self.arbor)
+
 def compare_arbors(a1, a2, groups=None, fields=None):
     """
     Compare all fields for all trees in two arbors.
@@ -59,6 +107,9 @@ def compare_arbors(a1, a2, groups=None, fields=None):
 
     if fields is None:
         fields = a1.field_list
+
+    for field in fields:
+        assert (a1[field] == a2[field]).all()
 
     for t1, t2 in zip(a1, a2):
         for field in fields:
@@ -105,16 +156,3 @@ def assert_array_rel_equal(a1, a2, decimals=16, **kwargs):
     Wraps assert_rel_equal with, but decimals is a keyword arg.
     """
     assert_rel_equal(a1, a2, decimals, **kwargs)
-
-def requires_file(req_file):
-
-    def ffalse(func):
-        return None
-
-    def ftrue(func):
-        return func
-
-    if os.path.exists(req_file):
-        return ftrue
-    else:
-        return ffalse
