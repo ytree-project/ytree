@@ -92,10 +92,17 @@ class ArborTest(object):
         assert isinstance(self.arbor, self.arbor_type)
 
     def test_save_and_reload(self):
-        fn = self.arbor.save_arbor()
-        save_arbor = load(fn)
-        assert isinstance(save_arbor, YTreeArbor)
-        compare_arbors(save_arbor, self.arbor)
+        save_and_compare(self.arbor)
+
+def save_and_compare(arbor):
+    """
+    Check that arbor saves correctly.
+    """
+
+    fn = arbor.save_arbor()
+    save_arbor = load(fn)
+    assert isinstance(save_arbor, YTreeArbor)
+    compare_arbors(save_arbor, arbor)
 
 def compare_arbors(a1, a2, groups=None, fields=None):
     """

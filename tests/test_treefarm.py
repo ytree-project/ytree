@@ -2,15 +2,13 @@ import numpy as np
 import os
 import yt
 
-from ytree.arbor.frontends.ytree import \
-    YTreeArbor
 from ytree.arbor.frontends.tree_farm import \
     TreeFarmArbor
 from ytree.tree_farm import \
     TreeFarm
 from ytree.utilities.testing import \
-    compare_arbors, \
     requires_file, \
+    save_and_compare, \
     test_data_dir, \
     TempDirTest
 
@@ -30,14 +28,6 @@ def setup_ds(ds):
                      units="cm", particle_type=True)
 
 
-TFD = os.path.join(
-    test_data_dir,
-    "tree_farm_descendents/fof_subhalo_tab_000.0.h5")
-
-TFA = os.path.join(
-    test_data_dir,
-    "tree_farm_ancestors/fof_subhalo_tab_017.0.h5")
-
 FOF20 = os.path.join(
     test_data_dir,
     "fof_subfind/groups_020/fof_subhalo_tab_020.0.hdf5")
@@ -47,34 +37,6 @@ FOF40 = os.path.join(
     "fof_subfind/groups_040/fof_subhalo_tab_040.0.hdf5")
 
 class TreeFarmTest(TempDirTest):
-    @requires_file(TFD)
-    def test_tree_farm_arbor_descendents(self):
-        a1 = ytree.load(TFD)
-        assert isinstance(a1, TreeFarmArbor)
-        m1 = a1["mass"]
-
-        fn = a1.save_arbor("arbor_tfd")
-        a2 = ytree.load(fn)
-        assert isinstance(a2, YTreeArbor)
-        m2 = a2["mass"]
-
-        assert (m1 == m2).all()
-        compare_arbors(a2, a1)
-
-    @requires_file(TFA)
-    def test_tree_farm_arbor_ancestors(self):
-        a1 = ytree.load(TFA)
-        assert isinstance(a1, TreeFarmArbor)
-        m1 = a1["mass"]
-
-        fn = a1.save_arbor("arbor_tfa")
-        a2 = ytree.load(fn)
-        assert isinstance(a2, YTreeArbor)
-        m2 = a2["mass"]
-
-        assert (m1 == m2).all()
-        compare_arbors(a2, a1)
-
     @requires_file(FOF20)
     def test_tree_farm_descendents(self):
         ts = yt.DatasetSeries(
@@ -85,17 +47,9 @@ class TreeFarmTest(TempDirTest):
             "Group", filename="my_descendents/",
             fields=["virial_radius"])
 
-        a1 = ytree.load("my_descendents/fof_subhalo_tab_020.0.h5")
-        assert isinstance(a1, TreeFarmArbor)
-        m1 = a1["mass"]
-
-        fn = a1.save_arbor("arbor_tfd")
-        a2 = ytree.load(fn)
-        assert isinstance(a2, YTreeArbor)
-        m2 = a2["mass"]
-
-        assert (m1 == m2).all()
-        compare_arbors(a2, a1)
+        a = ytree.load("my_descendents/fof_subhalo_tab_020.0.h5")
+        assert isinstance(a, TreeFarmArbor)
+        save_and_compare(a)
 
     @requires_file(FOF40)
     def test_tree_farm_ancestors(self):
@@ -116,33 +70,6 @@ class TreeFarmTest(TempDirTest):
             fields=["virial_radius"])
 
         tfn = os.path.join("my_ancestors/%s.0.h5" % str(ds))
-        a1 = ytree.load(tfn)
-        assert isinstance(a1, TreeFarmArbor)
-        m1 = a1["mass"]
-
-        fn = a1.save_arbor("arbor_tfd")
-        a2 = ytree.load(fn)
-        assert isinstance(a2, YTreeArbor)
-        m2 = a2["mass"]
-
-        assert (m1 == m2).all()
-        compare_arbors(a2, a1)
-
-    #     i1 = np.argsort(m1.d)[::-1][0]
-    #     fn = a1[i1].save_tree()
-    #     a3 = load(fn)
-    #     assert isinstance(a3, ArborArbor)
-    #     for field in a1.field_list:
-    #         assert (a1[i1]["tree", field] == a3[0]["tree", field]).all()
-
-    #     ds = yt.load(TF25)
-    #     i_max = np.argmax(ds.r["Group", "particle_mass"].d)
-    #     my_ids = ds.r["Group", "particle_identifier"][i_max]
-    #     my_tree.trace_ancestors("Group", my_ids,
-    #                             filename="my_halos/",
-    #                             fields=["virial_radius"])
-    #     a4 = load("my_halos/fof_subhalo_tab_025.0.h5")
-    #     assert isinstance(a4, TreeFarmArbor)
-    #     for field in a4.field_list:
-    #         if field in ["uid", "desc_id"]: continue
-    #         assert (a3[0]["line", field] == a4[0]["line", field]).all()
+        a = ytree.load(tfn)
+        assert isinstance(a, TreeFarmArbor)
+        save_and_compare(a)
