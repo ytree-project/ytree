@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/brittonsmith/ytree.svg?branch=master)](https://travis-ci.org/brittonsmith/ytree)
 [![Documentation Status](https://readthedocs.org/projects/ytree/badge/?version=latest)](http://ytree.readthedocs.io/en/latest/?badge=latest)
 
-This is ytree, a (yt)[https://github.com/yt-project/yt] extension for generating and working with
+This is ytree, a [yt](https://github.com/yt-project/yt) extension for generating and working with
 merger-tree data.  ytree supports:
 
  * loading merger-tree and halo catalog data from Consistent-Trees and Rockstar
