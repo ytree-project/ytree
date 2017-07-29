@@ -1,24 +1,47 @@
-.. image:: https://travis-ci.org/brittonsmith/ytree.svg?branch=master
-   :target: https://travis-ci.org/brittonsmith/ytree
-   :alt: Build Status
-.. image:: https://readthedocs.org/projects/ytree/badge/?version=latest
-   :target: http://ytree.readthedocs.io/en/latest/?badge=latest
-   :alt: Documentation Status
+# ytree
 
-ytree
-===========
+[![Build Status](https://travis-ci.org/brittonsmith/ytree.svg?branch=master)](https://travis-ci.org/brittonsmith/ytree)
+[![Documentation Status](https://readthedocs.org/projects/ytree/badge/?version=latest)](http://ytree.readthedocs.io/en/latest/?badge=latest)
 
-This is ytree, a yt extension for generating and working with
-merger tree data.  ytree can:
+This is ytree, a (yt)[https://github.com/yt-project/yt] extension for generating and working with
+merger-tree data.  ytree supports:
 
-* create merger trees from Gadget's inline FOF/SUBFIND catalogs
+ * loading merger-tree and halo catalog data from Consistent-Trees and Rockstar
 
-* create merger trees from Rockstar halo catalogs
+ * creating merger trees from Gadget's inline FOF/SUBFIND catalogs
 
-* read in consistent-trees merger trees
+ * fast, on-demand loading of trees and fields
 
-* output all merger trees to a universal, reloadable format
+ * symbolic units, derived fields, and alias fields
 
-For more information, visit:
+ * saving trees to a universal format
 
-http://ytree.readthedocs.io
+## Installation
+
+ytree can be installed with pip:
+
+```
+pip install ytree
+```
+
+To get the development version, clone this repository and install like this:
+
+```
+git clone https://github.com/brittonsmith/ytree
+cd ytree
+pip install -e .
+```
+
+## Getting Started
+
+A brief tutorial for getting started can be found [here](http://ytree.readthedocs.io/en/latest/Arbor.html).
+
+## Contributing
+
+The ytree project would love your contribution!  As an extension of [the yt Project](http://yt-project.org/), we follow the yt [guidelines for contributing](https://github.com/yt-project/yt#contributing).
+
+## Resources
+
+ * The latest documentation can be found at http://ytree.readthedocs.io
+
+ * ytree is an extension of [the yt Project](http://yt-project.org/). The [yt-project community resources](https://github.com/yt-project/yt#resources) can be used for ytree-related communication.
