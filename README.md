@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/brittonsmith/ytree.svg?branch=master)](https://travis-ci.org/brittonsmith/ytree)
 [![Documentation Status](https://readthedocs.org/projects/ytree/badge/?version=latest)](http://ytree.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version](https://badge.fury.io/py/ytree.svg)](https://badge.fury.io/py/ytree)
 
 This is ytree, a [yt](https://github.com/yt-project/yt) extension for generating and working with
 merger-tree data.  ytree supports:
