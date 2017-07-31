@@ -119,11 +119,24 @@ def compare_arbors(a1, a2, groups=None, fields=None):
         assert (a1[field] == a2[field]).all()
 
     for t1, t2 in zip(a1, a2):
-        for field in fields:
-            for group in groups:
-                assert (t1[group, field] == t2[group, field]).all()
-        t1.clear_fields()
-        t2.clear_fields()
+        compare_trees(t1, t2, groups=groups, fields=fields)
+
+def compare_trees(t1, t2, groups=None, fields=None):
+    """
+    Compare all fields between two trees.
+    """
+
+    if groups is None:
+        groups = ["tree", "prog"]
+
+    if fields is None:
+        fields = t1.arbor.field_list
+
+    for field in fields:
+        for group in groups:
+            assert (t1[group, field] == t2[group, field]).all()
+    t1.clear_fields()
+    t2.clear_fields()
 
 def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
                  **kwargs):

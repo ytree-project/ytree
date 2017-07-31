@@ -592,9 +592,25 @@ class Arbor(object):
         """
 
         if trees is None:
+            all_trees = True
             trees = self.trees
+            roots = trees
         else:
-            raise NotImplementedError
+            all_trees = False
+            # assemble unique tree roots for getting fields
+            trees = np.asarray(trees)
+            roots = []
+            root_uids = []
+            for tree in trees:
+                if tree.root == -1:
+                    my_root = tree
+                else:
+                    my_root = tree.root
+                if my_root.uid not in root_uids:
+                    roots.append(my_root)
+                    root_uids.append(my_root.uid)
+            roots = np.array(roots)
+            del root_uids
 
         if fields in [None, "all"]:
             # If a field has an alias, get that instead.
@@ -602,6 +618,9 @@ class Arbor(object):
             for field in self.field_list + self.analysis_field_list:
                 fields.extend(
                     self.field_info[field].get("aliases", [field]))
+        else:
+            fields.extend([f for f in ["uid", "desc_uid"]
+                           if f not in fields])
 
         ds = {}
         for attr in ["hubble_constant",
@@ -613,16 +632,16 @@ class Arbor(object):
                        "arbor_type": "YTreeArbor",
                        "unit_registry_json": self.unit_registry.to_json()}
 
-        self._node_io_loop(self._setup_tree,
+        self._node_io_loop(self._setup_tree, root_nodes=roots,
                            pbar="Setting up trees")
         self._root_io.get_fields(self, fields=fields)
 
         # determine file layout
-        nn = 0
-        nt = 0
+        nn = 0 # node count
+        nt = 0 # tree count
         nnodes = []
         ntrees = []
-        tree_size = np.array([tree.tree_size for tree in self.trees])
+        tree_size = np.array([tree.tree_size for tree in trees])
         for ts in tree_size:
             nn += ts
             nt += 1
@@ -651,11 +670,17 @@ class Arbor(object):
               dict((key, fi[key])
                    for key in ["units", "description"]
                    if key in fi)
-            rdata[fieldname] = self._root_field_data[field]
+            if all_trees:
+                rdata[fieldname] = self._root_field_data[field]
+            else:
+                rdata[fieldname] = self.arr([t[field] for t in trees])
             rtypes[fieldname] = "data"
+        # all saved trees will be roots
+        if not all_trees:
+            rdata["desc_uid"][:] = -1
         extra_attrs["field_info"] = json.dumps(myfi)
         extra_attrs["total_files"] = nfiles
-        extra_attrs["total_trees"] = self.trees.size
+        extra_attrs["total_trees"] = trees.size
         extra_attrs["total_nodes"] = tree_size.sum()
         hdata = {"tree_start_index": tree_start_index,
                  "tree_end_index"  : tree_end_index,
@@ -670,9 +695,10 @@ class Arbor(object):
                         field_types=htypes,
                         extra_attrs=extra_attrs)
 
+        # write data files
         ftypes = dict((f, "data") for f in fieldnames)
         for i in range(nfiles):
-            my_nodes = self.trees[tree_start_index[i]:tree_end_index[i]]
+            my_nodes = trees[tree_start_index[i]:tree_end_index[i]]
             self._node_io_loop(
                 self._node_io.get_fields,
                 pbar="Getting fields [%d/%d]" % (i+1, nfiles),
@@ -686,8 +712,15 @@ class Arbor(object):
             c = 0
             for field, fieldname in zip(fields, fieldnames):
                 for di, node in enumerate(my_nodes):
-                    fdata[fieldname][my_tree_start[di]:my_tree_end[di]] = \
-                      node._tree_field_data[field]
+                    if node.is_root:
+                        ndata = node._tree_field_data[field]
+                    else:
+                        ndata = node["tree", field]
+                        if field == "desc_uid":
+                            # make sure it's a root when loaded
+                            ndata[0] = -1
+                    fdata[fieldname][
+                        my_tree_start[di]:my_tree_end[di]] = ndata
                     c += my_tree_size[di]
                     pbar.update(c)
             pbar.finish()

@@ -17,10 +17,6 @@ import numpy as np
 
 from yt.extern.six import \
     string_types
-from yt.frontends.ytdata.utilities import \
-    save_as_dataset
-from yt.funcs import \
-    get_output_filename
 
 from ytree.arbor.fields import \
     FieldContainer
@@ -106,7 +102,7 @@ class TreeNode(object):
     @property
     def tree_size(self):
         if not self.is_root:
-            return None
+            return self["tree"].size
         if self._tree_size is None:
             self.arbor._setup_tree(self)
         return self._tree_size
@@ -331,9 +327,9 @@ class TreeNode(object):
         Parameters
         ----------
         filename : optional, string
-            Output filename.  Include a trailing "/" to indicate
-            a directory.
-            Default: "arbor_<uid>.h5"
+            Output file keyword.  Main header file will be named
+            <filename>/<filename>.h5.
+            Default: "tree_<uid>".
         fields : optional, list of strings
             The fields to be saved.  If not given, all
             fields will be saved.
@@ -354,30 +350,10 @@ class TreeNode(object):
         >>> a2 = ytree.load(fn)
 
         """
-        raise NotImplementedError
-        keyword = "tree_%d" % self.uid
-        filename = get_output_filename(filename, keyword, ".h5")
-        if fields is None:
-            fields = self.arbor._field_data.keys()
-        ds = {}
-        for attr in ["hubble_constant",
-                     "omega_matter",
-                     "omega_lambda"]:
-            if hasattr(self.arbor, attr):
-                ds[attr] = getattr(self.arbor, attr)
-        extra_attrs = {"box_size": self.arbor.box_size,
-                       "arbor_type": "ArborArbor",
-                       "unit_registry_json":
-                       self.arbor.unit_registry.to_json()}
-        data = {}
-        for field in fields:
-            data[field] = self["tree", field]
 
-        # If this node is not the root of the tree,
-        # it has to become a root in order to reload it.
-        data["tree_id"][:] = self["uid"]
-        data["desc_id"][0] = -1
+        if filename is None:
+            filename = "tree_%d" % self.uid
 
-        save_as_dataset(ds, filename, data,
-                        extra_attrs=extra_attrs)
-        return filename
+        return self.arbor.save_arbor(
+            filename=filename, fields=fields,
+            trees=[self])
