@@ -1,3 +1,19 @@
+"""
+TreeFarm tests
+
+
+
+"""
+
+#-----------------------------------------------------------------------------
+# Copyright (c) 2016-2017, Britton Smith <brittonsmith@gmail.com>
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file COPYING.txt, distributed with this software.
+#-----------------------------------------------------------------------------
+
+from distutils.version import LooseVersion
 import numpy as np
 import os
 import yt
@@ -37,6 +53,12 @@ FOF40 = os.path.join(
     "fof_subfind/groups_040/fof_subhalo_tab_040.0.hdf5")
 
 class TreeFarmTest(TempDirTest):
+
+    def setUp(self):
+        if LooseVersion(yt.__version__) < LooseVersion("3.4"):
+            self.skipTest("need yt development version")
+        super(TreeFarmTest, self).setUp()
+
     @requires_file(FOF20)
     def test_tree_farm_descendents(self):
         ts = yt.DatasetSeries(
