@@ -856,6 +856,9 @@ class CatalogArbor(Arbor):
     def is_grown(self, tree_node):
         return True
 
+global load_warn
+load_warn = True
+
 def load(filename, method=None):
     """
     Load an Arbor, determine the type automatically.
@@ -866,7 +869,7 @@ def load(filename, method=None):
         Input filename.
     method : optional, string
         The type of Arbor to be loaded.  Existing types are:
-        Arbor, ConsistentTrees, Rockstar, TreeFar.  If not
+        ConsistentTrees, Rockstar, TreeFarm, YTree.  If not
         given, the type will be determined based on characteristics
         of the input file.
 
@@ -879,13 +882,13 @@ def load(filename, method=None):
 
     >>> import ytree
     >>> # saved Arbor
-    >>> a = ytree.load("arbor.h5")
+    >>> a = ytree.load("arbor/arbor.h5")
     >>> # consistent-trees output
     >>> a = ytree.load("rockstar_halos/trees/tree_0_0_0.dat")
     >>> # Rockstar catalogs
     >>> a = ytree.load("rockstar_halos/out_0.list")
     >>> # TreeFarm catalogs
-    >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.hdf5.0.h5")
+    >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.h5")
 
     """
     if not os.path.exists(filename):
@@ -909,4 +912,14 @@ def load(filename, method=None):
         if method not in arbor_registry:
             raise IOError("Invalid method: %s.  Available: %s." %
                           (method, arbor_registry.keys()))
+
+    global load_warn
+    if method != "YTree" and load_warn:
+        print(
+            ("Performance will be improved by saving this arbor with " +
+             "\"save_arbor\" and reloading:\n" +
+             "\t>>> a = ytree.load(\"%s\")\n" +
+             "\t>>> fn = a.save_arbor()\n" +
+             "\t>>> a = ytree.load(fn)") % filename)
+        load_warn = False
     return arbor_registry[method](filename)
