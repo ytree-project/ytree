@@ -13,7 +13,7 @@ dependencies:
 - mpmath=0.19=py27_0
 - numpy=1.11.0=py27_1
 - openssl=1.0.2h=0
-- pip=8.1.1=py27_1
+- pip=9.0.1=py27_1
 - pixman=0.32.6=0
 - pycairo=1.10.0=py27_0
 - pyparsing=2.1.1=py27_0
