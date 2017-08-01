@@ -13,6 +13,14 @@ TreeFarm class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from distutils.version import LooseVersion
+import yt
+if LooseVersion(yt.__version__) < LooseVersion("3.4"):
+    raise RuntimeError(
+        ("TreeFarm currently requires the development version of yt.\n" +
+         "Visit http://yt-project.org/#getyt for information on " +
+         "installing yt from source."))
+
 import numpy as np
 import os
 

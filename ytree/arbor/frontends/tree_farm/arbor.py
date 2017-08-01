@@ -18,8 +18,6 @@ from collections import \
 import glob
 import h5py
 
-from yt.funcs import \
-    parse_h5_attr
 from yt.units.unit_registry import \
     UnitRegistry
 
@@ -31,7 +29,8 @@ from ytree.arbor.frontends.tree_farm.io import \
     TreeFarmDataFile, \
     TreeFarmTreeFieldIO
 from ytree.utilities.io import \
-    _hdf5_yt_attr
+    _hdf5_yt_attr, \
+    parse_h5_attr
 
 class TreeFarmArbor(CatalogArbor):
     """

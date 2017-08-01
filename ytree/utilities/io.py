@@ -18,6 +18,19 @@ from yt.units.yt_array import \
     YTArray, \
     YTQuantity
 
+def parse_h5_attr(f, attr):
+    """A Python3-safe function for getting hdf5 attributes.
+
+    If an attribute is supposed to be a string, this will return it as such.
+
+    This was taken from yt.
+    """
+    val = f.attrs.get(attr, None)
+    if isinstance(val, bytes):
+        return val.decode('utf8')
+    else:
+        return val
+
 def _hdf5_yt_attr(fh, attr, unit_registry=None):
     """
     Read an hdf5 attribute.  If there exists another attribute

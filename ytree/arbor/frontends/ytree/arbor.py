@@ -17,8 +17,6 @@ import h5py
 import json
 import numpy as np
 
-from yt.funcs import \
-    parse_h5_attr
 from yt.units.unit_registry import \
     UnitRegistry
 
@@ -30,7 +28,8 @@ from ytree.arbor.frontends.ytree.io import \
 from ytree.arbor.tree_node import \
     TreeNode
 from ytree.utilities.io import \
-    _hdf5_yt_attr
+    _hdf5_yt_attr, \
+    parse_h5_attr
 
 class YTreeArbor(Arbor):
     """

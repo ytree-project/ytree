@@ -856,6 +856,7 @@ class CatalogArbor(Arbor):
     def is_grown(self, tree_node):
         return True
 
+
 global load_warn
 load_warn = True
 
