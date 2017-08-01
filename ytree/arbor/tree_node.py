@@ -173,6 +173,10 @@ class TreeNode(object):
                 raise SyntaxError(
                     "Must be either 1 or 2 arguments.")
             ftype, field = key
+            if ftype == "line":
+                raise SyntaxError(
+                    "\"line\" has been deprecated. " +
+                    "Please use \"prog\" instead.")
             if ftype not in arr_types:
                 raise SyntaxError(
                     "First argument must be one of %s." % str(arr_types))
@@ -189,6 +193,10 @@ class TreeNode(object):
         else:
             if isinstance(key, string_types):
                 # return the progenitor list or tree nodes in a list
+                if key == "line":
+                    raise SyntaxError(
+                        "\"line\" has been deprecated. " +
+                        "Please use \"prog\" instead.")
                 if key in arr_types:
                     self.arbor._setup_tree(self)
                     return getattr(self, "_%s_nodes" % key)
