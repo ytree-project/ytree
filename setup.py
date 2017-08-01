@@ -23,6 +23,11 @@ setup(name="ytree",
           "Programming Language :: Python :: 2.7",
           "Programming Language :: Python :: 3.5",
           "Programming Language :: Python :: 3.6",
-          ],
-      install_requires=['yt', 'h5py', 'numpy', 'configparser'],
-      )
+      ],
+      install_requires=[
+          'configparser',
+          'h5py',
+          'numpy',
+          'yt>=3.3.5',
+      ],
+)
