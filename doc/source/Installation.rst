@@ -9,27 +9,24 @@ have installed yt following the instructions `here
 
 .. code-block:: bash
 
-    pip install ytree
+    $ pip install ytree
 
-If you'd like to install the development version or don't want to use
-pip, the mercurial repository for ytree can be found
-`here <https://bitbucket.org/brittonsmith/ytree>`__.  To clone the
-repositry, just do:
-
-.. code-block:: bash
-
-   hg clone https://bitbucket.org/brittonsmith/ytree
-
-Then, install with one of the following two methods:
+If you'd like to install the development version, the repository can
+be found at `<https://github.com/brittonsmith/ytree>`__.  This can be
+installed by doing:
 
 .. code-block:: bash
 
-   cd ytree
-   python setup.py develop
+   $ git clone https://github.com/brittonsmith/ytree
+   $ cd ytree
+   $ pip install -e .
 
-or
+What version do I have?
+=======================
 
-.. code-block:: bash
+To see what version of ytree you are using, do the following:
 
-   cd ytree
-   pip install -e .
+.. code-block:: python
+
+   import ytree
+   print (ytree.__version__)

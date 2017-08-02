@@ -3,13 +3,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to ytree's documentation!
-=================================
+Welcome to ytree.
+=================
 
-ytree is a merger-tree code based on the `yt <http://yt-project.org/>`_
-analysis toolkit.  ytree can create merger-trees from Gadget FoF/Subfind
-catalogs, either for all halos or for a specific set of halos.  ytree is
-able to load in merger-tree from the following formats:
+ytree is a tool for working with merger-tree data from multiple sources.
+ytree is an extension of the `yt <http://yt-project.org/>`_ analysis toolkit
+and provides a similar interface for merger-tree data that includes universal
+field names, derived fields, and symbolic units.  ytree can create
+merger-trees from Gadget FoF/Subfind catalogs, either for all halos or for a
+specific set of halos.  ytree is able to load in merger-tree from the following
+formats:
 
 - `consistent-trees <https://bitbucket.org/pbehroozi/consistent-trees>`_
 - `Rockstar <https://bitbucket.org/gfcstanford/rockstar>`_ halo catalogs
@@ -17,23 +20,10 @@ able to load in merger-tree from the following formats:
 - merger-trees made with ytree
 
 All formats can be saved with a universal format that can be reloaded
-with ytree.  Individual trees for single halos can also be saved.  Similar
-to yt, fields queried for halos or trees are returned with units.
+with ytree.  Individual trees for single halos can also be saved.
 
-.. include:: Installation.rst
-
-What version do I have?
-=======================
-
-To see what version of ytree you are using, do the following:
-
-.. code-block:: python
-
-   import ytree
-   print (ytree.__version__)
-
-Using ytree
-===========
+Table of Contents
+=================
 
 .. toctree::
    :maxdepth: 2
