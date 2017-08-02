@@ -39,7 +39,8 @@ def clear_id_cache():
 def add_halo_selector(name, function):
     r"""
     Add a HaloSelector to the registry of known selectors, so they
-    can be chosen with `~ytree.tree_farm.TreeFarm.set_selector`.
+    can be chosen with
+    :func:`~ytree.tree_farm.tree_farm.TreeFarm.set_selector`.
 
     Parameters
     ----------

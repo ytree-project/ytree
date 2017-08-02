@@ -23,11 +23,18 @@ from ytree.utilities.exceptions import \
     ArborFieldNotFound
 
 class FieldInfoContainer(dict):
+    """
+    A container for information about fields.
+    """
+
     alias_fields = ()
     def __init__(self, arbor):
         self.arbor = arbor
 
     def setup_aliases(self):
+        """
+        Add aliases defined in the alias_fields tuple for each frontend.
+        """
         for alias in self.alias_fields:
             aliasname, fieldname, units = alias
             if not isinstance(fieldname, tuple):
@@ -45,6 +52,9 @@ class FieldInfoContainer(dict):
             self.arbor.add_alias_field(alias, field)
 
     def setup_derived_fields(self):
+        """
+        Add stock derived fields.
+        """
         def _redshift(data):
             return 1. / data["scale_factor"] - 1.
         self.arbor.add_derived_field(
@@ -84,10 +94,16 @@ class FieldInfoContainer(dict):
         return fields_to_read, fields_to_generate
 
 class FieldContainer(dict):
+    """
+    A container for field data.
+    """
     def __init__(self, arbor):
         self.arbor = arbor
 
 class FakeFieldContainer(defaultdict):
+    """
+    A fake field data container used to calculate dependencies.
+    """
     def __init__(self, arbor, name=None):
         self.arbor = arbor
         self.name = name

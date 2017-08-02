@@ -33,8 +33,9 @@ from ytree.utilities.io import \
 
 class YTreeArbor(Arbor):
     """
-    Class for Arbors created from the :func:`~ytree.arbor.Arbor.save_arbor`
-    or :func:`~ytree.tree_node.TreeNode.save_tree` functions.
+    Class for Arbors created from the
+    :func:`~ytree.arbor.arbor.Arbor.save_arbor`
+    or :func:`~ytree.arbor.tree_node.TreeNode.save_tree` functions.
     """
     _root_field_io_class = YTreeRootFieldIO
     _tree_field_io_class = YTreeTreeFieldIO

@@ -19,6 +19,9 @@ from yt.utilities.operator_registry import \
 ancestry_short_registry = OperatorRegistry()
 
 def add_ancestry_short(name, function):
+    """
+    Add an ancestry short-out function to the registry.
+    """
     ancestry_short_registry[name] = AncestryShort(function)
 
 class AncestryShort(object):

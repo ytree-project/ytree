@@ -23,7 +23,7 @@ tree_node_selector_registry = OperatorRegistry()
 def add_tree_node_selector(name, function):
     r"""
     Add a TreeNodeSelector to the registry of known selectors, so they
-    can be chosen with `~ytree.arbor.Arbor.set_selector`.
+    can be chosen with :func:`~ytree.arbor.arbor.Arbor.set_selector`.
 
     Parameters
     ----------
@@ -31,14 +31,27 @@ def add_tree_node_selector(name, function):
         Name of the selector.
     function : callable
         The associated function.
+
+    Examples
+    --------
+
+    >>> import ytree
+    >>> def max_value(ancestors, field):
+    ...     vals = np.array([a[field] for a in ancestors])
+    ...     return ancestors[np.argmax(vals)]
+    >>> ytree.add_tree_node_selector("max_field_value", max_value)
+    >>> a = ytree.load("tree_0_0_0.dat")
+    >>> a.set_selector("max_field_value", "mass")
+    >>> print (a[0]["prog"])
+
     """
     tree_node_selector_registry[name] = TreeNodeSelector(function)
 
 class TreeNodeSelector(object):
     r"""
-    A TreeNodeSelector is responsible for choosing which one of a
-    halo's ancestors to return for accessing fields from trees with
-    the `~ytree.tree_node.TreeNode._line` function.
+    The TreeNodeSelector is responsible for choosing which one of a
+    halo's ancestors to return when querying the line of main
+    progenitors for a halo.
 
     Required Arguments
     ------------------
@@ -46,6 +59,18 @@ class TreeNodeSelector(object):
         List of TreeNode objects from which to select.
 
     The function should return a single TreeNode.
+
+    Examples
+    --------
+
+    >>> import ytree
+    >>> def max_value(ancestors, field):
+    ...     vals = np.array([a[field] for a in ancestors])
+    ...     return ancestors[np.argmax(vals)]
+    >>> ytree.add_tree_node_selector("max_field_value", max_value)
+    >>> a = ytree.load("tree_0_0_0.dat")
+    >>> a.set_selector("max_field_value", "mass")
+    >>> print (a[0]["prog"])
 
     """
     def __init__(self, function, args=None, kwargs=None):

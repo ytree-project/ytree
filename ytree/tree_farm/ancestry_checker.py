@@ -21,6 +21,9 @@ from yt.utilities.operator_registry import \
 ancestry_checker_registry = OperatorRegistry()
 
 def add_ancestry_checker(name, function):
+    """
+    Add an ancestry checking function to the registry.
+    """
     ancestry_checker_registry[name] = AncestryChecker(function)
 
 class AncestryChecker(object):

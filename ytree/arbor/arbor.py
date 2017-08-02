@@ -75,11 +75,12 @@ class Arbor(object):
     Base class for all Arbor classes.
 
     Loads a merger-tree output file or a series of halo catalogs
-    and create trees, stored in an array in :func:`~ytree.arbor.Arbor.trees`.
+    and create trees, stored in an array in
+    :func:`~ytree.arbor.arbor.Arbor.trees`.
     Arbors can be saved in a universal format with
-    :func:`~ytree.arbor.Arbor.save_arbor`.  Also, provide some convenience
-    functions for creating YTArrays and YTQuantities and a cosmology
-    calculator.
+    :func:`~ytree.arbor.arbor.Arbor.save_arbor`.  Also, provide some
+    convenience functions for creating YTArrays and YTQuantities and
+    a cosmology calculator.
     """
 
     _field_info_class = FieldInfoContainer
@@ -116,6 +117,10 @@ class Arbor(object):
         raise NotImplementedError
 
     def is_setup(self, tree_node):
+        """
+        Return True if arrays of uids and descendent uids have
+        been read in.
+        """
         return tree_node.root != -1 or \
           tree_node._uids is not None
 
@@ -140,6 +145,10 @@ class Arbor(object):
         tree_node._tree_size = tree_node._uids.size
 
     def is_grown(self, tree_node):
+        """
+        Return True if a tree has been fully assembled, i.e.,
+        the hierarchy of ancestor tree nodes has been built.
+        """
         return hasattr(tree_node, "treeid")
 
     def _grow_tree(self, tree_node):
@@ -170,9 +179,6 @@ class Arbor(object):
                 desc.add_ancestor(node)
                 node.descendent = desc
 
-    def _create_nodes(self, tree_node):
-        self._grow_tree(tree_node)
-
     def _node_io_loop(self, func, *args, **kwargs):
         root_nodes = kwargs.pop("root_nodes", None)
         if root_nodes is None:
@@ -192,6 +198,9 @@ class Arbor(object):
     _trees = None
     @property
     def trees(self):
+        """
+        Array containing all trees in the arbor.
+        """
         if self._trees is None:
             self._plant_trees()
         return self._trees
@@ -229,6 +238,9 @@ class Arbor(object):
     _field_info = None
     @property
     def field_info(self):
+        """
+        A dictionary containing information for each available field.
+        """
         if self._field_info is None and \
           self._field_info_class is not None:
             self._field_info = self._field_info_class(self)
@@ -244,6 +256,9 @@ class Arbor(object):
     _unit_registry = None
     @property
     def unit_registry(self):
+        """
+        Unit system registry.
+        """
         return self._unit_registry
 
     @unit_registry.setter
@@ -255,6 +270,9 @@ class Arbor(object):
     _hubble_constant = None
     @property
     def hubble_constant(self):
+        """
+        Value of the Hubble parameter.
+        """
         return self._hubble_constant
 
     @hubble_constant.setter
@@ -268,6 +286,9 @@ class Arbor(object):
     _box_size = None
     @property
     def box_size(self):
+        """
+        The simulation box size.
+        """
         return self._box_size
 
     @box_size.setter
@@ -554,7 +575,7 @@ class Arbor(object):
     def _is_valid(cls, *args, **kwargs):
         """
         Check if input file works with a specific Arbor class.
-        This is used with :func:`~ytree.arbor.load` function.
+        This is used with :func:`~ytree.arbor.arbor.load` function.
         """
         return False
 
@@ -846,9 +867,6 @@ class CatalogArbor(Arbor):
         if self.field_info["uid"]["source"] == "arbor":
             tree_node._tree_field_data["uid"] = tree_node._uids
             tree_node._tree_field_data["desc_uid"] = tree_node._descids
-
-    def _create_nodes(self, tree_node):
-        self._setup_tree(tree_node)
 
     def _grow_tree(self, tree_node):
         pass

@@ -116,6 +116,9 @@ class FieldIO(object):
                 self._store_fields(storage_object, fdata, **kwargs)
 
 class TreeFieldIO(FieldIO):
+    """
+    IO class for getting fields for a tree.
+    """
 
     _default_dtype = np.float32
 
@@ -197,6 +200,10 @@ class TreeFieldIO(FieldIO):
         return field_data
 
 class RootFieldIO(FieldIO):
+    """
+    IO class for getting fields for the roots of all trees.
+    """
+
     def _determine_field_storage(self, data_object, **kwargs):
         return data_object, data_object._root_field_data
 

@@ -112,7 +112,7 @@ class TreeNode(object):
     def nodes(self):
         if not self.is_root:
             return None
-        self.arbor._create_nodes(self)
+        self.arbor._grow_tree(self)
         return self._nodes
 
     def __setitem__(self, key, value):

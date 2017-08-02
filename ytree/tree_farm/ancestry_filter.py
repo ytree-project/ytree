@@ -21,6 +21,9 @@ from yt.utilities.operator_registry import \
 ancestry_filter_registry = OperatorRegistry()
 
 def add_ancestry_filter(name, function):
+    """
+    Add an ancestry filter function to the registry.
+    """
     ancestry_filter_registry[name] = AncestryFilter(function)
 
 class AncestryFilter(object):
