@@ -211,7 +211,7 @@ For convenience, individual trees can also be saved by calling
 An Important Note on Comoving and Proper Units
 ==============================================
 
-Users of yt are likely familiar with conversion from proper to comoving
+Users of ``yt`` are likely familiar with conversion from proper to comoving
 reference frames by adding "cm" to a unit.  For example, proper "Mpc"
 becomes comoving with "Mpccm".  This conversion relies on all the data
 being associated with a single redshift.  This is not possible here

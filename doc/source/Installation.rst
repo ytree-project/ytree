@@ -4,7 +4,7 @@ Installation
 ============
 
 ytree's main dependency is `yt <http://yt-project.org/>`_.  Once you
-have installed yt following the instructions `here
+have installed ``yt`` following the instructions `here
 <http://yt-project.org/#getyt>`__, ytree can be installed using pip.
 
 .. code-block:: bash

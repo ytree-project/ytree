@@ -3,6 +3,10 @@
 Making Merger-trees from Gadget FoF/Subfind
 ===========================================
 
+.. note:: This feature currently requires the development version
+   of yt. Visit http://yt-project.org/#getyt for information on
+   installing yt from source.
+
 The ytree ``TreeFarm`` can compute merger-trees either for all halos,
 starting at the beginning of the simulation, or for specific halos,
 starting at the final output and moving backward.  These two
@@ -31,8 +35,8 @@ FoF groups or Subhalo for Subfind groups.
 This process will create a new halo catalogs with the additional
 field representing the descendent ID for each halo.  These can
 be loaded using ``yt`` like any other catalogs.  Once complete,
-the final merger-tree can be loaded into a
-:ref:`TreeFarm Arbor <load-treefarm>`.
+the final merger-tree can be
+:ref:`loaded into ytree <load-treefarm>`.
 
 .. _ancestor_search:
 
@@ -70,9 +74,9 @@ are some tips for speeding up the process.
 Running in Parallel
 ^^^^^^^^^^^^^^^^^^^
 
-ytree uses the parallel capabilities of yt to divide up the
+ytree uses the parallel capabilities of ``yt`` to divide up the
 halo ancestor/descendent search over multiple processors.
-In order to do this, yt must be set up to run in parallel.
+In order to do this, ``yt`` must be set up to run in parallel.
 See `here <http://yt-project.org/doc/analyzing/parallel_computation.html#setting-up-parallel-yt>`_
 for instructions.  Once this is done, a call to
 ``yt.enable_parallelism()`` must be added to your script.
