@@ -21,6 +21,8 @@ env:
     SCIPY=scipy
     IPYTHON=ipython
     FASTCACHE=fastcache
+    YT_DIR=$HOME/yt-git
+    YTREE_DATA=$HOME/ytree_test
 
 matrix:
   include:
@@ -32,7 +34,7 @@ before_install:
   - |
     mkdir -p $HOME/.config/ytree
     echo "[ytree]" > $HOME/.config/ytree/ytreerc
-    echo "test_data_dir = $HOME/ytree_test" >> $HOME/.config/ytree/ytreerc
+    echo "test_data_dir = $YTREE_DATA" >> $HOME/.config/ytree/ytreerc
     cat $HOME/.config/ytree/ytreerc
 
 install:
@@ -44,12 +46,13 @@ install:
     # Install dependencies
     pip install mock $NUMPY $SCIPY $H5PY $CYTHON $MATPLOTLIB $SYMPY $FASTCACHE $IPYTHON flake8 pytest girder-client
     # install yt
-    if [ -d $HOME/yt-git/README.md ]; then
+    if [ -d $YT_DIR/README.md ]; then
         git pull
+        git checkout master
     else
-        git clone https://github.com/yt-project/yt $HOME/yt-git
+        git clone --branch=master https://github.com/yt-project/yt $YT_DIR
     fi
-    pushd $HOME/yt-git
+    pushd $YT_DIR
     pip install -e .
     popd
     # install ytree
@@ -58,7 +61,9 @@ install:
 before_script:
   - |
     # download test data
-    .travis_scripts/download_test_data.sh
+    if [ ! -d $YTREE_DATA/rockstar ]; then
+        girder-cli --api-url https://girder.hub.yt/api/v1 download 59835a1ee2a67400016a2cda $YTREE_DATA
+    fi
 
 script:
   - |
