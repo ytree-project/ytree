@@ -25,16 +25,16 @@ from ytree.utilities.testing import \
 
 class ConsistentTreesArborTest(TempDirTest, ArborTest):
     arbor_type = ConsistentTreesArbor
-    test_filename = "rockstar_halos/trees/tree_0_0_0.dat"
+    test_filename = "consistent_trees/tree_0_0_0.dat"
 
 class RockstarArborTest(TempDirTest, ArborTest):
     arbor_type = RockstarArbor
-    test_filename = "rockstar_halos/out_0.list"
+    test_filename = "rockstar/rockstar_halos/out_0.list"
 
 class TreeFarmArborDescendentsTest(TempDirTest, ArborTest):
     arbor_type = TreeFarmArbor
-    test_filename = "tree_farm_descendents/fof_subhalo_tab_000.0.h5"
+    test_filename = "tree_farm/tree_farm_descendents/fof_subhalo_tab_000.0.h5"
 
 class TreeFarmArborAncestorsTest(TempDirTest, ArborTest):
     arbor_type = TreeFarmArbor
-    test_filename = "tree_farm_ancestors/fof_subhalo_tab_017.0.h5"
+    test_filename = "tree_farm/tree_farm_ancestors/fof_subhalo_tab_017.0.h5"

@@ -24,7 +24,7 @@ from ytree.utilities.testing import \
 import ytree
 
 CT = os.path.join(test_data_dir,
-                  "rockstar_halos/trees/tree_0_0_0.dat")
+                  "consistent_trees/tree_0_0_0.dat")
 
 class SaveArborTest(TempDirTest):
     @requires_file(CT)
