@@ -1,6 +1,8 @@
 language: python
 sudo: false
 cache:
+  directories:
+    - $HOME/ytree_test
   pip: true
 
 addons:
@@ -51,7 +53,9 @@ install:
 before_script:
   - |
     # download test data
-    girder-cli --api-url https://girder.hub.yt/api/v1 download 59835a1ee2a67400016a2cda $HOME/ytree_test
+    if [ ! -d $HOME/ytree_test ]; then
+        girder-cli --api-url https://girder.hub.yt/api/v1 download 59835a1ee2a67400016a2cda $HOME/ytree_test
+    fi
 
 script:
   - |
