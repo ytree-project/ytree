@@ -35,11 +35,22 @@ pip install -e .
 
 ## Getting Started
 
-A brief tutorial for getting started can be found [here](http://ytree.readthedocs.io/en/latest/Arbor.html).
+Below is a notebook that demonstrates how to use ytree with merger-tree data.  For
+more information, see the full [ytree documenation](http://ytree.readthedocs.io).
+
+ * [Introduction](https://github.com/brittonsmith/ytree/blob/master/doc/source/notebooks/Intro_to_ytree.ipynb)
+
+## Sample Data
+
+Sampled data for all merger-tree formats supported by ytree is available on the
+[yt Hub](https://girder.hub.yt/) in the
+[ytree data](https://girder.hub.yt/#collection/59835a1ee2a67400016a2cda) collection.
 
 ## Contributing
 
-The ytree project would love your contribution!  As an extension of [the yt Project](http://yt-project.org/), we follow the yt [guidelines for contributing](https://github.com/yt-project/yt#contributing).
+ytree would be much better with your contribution!  As an extension of
+[the yt Project](http://yt-project.org/), we follow the yt
+[guidelines for contributing](https://github.com/yt-project/yt#contributing).
 
 ## Resources
 
