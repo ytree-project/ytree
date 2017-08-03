@@ -3,6 +3,7 @@ sudo: false
 cache:
   directories:
     - $HOME/ytree_test
+    - $HOME/yt-git
   pip: true
 
 addons:
@@ -43,8 +44,12 @@ install:
     # Install dependencies
     pip install mock $NUMPY $SCIPY $H5PY $CYTHON $MATPLOTLIB $SYMPY $FASTCACHE $IPYTHON flake8 pytest girder-client
     # install yt
-    git clone https://github.com/yt-project/yt /tmp/yt
-    pushd /tmp/yt
+    if [ -d $HOME/yt-git/README.md ]; then
+        git pull
+    else
+        git clone https://github.com/yt-project/yt $HOME/yt-git
+    fi
+    pushd $HOME/yt-git
     pip install -e .
     popd
     # install ytree
