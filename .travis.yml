@@ -31,9 +31,6 @@ before_install:
     echo "[ytree]" > $HOME/.config/ytree/ytreerc
     echo "test_data_dir = $HOME/ytree_test" >> $HOME/.config/ytree/ytreerc
     cat $HOME/.config/ytree/ytreerc
-    # download test data
-    curl -# -o $HOME/ytree_test.tar.gz http://www.roe.ac.uk/~brs/data/ytree_test.tar.gz
-    tar xfz $HOME/ytree_test.tar.gz -C $HOME
 
 install:
   - |
@@ -42,7 +39,7 @@ install:
     pip install --upgrade wheel
     pip install --upgrade setuptools
     # Install dependencies
-    pip install mock $NUMPY $SCIPY $H5PY $CYTHON $MATPLOTLIB $SYMPY $FASTCACHE $IPYTHON flake8 pytest
+    pip install mock $NUMPY $SCIPY $H5PY $CYTHON $MATPLOTLIB $SYMPY $FASTCACHE $IPYTHON flake8 pytest girder-client
     # install yt
     git clone https://github.com/yt-project/yt /tmp/yt
     pushd /tmp/yt
@@ -50,6 +47,11 @@ install:
     popd
     # install ytree
     pip install -e .
+
+before_script:
+  - |
+    # download test data
+    girder-cli --api-url https://girder.hub.yt/api/v1 download 59835a1ee2a67400016a2cda $HOME/ytree_test
 
 script:
   - |
