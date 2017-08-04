@@ -43,7 +43,8 @@ Citing ytree
 ============
 
 If you use ytree in your work, please cite it as "ytree, written by
-Britton Smith" with a footnote pointing to http://ytree.readthedocs.io.
+Britton Smith and the yt project" with a footnote pointing to
+http://ytree.readthedocs.io.
 
 Search
 ======

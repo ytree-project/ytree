@@ -3,7 +3,8 @@
 Contributing to ytree
 =====================
 
-ytree is a community project!
+ytree is a community project and it will be better with your
+contribution.
 
 Contributions are welcome in the form of code, documentation, or
 just about anything.  If you'd like to get involved, please do!
