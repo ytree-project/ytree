@@ -15,7 +15,7 @@ format is typically one or a few files with a naming convention like
 .. code-block:: python
 
    import ytree
-   a = ytree.load("tree_0_0_0.dat")
+   a = ytree.load("consistent_trees/tree_0_0_0.dat")
 
 Rockstar Catalogs
 -----------------
@@ -29,7 +29,7 @@ load in this format, simply provide the path to one of these files.
 .. code-block:: python
 
    import ytree
-   a = ytree.load("rockstar_halos/out_0.list")
+   a = ytree.load("rockstar/rockstar_halos/out_0.list")
 
 .. _load-treefarm:
 
@@ -43,7 +43,7 @@ path to one of the catalogs created during the calculation.
 .. code-block:: python
 
    import ytree
-   a = ytree.load("all_halos/fof_subhalo_tab_016.0.h5")
+   a = ytree.load("tree_farm/tree_farm_descendents/fof_subhalo_tab_000.0.h5")
 
 .. _load-ytree:
 

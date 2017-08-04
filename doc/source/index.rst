@@ -24,6 +24,7 @@ Table of Contents
    :maxdepth: 2
 
    Installation.rst
+   Data.rst
    Arbor.rst
    Fields.rst
    TreeFarm.rst

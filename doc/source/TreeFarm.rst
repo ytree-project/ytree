@@ -54,7 +54,7 @@ most massive halo.
    import yt
    import ytree
 
-   ds = yt.load("data/groups_025/fof_subhalo_tab_025.0.hdf5")
+   ds = yt.load("fof_subfind/groups_025/fof_subhalo_tab_025.0.hdf5")
    i_max = np.argmax(ds.r["Group", "particle_mass"])
    my_id = ds.r["particle_identifier"][i_max]
 
