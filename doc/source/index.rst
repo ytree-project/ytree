@@ -30,6 +30,7 @@ Table of Contents
    TreeFarm.rst
    Conduct.rst
    Contributing.rst
+   Developing.rst
    Help.rst
    reference.rst
 
