@@ -46,13 +46,12 @@ install:
     # Install dependencies
     pip install mock $NUMPY $SCIPY $H5PY $CYTHON $MATPLOTLIB $SYMPY $FASTCACHE $IPYTHON flake8 pytest girder-client
     # install yt
-    if [ -d $YT_DIR/README.md ]; then
-        git pull
-        git checkout master
-    else
+    if [ ! -f $YT_DIR/README.md ]; then
         git clone --branch=master https://github.com/yt-project/yt $YT_DIR
     fi
     pushd $YT_DIR
+    git pull
+    git checkout master
     pip install -e .
     popd
     # install ytree
