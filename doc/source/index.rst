@@ -30,15 +30,8 @@ Table of Contents
    TreeFarm.rst
    Conduct.rst
    Contributing.rst
+   Help.rst
    reference.rst
-
-Help
-====
-
-ytree is an extension of `the yt project <http://yt-project.org/>`_.
-The best place to get help is by joining the `yt users list
-<http://lists.spacepope.org/listinfo.cgi/yt-users-spacepope.org>`_.  Feel
-free to post any questions or ideas for development.
 
 Citing ytree
 ============
