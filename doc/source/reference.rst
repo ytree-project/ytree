@@ -67,6 +67,7 @@ Internal Classes
    ~ytree.arbor.io.TreeFieldIO
    ~ytree.arbor.io.RootFieldIO
    ~ytree.arbor.io.FallbackRootFieldIO
+   ~ytree.arbor.io.CatalogDataFile
    ~ytree.arbor.tree_node.TreeNode
    ~ytree.arbor.tree_node_selector.TreeNodeSelector
    ~ytree.arbor.frontends.arborarbor.arbor.ArborArbor
