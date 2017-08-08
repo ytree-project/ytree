@@ -33,9 +33,6 @@ matrix:
 
 before_install:
   - |
-    pip install --upgrade virtualenv
-    python -m virtualenv venv
-    source venv/bin/activate
     export PATH=/usr/lib/ccache:$PATH
     # configure ytree
     mkdir -p $HOME/.config/ytree
