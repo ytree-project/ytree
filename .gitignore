@@ -1,0 +1,7 @@
+__pycache__/
+ytree.egg-info
+syntax: glob
+*~
+*.pyc
+doc/build
+dist
