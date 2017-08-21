@@ -102,14 +102,6 @@ class TreeFarm(object):
 
     """
     def __init__(self, time_series, setup_function=None):
-        from distutils.version import LooseVersion
-        import yt
-        if LooseVersion(yt.__version__) < LooseVersion("3.4"):
-            raise RuntimeError(
-                ("TreeFarm currently requires the development version of yt.\n" +
-                 "Visit http://yt-project.org/#getyt for information on " +
-                 "installing yt from source."))
-
         self.ts = time_series
         self.setup_function = setup_function
 
