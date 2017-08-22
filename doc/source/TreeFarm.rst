@@ -3,10 +3,6 @@
 Making Merger-trees from Gadget FoF/Subfind
 ===========================================
 
-.. note:: This feature currently requires the development version
-   of yt. Visit http://yt-project.org/#getyt for information on
-   installing yt from source.
-
 The ytree ``TreeFarm`` can compute merger-trees either for all halos,
 starting at the beginning of the simulation, or for specific halos,
 starting at the final output and moving backward.  These two
