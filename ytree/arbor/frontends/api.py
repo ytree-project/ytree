@@ -1,12 +1,12 @@
 """
-API for yt.frontends
+API for ytree frontends
 
 
 
 """
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2013, yt Development Team.
+# Copyright (c) 2017, ytree Development Team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -18,6 +18,7 @@ import importlib
 _frontends = [
     "arborarbor",
     "consistent_trees",
+    "lhalotree",
     "rockstar",
     "tree_farm",
     "ytree",
