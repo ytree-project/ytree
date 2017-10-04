@@ -19,6 +19,8 @@ import numpy as np
 from ytree.arbor.io import \
     RootFieldIO, \
     TreeFieldIO
+from ytree.utilities.logger import \
+    ytreeLogger as mylog
 
 class YTreeTreeFieldIO(TreeFieldIO):
     def _read_fields(self, root_node, fields, dtypes=None,
@@ -81,3 +83,18 @@ class YTreeRootFieldIO(RootFieldIO):
         fh.close()
 
         return field_data
+
+    def _initialize_analysis_field(self, storage_object,
+                                   name, units, **kwargs):
+        if name in storage_object._root_field_data:
+            return
+        mylog.warn(
+            ("Accessing analysis field \"%s\" as root field. " +
+             "Any changes made will not be reflected here.") %
+             name)
+        data = [t[name] for t in storage_object]
+        if units == "":
+            data = np.array(data)
+        else:
+            data = self.arbor.arr(data, units)
+        storage_object._root_field_data[name] = data
