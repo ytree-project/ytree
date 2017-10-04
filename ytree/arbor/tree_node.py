@@ -128,6 +128,9 @@ class TreeNode(object):
         data[treeid] = value
 
     def __getitem__(self, key):
+        return self.query(key)
+
+    def query(self, key):
         """
         Return field values for this TreeNode, progenitor list, or tree.
 

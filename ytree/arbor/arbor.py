@@ -151,7 +151,7 @@ class Arbor(object):
         """
         return hasattr(tree_node, "treeid")
 
-    def _grow_tree(self, tree_node):
+    def _grow_tree(self, tree_node, **kwargs):
         """
         Create an array of TreeNodes hanging off the root node
         and assemble the tree structure.
@@ -209,6 +209,9 @@ class Arbor(object):
         return self.basename
 
     def __getitem__(self, key):
+        return self.query(key)
+
+    def query(self, key):
         """
         If given a string, return an array of field values for the
         roots of all trees.
