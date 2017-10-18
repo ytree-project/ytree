@@ -225,11 +225,6 @@ class FallbackRootFieldIO(FieldIO):
         fields_to_get = []
         for field in fields:
             if field not in data_object._root_field_data:
-                if fi[field].get("type") == "analysis":
-                    mylog.warn(
-                        ("Accessing analysis field \"%s\" as root field. " +
-                         "Any changes made will not be reflected here.") %
-                         field)
                 fields_to_get.append(field)
         if not fields_to_get:
             return

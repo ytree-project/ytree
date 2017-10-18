@@ -222,6 +222,8 @@ class Arbor(object):
             if key in ("tree", "prog"):
                 raise SyntaxError("Argument must be a field or integer.")
             self._root_io.get_fields(self, fields=[key])
+            if self.field_info[key].get("type") == "analysis":
+                return self._root_field_data.pop(key)
             return self._root_field_data[key]
         return self.trees[key]
 
