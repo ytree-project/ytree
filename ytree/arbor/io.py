@@ -21,8 +21,6 @@ from yt.funcs import \
 
 from ytree.utilities.exceptions import \
     ArborAnalysisFieldNotGenerated
-from ytree.utilities.logger import \
-    ytreeLogger as mylog
 
 class FieldIO(object):
     """
