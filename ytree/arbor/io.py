@@ -31,7 +31,7 @@ class FieldIO(object):
     """
 
     def __init__(self, arbor):
-        self.arbor = weakref.ref(arbor)
+        self.arbor = weakref.proxy(arbor)
 
     def _initialize_analysis_field(self, storage_object,
                                    name, units, **kwargs):
@@ -258,7 +258,7 @@ class CatalogDataFile(object):
 
     def __init__(self, filename, arbor):
         self.filename = filename
-        self.arbor = weakref.ref(arbor)
+        self.arbor = weakref.proxy(arbor)
         self._parse_header()
 
     def _parse_header(self):

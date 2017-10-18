@@ -13,18 +13,16 @@ ytree exceptions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import weakref
-
 class ArborFieldException(Exception):
     def __init__(self, field, arbor=None):
         self.field = field
-        self.arbor = weakref.ref(arbor)
+        self.arbor = arbor
 
 class ArborFieldDependencyNotFound(Exception):
     def __init__(self, field, dependency, arbor=None):
         self.field = field
         self.dependency = dependency
-        self.arbor = weakref.ref(arbor)
+        self.arbor = arbor
 
     def __str__(self):
         return ("Field dependency not found: \"%s\" "

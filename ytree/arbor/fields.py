@@ -30,7 +30,7 @@ class FieldInfoContainer(dict):
 
     alias_fields = ()
     def __init__(self, arbor):
-        self.arbor = weakref.ref(arbor)
+        self.arbor = weakref.proxy(arbor)
 
     def setup_aliases(self):
         """
@@ -99,14 +99,14 @@ class FieldContainer(dict):
     A container for field data.
     """
     def __init__(self, arbor):
-        self.arbor = weakref.ref(arbor)
+        self.arbor = weakref.proxy(arbor)
 
 class FakeFieldContainer(defaultdict):
     """
     A fake field data container used to calculate dependencies.
     """
     def __init__(self, arbor, name=None):
-        self.arbor = weakref.ref(arbor)
+        self.arbor = weakref.proxy(arbor)
         self.name = name
 
     def __missing__(self, key):

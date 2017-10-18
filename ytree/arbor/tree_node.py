@@ -38,7 +38,7 @@ class TreeNode(object):
         its level in the tree.
         """
         self.uid = uid
-        self.arbor = weakref.ref(arbor)
+        self.arbor = weakref.proxy(arbor)
         if root:
             self.root = -1
             self._root_field_data = FieldContainer(arbor)
