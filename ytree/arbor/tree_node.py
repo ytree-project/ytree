@@ -14,6 +14,7 @@ TreeNode class and member functions
 #-----------------------------------------------------------------------------
 
 import numpy as np
+import weakref
 
 from yt.extern.six import \
     string_types
@@ -37,7 +38,7 @@ class TreeNode(object):
         its level in the tree.
         """
         self.uid = uid
-        self.arbor = arbor
+        self.arbor = weakref.ref(arbor)
         if root:
             self.root = -1
             self._root_field_data = FieldContainer(arbor)

@@ -15,6 +15,7 @@ FieldIO class and member functions
 
 from collections import defaultdict
 import numpy as np
+import weakref
 
 from yt.funcs import \
     just_one
@@ -30,7 +31,7 @@ class FieldIO(object):
     """
 
     def __init__(self, arbor):
-        self.arbor = arbor
+        self.arbor = weakref.ref(arbor)
 
     def _initialize_analysis_field(self, storage_object,
                                    name, units, **kwargs):
@@ -257,7 +258,7 @@ class CatalogDataFile(object):
 
     def __init__(self, filename, arbor):
         self.filename = filename
-        self.arbor = arbor
+        self.arbor = weakref.ref(arbor)
         self._parse_header()
 
     def _parse_header(self):

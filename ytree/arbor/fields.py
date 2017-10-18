@@ -16,6 +16,7 @@ Arbor field-related classes
 from collections import \
     defaultdict
 import numpy as np
+import weakref
 
 from ytree.utilities.exceptions import \
     ArborFieldCircularDependency, \
@@ -29,7 +30,7 @@ class FieldInfoContainer(dict):
 
     alias_fields = ()
     def __init__(self, arbor):
-        self.arbor = arbor
+        self.arbor = weakref.ref(arbor)
 
     def setup_aliases(self):
         """
@@ -98,14 +99,14 @@ class FieldContainer(dict):
     A container for field data.
     """
     def __init__(self, arbor):
-        self.arbor = arbor
+        self.arbor = weakref.ref(arbor)
 
 class FakeFieldContainer(defaultdict):
     """
     A fake field data container used to calculate dependencies.
     """
     def __init__(self, arbor, name=None):
-        self.arbor = arbor
+        self.arbor = weakref.ref(arbor)
         self.name = name
 
     def __missing__(self, key):
