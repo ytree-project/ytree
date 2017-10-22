@@ -26,7 +26,6 @@ from yt.extern.six import \
 from yt.frontends.ytdata.utilities import \
     save_as_dataset
 from yt.funcs import \
-    ensure_dir, \
     get_pbar
 from yt.units.dimensions import \
     length
@@ -42,6 +41,8 @@ from ytree.arbor.fields import \
     FakeFieldContainer, \
     FieldContainer, \
     FieldInfoContainer
+from ytree.arbor.misc import \
+    _determine_output_filename
 from ytree.arbor.io import \
     FallbackRootFieldIO, \
     TreeFieldIO
@@ -594,8 +595,9 @@ class Arbor(object):
         Parameters
         ----------
         filename : optional, string
-            Output file keyword.  Main header file will be named
-            <filename>/<filename>.h5.
+            Output file keyword.  If filename ends in ".h5",
+            the main header file will be just that.  If not,
+            filename will be <filename>/<basename>.h5.
             Default: "arbor".
         fields : optional, list of strings
             The fields to be saved.  If not given, all
@@ -603,7 +605,7 @@ class Arbor(object):
 
         Returns
         -------
-        filename : string
+        header_filename : string
             The filename of the saved arbor.
 
         Examples
@@ -715,8 +717,8 @@ class Arbor(object):
         htypes = dict((f, "index") for f in hdata)
         htypes.update(rtypes)
 
-        ensure_dir(filename)
-        header_filename = os.path.join(filename, "%s.h5" % filename)
+        filename = _determine_output_filename(filename, ".h5")
+        header_filename = "%s.h5" % filename
         save_as_dataset(ds, header_filename, hdata,
                         field_types=htypes,
                         extra_attrs=extra_attrs)
@@ -757,8 +759,7 @@ class Arbor(object):
                       "tree_end_index",
                       "tree_size"]:
                 ftypes[ft] = "index"
-            my_filename = os.path.join(
-                filename, "%s_%04d.h5" % (filename, i))
+            my_filename = "%s_%04d.h5" % (filename, i)
             save_as_dataset({}, my_filename, fdata,
                             field_types=ftypes)
 
