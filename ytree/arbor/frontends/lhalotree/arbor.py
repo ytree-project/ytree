@@ -25,9 +25,9 @@ from ytree.arbor.arbor import \
 from ytree.arbor.tree_node import \
     TreeNode
 
-from ytree.arbor.frontends.consistent_trees.fields import \
+from ytree.arbor.frontends.lhalotree.fields import \
     LHaloTreeFieldInfo
-from ytree.arbor.frontends.consistent_trees.io import \
+from ytree.arbor.frontends.lhalotree.io import \
     LHaloTreeTreeFieldIO
 
 class LHaloTreeArbor(Arbor):
