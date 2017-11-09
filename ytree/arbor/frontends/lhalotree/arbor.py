@@ -29,6 +29,8 @@ from ytree.arbor.frontends.lhalotree.fields import \
     LHaloTreeFieldInfo
 from ytree.arbor.frontends.lhalotree.io import \
     LHaloTreeTreeFieldIO
+from ytree.arbor.frontends.lhalotree.utils import LHaloTreeReader
+
 
 class LHaloTreeArbor(Arbor):
     """
@@ -37,6 +39,19 @@ class LHaloTreeArbor(Arbor):
 
     _field_info_class = LHaloTreeFieldInfo
     _tree_field_io_class = LHaloTreeTreeFieldIO
+
+    def __init__(self, *args, **kwargs):
+        r"""Added reader class to allow fast access of header info."""
+        reader_keys = ['parameter_file',
+                       'header_size', 'nhalos_per_tree', 'read_header_func',
+                       'item_dtype', 'scale_factor_file']
+        reader_kwargs = dict()
+        for k in reader_keys:
+            if k in kwargs:
+                reader_kwargs[k] = kwargs.pop(k)
+        self._lhtreader = LHaloTreeReader(args[0], **reader_kwargs)
+        super(LHaloTreeArbor, self).__init__(*args, **kwargs)
+        kwargs.update(**reader_kwargs)
 
     def _node_io_loop(self, func, *args, **kwargs):
         """
@@ -58,19 +73,42 @@ class LHaloTreeArbor(Arbor):
         - list of fields
         """
 
-        # self.hubble_constant = ...
-        # self.omega_matter = ...
-        # self.omega_lambda = ...
-        # self.box_size = self.quan(value, units)
+        for u in ['mass', 'vel', 'len']:
+            setattr(self, '_lht_units_' + u,
+                    getattr(self._lhtreader, 'units_' + u))
+            # v, s = getattr(self._lhtreader, 'units_' + u).split()
+            # setattr(self, '_lht_units_' + u, self.quan(float(v), s))
+
+        self.hubble_constant = self._lhtreader.hubble_constant
+        self.omega_matter = self._lhtreader.omega_matter
+        self.omega_lambda = self._lhtreader.omega_lambda
+        self.box_size = self.quan(self._lhtreader.box_size, self._lht_units_len)
+        # self.box_size = self._lhtreader.box_size * self._lht_units_len
 
         # a list of all fields on disk
-        fields = []
+        fields = self._lhtreader.fields
         # a dictionary of information for each field
         # this can have specialized information for reading the field
         fi = {}
         # for example:
         # fi["mass"] = {"column": 4, "units": "Msun/h", ...}
-
+        none_keys = ['Descendant', 'FirstProgenitor', 'NextProgenitor',
+                     'FirstHaloInFOFgroup', 'NextHaloInFOFgroup',
+                     'Len', 'Spin', 'MostBoundID',
+                     'SnapNum', 'FileNr', 'SubhaloIndex',
+                     'desc_uid', 'scale_factor']
+        mass_keys = ['M_Mean200', 'Mvir', 'M_TopHat', 'SubHalfMass']
+        dist_keys = ['Pos', 'x', 'y', 'z']
+        velo_keys = ['Vel', 'VelDisp', 'Vmax', 'vx', 'vy', 'vz']
+        for k in none_keys:
+            fi[k] = {'units': ''}
+        for k in mass_keys:
+            fi[k] = {'units': self._lht_units_mass}
+        for k in dist_keys:
+            fi[k] = {'units': self._lht_units_len}
+        for k in velo_keys:
+            fi[k] = {'units': self._lht_units_vel}
+            
         self.field_list = fields
         self.field_info.update(fi)
 
@@ -82,34 +120,26 @@ class LHaloTreeArbor(Arbor):
         """
 
         # open file, count trees
-        # ntrees = ...
-        # self._trees = np.empty(ntrees, dtype=object)
+        ntrees = self._lhtreader.ntrees
+        self._trees = np.empty(ntrees, dtype=object)
 
-        # for i in range(ntrees):
-        #     # get a uid (unique id) from file or assign one
-        #     uid = ...
-        #     my_node = TreeNode(uid, arbor=self, root=True)
-        #     # assign any helpful attributes, such as start
-        #     # index in field arrays, etc.
-        #     self._trees[i] = my_node
+        for i in range(ntrees):
+            # get a uid (unique id) from file or assign one
+            uid = self._lhtreader.get_lhalotree_uid(i)
+            my_node = TreeNode(uid, arbor=self, root=True)
+            # assign any helpful attributes, such as start
+            # index in field arrays, etc.
+            my_node._index_in_lht = i
+            self._trees[i] = my_node
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
         """
-        Here's the ctrees example.
-        File should end in .dat and have a line in the header
-        with the string, "Consistent Trees".
+        Return True if we are able to initialize a reader.
         """
-        fn = args[0]
-        if not fn.endswith(".dat"): return False
-        with open(fn, "r") as f:
-            valid = False
-            while True:
-                line = f.readline()
-                if line is None or not line.startswith("#"):
-                    break
-                if "Consistent Trees" in line:
-                    valid = True
-                    break
-            if not valid: return False
+        try:
+            kwargs['silent'] = True
+            reader = LHaloTreeReader(*args, **kwargs)
+        except BaseException:
+            return False
         return True

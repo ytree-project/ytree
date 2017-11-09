@@ -4,7 +4,7 @@ tests for LHaloTree reader.
 
 """
 
-
+import os
 import numpy as np
 import nose.tools as nt
 from ytree.utilities.testing import \
@@ -12,17 +12,16 @@ from ytree.utilities.testing import \
     test_data_dir
 from ytree.arbor.frontends.lhalotree import utils as lhtutils
 
-MM = '/root/ytree/ytree/trees_063.0'
+MMT = os.path.join(test_data_dir, 'lhalotree', 'trees_063.0')
 
-
-@requires_file(MM)
+@requires_file(MMT)
 def test_read_header_default():
-    header_size, nhalos_per_tree = lhtutils.read_header_default(MM)
+    header_size, nhalos_per_tree = lhtutils.read_header_default(MMT)
 
 
-@requires_file(MM)
+@requires_file(MMT)
 def test_LHaloTreeReader():
-    reader = lhtutils.LHaloTreeReader(MM)
+    reader = lhtutils.LHaloTreeReader(MMT)
     for i in range(reader.ntrees):
         tree = reader.read_single_lhalotree(i)
             

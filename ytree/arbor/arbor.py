@@ -142,6 +142,9 @@ class Arbor(object):
                                                  dtypes=dtypes, **kwargs)
         tree_node._uids      = field_data[halo_id_f]
         tree_node._descids   = field_data[desc_id_f]
+        print(type(tree_node._uids))
+        # tree_node._uids      = np.array(field_data[halo_id_f], dtype=idtype)
+        # tree_node._descids   = np.array(field_data[desc_id_f], dtype=idtype)
         tree_node._tree_size = tree_node._uids.size
 
     def is_grown(self, tree_node):
@@ -878,7 +881,7 @@ class CatalogArbor(Arbor):
 global load_warn
 load_warn = True
 
-def load(filename, method=None):
+def load(filename, method=None, **kwargs):
     """
     Load an Arbor, determine the type automatically.
 
@@ -891,6 +894,9 @@ def load(filename, method=None):
         ConsistentTrees, Rockstar, TreeFarm, YTree.  If not
         given, the type will be determined based on characteristics
         of the input file.
+    **kwargs : optional, dict
+        Additional keyword arguments are passed to _is_valid and
+        the determined type.
 
     Returns
     -------
@@ -908,6 +914,9 @@ def load(filename, method=None):
     >>> a = ytree.load("rockstar_halos/out_0.list")
     >>> # TreeFarm catalogs
     >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.h5")
+    >>> # LHaloTree catalogs
+    >>> a = ytree.load("my_halos/trees_063.0",
+    ...                parameter_file="gadget_sim.param")
 
     """
     if not os.path.exists(filename):
@@ -915,7 +924,7 @@ def load(filename, method=None):
     if method is None:
         candidates = []
         for candidate, c in arbor_registry.items():
-            if c._is_valid(filename):
+            if c._is_valid(filename, **kwargs):
                 candidates.append(candidate)
         if len(candidates) == 0:
             raise IOError("Could not determine arbor type for %s." % filename)
@@ -941,4 +950,4 @@ def load(filename, method=None):
              "\t>>> fn = a.save_arbor()\n" +
              "\t>>> a = ytree.load(fn)") % filename)
         load_warn = False
-    return arbor_registry[method](filename)
+    return arbor_registry[method](filename, **kwargs)
