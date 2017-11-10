@@ -42,9 +42,9 @@ class LHaloTreeArbor(Arbor):
 
     def __init__(self, *args, **kwargs):
         r"""Added reader class to allow fast access of header info."""
-        reader_keys = ['parameter_file',
+        reader_keys = ['parameter_file', 'scale_factor_file',
                        'header_size', 'nhalos_per_tree', 'read_header_func',
-                       'item_dtype', 'scale_factor_file']
+                       'item_dtype']
         reader_kwargs = dict()
         for k in reader_keys:
             if k in kwargs:
@@ -87,6 +87,10 @@ class LHaloTreeArbor(Arbor):
 
         # a list of all fields on disk
         fields = self._lhtreader.fields
+        # remove fields with 2D arrays
+        fields.remove('Pos')
+        fields.remove('Vel')
+        fields.remove('Spin')
         # a dictionary of information for each field
         # this can have specialized information for reading the field
         fi = {}
@@ -94,12 +98,13 @@ class LHaloTreeArbor(Arbor):
         # fi["mass"] = {"column": 4, "units": "Msun/h", ...}
         none_keys = ['Descendant', 'FirstProgenitor', 'NextProgenitor',
                      'FirstHaloInFOFgroup', 'NextHaloInFOFgroup',
-                     'Len', 'Spin', 'MostBoundID',
+                     'Len', 'MostBoundID',
                      'SnapNum', 'FileNr', 'SubhaloIndex',
-                     'desc_uid', 'scale_factor']
+                     'uid', 'desc_uid', 'scale_factor',
+                     'Jx', 'Jy', 'Jz']
         mass_keys = ['M_Mean200', 'Mvir', 'M_TopHat', 'SubHalfMass']
-        dist_keys = ['Pos', 'x', 'y', 'z']
-        velo_keys = ['Vel', 'VelDisp', 'Vmax', 'vx', 'vy', 'vz']
+        dist_keys = ['x', 'y', 'z']
+        velo_keys = ['VelDisp', 'Vmax', 'vx', 'vy', 'vz']
         for k in none_keys:
             fi[k] = {'units': ''}
         for k in mass_keys:

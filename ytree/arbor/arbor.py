@@ -143,9 +143,6 @@ class Arbor(object):
                                                  dtypes=dtypes, **kwargs)
         tree_node._uids      = field_data[halo_id_f]
         tree_node._descids   = field_data[desc_id_f]
-        print(type(tree_node._uids))
-        # tree_node._uids      = np.array(field_data[halo_id_f], dtype=idtype)
-        # tree_node._descids   = np.array(field_data[desc_id_f], dtype=idtype)
         tree_node._tree_size = tree_node._uids.size
 
     def is_grown(self, tree_node):
@@ -172,14 +169,18 @@ class Arbor(object):
             nodes[i] = TreeNode(tree_node.uids[i], arbor=self)
         tree_node._nodes = nodes
 
-        uidmap   = {}
+        # Add tree information to nodes
+        uidmap = {}
         for i, node in enumerate(nodes):
             node.treeid = i
             node.root   = tree_node
-            descid      = tree_node.descids[i]
             uidmap[tree_node.uids[i]] = i
+
+        # Link ancestor/descendents
+        for i, node in enumerate(nodes):
+            descid      = tree_node.descids[i]
             if descid != -1:
-                desc = nodes[uidmap[tree_node.descids[i]]]
+                desc = nodes[uidmap[descid]]
                 desc.add_ancestor(node)
                 node.descendent = desc
 
