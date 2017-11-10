@@ -49,7 +49,6 @@ class LHaloTreeTreeFieldIO(TreeFieldIO):
         field_data = {}
         fi = self.arbor.field_info
         for field in fields:
-            # field_data[field] = data[field]
             # Copy makes array contiguous in memory, but also uses more memory
             dtype = dtypes.get(field, float)
             field_data[field] = \
