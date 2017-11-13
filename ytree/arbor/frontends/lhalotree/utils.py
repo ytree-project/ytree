@@ -201,16 +201,14 @@ class LHaloTreeReader(object):
                 data['SnapNum'][0] + 1, len(self.scale_factors)))
         # Get descendant unique IDs
         desc = data['Descendant']
+        pos_flag = (desc >= 0)
         desc_uid = np.zeros(self.totnhalos, dtype='int64') - 1
-        for t in range(self.ntrees):
-            idx = self.get_total_index(t)
-            uid = self.all_uids[idx]
-            pos_flag = (desc[idx] >= 0)
-            desc_uid[idx][pos_flag] = uid[desc[idx][pos_flag]]
+        desc_abs = self.get_total_index(self._treenum_arr, desc)
+        desc_uid[pos_flag] = self.all_uids[desc_abs[pos_flag]]
         self.all_desc_uids = desc_uid
         # Add fields and set root fields
         data = self.add_computed_fields(-1, data)
-        root_idx = self.get_total_index(np.arange(self.ntrees).astype('int64'), 0)
+        root_idx = self.nhalos_before_tree
         self._root_data = dict()
         for k in self.fields:
             self._root_data[k] = data[k][root_idx]
@@ -738,6 +736,8 @@ class LHaloTreeReader(object):
                 treenum_arr[tidx] = t
                 nhalos[tidx] = self.nhalos_per_tree[t]
             idx = slice(self.totnhalos)
+            # TODO: pass this back?
+            self._treenum_arr = treenum_arr
         # Check that halos are within tree
         for k in halo_fields:
             assert((tree[k][idx] < nhalos).all())
