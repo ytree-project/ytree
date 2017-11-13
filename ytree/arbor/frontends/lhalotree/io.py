@@ -19,6 +19,7 @@ from ytree.arbor.io import \
     TreeFieldIO
 
 class LHaloTreeTreeFieldIO(TreeFieldIO):
+
     def _read_fields(self, root_node, fields, dtypes=None,
                      f=None, root_only=False):
         """
@@ -60,16 +61,17 @@ class LHaloTreeTreeFieldIO(TreeFieldIO):
             data['desc_uid'] = lht.get_halo_desc_uid(
                 root_node._index_in_lht, halonum)
 
-        if not isinstance(data, dict):
-            nhalos = len(data)
+        if isinstance(data, np.ndarray):
+            # nhalos = len(data)
             field_data = {}
             for field in fields:
                 # Copy makes array contiguous in memory, but also uses more memory
                 dtype = dtypes.get(field, float)
-                field_data[field] = data[field].astype(dtype) 
+                field_data[field] = data[field].astype(dtype)
                 # field_data[field] = np.zeros(nhalos, dtype=dtype)
                 # field_data[field][:] = data[field]
         else:
+            assert(isinstance(data, dict))
             # TODO: Is there a reason for a specific data type other than
             # native? If so, the fields need converted here
             # field_data = {}
