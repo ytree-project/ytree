@@ -547,12 +547,7 @@ class LHaloTreeReader(object):
             out = {k: out_ra[k] for k in out_ra.dtype.fields.keys()}
         # Validate
         if validate:
-            if treenum == -1:
-                for t in range(self.ntrees):
-                    idx = self.get_total_index(t)
-                    self.validate_tree(t, out, idx=idx)
-            else:
-                self.validate_tree(treenum, out, halonum=halonum)
+            self.validate_tree(treenum, out, halonum=halonum)
         # Add fields
         if not skip_add_fields:
             out = self.add_computed_fields(treenum, out, halonum=halonum)
