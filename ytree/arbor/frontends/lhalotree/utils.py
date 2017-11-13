@@ -485,42 +485,17 @@ class LHaloTreeReader(object):
         """
         return self.all_desc_uids
 
-    def read_single_root(self, treenum, **kwargs):
-        r"""Read an entry for a single tree root. First check to see if the root
-        was chached.
+    def read_single_tree(self, treenum, halonum=None, fd=None,
+                         skip_add_fields=False, validate=False,
+                         as_recarray=False):
+        r"""Read a single tree from the file.
 
         Args:
-            treenum (int): Index of the tree that data should be returned for.
-                If -1, the data for every root in the file is returned.
-            **kwargs: Additional keyword arguments are passed to
-                read_single_halo in the event that the root data is not cached.
-
-        Returns:
-            np.ndarray, dict: Dictionary or single element structured array with
-                fields for the corresponding halo.
-
-        """
-        root_data = getattr(self, '_root_data', None)
-        if root_data is None:
-            if treenum == -1:
-                self.set_global_properties()
-                root_data = self._root_data
-            else:
-                return self.read_single_halo(treenum, 0, **kwargs)
-        if treenum == -1:
-            return root_data
-        out = dict()
-        for k, v in root_data.items():
-            out[k] = np.array([v[treenum]], dtype=v.dtype)
-        return out
-
-    def read_single_halo(self, treenum, halonum, fd=None, skip_add_fields=False,
-                         validate=False, as_recarray=False):
-        r"""Read a single halo entry from a tree in the file.
-
-        Args:
-            treenum (int): Index of the tree that contains the requested halo.
-            halonum (int): Index of the halo within its tree.
+            treenum (int): Index of the tree that should be returned. If -1,
+                data for every tree in the file will be returned.
+            halonum (int, optional): If provided, this is the index of a 
+                particular halo within the tree that should be returned. If not
+                provided, the entire tree is returned.
             fd (file, optional): Open file identifier. If not provided, the file
                 is opened for the read and then closed.
             skip_add_fields (bool, optional): If True, the calculated fields
@@ -532,8 +507,8 @@ class LHaloTreeReader(object):
                 is a dictionary of arrays. Defaults to False.
 
         Returns:
-            np.ndarray, dict: Dictionary or single element structured array with
-                fields for the corresponding halo.
+            np.ndarray, dict: Dictionary or structured array with fields for
+                each halo in the file/tree/halo.
 
         """
         # Open file as necessary
@@ -578,33 +553,79 @@ class LHaloTreeReader(object):
             out = self.add_computed_fields(treenum, out, halonum=halonum)
         return out
 
+    def read_single_halo(self, treenum, halonum, fd=None, skip_add_fields=False,
+                         validate=False, as_recarray=False):
+        r"""Read a single halo entry from a tree in the file.
+
+        Args:
+            treenum (int): Index of the tree that contains the requested halo.
+            halonum (int): Index of the halo within its tree.
+            **kwargs: Additional keyword arguments are passed to
+                read_single_tree.
+
+        Returns:
+            np.ndarray, dict: Dictionary or single element structured array with
+                fields for the corresponding halo.
+
+        """
+        return self.read_single_tree(treenum, halonum=halonum, **kwargs)
+
+    def read_single_root(self, treenum, **kwargs):
+        r"""Read an entry for a single tree root. First check to see if the root
+        was chached.
+
+        Args:
+            treenum (int): Index of the tree that data should be returned for.
+                If -1, the data for every root in the file is returned.
+            **kwargs: Additional keyword arguments are passed to
+                read_single_tree in the event that the root data is not cached.
+
+        Returns:
+            np.ndarray, dict: Dictionary or single element structured array with
+                fields for the corresponding root.
+
+        """
+        root_data = getattr(self, '_root_data', None)
+        if root_data is None:
+            if treenum == -1:
+                self.set_global_properties()
+                root_data = self._root_data
+            else:
+                return self.read_single_tree(treenum, halonum=0, **kwargs)
+        if treenum == -1:
+            return root_data
+        out = dict()
+        for k, v in root_data.items():
+            out[k] = np.array([v[treenum]], dtype=v.dtype)
+        return out
+
     def read_single_lhalotree(self, treenum, **kwargs):
         r"""Read a single lhalotree from the file.
 
         Args:
             treenum (int): Index of the tree that should be read from the file.
                 (starts at 0)
-            **kwargs: Additional keyword arguments are passed to read_single_halo.
+            **kwargs: Additional keyword arguments are passed to read_single_tree.
 
         Returns:
             dict, np.ndarray: Dictionary or structured array with fields for
                 each halo in the corresponding tree.
 
         """
-        return self.read_single_halo(treenum, None, **kwargs)
+        return self.read_single_tree(treenum, halonum=None, **kwargs)
 
     def read_all_lhalotree(self, **kwargs):
         r"""Read a all lhalotrees from the file.
 
         Args:
-            **kwargs: All keyword arguments are passed to read_single_halo.
+            **kwargs: All keyword arguments are passed to read_single_tree.
 
         Returns:
             dict, np.ndarray: Dictionary or structured array with fields for
                 each halo in the file.
 
         """
-        return self.read_single_halo(-1, None, **kwargs)
+        return self.read_single_tree(-1, halonum=None, **kwargs)
 
     def add_computed_fields(self, treenum, tree, halonum=None):
         r"""Add computed fields to the numpy array.
