@@ -498,7 +498,7 @@ class LHaloTreeReader(object):
         Args:
             treenum (int): Index of the tree that should be returned. If -1,
                 data for every tree in the file will be returned.
-            halonum (int, optional): If provided, this is the index of a 
+            halonum (int, optional): If provided, this is the index of a
                 particular halo within the tree that should be returned. If not
                 provided, the entire tree is returned.
             fd (file, optional): Open file identifier. If not provided, the file
@@ -558,8 +558,7 @@ class LHaloTreeReader(object):
             out = self.add_computed_fields(treenum, out, halonum=halonum)
         return out
 
-    def read_single_halo(self, treenum, halonum, fd=None, skip_add_fields=False,
-                         validate=False, as_recarray=False):
+    def read_single_halo(self, treenum, halonum, **kwargs):
         r"""Read a single halo entry from a tree in the file.
 
         Args:
