@@ -14,6 +14,8 @@ LHaloTreeArbor class and member functions
 #-----------------------------------------------------------------------------
 
 import numpy as np
+import warnings
+import glob
 
 from yt.funcs import \
     get_pbar
@@ -42,28 +44,66 @@ class LHaloTreeArbor(Arbor):
 
     def __init__(self, *args, **kwargs):
         r"""Added reader class to allow fast access of header info."""
-        reader_keys = ['parameter_file', 'scale_factor_file',
+        reader_keys = ['parameters', 'parameter_file',
+                       'scale_factors', 'scale_factor_file',
                        'header_size', 'nhalos_per_tree', 'read_header_func',
                        'item_dtype']
         reader_kwargs = dict()
         for k in reader_keys:
             if k in kwargs:
                 reader_kwargs[k] = kwargs.pop(k)
-        self._lhtreader = LHaloTreeReader(args[0], **reader_kwargs)
+        self._lht0 = LHaloTreeReader(args[0], **reader_kwargs)
         super(LHaloTreeArbor, self).__init__(*args, **kwargs)
         kwargs.update(**reader_kwargs)
+        lht0 = self._lht0
+        pattern = lht0.filepattern
+        files = sorted(glob.glob(pattern))
+        self._lhtfiles = [None for _ in files]
+        self._lhtfiles[lht0.fileindex] = lht0
+        if len(files) > 1:
+            if 'header_size' in reader_kwargs or 'nhalos_per_tree' in reader_kwargs:
+                raise RuntimeError("Cannot use 'header_size' or 'nhalos_per_tree' " +
+                                   "for trees split across multiple files. Use " +
+                                   "'read_header_func' instead.")
+            reader_kwargs['parameters'] = lht0.parameters
+            reader_kwargs['scale_factors'] = lht0.scale_factors
+            reader_kwargs['item_dtype'] = lht0.item_dtype
+            reader_kwargs['silent'] = True
+            for f in files:
+                if f == lht0.filename:
+                    continue
+                ilht = LHaloTreeReader(f, **reader_kwargs)
+                self._lhtfiles[ilht.fileindex] = ilht
+        for f in self._lhtfiles:
+            if f is None:
+                raise RuntimeError("Not all files were read.")
+
+    def _func_update_file(self, node, *args, **kwargs):
+        """Call a file making sure that the correct file is open."""
+        func = kwargs.pop("_func", None)
+        if func is None:
+            raise RuntimeError("No function passed.")
+        fd = self._node_io_fd
+        if fd is None or (node._lht.filename != fd.name):
+            if fd is not None:
+                fd.close()
+            self._node_io_fd = open(node._lht.filename, 'rb')
+        kwargs["f"] = self._node_io_fd
+        return func(node, *args, **kwargs)
 
     def _node_io_loop(self, func, *args, **kwargs):
         """
-        This will get moved to the base class soon.
+        Since LHaloTrees can be split across multiple files, this
+        optimization only works if the nodes are all in the same file.
         It's a small optimization that keeps the file open
-        when doing io for multiple trees.
+        when doing io for multiple trees in the same file.
         """
-        f = open(self.filename, "r")
-        kwargs["f"] = f
+        self._node_io_fd = None
+        kwargs["_func"] = func
         super(LHaloTreeArbor, self)._node_io_loop(
-            func, *args, **kwargs)
-        f.close()
+            self._func_update_file, *args, **kwargs)
+        if self._node_io_fd is not None:
+            self._node_io_fd.close()
 
     def _parse_parameter_file(self):
         """
@@ -75,18 +115,18 @@ class LHaloTreeArbor(Arbor):
 
         for u in ['mass', 'vel', 'len']:
             setattr(self, '_lht_units_' + u,
-                    getattr(self._lhtreader, 'units_' + u))
-            # v, s = getattr(self._lhtreader, 'units_' + u).split()
+                    getattr(self._lht0, 'units_' + u))
+            # v, s = getattr(self._lht0, 'units_' + u).split()
             # setattr(self, '_lht_units_' + u, self.quan(float(v), s))
 
-        self.hubble_constant = self._lhtreader.hubble_constant
-        self.omega_matter = self._lhtreader.omega_matter
-        self.omega_lambda = self._lhtreader.omega_lambda
-        self.box_size = self.quan(self._lhtreader.box_size, self._lht_units_len)
-        # self.box_size = self._lhtreader.box_size * self._lht_units_len
+        self.hubble_constant = self._lht0.hubble_constant
+        self.omega_matter = self._lht0.omega_matter
+        self.omega_lambda = self._lht0.omega_lambda
+        self.box_size = self.quan(self._lht0.box_size, self._lht_units_len)
+        # self.box_size = self._lht0.box_size * self._lht_units_len
 
         # a list of all fields on disk
-        fields = self._lhtreader.fields
+        fields = self._lht0.fields
         # remove fields with 2D arrays
         fields.remove('Pos')
         fields.remove('Vel')
@@ -105,14 +145,18 @@ class LHaloTreeArbor(Arbor):
         mass_keys = ['M_Mean200', 'Mvir', 'M_TopHat', 'SubHalfMass']
         dist_keys = ['x', 'y', 'z']
         velo_keys = ['VelDisp', 'Vmax', 'vx', 'vy', 'vz']
-        for k in none_keys:
-            fi[k] = {'units': ''}
-        for k in mass_keys:
-            fi[k] = {'units': self._lht_units_mass}
-        for k in dist_keys:
-            fi[k] = {'units': self._lht_units_len}
-        for k in velo_keys:
-            fi[k] = {'units': self._lht_units_vel}
+        all_keys = [none_keys, mass_keys, dist_keys, velo_keys]
+        all_units = ['', self._lht_units_mass, self._lht_units_len,
+                     self._lht_units_vel]
+        for keylist, unit in zip(all_keys, all_units):
+            try:
+                self.quan(1, unit)
+                punit = unit
+            except UnitParseError:
+                warnings.warn("Could not parse unit: %s" % unit)
+                punit = ''
+            for k in keylist:
+                fi[k] = {'units': punit}
             
         self.field_list = fields
         self.field_info.update(fi)
@@ -125,17 +169,29 @@ class LHaloTreeArbor(Arbor):
         """
 
         # open file, count trees
-        ntrees = self._lhtreader.ntrees
-        self._trees = np.empty(ntrees, dtype=object)
+        ntrees_tot = 0
+        for lht in self._lhtfiles:
+            ntrees_tot += lht.ntrees
+        self._trees = np.empty(ntrees_tot, dtype=object)
 
-        for i in range(ntrees):
-            # get a uid (unique id) from file or assign one
-            uid = self._lhtreader.get_lhalotree_uid(i)
-            my_node = TreeNode(uid, arbor=self, root=True)
-            # assign any helpful attributes, such as start
-            # index in field arrays, etc.
-            my_node._index_in_lht = i
-            self._trees[i] = my_node
+        pbar = get_pbar("Loading tree roots", ntrees_tot)
+
+        itot = 0
+        for ifile, lht in enumerate(self._lhtfiles):
+            ntrees = lht.ntrees
+            for i in range(ntrees):
+                # get a uid (unique id) from file or assign one
+                uid = lht.get_lhalotree_uid(i)
+                my_node = TreeNode(uid, arbor=self, root=True)
+                # assign any helpful attributes, such as start
+                # index in field arrays, etc.
+                my_node._lht = lht
+                my_node._index_in_lht = i
+                self._trees[itot] = my_node
+                itot += 1
+                pbar.update(itot)
+
+        pbar.finish()
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
@@ -144,7 +200,7 @@ class LHaloTreeArbor(Arbor):
         """
         try:
             kwargs['silent'] = True
-            reader = LHaloTreeReader(*args, **kwargs)
-        except BaseException:
+            LHaloTreeReader(*args, **kwargs)
+        except IOError:
             return False
         return True

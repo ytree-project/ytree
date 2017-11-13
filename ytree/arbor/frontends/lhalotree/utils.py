@@ -5,6 +5,7 @@ LHaloTree utilities
 
 """
 
+import warnings
 import numpy as np
 from numpy.lib.recfunctions import append_fields
 import os
@@ -68,10 +69,14 @@ class LHaloTreeReader(object):
 
     Args:
         filename (str): Full path to file that trees should be read from.
+        parameters (dict, optional): Dictionary of simulation parameters. If not
+            provided, parameters are loaded from parameter_file.
         parameter_file (str, optional): Full path to file that contains
             simulation parameters. If not provided, one with the suffix '.param'
             is searched for in the same directory as the tree file. An IOError
             will be raised if it cannot be found.
+        scale_factors (np.ndarray, optional): 1D array of scale factors for each
+            snapshot. If not provided, they are loaded form scale_factor_file.
         scale_factor_file (str, optional): Full path to the file containing the
             list of scale factors for each snapshot. If not provided, one with
             the suffix '.a_list' is searched for in the same directory as the
@@ -92,6 +97,9 @@ class LHaloTreeReader(object):
 
     Attributes:
         filename (str): Full path to file that trees should be read from.
+        fileindex (int): Index of this file in the full set of trees.
+        filepattern (str): Glob style pattern that can be used to find other
+            files in the full set of trees.
         parameter_file (str): Full path to file that contains simulation
             parameters.
         header_size (int): The size of the file header.
@@ -116,20 +124,33 @@ class LHaloTreeReader(object):
 
     """
 
-    def __init__(self, filename, parameter_file=None, scale_factor_file=None,
+    def __init__(self, filename, parameters=None, parameter_file=None,
+                 scale_factors=None, scale_factor_file=None,
                  header_size=None, nhalos_per_tree=None, read_header_func=None,
                  item_dtype=None, silent=False):
         # Files
         self.filename = self._verify_file(filename)
-        self.parameter_file = self._verify_file(parameter_file, suffix='.param',
-                                                error_tag='Parameter file',
-                                                silent=silent)
-        self._parameters = None
-        self.scale_factor_file = self._verify_file(scale_factor_file,
-                                                   suffix='.a_list',
-                                                   error_tag='Scale factor file',
-                                                   silent=silent)
-        self._scale_factors = None
+        ext = self.filename.split('.')[-1]
+        if ext.isdigit():
+            self.fileindex = int(ext)
+            self.filepattern = os.path.splitext(self.filename)[0] + ".*"
+        else:
+            self.fileindex = 0
+            self.filepattern = self.filename
+        if parameters is not None:
+            self._parameters = parameters
+        else:
+            self.parameter_file = self._verify_file(
+                parameter_file, suffix='.param', error_tag='Parameter file',
+                silent=silent)
+            self._parameters = None
+        if scale_factors is not None:
+            self._scale_factors = scale_factors
+        else:
+            self.scale_factor_file = self._verify_file(
+                scale_factor_file, suffix='.a_list', error_tag='Scale factor file',
+                silent=silent)
+            self._scale_factors = None
         # Header info
         if (header_size is None) or (nhalos_per_tree is None):
             if (read_header_func is None):
@@ -156,9 +177,23 @@ class LHaloTreeReader(object):
                  "with header of %d bytes should be %d bytes total.") \
                  % (file_size, self.totnhalos, item_size,
                     self.header_size, body_size + self.header_size))
-        # Read first halo to get file number
+        # Read first halo to get file number and check first FoF
         out = self.read_single_halo(0, 0, skip_add_fields=True)
-        self.filenum = out[0]['FileNr']
+        self.filenum = out['FileNr'][0]
+        if (out['SnapNum'][0] + 1) != len(self.scale_factors):
+            warnings.warn("First FoF central is in snapshot %d/%d." % (
+                out['SnapNum'][0] + 1, len(self.scale_factors)))
+        # Compute uids and descids for all trees
+        uid = np.int64(self.filenum)
+        self.all_uids = np.bitwise_or(uid << 32,
+                                      np.arange(self.totnhalos, dtype='int64'))
+        desc = self.read_all_lhalotree(as_recarray=True)['Descendant']
+        self.all_desc_uids = np.zeros(self.totnhalos, dtype='int64') - 1
+        for t in range(self.ntrees):
+            idx = self.get_total_index(t)
+            uid = self.all_uids[idx]
+            pos_flag = (desc[idx] >= 0)
+            self.all_desc_uids[idx][pos_flag] = uid[desc[idx][pos_flag]]
 
     def _verify_file(self, filename, suffix=None, error_tag=None, silent=False):
         r"""Verify that the provided file exists. If it is None, and a suffix
@@ -292,6 +327,25 @@ class LHaloTreeReader(object):
             self._scale_factors = np.fromfile(self.scale_factor_file, sep='\n')
         return self._scale_factors
 
+    def get_total_index(self, treenum, halonum=None):
+        r"""Get the slice that selects halos in a single tree.
+
+        Args:
+            treenum (int): Index of the tree to get the slice for.
+            halonum (int, optional): Index of a halo within the tree to
+                get the total index for in the file. Defaults to None and
+                the slice for the entire tree is returned.
+
+        Returns:
+            slice, int: Slice of all halos for this tree.
+
+        """
+        start = np.sum(self.nhalos_per_tree[:treenum])
+        if halonum is None:
+            return slice(start, start + self.nhalos_per_tree[treenum])
+        else:
+            return start + halonum
+
     def get_lhalotree_offset(self, treenum):
         r"""Get the offset in bytes of a tree from the beginning of the file.
 
@@ -338,15 +392,32 @@ class LHaloTreeReader(object):
             int, np.ndarray: Unique ID(s) for the requested halo(s).
 
         """
-        if halonum is None:
-            halonum = np.arange(self.nhalos_per_tree[treenum], dtype='int64')
-        ihalo = np.int64(np.sum(self.nhalos_per_tree[:treenum])) + halonum
-        uid = np.int64(self.filenum)
-        return np.bitwise_or(uid << 32, ihalo)
+        idx = self.get_total_index(treenum, halonum)
+        # if halonum is None:
+        #     halonum = np.arange(self.nhalos_per_tree[treenum], dtype='int64')
+        # ihalo = np.int64(np.sum(self.nhalos_per_tree[:treenum])) + halonum
+        # uid = np.int64(self.filenum)
+        # return np.bitwise_or(uid << 32, ihalo)
+        return self.all_uids[idx]
+
+    def get_halo_desc_uid(self, treenum, halonum=None):
+        r"""Get a unique ID for a certain halo(s) descendant(s) in the tree.
+        
+        Args:
+            treenum (int): Index of the tree that requested halo is in.
+            halonum (int, optional): Index or array of the requested halo(s) in
+               the tree. If not provided, uids for every halo in the tree are
+               returned.
+
+        Returns:
+            int, np.ndarray: Unique ID(s) for the requested halo(s) descendant(s).
+
+        """
+        idx = self.get_total_index(treenum, halonum)
+        return self.all_desc_uids[idx]
 
     def get_lhalotree_uid(self, treenum):
-        r"""Get a unique ID for this tree. Currently, the subhalo ID of the root
-        is used.
+        r"""Get a unique ID for this tree.
         
         Args:
             treenum (int): Index of the tree to get a unique ID for.
@@ -357,7 +428,38 @@ class LHaloTreeReader(object):
         """
         return self.get_halo_uid(treenum, 0)
 
-    def read_single_halo(self, treenum, halonum, fd=None, skip_add_fields=False):
+    def get_lhalotree_desc_uid(self, treenum):
+        r"""Get a unique ID for the descendant of this tree's root.
+        
+        Args:
+            treenum (int): Index of the tree to get a descendent for.
+
+        Returns:
+            int: A unique ID for this tree's root's descendant.
+
+        """
+        return self.get_halo_desc_uid(treenum, 0)
+
+    def get_all_uid(self):
+        r"""Return unique IDs for every halo in the file.
+
+        Returns:
+            np.ndarray: Unique IDs for every halo in the file.
+
+        """
+        return self.all_uids
+
+    def get_all_desc_uid(self):
+        r"""Return unique IDs for every halo's descendant in the file.
+
+        Returns:
+            np.ndarray: Unique IDs for the descendants of every halo in the file.
+
+        """
+        return self.all_desc_uids
+
+    def read_single_halo(self, treenum, halonum, fd=None, skip_add_fields=False,
+                         as_recarray=False):
         r"""Read a single halo entry from a tree in the file.
 
         Args:
@@ -367,21 +469,36 @@ class LHaloTreeReader(object):
                 is opened for the read and then closed.
             skip_add_fields (bool, optional): If True, the calculated fields
                 will not be added or checked for. Defaults to False.
+            as_recarray (bool, optional): If True, the returned data is a
+                structured array with fields for the halo. Otherwise, the data
+                is a dictionary of arrays. Defaults to False.
 
         Returns:
-            np.ndarray: Single element structured array with fields for the
-                corresponding halo.
+            np.ndarray, dict: Dictionary or single element structured array with
+                fields for the corresponding halo.
 
         """
-        offset = self.get_halo_offset(treenum, halonum)
+        # Open file as necessary
         opened = False
-        if fd is None:
-            fd = open(self.filename, 'rb')
+        if (fd is None) or (fd.name != self.filename):
+            if fd is not None:
+                warnings.warn("Passed file handler is not for this file. " +
+                              "Opening a new file.")
+            fd_new = open(self.filename, 'rb')
             opened = True
-        fd.seek(offset, os.SEEK_SET)
-        out = np.fromfile(fd, dtype=self.item_dtype, count=1)
+        else:
+            fd_new = fd
+        # Seek to halo location and read
+        offset = self.get_halo_offset(treenum, halonum)
+        fd_new.seek(offset, os.SEEK_SET)
+        out_ra = np.fromfile(fd_new, dtype=self.item_dtype, count=1)
         if opened:
-            fd.close()
+            fd_new.close()
+        # Convert to dictionary
+        if as_recarray:
+            out = out_ra
+        else:
+            out = {k: out_ra[k] for k in out_ra.dtype.fields.keys()}
         # Validate
         self.validate_halo(out)
         # Add fields
@@ -389,7 +506,7 @@ class LHaloTreeReader(object):
             out = self.add_computed_fields(treenum, out, halonum=halonum)
         return out
 
-    def read_single_lhalotree(self, treenum, fd=None):
+    def read_single_lhalotree(self, treenum, fd=None, as_recarray=False):
         r"""Read a single lhalotree from the file.
 
         Args:
@@ -397,26 +514,80 @@ class LHaloTreeReader(object):
                 (starts at 0)
             fd (file, optional): Open file identifier. If not provided, the file
                 is opened for the read and then closed.
+            as_recarray (bool, optional): If True, the returned data is a
+                structured array with fields for each halo. Otherwise, the data
+                is a dictionary of arrays. Defaults to False.
 
         Returns:
-            np.ndarray: Structured array with fields for each halo in the
-                corresponding tree.
+            dict, np.ndarray: Dictionary or structured array with fields for
+                each halo in the corresponding tree.
 
         """
-        offset = self.get_lhalotree_offset(treenum)
+        # Open file as necessary
         opened = False
-        if fd is None:
-            fd = open(self.filename, 'rb')
+        if (fd is None) or (fd.name != self.filename):
+            if fd is not None:
+                warnings.warn("Passed file handler is not for this file. " +
+                              "Opening a new file.")
+            fd_new = open(self.filename, 'rb')
             opened = True
-        fd.seek(offset, os.SEEK_SET)
-        out = np.fromfile(fd, dtype=self.item_dtype,
-                          count=self.nhalos_per_tree[treenum])
+        else:
+            fd_new = fd
+        # Seek to proper location and read file
+        offset = self.get_lhalotree_offset(treenum)
+        fd_new.seek(offset, os.SEEK_SET)
+        out_ra = np.fromfile(fd_new, dtype=self.item_dtype,
+                             count=self.nhalos_per_tree[treenum])
         if opened:
-            fd.close()
+            fd_new.close()
+        # Convert to dictionary
+        if as_recarray:
+            out = out_ra
+        else:
+            out = {k: out_ra[k] for k in out_ra.dtype.fields.keys()}
         # Validate
         self.validate_tree(treenum, out)
         # Add fields
         out = self.add_computed_fields(treenum, out)
+        return out
+
+    def read_all_lhalotree(self, fd=None, as_recarray=False):
+        r"""Read a all lhalotrees from the file.
+
+        Args:
+            fd (file, optional): Open file identifier. If not provided, the file
+                is opened for the read and then closed.
+            as_recarray (bool, optional): If True, the returned data is a
+                structured array with fields for each halo. Otherwise, the data
+                is a dictionary of arrays. Defaults to False.
+
+        Returns:
+            dict, np.ndarray: Dictionary or structured array with fields for
+                each halo in the file.
+
+        """
+        # Open file as necessary
+        opened = False
+        if (fd is None) or (fd.name != self.filename):
+            if fd is not None:
+                warnings.warn("Passed file handler is not for this file. " +
+                              "Opening a new file.")
+            fd_new = open(self.filename, 'rb')
+            opened = True
+        else:
+            fd_new = fd
+        # Seek to proper location and read file
+        offset = self.get_lhalotree_offset(0)
+        fd_new.seek(offset, os.SEEK_SET)
+        out_ra = np.fromfile(fd_new, dtype=self.item_dtype,
+                             count=np.sum(self.nhalos_per_tree))
+        if opened:
+            fd_new.close()
+        # Convert to dictionary
+        if as_recarray:
+            out = out_ra
+        else:
+            out = {k: out_ra[k] for k in out_ra.dtype.fields.keys()}
         return out
 
     def add_computed_fields(self, treenum, tree, halonum=None):
@@ -433,7 +604,10 @@ class LHaloTreeReader(object):
                 fields.
 
         """
-        nhalos = len(tree)
+        try:
+            nhalos = len(tree['SnapNum'])
+        except AttributeError:
+            nhalos = len(tree)
         if nhalos != self.nhalos_per_tree[treenum]:
             assert(nhalos == 1)
             assert(halonum is not None)
@@ -441,8 +615,8 @@ class LHaloTreeReader(object):
             halonum = None
         # Unique ID for each halo in tree
         all_uids = self.get_halo_uid(treenum)
-        if nhalos == 1:
-            uid = np.array(all_uids[halonum], dtype='i8')
+        if halonum is not None:
+            uid = np.array([all_uids[halonum]], dtype='i8')
         else:
             uid = all_uids
         # Descendant unique ID
@@ -466,7 +640,11 @@ class LHaloTreeReader(object):
         # Add new fields
         new_fields = dict(uid=uid, desc_uid=desc_uid, scale_factor=scale_factor,
                           x=x, y=y, z=z, vx=vx, vy=vy, vz=vz, Jx=Jx, Jy=Jy, Jz=Jz)
-        out = append_fields(tree, new_fields.keys(), new_fields.values())
+        try:
+            out = tree
+            out.update(**new_fields)
+        except AttributeError:
+            out = append_fields(tree, new_fields.keys(), new_fields.values())
         self.validate_fields(out)
         return out
 
@@ -493,17 +671,22 @@ class LHaloTreeReader(object):
         """
         # Check size
         nhalos = self.nhalos_per_tree[treenum]
-        assert(len(tree) == nhalos)
+        try:
+            fields = list(tree.keys())
+        except AttributeError:
+            fields = list(tree.dtype.fields.keys())
+        for k in fields:
+            assert(len(tree[k]) == nhalos)
         # Check fields
-        fields = tree.dtype.fields
         for k in self.raw_fields:
             assert(k in fields)
         # Check that halos are within tree
         for k in halo_fields:
             pos_flag = (tree[k] >= 0)
-            assert((tree[k][pos_flag] <= nhalos).all())
-        # Check FOF all in one snapshot
+            assert((tree[k][pos_flag] < nhalos).all())
+        # Check FOF central exists and all subs in one snapshot
         central = tree['FirstHaloInFOFgroup']
+        assert((central >= 0).all())
         assert((tree['SnapNum'] == tree['SnapNum'][central]).all())
         # Check that progenitors/descendants are back/forward in time
         progen1 = tree['FirstProgenitor']
@@ -536,9 +719,13 @@ class LHaloTreeReader(object):
 
         """
         # Check size
-        assert(len(halo) == 1)
+        try:
+            assert(len(halo[list(halo.keys())[0]]) == 1)
+            fields = list(halo.keys())
+        except AttributeError:
+            assert(len(halo) == 1)
+            fields = list(halo.dtype.fields.keys())
         # Check fields
-        fields = halo.dtype.fields
         for k in self.raw_fields:
             assert(k in fields)
 
@@ -554,6 +741,9 @@ class LHaloTreeReader(object):
 
         """
         # Check fields
-        fields = tree.dtype.fields.keys()
+        try:
+            fields = list(tree.keys())
+        except AttributeError:
+            fields = list(tree.dtype.fields.keys())
         for k in self.fields:
             assert(k in fields)

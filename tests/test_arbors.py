@@ -43,4 +43,4 @@ class TreeFarmArborAncestorsTest(TempDirTest, ArborTest):
 
 class LHaloTreeArborTest(TempDirTest, ArborTest):
     arbor_type = LHaloTreeArbor
-    test_filename = "lhalotree/trees_063.0"
+    test_filename = "lhalotree/trees_single_063.0"
