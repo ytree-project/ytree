@@ -185,7 +185,12 @@ class LHaloTreeReader(object):
         self.set_global_properties()
 
     def set_global_properties(self):
-        r"""Set attributes for all trees by loading all of the halos."""
+        r"""Set attributes for all trees by loading all of the halos.
+
+        .. todo:: For small files, the data could be cached which would
+                  greatly speed up loading.
+
+        """
         # Read all data
         data = self.read_all_lhalotree(skip_add_fields=True, validate=True)
         # Set properties
