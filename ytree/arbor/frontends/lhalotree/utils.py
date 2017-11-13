@@ -679,7 +679,7 @@ class LHaloTreeReader(object):
         self.validate_fields(out)
         return out
 
-    def validate_tree(self, treenum, tree, halonum=None, idx=None):
+    def validate_tree(self, treenum, tree, halonum=None):
         r"""Check that the tree conforms to expectation.
 
         Args:
@@ -688,8 +688,6 @@ class LHaloTreeReader(object):
                 tree.
             halonum (int): Index of halo in tree if this is a single halo.
                 Defaults to None and tree is treated as a complete tree.
-            idx (slice, optional): Index of tree data in individual arrays.
-                Defaults to None and arrays are assumed to only contain one tree.
 
         Raises:
             AssertionError: If the tree does not have the expected number of
@@ -717,10 +715,8 @@ class LHaloTreeReader(object):
             fields = list(tree.keys())
         except AttributeError:
             fields = list(tree.dtype.fields.keys())
-        if idx is None:
-            idx = slice(len(tree[fields[0]]))
         for k in fields:
-            assert(len(tree[k][idx]) == nhalos)
+            assert(len(tree[k]) == nhalos)
         # Check fields
         for k in self.raw_fields:
             assert(k in fields)
@@ -735,42 +731,41 @@ class LHaloTreeReader(object):
                 tidx = self.get_total_index(t)
                 treenum_arr[tidx] = t
                 nhalos[tidx] = self.nhalos_per_tree[t]
-            idx = slice(self.totnhalos)
             # TODO: pass this back?
             self._treenum_arr = treenum_arr
         # Check that halos are within tree
         for k in halo_fields:
-            assert((tree[k][idx] < nhalos).all())
+            assert((tree[k] < nhalos).all())
         # Check FOF central exists and all subs in one snapshot
-        central = tree['FirstHaloInFOFgroup'][idx]
+        central = tree['FirstHaloInFOFgroup']
         assert((central >= 0).all())
         if treenum == -1:
-            central = self.get_total_index(treenum_arr[idx], central)
-        assert((tree['SnapNum'][idx] == tree['SnapNum'][idx][central]).all())
+            central = self.get_total_index(treenum_arr, central)
+        assert((tree['SnapNum'] == tree['SnapNum'][central]).all())
         # Check that progenitors/descendants are back/forward in time
-        descend = tree['Descendant'][idx].astype('i4')
+        descend = tree['Descendant'].astype('i4')
         has_descend = (descend >= 0)
         not_descend = np.logical_not(has_descend)
         # Not strictly True
-        # assert((tree['SnapNum'][idx][not_descend] ==
+        # assert((tree['SnapNum'][not_descend] ==
         #         (len(self.scale_factors) - 1)).all())
         if treenum == -1:
-            descend = self.get_total_index(treenum_arr[idx], descend)
-        assert((tree['SnapNum'][idx][descend[has_descend]] >
-                tree['SnapNum'][idx][has_descend]).all())
+            descend = self.get_total_index(treenum_arr, descend)
+        assert((tree['SnapNum'][descend[has_descend]] >
+                tree['SnapNum'][has_descend]).all())
         # Check progenitors are back in time
         descend[not_descend] = np.where(not_descend)[0]
-        progen1 = tree['FirstProgenitor'][idx]
-        progen2 = tree['NextProgenitor'][idx]
+        progen1 = tree['FirstProgenitor']
+        progen2 = tree['NextProgenitor']
         has_progen1 = (progen1 >= 0)
         has_progen2 = (progen2 >= 0)
         if treenum == -1:
-            progen1 = self.get_total_index(treenum_arr[idx], progen1)
-            progen2 = self.get_total_index(treenum_arr[idx], progen2)
-        assert((tree['SnapNum'][idx][progen1[has_progen1]] <=
-                tree['SnapNum'][idx][descend[has_progen1]]).all())
-        assert((tree['SnapNum'][idx][progen2[has_progen2]] <=
-                tree['SnapNum'][idx][descend[has_progen2]]).all())
+            progen1 = self.get_total_index(treenum_arr, progen1)
+            progen2 = self.get_total_index(treenum_arr, progen2)
+        assert((tree['SnapNum'][progen1[has_progen1]] <=
+                tree['SnapNum'][descend[has_progen1]]).all())
+        assert((tree['SnapNum'][progen2[has_progen2]] <=
+                tree['SnapNum'][descend[has_progen2]]).all())
 
     def validate_fields(self, tree):
         r"""Check that the tree/halo has all of the expected fields.
