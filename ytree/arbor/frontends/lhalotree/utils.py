@@ -726,11 +726,14 @@ class LHaloTreeReader(object):
         # For all trees get list of local nhalos for every halo
         if treenum == -1:
             treenum_arr = np.zeros(self.totnhalos, dtype='int64')
-            nhalos = np.zeros(self.totnhalos, dtype='int64')
+            start = self.nhalos_before_tree
+            stop = start + self.nhalos_per_tree
+            # treenum_arr[start:stop] = np.arange(self.ntrees)
             for t in range(self.ntrees):
-                tidx = self.get_total_index(t)
-                treenum_arr[tidx] = t
-                nhalos[tidx] = self.nhalos_per_tree[t]
+                treenum_arr[start[t]:stop[t]] = t
+                # tidx = self.get_total_index(t)
+                # treenum_arr[tidx] = t
+            nhalos = self.nhalos_per_tree[treenum_arr]
             # TODO: pass this back?
             self._treenum_arr = treenum_arr
         # Check that halos are within tree
