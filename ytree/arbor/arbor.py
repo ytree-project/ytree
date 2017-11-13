@@ -161,7 +161,7 @@ class Arbor(object):
         if self.is_grown(tree_node):
             return
 
-        self._setup_tree(tree_node)
+        self._setup_tree(tree_node, **kwargs)
         nhalos   = tree_node.uids.size
         nodes    = np.empty(nhalos, dtype=np.object)
         nodes[0] = tree_node
