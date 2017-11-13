@@ -12,7 +12,7 @@ from ytree.utilities.testing import \
     test_data_dir
 from ytree.arbor.frontends.lhalotree import utils as lhtutils
 
-MMT = os.path.join(test_data_dir, 'lhalotree', 'trees_063.0')
+MMT = os.path.join(test_data_dir, 'lhalotree', 'trees_063.3')
 
 @requires_file(MMT)
 def test_read_header_default():

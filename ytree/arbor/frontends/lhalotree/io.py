@@ -38,24 +38,48 @@ class LHaloTreeTreeFieldIO(TreeFieldIO):
         """
         if dtypes is None:
             dtypes = {}
-        if root_only:
-            data = root_node.arbor._lhtreader.read_single_halo(
-                root_node._index_in_lht, 0, fd=f)
-        else:
-            data = root_node.arbor._lhtreader.read_single_lhalotree(
-                root_node._index_in_lht, fd=f)
 
-        nhalos = len(data)
-        field_data = {}
-        fi = self.arbor.field_info
+        # Don't read all data if only uid/desc_uid requested
+        lht = root_node._lht
+        data = None
         for field in fields:
-            # Copy makes array contiguous in memory, but also uses more memory
-            dtype = dtypes.get(field, float)
-            field_data[field] = \
-              np.empty(nhalos, dtype=dtype)
-            field_data[field][:] = data[field].astype(dtype)
+            if field not in ['uid', 'desc_uid']:
+                if root_only:
+                    data = lht.read_single_halo(root_node._index_in_lht, 0, fd=f)
+                else:
+                    data = lht.read_single_lhalotree(root_node._index_in_lht, fd=f)
+                break
+        if data is None:
+            data = dict()
+            if root_only:
+                halonum = 0
+            else:
+                halonum = None
+            data['uid'] = lht.get_halo_uid(
+                root_node._index_in_lht, halonum)
+            data['desc_uid'] = lht.get_halo_desc_uid(
+                root_node._index_in_lht, halonum)
+
+        if not isinstance(data, dict):
+            nhalos = len(data)
+            field_data = {}
+            for field in fields:
+                # Copy makes array contiguous in memory, but also uses more memory
+                dtype = dtypes.get(field, float)
+                field_data[field] = data[field].astype(dtype) 
+                # field_data[field] = np.zeros(nhalos, dtype=dtype)
+                # field_data[field][:] = data[field]
+        else:
+            # TODO: Is there a reason for a specific data type other than
+            # native? If so, the fields need converted here
+            # field_data = {}
+            # for field in fields:
+            #     dtype = dtypes.get(field, float)
+            #     field_data[field] = data[field].astype(dtype)
+            field_data = data
 
         # apply field units
+        fi = self.arbor.field_info
         for field in fields:
             units = fi[field].get("units", "")
             if units != "":

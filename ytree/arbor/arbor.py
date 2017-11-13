@@ -171,12 +171,16 @@ class Arbor(object):
 
         # Add tree information to nodes
         uidmap = {}
+        if isinstance(tree_node.uids[0], np.ndarray):
+            print(tree_node.uids[0])
         for i, node in enumerate(nodes):
             node.treeid = i
             node.root   = tree_node
             uidmap[tree_node.uids[i]] = i
 
         # Link ancestor/descendents
+        # Separate loop for trees like lhalotree where descendent
+        # can follow in order
         for i, node in enumerate(nodes):
             descid      = tree_node.descids[i]
             if descid != -1:
