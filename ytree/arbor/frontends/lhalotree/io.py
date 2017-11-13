@@ -46,7 +46,7 @@ class LHaloTreeTreeFieldIO(TreeFieldIO):
         for field in fields:
             if field not in ['uid', 'desc_uid']:
                 if root_only:
-                    data = lht.read_single_halo(root_node._index_in_lht, 0, fd=f)
+                    data = lht.read_single_root(root_node._index_in_lht, fd=f)
                 else:
                     data = lht.read_single_lhalotree(root_node._index_in_lht, fd=f)
                 break

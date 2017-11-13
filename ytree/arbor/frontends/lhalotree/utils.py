@@ -187,7 +187,7 @@ class LHaloTreeReader(object):
     def set_global_properties(self):
         r"""Set attributes for all trees by loading all of the halos."""
         # Read all data
-        data = self.read_all_lhalotree(skip_add_fields=True)
+        data = self.read_all_lhalotree(skip_add_fields=True, validate=True)
         # Set properties
         # File number
         self.filenum = data['FileNr'][0]
@@ -205,10 +205,10 @@ class LHaloTreeReader(object):
         self.all_desc_uids = desc_uid
         # Add fields and set root fields
         data = self.add_computed_fields(-1, data)
-        # root_idx = self.get_total_index(np.arange(self.ntrees, 'int64'), 0)
-        # self._root_fields = dict()
-        # for k in self.fields:
-        #     self._root_fields[k] = all_data[k][root_idx]
+        root_idx = self.get_total_index(np.arange(self.ntrees).astype('int64'), 0)
+        self._root_data = dict()
+        for k in self.fields:
+            self._root_data[k] = data[k][root_idx]
 
     @property
     def all_uids(self):
@@ -367,7 +367,7 @@ class LHaloTreeReader(object):
             slice, int: Slice of all halos for this tree.
 
         """
-        if treenum == -1:
+        if (not isinstance(treenum, np.ndarray)) and (treenum == -1):
             return slice(0, self.totnhalos)
         start = self.nhalos_before_tree[treenum]
         if halonum is None:
@@ -386,6 +386,8 @@ class LHaloTreeReader(object):
                 requested tree.
 
         """
+        if treenum == -1:
+            return self.header_size
         offset = self.header_size + (self.nhalos_before_tree[treenum] *
                                      self.item_dtype.itemsize)
         return offset
@@ -403,7 +405,8 @@ class LHaloTreeReader(object):
 
         """
         offset = self.get_lhalotree_offset(treenum)
-        offset += halonum * self.item_dtype.itemsize
+        if halonum is not None:
+            offset += halonum * self.item_dtype.itemsize
         return offset
 
     def get_halo_uid(self, treenum, halonum=None):
@@ -482,8 +485,37 @@ class LHaloTreeReader(object):
         """
         return self.all_desc_uids
 
+    def read_single_root(self, treenum, **kwargs):
+        r"""Read an entry for a single tree root. First check to see if the root
+        was chached.
+
+        Args:
+            treenum (int): Index of the tree that data should be returned for.
+                If -1, the data for every root in the file is returned.
+            **kwargs: Additional keyword arguments are passed to
+                read_single_halo in the event that the root data is not cached.
+
+        Returns:
+            np.ndarray, dict: Dictionary or single element structured array with
+                fields for the corresponding halo.
+
+        """
+        root_data = getattr(self, '_root_data', None)
+        if root_data is None:
+            if treenum == -1:
+                self.set_global_properties()
+                root_data = self._root_data
+            else:
+                return self.read_single_halo(treenum, 0, **kwargs)
+        if treenum == -1:
+            return root_data
+        out = dict()
+        for k, v in root_data.items():
+            out[k] = np.array([v[treenum]], dtype=v.dtype)
+        return out
+
     def read_single_halo(self, treenum, halonum, fd=None, skip_add_fields=False,
-                         as_recarray=False):
+                         validate=False, as_recarray=False):
         r"""Read a single halo entry from a tree in the file.
 
         Args:
@@ -493,6 +525,8 @@ class LHaloTreeReader(object):
                 is opened for the read and then closed.
             skip_add_fields (bool, optional): If True, the calculated fields
                 will not be added or checked for. Defaults to False.
+            validate (bool, optional): If True, the resulting data will be
+                validated. Defaults to False.
             as_recarray (bool, optional): If True, the returned data is a
                 structured array with fields for the halo. Otherwise, the data
                 is a dictionary of arrays. Defaults to False.
@@ -515,7 +549,15 @@ class LHaloTreeReader(object):
         # Seek to halo location and read
         offset = self.get_halo_offset(treenum, halonum)
         fd_new.seek(offset, os.SEEK_SET)
-        out_ra = np.fromfile(fd_new, dtype=self.item_dtype, count=1)
+        if treenum == -1:
+            nread = self.totnhalos
+            halonum = None
+        else:
+            if halonum is None:
+                nread = self.nhalos_per_tree[treenum]
+            else:
+                nread = 1
+        out_ra = np.fromfile(fd_new, dtype=self.item_dtype, count=nread)
         if opened:
             fd_new.close()
         # Convert to dictionary
@@ -524,105 +566,45 @@ class LHaloTreeReader(object):
         else:
             out = {k: out_ra[k] for k in out_ra.dtype.fields.keys()}
         # Validate
-        # self.validate_halo(out)
+        if validate:
+            if treenum == -1:
+                for t in range(self.ntrees):
+                    idx = self.get_total_index(t)
+                    self.validate_tree(t, out, idx=idx)
+            else:
+                self.validate_tree(treenum, out, halonum=halonum)
         # Add fields
         if not skip_add_fields:
             out = self.add_computed_fields(treenum, out, halonum=halonum)
         return out
 
-    def read_single_lhalotree(self, treenum, fd=None, as_recarray=False):
+    def read_single_lhalotree(self, treenum, **kwargs):
         r"""Read a single lhalotree from the file.
 
         Args:
             treenum (int): Index of the tree that should be read from the file.
                 (starts at 0)
-            fd (file, optional): Open file identifier. If not provided, the file
-                is opened for the read and then closed.
-            as_recarray (bool, optional): If True, the returned data is a
-                structured array with fields for each halo. Otherwise, the data
-                is a dictionary of arrays. Defaults to False.
+            **kwargs: Additional keyword arguments are passed to read_single_halo.
 
         Returns:
             dict, np.ndarray: Dictionary or structured array with fields for
                 each halo in the corresponding tree.
 
         """
-        # Open file as necessary
-        opened = False
-        if (fd is None) or (fd.name != self.filename):
-            if fd is not None:
-                warnings.warn("Passed file handler is not for this file. " +
-                              "Opening a new file.")
-            fd_new = open(self.filename, 'rb')
-            opened = True
-        else:
-            fd_new = fd
-        # Seek to proper location and read file
-        offset = self.get_lhalotree_offset(treenum)
-        fd_new.seek(offset, os.SEEK_SET)
-        out_ra = np.fromfile(fd_new, dtype=self.item_dtype,
-                             count=self.nhalos_per_tree[treenum])
-        if opened:
-            fd_new.close()
-        # Convert to dictionary
-        if as_recarray:
-            out = out_ra
-        else:
-            out = {k: out_ra[k] for k in out_ra.dtype.fields.keys()}
-        # Validate
-        # self.validate_tree(treenum, out)
-        # Add fields
-        out = self.add_computed_fields(treenum, out)
-        return out
+        return self.read_single_halo(treenum, None, **kwargs)
 
-    def read_all_lhalotree(self, fd=None, as_recarray=False,
-                           skip_add_fields=False):
+    def read_all_lhalotree(self, **kwargs):
         r"""Read a all lhalotrees from the file.
 
         Args:
-            fd (file, optional): Open file identifier. If not provided, the file
-                is opened for the read and then closed.
-            as_recarray (bool, optional): If True, the returned data is a
-                structured array with fields for each halo. Otherwise, the data
-                is a dictionary of arrays. Defaults to False.
-            skip_add_fields (bool, optional): If True, the calculated fields
-                will not be added or checked for. Defaults to False.
+            **kwargs: All keyword arguments are passed to read_single_halo.
 
         Returns:
             dict, np.ndarray: Dictionary or structured array with fields for
                 each halo in the file.
 
         """
-        # Open file as necessary
-        opened = False
-        if (fd is None) or (fd.name != self.filename):
-            if fd is not None:
-                warnings.warn("Passed file handler is not for this file. " +
-                              "Opening a new file.")
-            fd_new = open(self.filename, 'rb')
-            opened = True
-        else:
-            fd_new = fd
-        # Seek to proper location and read file
-        offset = self.get_lhalotree_offset(0)
-        fd_new.seek(offset, os.SEEK_SET)
-        out_ra = np.fromfile(fd_new, dtype=self.item_dtype,
-                             count=self.totnhalos)
-        if opened:
-            fd_new.close()
-        # Convert to dictionary
-        if as_recarray:
-            out = out_ra
-        else:
-            out = {k: out_ra[k] for k in out_ra.dtype.fields.keys()}
-        # Validate
-        for t in range(self.ntrees):
-            idx = self.get_total_index(t)
-            self.validate_tree(t, out, idx=idx)
-        # Add fields
-        if not skip_add_fields:
-            out = self.add_computed_fields(-1, out)
-        return out
+        return self.read_single_halo(-1, None, **kwargs)
 
     def add_computed_fields(self, treenum, tree, halonum=None):
         r"""Add computed fields to the numpy array.
@@ -679,13 +661,15 @@ class LHaloTreeReader(object):
         self.validate_fields(out)
         return out
 
-    def validate_tree(self, treenum, tree, idx=None):
+    def validate_tree(self, treenum, tree, halonum=None, idx=None):
         r"""Check that the tree conforms to expectation.
 
         Args:
             treenum (int): Index of the tree being validated in the file.
             tree (np.ndarray): Structured array of information for halos in a
                 tree.
+            halonum (int): Index of halo in tree if this is a single halo.
+                Defaults to None and tree is treated as a complete tree.
             idx (slice, optional): Index of tree data in individual arrays.
                 Defaults to None and arrays are assumed to only contain one tree.
 
@@ -703,7 +687,10 @@ class LHaloTreeReader(object):
 
         """
         # Check size
-        nhalos = self.nhalos_per_tree[treenum]
+        if halonum is not None:
+            nhalos = 1
+        else:
+            nhalos = self.nhalos_per_tree[treenum]
         try:
             fields = list(tree.keys())
         except AttributeError:
@@ -715,54 +702,32 @@ class LHaloTreeReader(object):
         # Check fields
         for k in self.raw_fields:
             assert(k in fields)
-        # Check that halos are within tree
-        for k in halo_fields:
-            pos_flag = (tree[k][idx] >= 0)
-            assert((tree[k][idx][pos_flag] < nhalos).all())
-        # Check FOF central exists and all subs in one snapshot
-        central = tree['FirstHaloInFOFgroup'][idx]
-        assert((central >= 0).all())
-        assert((tree['SnapNum'][idx] == tree['SnapNum'][idx][central]).all())
-        # Check that progenitors/descendants are back/forward in time
-        progen1 = tree['FirstProgenitor'][idx]
-        progen2 = tree['NextProgenitor'][idx]
-        descend = tree['Descendant'][idx].astype('i4')
-        has_descend = (descend >= 0)
-        assert((tree['SnapNum'][idx][descend[has_descend]] >
-                tree['SnapNum'][idx][has_descend]).all())
-        # Check progenitors are back in time
-        not_descend = np.logical_not(has_descend)
-        descend[not_descend] = np.where(not_descend)[0]
-        has_progen1 = (progen1 >= 0)
-        has_progen2 = (progen2 >= 0)
-        assert((tree['SnapNum'][idx][progen1[has_progen1]] <=
-                tree['SnapNum'][idx][descend[has_progen1]]).all())
-        assert((tree['SnapNum'][idx][progen2[has_progen2]] <=
-                tree['SnapNum'][idx][descend[has_progen2]]).all())
-
-    def validate_halo(self, halo):
-        r"""Check that the halo conforms to expectations.
-
-        Args:
-            halo (np.ndarray): Single element structured array of information
-                for a single halo.
-
-        Raises:
-            AssertionError: If the halo does not have length of 1.
-            AssertionError: If the halo does not have all of the expected fields
-                from the default LHaloTree format.
-
-        """
-        # Check size
-        try:
-            assert(len(halo[list(halo.keys())[0]]) == 1)
-            fields = list(halo.keys())
-        except AttributeError:
-            assert(len(halo) == 1)
-            fields = list(halo.dtype.fields.keys())
-        # Check fields
-        for k in self.raw_fields:
-            assert(k in fields)
+        # Don't check tree indices for a single halo
+        if halonum is None:
+            # Check that halos are within tree
+            for k in halo_fields:
+                pos_flag = (tree[k][idx] >= 0)
+                assert((tree[k][idx][pos_flag] < nhalos).all())
+            # Check FOF central exists and all subs in one snapshot
+            central = tree['FirstHaloInFOFgroup'][idx]
+            assert((central >= 0).all())
+            assert((tree['SnapNum'][idx] == tree['SnapNum'][idx][central]).all())
+            # Check that progenitors/descendants are back/forward in time
+            progen1 = tree['FirstProgenitor'][idx]
+            progen2 = tree['NextProgenitor'][idx]
+            descend = tree['Descendant'][idx].astype('i4')
+            has_descend = (descend >= 0)
+            assert((tree['SnapNum'][idx][descend[has_descend]] >
+                    tree['SnapNum'][idx][has_descend]).all())
+            # Check progenitors are back in time
+            not_descend = np.logical_not(has_descend)
+            descend[not_descend] = np.where(not_descend)[0]
+            has_progen1 = (progen1 >= 0)
+            has_progen2 = (progen2 >= 0)
+            assert((tree['SnapNum'][idx][progen1[has_progen1]] <=
+                    tree['SnapNum'][idx][descend[has_progen1]]).all())
+            assert((tree['SnapNum'][idx][progen2[has_progen2]] <=
+                    tree['SnapNum'][idx][descend[has_progen2]]).all())
 
     def validate_fields(self, tree):
         r"""Check that the tree/halo has all of the expected fields.
