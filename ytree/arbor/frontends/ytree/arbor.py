@@ -112,6 +112,6 @@ class YTreeArbor(Arbor):
                     return False
                 if f.attrs["arbor_type"].astype(str) != "YTreeArbor":
                     return False
-        except:
+        except BaseException:
             return False
         return True

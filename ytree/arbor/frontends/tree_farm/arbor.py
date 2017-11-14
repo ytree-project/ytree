@@ -90,6 +90,6 @@ class TreeFarmArbor(CatalogArbor):
                     return False
                 if f.attrs["data_type"].astype(str) != "halo_catalog":
                     return False
-        except:
+        except BaseException:
             return False
         return True
