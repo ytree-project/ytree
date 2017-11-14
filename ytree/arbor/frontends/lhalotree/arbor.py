@@ -30,7 +30,7 @@ from ytree.arbor.tree_node import \
 from ytree.arbor.frontends.lhalotree.fields import \
     LHaloTreeFieldInfo
 from ytree.arbor.frontends.lhalotree.io import \
-    LHaloTreeTreeFieldIO
+    LHaloTreeTreeFieldIO, LHaloTreeRootFieldIO
 from ytree.arbor.frontends.lhalotree.utils import LHaloTreeReader
 
 
@@ -41,6 +41,7 @@ class LHaloTreeArbor(Arbor):
 
     _field_info_class = LHaloTreeFieldInfo
     _tree_field_io_class = LHaloTreeTreeFieldIO
+    _root_field_io_class = LHaloTreeRootFieldIO
 
     def __init__(self, *args, **kwargs):
         r"""Added reader class to allow fast access of header info."""
@@ -56,54 +57,62 @@ class LHaloTreeArbor(Arbor):
         super(LHaloTreeArbor, self).__init__(*args, **kwargs)
         kwargs.update(**reader_kwargs)
         lht0 = self._lht0
-        pattern = lht0.filepattern
-        files = sorted(glob.glob(pattern))
+        files = sorted(glob.glob(lht0.filepattern))
         self._lhtfiles = [None for _ in files]
         self._lhtfiles[lht0.fileindex] = lht0
         if len(files) > 1:
-            if 'header_size' in reader_kwargs or 'nhalos_per_tree' in reader_kwargs:
+            if ((('header_size' in reader_kwargs) or  # pragma: no cover
+                 ('nhalos_per_tree' in reader_kwargs))):
                 raise RuntimeError("Cannot use 'header_size' or 'nhalos_per_tree' " +
                                    "for trees split across multiple files. Use " +
                                    "'read_header_func' instead.")
-            reader_kwargs['parameters'] = lht0.parameters
-            reader_kwargs['scale_factors'] = lht0.scale_factors
-            reader_kwargs['item_dtype'] = lht0.item_dtype
-            reader_kwargs['silent'] = True
+            reader_kwargs.update(parameters=lht0.parameters,
+                                 scale_factors=lht0.scale_factors,
+                                 item_dtype=lht0.item_dtype,
+                                 silent=True)
             for f in files:
                 if f == lht0.filename:
                     continue
                 ilht = LHaloTreeReader(f, **reader_kwargs)
                 self._lhtfiles[ilht.fileindex] = ilht
+        # Assert files are there
         for f in self._lhtfiles:
-            if f is None:
+            if f is None:  # pragma: no cover
                 raise RuntimeError("Not all files were read.")
 
-    def _func_update_file(self, node, *args, **kwargs):
-        """Call a file making sure that the correct file is open."""
-        func = kwargs.pop("_func", None)
-        if func is None:
-            raise RuntimeError("No function passed.")
-        fd = self._node_io_fd
-        if fd is None or (node._lht.filename != fd.name):
-            if fd is not None:
-                fd.close()
-            self._node_io_fd = open(node._lht.filename, 'rb')
-        kwargs["f"] = self._node_io_fd
-        return func(node, *args, **kwargs)
+    # NOTE: LHaloTree is currently using np.memmap so it dosn't need
+    # fd to be passed. If this causes memory issues for larger trees,
+    # the below functions allow a file descriptor to be checked and updated
+    # as needed to prevent unnecessary open/close operations when accessing
+    # nodes in the same file. Alternatively, see io.py for an option that
+    # caches the file descriptor any time a field is read.
 
-    def _node_io_loop(self, func, *args, **kwargs):
-        """
-        Since LHaloTrees can be split across multiple files, this
-        optimization only works if the nodes are all in the same file.
-        It's a small optimization that keeps the file open
-        when doing io for multiple trees in the same file.
-        """
-        self._node_io_fd = None
-        kwargs["_func"] = func
-        super(LHaloTreeArbor, self)._node_io_loop(
-            self._func_update_file, *args, **kwargs)
-        if self._node_io_fd is not None:
-            self._node_io_fd.close()
+    # def _func_update_file(self, node, *args, **kwargs):
+    #     """Call a file making sure that the correct file is open."""
+    #     func = kwargs.pop("_func", None)
+    #     if func is None:
+    #         raise RuntimeError("No function passed.")
+    #     fd = self._node_io_fd
+    #     if fd is None or (node._lht.filename != fd.name):
+    #         if fd is not None:
+    #             fd.close()
+    #         self._node_io_fd = open(node._lht.filename, 'rb')
+    #     kwargs["f"] = self._node_io_fd
+    #     return func(node, *args, **kwargs)
+
+    # def _node_io_loop(self, func, *args, **kwargs):
+    #     """
+    #     Since LHaloTrees can be split across multiple files, this
+    #     optimization only works if the nodes are all in the same file.
+    #     It's a small optimization that keeps the file open
+    #     when doing io for multiple trees in the same file.
+    #     """
+    #     self._node_io_fd = None
+    #     kwargs["_func"] = func
+    #     super(LHaloTreeArbor, self)._node_io_loop(
+    #         self._func_update_file, *args, **kwargs)
+    #     if self._node_io_fd is not None:
+    #         self._node_io_fd.close()
 
     def _parse_parameter_file(self):
         """
@@ -127,10 +136,6 @@ class LHaloTreeArbor(Arbor):
 
         # a list of all fields on disk
         fields = self._lht0.fields
-        # remove fields with 2D arrays
-        fields.remove('Pos')
-        fields.remove('Vel')
-        fields.remove('Spin')
         # a dictionary of information for each field
         # this can have specialized information for reading the field
         fi = {}
@@ -152,7 +157,7 @@ class LHaloTreeArbor(Arbor):
             try:
                 self.quan(1, unit)
                 punit = unit
-            except UnitParseError:
+            except UnitParseError:  # pragma: no cover
                 warnings.warn("Could not parse unit: %s" % unit)
                 punit = ''
             for k in keylist:
@@ -179,10 +184,10 @@ class LHaloTreeArbor(Arbor):
         itot = 0
         for ifile, lht in enumerate(self._lhtfiles):
             ntrees = lht.ntrees
+            root_uids = lht.all_uids[lht.nhalos_before_tree]
             for i in range(ntrees):
                 # get a uid (unique id) from file or assign one
-                uid = lht.get_lhalotree_uid(i)
-                my_node = TreeNode(uid, arbor=self, root=True)
+                my_node = TreeNode(root_uids[i], arbor=self, root=True)
                 # assign any helpful attributes, such as start
                 # index in field arrays, etc.
                 my_node._lht = lht
@@ -199,7 +204,7 @@ class LHaloTreeArbor(Arbor):
         Return True if we are able to initialize a reader.
         """
         try:
-            kwargs['silent'] = True
+            kwargs.update(silent=True, validate=True)
             LHaloTreeReader(*args, **kwargs)
         except IOError:
             return False
