@@ -107,6 +107,8 @@ class LHaloTreeReader(object):
             trees in the file.
         nhalos_before_tree (np.ndarray): The number of halos before each of the
             ntree trees in the file.
+        totnhalos (int): Total number of halos in this file.
+        ntrees (int): Number of trees in this file.
         item_dtype (np.dtype): Data type specifying the structure of single halo
             entries in the tree.
         raw_fields (list): Available fields that are present for each halo based
@@ -164,6 +166,8 @@ class LHaloTreeReader(object):
         self.nhalos_per_tree = nhalos_per_tree
         self.nhalos_before_tree = (np.cumsum(self.nhalos_per_tree) -
                                    self.nhalos_per_tree)
+        self.totnhalos = np.sum(self.nhalos_per_tree)
+        self.ntrees = len(self.nhalos_per_tree)
         self.item_dtype = np.dtype(item_dtype)
         # Fields
         self.raw_fields = list(self.item_dtype.fields.keys())
@@ -206,7 +210,7 @@ class LHaloTreeReader(object):
         desc_abs = self.get_total_index(self._treenum_arr, desc)
         desc_uid[pos_flag] = self.all_uids[desc_abs[pos_flag]]
         self.all_desc_uids = desc_uid
-        # Add fields and set root fields
+        # Add fields and cache root fields
         data = self.add_computed_fields(-1, data)
         root_idx = self.nhalos_before_tree
         self._root_data = dict()
@@ -261,18 +265,6 @@ class LHaloTreeReader(object):
                 if not silent:
                     print("Using %s found at %s" % (error_tag.lower(), filename))
         return filename
-
-    @property
-    def totnhalos(self):
-        r"""int: Total number of halos in this file."""
-        if getattr(self, '_totnhalos', None) is None:
-            self._totnhalos = np.sum(self.nhalos_per_tree)
-        return self._totnhalos
-
-    @property
-    def ntrees(self):
-        r"""int: Number of trees in this file."""
-        return len(self.nhalos_per_tree)
 
     @property
     def parameters(self):
@@ -360,14 +352,15 @@ class LHaloTreeReader(object):
         r"""Get the slice that selects halos in a single tree.
 
         Args:
-            treenum (int): Index of the tree to get the slice for. If -1, a
-                slice that includes all halos in the file will be returned.
-            halonum (int, optional): Index of a halo within the tree to
-                get the total index for in the file. Defaults to None and
-                the slice for the entire tree is returned.
+            treenum (int, np.ndarray): Index/indicies of tree(s) to get the
+                total index for If -1, a slice that includes all halos in the
+                file will be returned.
+            halonum (int, np.ndarray, optional): Index/indices of halo(s) within
+                the tree(s) to get the total index for in the file. Defaults to
+                None and the slice for the entire tree is returned.
 
         Returns:
-            slice, int: Slice of all halos for this tree.
+            slice, int: Slice/indices of halo(s) for this tree/halo(s).
 
         """
         if (not isinstance(treenum, np.ndarray)) and (treenum == -1):
