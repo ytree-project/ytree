@@ -5,8 +5,6 @@ tests for LHaloTree reader.
 """
 
 import os
-import numpy as np
-import nose.tools as nt
 import ytree
 from ytree.utilities.testing import \
     requires_file, \
@@ -41,15 +39,9 @@ def test_LHaloTreeReader():
         getattr(reader, a)
     # fd = reader.open()
     for i in range(reader.ntrees):
-<<<<<<< HEAD
         reader.read_single_tree(i, validate=True)  # , fd=fd)
         reader.read_single_root(i, validate=True)  # , fd=fd)
         reader.read_single_halo(i, 0, validate=True)  # , fd=fd)
-=======
-        tree = reader.read_single_tree(i, validate=True)  # , fd=fd)
-        root = reader.read_single_root(i, validate=True)  # , fd=fd)
-        halo = reader.read_single_halo(i, 0, validate=True)  # , fd=fd)
->>>>>>> 05351ec85e9299ed7100733d6de5bead4f596dca
     # fd.close()
 
 
