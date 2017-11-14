@@ -171,8 +171,6 @@ class Arbor(object):
 
         # Add tree information to nodes
         uidmap = {}
-        if isinstance(tree_node.uids[0], np.ndarray):
-            print(tree_node.uids[0])
         for i, node in enumerate(nodes):
             node.treeid = i
             node.root   = tree_node
@@ -926,8 +924,7 @@ def load(filename, method=None, **kwargs):
     >>> # TreeFarm catalogs
     >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.h5")
     >>> # LHaloTree catalogs
-    >>> a = ytree.load("my_halos/trees_063.0",
-    ...                parameter_file="gadget_sim.param")
+    >>> a = ytree.load("my_halos/trees_063.0")
 
     """
     if not os.path.exists(filename):
