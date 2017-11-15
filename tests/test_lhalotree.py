@@ -43,7 +43,6 @@ def make_small_example(ntrees_per_file=None):
         prev_halos += ntothalos1
         header_size1 = lhtutils.save_header_default(ifile, nhalos_per_tree1)
         lhtutils._save_to_mmap(ifile, data1, header_size=header_size1)
-        print('Finished %s' % ifile)
 
 
 @requires_file(SMT)
