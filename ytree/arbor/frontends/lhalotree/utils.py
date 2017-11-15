@@ -50,17 +50,250 @@ def read_header_default(filename):
              of halos in each header.
 
     """
-    with open(filename, 'rb') as fd:
-        dtype1 = np.dtype([('ntrees', 'i4'), ('totnhalos', 'i4')])
-        x1 = np.fromfile(fd, dtype=dtype1, count=1)
-        ntrees = x1['ntrees'][0]
-        nhalos = x1['totnhalos'][0]
-        dtype2 = np.dtype('i4')
-        x2 = np.fromfile(fd, dtype=dtype2, count=ntrees)
-        assert(len(x2) == ntrees)
-        assert(np.sum(x2) == nhalos)
-        header_size = dtype1.itemsize + ntrees*dtype2.itemsize
+    # Open
+    if isinstance(filename, str):
+        fd = open(filename, 'rb')
+        close = True
+    else:
+        fd = filename
+        close = False
+    # Read
+    dtype1 = np.dtype([('ntrees', 'i4'), ('totnhalos', 'i4')])
+    x1 = np.fromfile(fd, dtype=dtype1, count=1)
+    ntrees = x1['ntrees'][0]
+    nhalos = x1['totnhalos'][0]
+    dtype2 = np.dtype('i4')
+    x2 = np.fromfile(fd, dtype=dtype2, count=ntrees)
+    assert(len(x2) == ntrees)
+    assert(np.sum(x2) == nhalos)
+    header_size = dtype1.itemsize + ntrees*dtype2.itemsize
+    # Close
+    if close:
+        fd.close()
     return header_size, x2
+
+
+def save_header_default(filename, nhalos_per_tree):
+    r"""Writes the default LHaloTree file header.
+
+    Args:
+        filename (str): Full path to file that should be written to.
+        nhalos_per_tree (np.ndarray): The number of halos in each tree that
+            will be written to the file.
+    
+    Returns:
+        int: The size of the header that was written.
+
+    """
+    ntrees = len(nhalos_per_tree)
+    nhalos = np.sum(nhalos_per_tree)
+    dtype1 = np.dtype([('ntrees', 'i4'), ('totnhalos', 'i4')])
+    x1 = np.array([(ntrees, nhalos)], dtype=dtype1)
+    x2 = nhalos_per_tree.astype('i4')
+    header_size = x1.nbytes + x2.nbytes
+    # Open
+    if isinstance(filename, str):
+        fd = open(filename, 'wb')
+        close = True
+    else:
+        fd = filename
+        close = False
+    # Write
+    x1.tofile(fd)
+    x2.tofile(fd)
+    # Close
+    if close:
+        fd.close()
+    return header_size
+
+
+def _read_from_mmap(filename, start=0, nhalo=None,
+                    header_size=None, item_dtype=None):
+    r"""Read one or more halos from a memmapped file.
+
+    Args:
+        filename (str, np.memmap): Either the full path to the file that should
+            be read via memmap or an existing memmapped file.
+        start (int, optional): Index of halo in memmap where read should start.
+            Defaults to 0.
+        nhalo (int, optional): Number of halos that should be read. Defaults to
+            None and all halos following start are read.
+        header_size (int, optional): Size of the header preceeding trees in the
+            file. If this is not provided and filename is a path, it will be set
+            to 0.
+        item_dtype (np.dtype, optional): Data type of each halo entry. Defaults
+            to dtype_header_default.
+
+    Returns:
+        np.ndarray: Structure array of halo data.
+
+    """
+    if isinstance(filename, np.memmap):
+        mmap = filename
+    else:
+        if header_size is None:
+            header_size = 0
+        if item_dtype is None:
+            item_dtype = dtype_header_default
+        mmap = np.memmap(filename, dtype=item_dtype, mode='c', offset=header_size)
+    if nhalo is None:
+        stop = None
+    else:
+        stop = start + nhalo
+    idx = slice(start, stop)
+    return mmap[idx]
+
+
+def _save_to_mmap(filename, data, start=0, header_size=None):
+    r"""Save one or more halos to a memmapped file.
+
+    Args:
+        filename (str, np.memmap): Either the full path to the file that should
+            be saved to via memmap or an existing memmapped file.
+        data (np.ndarray): Structured array of halo data that should be saved.
+        start (int, optional): Index in memmap where halos should be written.
+            Defaults to 0.
+        header_size (int, optional): Size of the header preceeding trees in the
+            file. If this is not provided and filename is a path, it will be set
+            to 0.
+
+    """
+    nhalo = len(data)
+    if isinstance(filename, np.memmap):
+        mmap = filename
+        flush = False
+    else:
+        if header_size is None:
+            header_size = 0
+        item_dtype = data.dtype
+        mmap = np.memmap(filename, dtype=item_dtype, mode='r+',
+                         offset=header_size, shape=(nhalo, ))
+        flush = True
+    mmap[start:(start + nhalo)] = data[:]
+    if flush:
+        del mmap  # flush to disk
+
+
+def _read_from_file(filename, start=0, nhalo=None,
+                    header_size=None, item_dtype=None):
+    r"""Read one or more halos from the file using np.fromfile.
+
+    Args:
+        filename (str, file): Either the full path to the file that should be
+           openned and read or an existing open file object.
+        start (int, optional): Index of halo in file (relative to the end of the
+            header) where read should start. Defaults to 0.
+        nhalo (int, optional): Number of halos that should be read. Defaults to
+            all halos.
+        header_size (int, optional): Size of the header preceeding trees in the
+            file. Defaults to 0.
+        item_dtype (np.dtype, optional): Data type of each halo entry. Defaults
+            to dtype_header_default.
+
+    Returns:
+        np.ndarray: Structure array of halo data.
+
+    """
+    if header_size is None:
+        header_size = 0
+    if item_dtype is None:
+        item_dtype = dtype_header_default
+    item_dtype = np.dtype(item_dtype)
+    # Open file as necessary
+    opened = False
+    if isinstance(filename, str):
+        fd = open(filename, 'rb')
+        opened = True
+    else:
+        fd = filename
+    # Seek to halo location and read
+    offset = header_size + (start * item_dtype.itemsize)
+    fd.seek(offset, os.SEEK_SET)
+    if nhalo is None:
+        nhalo = -1
+    out = np.fromfile(fd, dtype=item_dtype, count=nhalo)
+    if opened:
+        fd.close()
+    return out
+
+
+def _save_to_file(filename, data, start=0, header_size=None):
+    r"""Save one or more halos to a file using np.tofile.
+
+    Args:
+        filename (str, file): Either the full path to the file that should be
+           openned and saved to or an existing open file object.
+        data (np.ndarray): Structured array of halo data that should be saved.
+        start (int, optional): Index in file (in halso) where halos should be
+            written. Defaults to 0.
+        header_size (int, optional): Size of the header preceeding trees in the
+            file. Defaults to 0.
+
+    """
+    if header_size is None:
+        header_size = 0
+    item_dtype = data.dtype
+    # Open file as necessary
+    opened = False
+    if isinstance(filename, str):
+        fd = open(filename, 'rb+')
+        opened = True
+    else:
+        fd = filename
+    # Seek to halo location and write
+    offset = header_size + (start * item_dtype.itemsize)
+    fd.seek(offset, os.SEEK_SET)
+    data.tofile(fd)
+    if opened:
+        fd.close()
+
+
+def read_trees_default(filename, **kwargs):
+    r"""Read trees from a file.
+
+    Args:
+        filename (str, np.memmap): Either the full path to the file that should
+            be read via memmap or an existing memmapped file.
+        **kwargs: Additional keyword arguments are passed to _read_from_mmap.
+
+    Returns:
+        dict: Arrays of fields for each halo.
+
+    """
+    # out_ra = _read_from_file(filename, **kwargs)
+    out_ra = _read_from_mmap(filename, **kwargs)
+    # if len(out_ra) == 1:
+    #     for k in out_ra.dtype.fields.keys():
+    #         if not isinstance(out_ra[k], np.ndarray):
+    #             print(k, out_ra[k])
+    #             raise Exception
+    #     out = {k: out_ra[k].copy() for k in out_ra.dtype.fields.keys()}
+    # else:
+    out = {k: out_ra[k].copy() for k in out_ra.dtype.fields.keys()}
+    return out
+
+
+def save_trees_default(filename, data, item_dtype=None, **kwargs):
+    r"""Save trees to a file.
+
+    Args:
+        filename (str, np.memmap): Either the full path to the file that should
+            be saved to via memmap or an existing memmapped file.
+        data (dict): Arrays of fields for each halo.
+        item_dtype (np.dtype, optional): Data type of each halo entry. Defaults
+            to dtype_header_default.
+        **kwargs: Additional keyword arguments are passed to _save_to_mmap.
+
+    """
+    if item_dtype is None:
+        item_dtype = dtype_header_default
+    item_dtype = np.dtype(item_dtype)
+    nhalo = len(data[next(iter(data))])  # Gross, but Py 2 & 3 compat
+    data_ra = np.empty(nhalo, dtype=item_dtype)
+    for k in item_dtype.fields.keys():
+        data_ra[k] = data[k]
+    # return _save_to_file(filename, data_ra, **kwargs)
+    return _save_to_mmap(filename, data_ra, **kwargs)
 
 
 class LHaloTreeReader(object):
@@ -210,8 +443,8 @@ class LHaloTreeReader(object):
         stop = start + self.nhalos_per_tree
         for t in range(self.ntrees):
             self.treenum_arr[start[t]:stop[t]] = t
-        # Memmap
-        self.mmap = np.memmap(self.filename, dtype=self.item_dtype, mode='r',
+        # Memmap/file object
+        self.fobj = np.memmap(self.filename, dtype=self.item_dtype, mode='c',
                               offset=self.header_size)
         # Read all data
         data = self.read_all_trees(skip_add_fields=True, validate=validate)
@@ -416,68 +649,6 @@ class LHaloTreeReader(object):
     #         offset += halonum * self.item_dtype.itemsize
     #     return offset
 
-    def _read_from_mmap(self, treenum, halonum=None):
-        r"""Read one or more halos from the memmapped file.
-
-        Args:
-            treenum (int): Index of the tree that should be returned. If -1,
-                data for every tree in the file will be returned.
-            halonum (int, optional): If provided, this is the index of a
-                particular halo within the tree that should be returned. If not
-                provided, the entire tree is returned.
-
-        """
-        idx = self.get_total_index(treenum, halonum)
-        return self.mmap[idx]
-
-    # def open(self):
-    #     r"""Open the file.
-
-    #     Returns:
-    #         file: Open file object for reading.
-
-    #     """
-    #     return open(self.filename, 'rb')
-
-    # def _read_from_file(self, treenum, halonum=None, fd=None):
-    #     r"""Read one or more halos from the file using np.fromfile.
-
-    #     Args:
-    #         treenum (int): Index of the tree that should be returned. If -1,
-    #             data for every tree in the file will be returned.
-    #         halonum (int, optional): If provided, this is the index of a
-    #             particular halo within the tree that should be returned. If not
-    #             provided, the entire tree is returned.
-    #         fd (file, optional): Open file identifier. If not provided, the file
-    #             is opened for the read and then closed.
-
-    #     """
-    #     # Open file as necessary
-    #     opened = False
-    #     if (fd is None) or (fd.name != self.filename):
-    #         if fd is not None:
-    #             warnings.warn("Passed file handler is not for this file. " +
-    #                           "Opening a new file.")
-    #         fd_new = self.open()
-    #         opened = True
-    #     else:
-    #         fd_new = fd
-    #     # Seek to halo location and read
-    #     offset = self.get_halo_offset(treenum, halonum)
-    #     fd_new.seek(offset, os.SEEK_SET)
-    #     if treenum == -1:
-    #         nread = self.totnhalos
-    #         halonum = None
-    #     else:
-    #         if halonum is None:
-    #             nread = self.nhalos_per_tree[treenum]
-    #         else:
-    #             nread = 1
-    #     out_ra = np.fromfile(fd_new, dtype=self.item_dtype, count=nread)
-    #     if opened:
-    #         fd_new.close()
-    #     return out_ra
-
     def read_single_tree(self, treenum, halonum=None, fd=None,
                          skip_add_fields=False, validate=False):
         r"""Read a single tree from the file.
@@ -499,16 +670,17 @@ class LHaloTreeReader(object):
             dict: Dictionary of fields for each halo in the file/tree/halo.
 
         """
-        # Read from mmap
-        out_ra = self._read_from_mmap(treenum, halonum)
-        # Read from file
-        # out_ra = self._read_from_file(treenum, halonum)
-        # Convert to dictionary
-        if halonum is None:
-            out = {k: out_ra[k].copy() for k in out_ra.dtype.fields.keys()}
+        if treenum >= 0:
+            start = self.nhalos_before_tree[treenum]
+            if halonum is None:
+                nhalo = self.nhalos_per_tree[treenum]
+            else:
+                nhalo = 1
         else:
-            out = {k: np.array([out_ra[k].copy()], out_ra[k].dtype) \
-                   for k in out_ra.dtype.fields.keys()}
+            start = 0
+            nhalo = self.totnhalos
+        # Read from map/file
+        out = read_trees_default(self.fobj, start=start, nhalo=nhalo)
         # Validate
         if validate:
             self.validate_tree(treenum, out, halonum=halonum)
