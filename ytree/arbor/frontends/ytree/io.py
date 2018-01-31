@@ -23,13 +23,14 @@ from ytree.arbor.io import \
 
 class YTreeDataFile(object):
     def __init__(self, filename):
-        self.filename = filename
-        self.fh = None
-        self._start_index = None
-        self._end_index = None
-
         if not os.path.exists(filename):
             raise FileNotFoundError("Cannot find data file: %s." % filename)
+
+        self.filename = filename
+        self.fh = None
+        self._field_cache = None
+        self._start_index = None
+        self._end_index = None
 
     def open(self):
         self.fh = h5py.File(self.filename, "r")
@@ -39,8 +40,7 @@ class YTreeDataFile(object):
         self.fh = None
 
 class YTreeTreeFieldIO(TreeFieldIO):
-    def _read_fields(self, root_node, fields, dtypes=None,
-                     f=None, root_only=False, fcache=None):
+    def _read_fields(self, root_node, fields, dtypes=None, root_only=False):
         dfi = np.digitize(root_node._ai, self._ei)
         data_file = self.data_files[dfi]
 
