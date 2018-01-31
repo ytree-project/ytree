@@ -20,11 +20,14 @@ import os
 from ytree.arbor.io import \
     RootFieldIO, \
     TreeFieldIO
+from ytree.utilities.logger import \
+    ytreeLogger as mylog
 
 class YTreeDataFile(object):
     def __init__(self, filename):
         if not os.path.exists(filename):
-            raise FileNotFoundError("Cannot find data file: %s." % filename)
+            mylog.warn(("Cannot find data file: %s. " +
+                        "Will not be able to load field data.") % filename)
 
         self.filename = filename
         self.fh = None
