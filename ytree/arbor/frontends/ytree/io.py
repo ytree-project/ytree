@@ -15,49 +15,72 @@ YTreeArbor io classes and member functions
 
 import h5py
 import numpy as np
+import os
 
 from ytree.arbor.io import \
     RootFieldIO, \
     TreeFieldIO
 
+class YTreeDataFile(object):
+    def __init__(self, filename):
+        self.filename = filename
+        self.fh = None
+        self._start_index = None
+        self._end_index = None
+
+        if not os.path.exists(filename):
+            raise FileNotFoundError("Cannot find data file: %s." % filename)
+
+    def open(self):
+        self.fh = h5py.File(self.filename, "r")
+
+    def close(self):
+        self.fh.close()
+        self.fh = None
+
 class YTreeTreeFieldIO(TreeFieldIO):
     def _read_fields(self, root_node, fields, dtypes=None,
                      f=None, root_only=False, fcache=None):
+        dfi = np.digitize(root_node._ai, self._ei)
+        data_file = self.data_files[dfi]
+
         if dtypes is None:
             dtypes = {}
 
-        if fcache is None:
-            fcache = {}
+        if data_file._field_cache is None:
+            data_file._field_cache = {}
 
-        dfi = np.digitize(root_node._ai, self.arbor._ei)
-        if f is None:
+        if data_file.fh is None:
             close = True
-            fn = "%s_%04d%s" % (self.arbor._prefix, dfi, self.arbor._suffix)
-            f = h5py.File(fn, "r")
+            data_file.open()
         else:
             close = False
 
-        start_index = f["index/tree_start_index"].value
-        end_index   = f["index/tree_end_index"].value
-        ii = root_node._ai - self.arbor._si[dfi]
+        # get start_index and end_index
+        for itype in ["start", "end"]:
+            if getattr(data_file, "_%s_index" % itype) is None:
+                setattr(data_file, "_%s_index" % itype,
+                        data_file.fh["index/tree_%s_index" % itype].value)
+        ii = root_node._ai - self._si[dfi]
 
         field_data = {}
         fi = self.arbor.field_info
         for field in fields:
-            if field not in fcache:
-                fdata = f["data/%s" % field].value
+            if field not in data_file._field_cache:
+                fdata = data_file.fh["data/%s" % field].value
                 dtype = dtypes.get(field)
                 if dtype is not None:
                     fdata = fdata.astype(dtype)
                 units = fi[field].get("units", "")
                 if units != "":
                     fdata = self.arbor.arr(fdata, units)
-                fcache[field] = fdata
+                data_file._field_cache[field] = fdata
             field_data[field] = \
-              fcache[field][start_index[ii]:end_index[ii]]
+              data_file._field_cache[field][
+                  data_file._start_index[ii]:data_file._end_index[ii]]
 
         if close:
-            f.close()
+            data_file.close()
 
         return field_data
 
