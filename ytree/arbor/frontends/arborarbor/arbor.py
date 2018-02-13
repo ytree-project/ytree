@@ -117,6 +117,6 @@ class ArborArbor(Arbor):
                     return False
                 if f.attrs["arbor_type"].astype(str) != "ArborArbor":
                     return False
-        except:
+        except BaseException:
             return False
         return True
