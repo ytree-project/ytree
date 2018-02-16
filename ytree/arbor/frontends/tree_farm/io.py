@@ -24,15 +24,19 @@ class TreeFarmDataFile(CatalogDataFile):
 
     _default_dtype = np.float64
 
+    def open(self):
+        self.fh = h5py.File(self.filename, "r")
+
     def _parse_header(self):
-        fh = h5py.File(self.filename, "r")
+        self.open()
+        fh = self.fh
         self.redshift = fh.attrs["current_redshift"]
         self.nhalos   = fh.attrs["num_halos"]
         # Files with no halos won't have the units.
         # Keep trying until we get one.
         if not hasattr(self.arbor, "field_list"):
             self._setup_field_info(fh)
-        fh.close()
+        self.close()
 
     def _setup_field_info(self, fh):
         fields = list(fh.keys())
@@ -66,19 +70,21 @@ class TreeFarmDataFile(CatalogDataFile):
 
         if tree_nodes is None:
             ntrees = self.nhalos
-            fh = h5py.File(self.filename, "r")
+            self.open()
+            fh = self.fh
             field_data = dict((field, fh[field].value)
                               for field in rfields)
-            fh.close()
+            self.close()
 
         else:
             ntrees = len(tree_nodes)
             file_ids = np.array([node._fi for node in tree_nodes])
             field_data = {}
-            fh = h5py.File(self.filename, "r")
+            self.open()
+            fh = self.fh
             for field in rfields:
                 field_data[field] = fh[field].value[file_ids]
-            fh.close()
+            self.close()
 
         for field in hfields:
             field_data[field] = hfield_values[field] * \
