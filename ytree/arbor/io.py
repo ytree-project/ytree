@@ -26,29 +26,6 @@ from ytree.utilities.exceptions import \
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
-class DataFile(object):
-    """
-    Base class for data files.
-
-    This class allows us keep files open during i/o heavy operations
-    and to keep things like caches of fields.
-    """
-    def __init__(self, filename):
-        if not os.path.exists(filename):
-            mylog.warn(("Cannot find data file: %s. " +
-                        "Will not be able to load field data.") % filename)
-
-        self.filename = filename
-        self.fh = None
-
-    def open(self):
-        raise NotImplementedError
-
-    def close(self):
-        if self.fh is not None:
-            self.fh.close()
-            self.fh = None
-
 class FieldIO(object):
     """
     Base class for FieldIO classes.
@@ -275,7 +252,33 @@ class FallbackRootFieldIO(FieldIO):
                       self.arbor.trees[i]._root_field_data[field]
         data_object._root_field_data.update(field_data)
 
-class CatalogDataFile(object):
+class DataFile(object):
+    """
+    Base class for data files.
+
+    This class allows us keep files open during i/o heavy operations
+    and to keep things like caches of fields.
+    """
+    def __init__(self, filename):
+        if not os.path.exists(filename):
+            mylog.warn(("Cannot find data file: %s. " +
+                        "Will not be able to load field data.") % filename)
+
+        self.filename = filename
+        self.fh = None
+
+    def __repr__(self):
+        return self.filename
+
+    def open(self):
+        raise NotImplementedError
+
+    def close(self):
+        if self.fh is not None:
+            self.fh.close()
+            self.fh = None
+
+class CatalogDataFile(DataFile):
     """
     Base class for halo catalog files.
     """
@@ -283,7 +286,7 @@ class CatalogDataFile(object):
     _default_dtype = np.float32
 
     def __init__(self, filename, arbor):
-        self.filename = filename
+        super(CatalogDataFile, self).__init__(filename)
         self.arbor = weakref.proxy(arbor)
         self._parse_header()
 
@@ -292,6 +295,3 @@ class CatalogDataFile(object):
 
     def _read_fields(self, *args, **kwargs):
         raise NotImplementedError
-
-    def __repr__(self):
-        return self.filename

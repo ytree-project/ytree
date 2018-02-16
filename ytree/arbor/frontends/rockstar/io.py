@@ -25,8 +25,12 @@ class RockstarDataFile(CatalogDataFile):
         self.offsets = None
         super(RockstarDataFile, self).__init__(filename, arbor)
 
+    def open(self):
+        self.fh = open(self.filename, "r")
+
     def _parse_header(self):
-        f = open(self.filename, "r")
+        self.open()
+        f = self.fh
         f.seek(0, 2)
         self.file_size = f.tell()
         f.seek(0)
@@ -40,7 +44,7 @@ class RockstarDataFile(CatalogDataFile):
                 break
             elif line.startswith("#a = "):
                 self.scale_factor = float(line.split(" = ")[1])
-        f.close()
+        self.close()
 
     def _read_fields(self, fields, tree_nodes=None, dtypes=None):
         if dtypes is None:
@@ -57,7 +61,8 @@ class RockstarDataFile(CatalogDataFile):
         if tree_nodes is None:
             field_data = dict((field, []) for field in fields)
             offsets = []
-            f = open(self.filename, "r")
+            self.open()
+            f = self.fh
             f.seek(self._hoffset)
             file_size = self.file_size - self._hoffset
             for line, offset in f_text_block(f, file_size=file_size):
@@ -68,7 +73,7 @@ class RockstarDataFile(CatalogDataFile):
                 for field in rfields:
                     dtype = dtypes.get(field, self._default_dtype)
                     field_data[field].append(dtype(sline[fi[field]["column"]]))
-            f.close()
+            self.close()
             if self.offsets is None:
                 self.offsets = np.array(offsets)
 
@@ -85,7 +90,8 @@ class RockstarDataFile(CatalogDataFile):
                 field_data[field][:] = hfield_values[field]
 
             # fields from the actual data
-            f = open(self.filename, "r")
+            self.open()
+            f = self.fh
             for i in range(ntrees):
                 f.seek(self.offsets[tree_nodes[i]._fi])
                 line = f.readline()
@@ -93,6 +99,6 @@ class RockstarDataFile(CatalogDataFile):
                 for field in rfields:
                     dtype = dtypes.get(field, self._default_dtype)
                     field_data[field][i] = dtype(sline[fi[field]["column"]])
-            f.close()
+            self.close()
 
         return field_data
