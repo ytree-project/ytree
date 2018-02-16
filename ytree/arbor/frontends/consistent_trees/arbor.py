@@ -28,6 +28,7 @@ from ytree.arbor.tree_node import \
 from ytree.arbor.frontends.consistent_trees.fields import \
     ConsistentTreesFieldInfo
 from ytree.arbor.frontends.consistent_trees.io import \
+    ConsistentTreesDataFile, \
     ConsistentTreesTreeFieldIO
 
 class ConsistentTreesArbor(Arbor):
@@ -38,12 +39,21 @@ class ConsistentTreesArbor(Arbor):
     _field_info_class = ConsistentTreesFieldInfo
     _tree_field_io_class = ConsistentTreesTreeFieldIO
 
+    def __iter__(self):
+        self._node_io.data_file.open()
+        for my_node in self.trees:
+            yield my_node
+        self._node_io.data_file.close()
+
     def _node_io_loop(self, func, *args, **kwargs):
-        f = open(self.filename, "r")
-        kwargs["f"] = f
+        self._node_io.data_file.open()
         super(ConsistentTreesArbor, self)._node_io_loop(
             func, *args, **kwargs)
-        f.close()
+        self._node_io.data_file.close()
+
+    def _gather_data_files(self):
+        self._node_io.data_file = \
+          ConsistentTreesDataFile(self.filename)
 
     def _parse_parameter_file(self):
         fields = []
@@ -148,11 +158,13 @@ class ConsistentTreesArbor(Arbor):
         lkey = len("tree ")+1
         block_size = 32768
 
-        f = open(self.filename, "r")
-        f.seek(0, 2)
-        file_size = f.tell()
+        data_file = self._node_io.data_file
+
+        data_file.open()
+        data_file.fh.seek(0, 2)
+        file_size = data_file.fh.tell()
         pbar = get_pbar("Loading tree roots", file_size)
-        f.seek(self._hoffset)
+        data_file.fh.seek(self._hoffset)
         self._trees = np.empty(self._ntrees, dtype=np.object)
 
         offset = self._hoffset
@@ -162,13 +174,13 @@ class ConsistentTreesArbor(Arbor):
         for ib in range(nblocks):
             my_block = min(block_size, file_size - offset)
             if my_block <= 0: break
-            buff = f.read(my_block)
+            buff = data_file.fh.read(my_block)
             lihash = -1
             for ih in range(buff.count("#")):
                 ihash = buff.find("#", lihash+1)
                 inl = buff.find("\n", ihash+1)
                 if inl < 0:
-                    buff += f.readline()
+                    buff += data_file.fh.readline()
                     inl = len(buff)
                 uid = int(buff[ihash+lkey:inl])
                 lihash = ihash
@@ -178,10 +190,10 @@ class ConsistentTreesArbor(Arbor):
                 if itree > 0:
                     self._trees[itree-1]._ei = offset + ihash - 1
                 itree += 1
-            offset = f.tell()
+            offset = data_file.fh.tell()
             pbar.update(offset)
         self._trees[-1]._ei = offset
-        f.close()
+        data_file.close()
         pbar.finish()
 
     @classmethod

@@ -16,32 +16,40 @@ ConsistentTreesArbor io classes and member functions
 import numpy as np
 
 from ytree.arbor.io import \
+    DataFile, \
     TreeFieldIO
+
+class ConsistentTreesDataFile(DataFile):
+    def open(self):
+        self.fh = open(self.filename, "r")
 
 class ConsistentTreesTreeFieldIO(TreeFieldIO):
     def _read_fields(self, root_node, fields, dtypes=None,
-                     f=None, root_only=False):
+                     root_only=False):
         """
         Read fields from disk for a single tree.
         """
+        data_file = self.data_file
+
         if dtypes is None:
             dtypes = {}
 
         close = False
-        if f is None:
+        if data_file.fh is None:
             close = True
-            f = open(self.arbor.filename, "r")
-        f.seek(root_node._si)
+            data_file.open()
+        fh = data_file.fh
+        fh.seek(root_node._si)
         if root_only:
-            data = [f.readline()]
+            data = [fh.readline()]
         else:
-            data = f.read(
+            data = fh.read(
                 root_node._ei -
                 root_node._si).split("\n")
             if len(data[-1]) == 0:
                 data.pop()
         if close:
-            f.close()
+            data_file.close()
 
         nhalos = len(data)
         field_data = {}

@@ -15,6 +15,7 @@ FieldIO class and member functions
 
 from collections import defaultdict
 import numpy as np
+import os
 import weakref
 
 from yt.funcs import \
@@ -22,6 +23,31 @@ from yt.funcs import \
 
 from ytree.utilities.exceptions import \
     ArborAnalysisFieldNotGenerated
+from ytree.utilities.logger import \
+    ytreeLogger as mylog
+
+class DataFile(object):
+    """
+    Base class for data files.
+
+    This class allows us keep files open during i/o heavy operations
+    and to keep things like caches of fields.
+    """
+    def __init__(self, filename):
+        if not os.path.exists(filename):
+            mylog.warn(("Cannot find data file: %s. " +
+                        "Will not be able to load field data.") % filename)
+
+        self.filename = filename
+        self.fh = None
+
+    def open(self):
+        raise NotImplementedError
+
+    def close(self):
+        if self.fh is not None:
+            self.fh.close()
+            self.fh = None
 
 class FieldIO(object):
     """

@@ -103,6 +103,14 @@ class Arbor(object):
         self._set_default_selector()
         self._node_io = self._tree_field_io_class(self)
         self._root_io = self._root_field_io_class(self)
+        self._gather_data_files()
+
+    def _gather_data_files(self):
+        """
+        Get all files that hold field data and make them known
+        to the i/o system.
+        """
+        pass
 
     def _parse_parameter_file(self):
         """

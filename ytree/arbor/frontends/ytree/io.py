@@ -15,32 +15,21 @@ YTreeArbor io classes and member functions
 
 import h5py
 import numpy as np
-import os
 
 from ytree.arbor.io import \
+    DataFile, \
     RootFieldIO, \
     TreeFieldIO
-from ytree.utilities.logger import \
-    ytreeLogger as mylog
 
-class YTreeDataFile(object):
+class YTreeDataFile(DataFile):
     def __init__(self, filename):
-        if not os.path.exists(filename):
-            mylog.warn(("Cannot find data file: %s. " +
-                        "Will not be able to load field data.") % filename)
-
-        self.filename = filename
-        self.fh = None
+        super(YTreeDataFile, self).__init__(filename)
         self._field_cache = None
         self._start_index = None
         self._end_index = None
 
     def open(self):
         self.fh = h5py.File(self.filename, "r")
-
-    def close(self):
-        self.fh.close()
-        self.fh = None
 
 class YTreeTreeFieldIO(TreeFieldIO):
     def _read_fields(self, root_node, fields, dtypes=None, root_only=False):
