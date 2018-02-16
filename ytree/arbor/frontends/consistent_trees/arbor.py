@@ -51,7 +51,7 @@ class ConsistentTreesArbor(Arbor):
             func, *args, **kwargs)
         self._node_io.data_file.close()
 
-    def _gather_data_files(self):
+    def _get_data_files(self):
         self._node_io.data_file = \
           ConsistentTreesDataFile(self.filename)
 

@@ -30,7 +30,7 @@ class TreeFarmDataFile(CatalogDataFile):
         self.nhalos   = fh.attrs["num_halos"]
         # Files with no halos won't have the units.
         # Keep trying until we get one.
-        if not hasattr(self.arbor, "fields"):
+        if not hasattr(self.arbor, "field_list"):
             self._setup_field_info(fh)
         fh.close()
 

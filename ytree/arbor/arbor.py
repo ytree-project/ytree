@@ -99,13 +99,13 @@ class Arbor(object):
         self._parse_parameter_file()
         self._set_units()
         self._root_field_data = FieldContainer(self)
-        self._setup_fields()
-        self._set_default_selector()
         self._node_io = self._tree_field_io_class(self)
         self._root_io = self._root_field_io_class(self)
-        self._gather_data_files()
+        self._get_data_files()
+        self._setup_fields()
+        self._set_default_selector()
 
-    def _gather_data_files(self):
+    def _get_data_files(self):
         """
         Get all files that hold field data and make them known
         to the i/o system.
@@ -784,8 +784,6 @@ class CatalogArbor(Arbor):
     _data_file_class = None
 
     def __init__(self, filename):
-        self.filename = filename
-        self._get_data_files()
         super(CatalogArbor, self).__init__(filename)
         if "uid" not in self.field_list:
             for field in "uid", "desc_uid":
