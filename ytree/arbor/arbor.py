@@ -195,20 +195,69 @@ class Arbor(object):
                 node.descendent = desc
 
     def _node_io_loop(self, func, *args, **kwargs):
+        """
+        Call the provided function over a list of nodes.
+
+        If possible, group nodes by common data files to speed
+        things up.  This should work like __iter__, except we call
+        a function instead of yielding.
+        """
+
+        opbar = kwargs.pop("pbar", None)
         root_nodes = kwargs.pop("root_nodes", None)
         if root_nodes is None:
             root_nodes = self.trees
-        pbar = kwargs.pop("pbar", None)
-        if pbar is None:
-            mypbar = fake_pbar
-        else:
-            mypbar = get_pbar
+        data_files, node_list = self._node_io_loop_prepare(root_nodes)
 
-        pbar = mypbar(pbar, len(root_nodes))
-        for node in root_nodes:
-            func(node, *args, **kwargs)
-            pbar.update(1)
-        pbar.finish()
+        for i, (data_file, nodes) in enumerate(zip(data_files, node_list)):
+            if opbar is None:
+                my_pbar = fake_pbar
+                pbar_str = ""
+            else:
+                my_pbar = get_pbar
+                pbar_str = opbar
+                if len(node_list) > 1:
+                    pbar_str += " [%d/%d]" % (i+1, len(node_list))
+
+            pbar = my_pbar(pbar_str, len(nodes))
+            self._node_io_loop_start(data_file)
+            for node in nodes:
+                func(node, *args, **kwargs)
+                pbar.update(1)
+            self._node_io_loop_finish(data_file)
+            pbar.finish()
+
+    def _node_io_loop_start(self, data_file):
+        pass
+
+    def _node_io_loop_finish(self, data_file):
+        pass
+
+    def _node_io_loop_prepare(self, root_nodes):
+        """
+        This is called at the beginning of _node_io_loop.
+
+        In different frontends, this can be used to group nodes by
+        common data files.
+        """
+
+        return [None], [root_nodes]
+
+    def __iter__(self):
+        """
+        Iterate over all items in the tree list.
+
+        If possible, group nodes by common data files to speed
+        things up.
+        """
+
+        data_files, node_list = self._node_io_loop_prepare(self.trees)
+
+        for data_file, nodes in zip(data_files, node_list):
+            self._node_io_loop_start(data_file)
+            for node in nodes:
+                yield node
+            self._node_io_loop_finish(data_file)
 
     _trees = None
     @property
@@ -241,13 +290,6 @@ class Arbor(object):
                 return self._root_field_data.pop(key)
             return self._root_field_data[key]
         return self.trees[key]
-
-    def __iter__(self):
-        """
-        Iterate over all items in the tree list.
-        """
-        for t in self.trees:
-            yield t
 
     def __len__(self):
         """

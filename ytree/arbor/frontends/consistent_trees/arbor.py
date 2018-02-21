@@ -39,17 +39,14 @@ class ConsistentTreesArbor(Arbor):
     _field_info_class = ConsistentTreesFieldInfo
     _tree_field_io_class = ConsistentTreesTreeFieldIO
 
-    def __iter__(self):
-        self._node_io.data_file.open()
-        for my_node in self.trees:
-            yield my_node
-        self._node_io.data_file.close()
+    def _node_io_loop_prepare(self, root_nodes):
+        return [self._node_io.data_file], [root_nodes]
 
-    def _node_io_loop(self, func, *args, **kwargs):
-        self._node_io.data_file.open()
-        super(ConsistentTreesArbor, self)._node_io_loop(
-            func, *args, **kwargs)
-        self._node_io.data_file.close()
+    def _node_io_loop_start(self, data_file):
+        data_file.open()
+
+    def _node_io_loop_finish(self, data_file):
+        data_file.close()
 
     def _get_data_files(self):
         self._node_io.data_file = \

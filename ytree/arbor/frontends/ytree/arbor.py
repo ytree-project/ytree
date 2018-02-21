@@ -42,43 +42,21 @@ class YTreeArbor(Arbor):
     _tree_field_io_class = YTreeTreeFieldIO
     _suffix = ".h5"
 
-    def __iter__(self):
-        root_nodes = self.trees
+    def _node_io_loop_prepare(self, root_nodes):
         ai = np.array([node._ai for node in root_nodes])
         dfi = np.digitize(ai, self._node_io._ei)
         udfi = np.unique(dfi)
+        data_files = [self._node_io.data_files[i] for i in udfi]
+        node_list = [root_nodes[dfi == i] for i in udfi]
+        return data_files, node_list
 
-        for i in udfi:
-            my_nodes = root_nodes[dfi == i]
-            data_file = self._node_io.data_files[i]
-            data_file._field_cache = {}
-            data_file.open()
-            for my_node in my_nodes:
-                yield my_node
-            data_file._field_cache = {}
-            data_file.close()
+    def _node_io_loop_start(self, data_file):
+        data_file._field_cache = {}
+        data_file.open()
 
-    def _node_io_loop(self, func, *args, **kwargs):
-        root_nodes = kwargs.pop("root_nodes", None)
-        if root_nodes is None:
-            root_nodes = self.trees
-        opbar = kwargs.pop("pbar", None)
-
-        ai = np.array([node._ai for node in root_nodes])
-        dfi = np.digitize(ai, self._node_io._ei)
-        udfi = np.unique(dfi)
-
-        for i in udfi:
-            if opbar is not None:
-                kwargs["pbar"] = "%s [%d/%d]" % (opbar, i+1, udfi.size)
-            my_nodes = root_nodes[dfi == i]
-            kwargs["root_nodes"] = my_nodes
-            data_file = self._node_io.data_files[i]
-            data_file._field_cache = {}
-            data_file.open()
-            super(YTreeArbor, self)._node_io_loop(func, *args, **kwargs)
-            data_file._field_cache = {}
-            data_file.close()
+    def _node_io_loop_finish(self, data_file):
+        data_file._field_cache = {}
+        data_file.close()
 
     def _parse_parameter_file(self):
         self._prefix = \
