@@ -307,8 +307,8 @@ class LHaloTreeReader(object):
             simulation parameters. If not provided, one with the suffix '.param'
             is searched for in the same directory as the tree file. An IOError
             will be raised if it cannot be found.
-        scale_factors (np.ndarray, optional): 1D array of scale factors for each
-            snapshot. If not provided, they are loaded form scale_factor_file.
+        scale_factors (list or np.ndarray, optional): 1D array of scale factors for each
+            snapshot. If not provided, they are loaded from scale_factor_file.
         scale_factor_file (str, optional): Full path to the file containing the
             list of scale factors for each snapshot. If not provided, one with
             the suffix '.a_list' is searched for in the same directory as the
@@ -384,7 +384,7 @@ class LHaloTreeReader(object):
                 silent=silent)
             self._parameters = None
         if scale_factors is not None:
-            self._scale_factors = scale_factors
+            self._scale_factors = np.asarray(scale_factors)
             self.scale_factor_file = None
         else:
             self.scale_factor_file = self._verify_file(
