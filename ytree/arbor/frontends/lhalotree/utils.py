@@ -9,6 +9,7 @@ import warnings
 import numpy as np
 import os
 import glob
+from yt.extern.six import string_types
 
 
 """Default header data type."""
@@ -51,7 +52,7 @@ def read_header_default(filename):
 
     """
     # Open
-    if isinstance(filename, str):
+    if isinstance(filename, string_types):
         fd = open(filename, 'rb')
         close = True
     else:
