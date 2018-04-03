@@ -25,6 +25,8 @@ from yt.testing import \
     assert_rel_equal
 from yt.funcs import \
     get_pbar
+from yt.extern.six.moves import \
+    zip as izip
 
 from ytree.arbor.arbor import \
     load
@@ -123,7 +125,7 @@ def compare_arbors(a1, a2, groups=None, fields=None):
     i = 0
     ntot = len(a1)
     pbar = get_pbar("Comparing trees", ntot)
-    for t1, t2 in zip(a1, a2):
+    for t1, t2 in izip(a1, a2):
         compare_trees(t1, t2, groups=groups, fields=fields)
         i += 1
         pbar.update(i)
