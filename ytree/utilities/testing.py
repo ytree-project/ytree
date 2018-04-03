@@ -145,8 +145,8 @@ def compare_trees(t1, t2, groups=None, fields=None):
     for field in fields:
         for group in groups:
             assert (t1[group, field] == t2[group, field]).all()
-    t1.clear_fields()
-    t2.clear_fields()
+    t1.reset()
+    t2.reset()
 
 def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
                  **kwargs):
