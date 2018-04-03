@@ -31,6 +31,73 @@ load in this format, simply provide the path to one of these files.
    import ytree
    a = ytree.load("rockstar/rockstar_halos/out_0.list")
 
+LHaloTree
+---------
+
+.. todo:: New in version X.X?
+
+The `LHaloTree <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`_
+format is typically one or more files with a naming convention like
+"trees_063.0" that contain the trees themselves and a single file
+with a suffix ".a_list" that contains a list of the scale factors
+at the time of each simulation snapshot.
+
+In addition to the LHaloTree files, ytree also requires additional
+information about the simulation from a parameter file (in
+`Gadget <http://wwwmpa.mpa-garching.mpg.de/gadget/>`_ format). At
+minimum, the parameter file should contain the cosmological parameters
+``HubbleParam, Omega0, OmegaLambda, BoxSize, PeriodicBoundariesOn,``
+and ``ComovingIntegrationOn``, and the unit parameters
+``UnitVelocity_in_cm_per_s, UnitLength_in_cm,`` and ``UnitMass_in_g``.
+If not specified explicitly (see below), a file with the extension
+".param" will be searched for in the directory containing the
+LHaloTree files.
+
+If all of the required files are in the same directory, an LHaloTree
+catalog can be loaded from the path to one of the tree files.
+
+.. code-block:: python
+
+   import ytree
+   a = ytree.load("lhalotree/trees_063.0")
+
+Both the scale factor and parameter files can be specified explicitly
+through keyword arguments if they do not match the expected pattern
+or are located in a different directory than the tree files.
+
+.. code-block:: python
+
+   a = ytree.load("lhalotree/trees_063.0",
+                  parameter_file="lhalotree/param.txt",
+		  scale_factor_file="lhalotree/a_list.txt")
+
+The scale factors and/or parameters themselves can also be passed
+explicitly from python.
+
+.. code-block:: python
+
+   import numpy as np
+   parameters = dict(HubbleParam=0.7, Omega0=0.3, OmegaLambda=0.7,
+       BoxSize=62500, PeriodicBoundariesOn=1, ComovingIntegrationOn=1,
+       UnitVelocity_in_cm_per_s=100000, UnitLength_in_cm=3.08568e21,
+       UnitMass_in_g=1.989e+43)
+   scale_factors = [ 0.0078125,  0.012346 ,  0.019608 ,  0.032258 ,  0.047811 ,
+        0.051965 ,  0.056419 ,  0.061188 ,  0.066287 ,  0.071732 ,
+        0.07754  ,  0.083725 ,  0.090306 ,  0.097296 ,  0.104713 ,
+        0.112572 ,  0.120887 ,  0.129675 ,  0.13895  ,  0.148724 ,
+        0.159012 ,  0.169824 ,  0.181174 ,  0.19307  ,  0.205521 ,
+        0.218536 ,  0.232121 ,  0.24628  ,  0.261016 ,  0.27633  ,
+        0.292223 ,  0.308691 ,  0.32573  ,  0.343332 ,  0.361489 ,
+        0.380189 ,  0.399419 ,  0.419161 ,  0.439397 ,  0.460105 ,
+        0.481261 ,  0.502839 ,  0.524807 ,  0.547136 ,  0.569789 ,
+        0.59273  ,  0.615919 ,  0.639314 ,  0.66287  ,  0.686541 ,
+        0.710278 ,  0.734031 ,  0.757746 ,  0.781371 ,  0.804849 ,
+        0.828124 ,  0.851138 ,  0.873833 ,  0.896151 ,  0.918031 ,
+        0.939414 ,  0.960243 ,  0.980457 ,  1.       ]
+   a = ytree.load("lhalotree/trees_063.0",
+                  parameters=parameters,
+                  scale_factors=scale_factors)
+
 .. _load-treefarm:
 
 TreeFarm

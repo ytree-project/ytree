@@ -23,6 +23,10 @@ from unittest import \
     TestCase
 from yt.testing import \
     assert_rel_equal
+from yt.funcs import \
+    get_pbar
+from yt.extern.six.moves import \
+    zip as izip
 
 from ytree.arbor.arbor import \
     load
@@ -118,8 +122,14 @@ def compare_arbors(a1, a2, groups=None, fields=None):
     for field in fields:
         assert (a1[field] == a2[field]).all()
 
-    for t1, t2 in zip(a1, a2):
+    i = 0
+    ntot = len(a1)
+    pbar = get_pbar("Comparing trees", ntot)
+    for t1, t2 in izip(a1, a2):
         compare_trees(t1, t2, groups=groups, fields=fields)
+        i += 1
+        pbar.update(i)
+    pbar.finish()
 
 def compare_trees(t1, t2, groups=None, fields=None):
     """
@@ -135,8 +145,8 @@ def compare_trees(t1, t2, groups=None, fields=None):
     for field in fields:
         for group in groups:
             assert (t1[group, field] == t2[group, field]).all()
-    t1.clear_fields()
-    t2.clear_fields()
+    t1.reset()
+    t2.reset()
 
 def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
                  **kwargs):

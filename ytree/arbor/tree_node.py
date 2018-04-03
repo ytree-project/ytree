@@ -52,7 +52,7 @@ class TreeNode(object):
 
     def clear_fields(self):
         """
-        If a root node, remove tree-related data structures.
+        If a root node, delete field data.
         If not root node, do nothing.
         """
 
@@ -60,6 +60,21 @@ class TreeNode(object):
             return
         for attr in ["_root_field_data", "_tree_field_data"]:
             getattr(self, attr).clear()
+
+    def reset(self):
+        """
+        Reset all data structures.
+        """
+
+        self.clear_fields()
+        attrs = ["_tfi", "_tn", "_pfi", "_pn"]
+        if self.is_root:
+            self.root = -1
+            attrs.extend(["_nodes", "_descids", "_uids"])
+        else:
+            self.root = None
+        for attr in attrs:
+            setattr(self, attr, None)
 
     def add_ancestor(self, ancestor):
         """
