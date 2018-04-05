@@ -1,6 +1,9 @@
-__pycache__/
-ytree.egg-info
 syntax: glob
+__pycache__/
+.cache
+.pytest_cache
+flake8.out
+ytree.egg-info
 *~
 *.pyc
 doc/build
