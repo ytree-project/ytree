@@ -26,7 +26,8 @@ from yt.extern.six import \
 from yt.frontends.ytdata.utilities import \
     save_as_dataset
 from yt.funcs import \
-    get_pbar
+    get_pbar, \
+    TqdmProgressBar
 from yt.units.dimensions import \
     length
 from yt.units.unit_registry import \
@@ -201,30 +202,47 @@ class Arbor(object):
         If possible, group nodes by common data files to speed
         things up.  This should work like __iter__, except we call
         a function instead of yielding.
+
+        Parameters
+        ----------
+        func : function
+            Function to be called on an array of nodes.
+        pbar : optional, string or yt.funcs.TqdmProgressBar
+            A progress bar to be updated with each iteration.
+            If a string, a progress bar will be created and the
+            finish function will be called. If a progress bar is
+            provided, the finish function will not be called.
+            Default: None (no progress bar).
+        root_nodes : optional, array of root TreeNodes
+            Array of nodes over which the function will be called.
+            If None, the list will be self.trees (i.e., all
+            root_nodes).
+            Default: None.
         """
 
-        opbar = kwargs.pop("pbar", None)
+        pbar = kwargs.pop("pbar", None)
         root_nodes = kwargs.pop("root_nodes", None)
         if root_nodes is None:
             root_nodes = self.trees
         data_files, node_list = self._node_io_loop_prepare(root_nodes)
+        nnodes = sum([nodes.size for nodes in node_list])
 
-        for i, (data_file, nodes) in enumerate(zip(data_files, node_list)):
-            if opbar is None:
-                my_pbar = fake_pbar
-                pbar_str = ""
-            else:
-                my_pbar = get_pbar
-                pbar_str = opbar
-                if len(node_list) > 1:
-                    pbar_str += " [%d/%d]" % (i+1, len(node_list))
+        finish = True
+        if pbar is None:
+            pbar = fake_pbar("", nnodes)
+        elif not isinstance(pbar, TqdmProgressBar):
+            pbar = get_pbar(pbar, nnodes)
+        else:
+            finish = False
 
-            pbar = my_pbar(pbar_str, len(nodes))
+        for data_file, nodes in zip(data_files, node_list):
             self._node_io_loop_start(data_file)
             for node in nodes:
                 func(node, *args, **kwargs)
                 pbar.update(1)
             self._node_io_loop_finish(data_file)
+
+        if finish:
             pbar.finish()
 
     def _node_io_loop_start(self, data_file):
@@ -239,6 +257,12 @@ class Arbor(object):
 
         In different frontends, this can be used to group nodes by
         common data files.
+
+        Return
+        ------
+        list of data files and a list of node arrays
+
+        Each data file corresponds to an array of nodes.
         """
 
         return [None], [root_nodes]
