@@ -6,7 +6,7 @@ tests for backward compatibility with ytree 1.x
 """
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2017, Britton Smith <brittonsmith@gmail.com>
+# Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #

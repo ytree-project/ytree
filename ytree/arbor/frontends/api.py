@@ -6,7 +6,7 @@ API for ytree frontends
 """
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2017, ytree Development Team.
+# Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #

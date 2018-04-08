@@ -6,7 +6,7 @@ ytree utilities
 """
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2016, Britton Smith <brittonsmith@gmail.com>
+# Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
