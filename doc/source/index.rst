@@ -12,6 +12,7 @@ formats:
 - `consistent-trees <https://bitbucket.org/pbehroozi/consistent-trees>`_
 - `Rockstar <https://bitbucket.org/gfcstanford/rockstar>`_ halo catalogs
   without consistent-trees
+- `LHaloTree <http://adsabs.harvard.edu/abs/2005MNRAS.364.1105S>`_
 - :ref:`merger-trees made with ytree <treefarm>`
 
 All formats can be saved with a universal format that can be reloaded
@@ -34,12 +35,7 @@ Table of Contents
    Help.rst
    reference.rst
 
-Citing ytree
-============
-
-If you use ytree in your work, please cite it as "ytree, written by
-Britton Smith and the yt project" with a footnote pointing to
-http://ytree.readthedocs.io.
+.. include:: ../../CITATION.rst
 
 Search
 ======
