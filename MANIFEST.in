@@ -1,4 +1,4 @@
-include README* CREDITS COPYING.txt
+include README* CREDITS COPYING.txt CHANGELOG CONTRIBUTING.rst CITATION.rst
 recursive-include ytree *.py *.txt
 recursive-include doc *.rst *.py *.png
 include doc/README
