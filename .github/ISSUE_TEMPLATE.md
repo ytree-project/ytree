@@ -15,8 +15,8 @@ number of dependencies required.-->
 
 <!-- If you need to use a data file to trigger the issue you're having, consider
 using one of the sample datasets from the
-[ytree collection](https://girder.hub.yt/#collection/59835a1ee2a67400016a2cda)
-on the [yt hub](https://girder.hub.yt/). If your issue cannot be triggered using
+ytree collection (https://girder.hub.yt/#collection/59835a1ee2a67400016a2cda)
+on the yt hub (https://girder.hub.yt/). If your issue cannot be triggered using
 a public dataset, you can use the yt curldrop
 (https://docs.hub.yt/services.html#curldrop) to share data files. Please include
 a link to the dataset in the issue if you use the curldrop.-->
