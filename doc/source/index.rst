@@ -33,6 +33,7 @@ Table of Contents
    Contributing.rst
    Developing.rst
    Help.rst
+   Citing.rst
    reference.rst
 
 .. include:: ../../CITATION.rst
