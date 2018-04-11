@@ -16,6 +16,7 @@ API for ytree frontends
 import importlib
 
 _frontends = [
+    "ahf",
     "arborarbor",
     "consistent_trees",
     "lhalotree",
