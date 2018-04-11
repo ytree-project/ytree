@@ -17,7 +17,7 @@ import numpy as np
 
 from ytree.arbor.io import \
     CatalogDataFile
-from ytree.arbor.frontends.rockstar.misc import \
+from ytree.utilities.io import \
     f_text_block
 
 class RockstarDataFile(CatalogDataFile):
