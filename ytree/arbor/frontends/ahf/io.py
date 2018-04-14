@@ -24,9 +24,11 @@ from ytree.utilities.io import \
 class AHFDataFile(CatalogDataFile):
     def __init__(self, filename, arbor):
         self.filename = filename
+        self.filekey = \
+          self.filename[:self.filename.rfind(".parameter")]
         self._parse_header()
         self.data_filekey = "%s.z%.03f" % \
-          (self.filename, self.redshift)
+          (self.filekey, self.redshift)
         self.offsets = None
         self.arbor = weakref.proxy(arbor)
 
@@ -43,7 +45,7 @@ class AHFDataFile(CatalogDataFile):
         npars = len(pars.keys())
         vals = {}
 
-        f = open("%s.log" % self.filename, "r")
+        f = open("%s.log" % self.filekey, "r")
         while True:
             line = f.readline()
             if line is None:
