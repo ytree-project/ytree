@@ -43,18 +43,23 @@ class AHFArbor(CatalogArbor):
                      "hubble_constant"]:
             setattr(self, attr, getattr(df, attr))
 
+        # fields from from the .AHF_halos files
         f = open("%s.AHF_halos" % df.data_filekey)
         line = f.readline()
         f.close()
 
         fields = [key[:key.rfind("(")]
                   for key in line[1:].strip().split()]
-        fi = dict([(field, {"column": i})
+        fi = dict([(field, {"column": i, "file": "halos"})
                    for i, field in enumerate(fields)])
 
         # the scale factor comes from the catalog file header
         fields.append("redshift")
-        fi["redshift"] = {"column": "header", "units": ""}
+        fi["redshift"] = {"file": "header", "units": ""}
+
+        # the descendent ids come from the .AHF_mtree files
+        fields.append("desc_id")
+        fi["desc_id"] = {"file": "mtree", "units": ""}
 
         self.field_list = fields
         self.field_info.update(fi)

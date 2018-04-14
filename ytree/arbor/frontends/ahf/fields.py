@@ -23,8 +23,7 @@ v_unit = "km/s"
 
 class AHFFieldInfo(FieldInfoContainer):
     alias_fields = (
-    #     ("halo_id", "ID", None),
-    #     ("desc_id", "DescID", None),
+        ("halo_id", "ID", None),
     #     ("mass", "Mvir", m_unit),
     #     ("virial_mass", "Mvir", m_unit),
     #     ("virial_radius", "Rvir", r_unit),

@@ -14,6 +14,7 @@ AHFArbor io classes and member functions
 #-----------------------------------------------------------------------------
 
 import numpy as np
+import os
 import weakref
 
 from ytree.arbor.io import \
@@ -22,6 +23,9 @@ from ytree.utilities.io import \
     f_text_block
 
 class AHFDataFile(CatalogDataFile):
+
+    _data_exts = ("halos", "mtree")
+
     def __init__(self, filename, arbor):
         self.filename = filename
         self.filekey = \
@@ -29,8 +33,30 @@ class AHFDataFile(CatalogDataFile):
         self._parse_header()
         self.data_filekey = "%s.z%.03f" % \
           (self.filekey, self.redshift)
+        self.fh = {}
+        for ext in self._data_exts:
+            fn = "%s.AHF_%s" % (self.data_filekey, ext)
+            if os.path.exists(fn):
+                self.fh[ext] = None
+        self._parse_data_headers()
         self.offsets = None
         self.arbor = weakref.proxy(arbor)
+
+    def _parse_data_headers(self):
+        """
+        Get header sizes from the two data files ending
+        in .AHF_halos and .AHF_mtree.
+        """
+
+        self._hoffset = {}
+        self.open()
+        for ext, fh in self.fh.items():
+            for line, loc in f_text_block(fh):
+                if not line.startswith("#"):
+                    loc -= len(line) + 1
+                    break
+            self._hoffset[ext] = loc + len(line) + 1
+        self.close()
 
     def _parse_header(self):
         """
@@ -64,8 +90,25 @@ class AHFDataFile(CatalogDataFile):
         for par, val in vals.items():
             setattr(self, par, val)
 
-    def open(self):
-        self.fh = open(self.filename, "r")
+    def open(self, exts=None):
+        if exts is None:
+            exts = list(self.fh.keys())
+        elif not isinstance(exts, list):
+            exts = list(exts)
+        for ext in exts:
+            if self.fh[ext] is None:
+                self.fh[ext] = \
+                  open("%s.AHF_%s" % (self.data_filekey, ext), "r")
+
+    def close(self, exts=None):
+        if exts is None:
+            exts = list(self.fh.keys())
+        elif not isinstance(exts, list):
+            exts = list(exts)
+        for ext in exts:
+            if self.fh[ext] is not None:
+                self.fh[ext].close()
+                self.fh[ext] = None
 
     def _read_fields(self, fields, tree_nodes=None, dtypes=None):
         if dtypes is None:
@@ -73,7 +116,7 @@ class AHFDataFile(CatalogDataFile):
 
         fi = self.arbor.field_info
         hfields = [field for field in fields
-                   if fi[field]["column"] == "header"]
+                   if fi[field]["file"] == "header"]
         rfields = set(fields).difference(hfields)
 
         hfield_values = dict((field, getattr(self, field))
