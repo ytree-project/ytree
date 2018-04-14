@@ -14,6 +14,7 @@ AHFArbor io classes and member functions
 #-----------------------------------------------------------------------------
 
 import numpy as np
+import weakref
 
 from ytree.arbor.io import \
     CatalogDataFile
@@ -22,29 +23,47 @@ from ytree.utilities.io import \
 
 class AHFDataFile(CatalogDataFile):
     def __init__(self, filename, arbor):
+        self.filename = filename
+        self._parse_header()
+        self.data_filekey = "%s.z%.03f" % \
+          (self.filename, self.redshift)
         self.offsets = None
-        super(AHFDataFile, self).__init__(filename, arbor)
-
-    def open(self):
-        self.fh = open(self.filename, "r")
+        self.arbor = weakref.proxy(arbor)
 
     def _parse_header(self):
-        self.open()
-        f = self.fh
-        f.seek(0, 2)
-        self.file_size = f.tell()
-        f.seek(0)
+        """
+        Get header information from the .log file.
+        Use that to get the name of the data file.
+        """
+
+        pars = {"Redshift": "redshift",
+                "Omega0": "omega_matter",
+                "OmegaLambda": "omega_lambda",
+                "Hubble parameter": "hubble_constant"}
+        npars = len(pars.keys())
+        vals = {}
+
+        f = open("%s.log" % self.filename, "r")
         while True:
             line = f.readline()
             if line is None:
-                self._hoffset = f.tell()
                 break
-            elif not line.startswith("#"):
-                self._hoffset = f.tell() - len(line)
+            if len(vals.keys()) == npars:
                 break
-            elif line.startswith("#a = "):
-                self.scale_factor = float(line.split(" = ")[1])
-        self.close()
+            for par in pars:
+                key = pars[par]
+                if key in vals:
+                    continue
+                if "%s:" % par in line:
+                    val = float(line.split(":")[1])
+                    vals[key] = val
+        f.close()
+
+        for par, val in vals.items():
+            setattr(self, par, val)
+
+    def open(self):
+        self.fh = open(self.filename, "r")
 
     def _read_fields(self, fields, tree_nodes=None, dtypes=None):
         if dtypes is None:

@@ -32,68 +32,30 @@ class AHFArbor(CatalogArbor):
     Use only descendent IDs to determine tree relationship.
     """
 
-    _suffix = ".list"
     _field_info_class = AHFFieldInfo
     _data_file_class = AHFDataFile
 
     def _parse_parameter_file(self):
-        self.field_list = []
-        return
-        fgroups = setup_field_groups()
-        rems = ["%s%s%s" % (s[0], t, s[1])
-                for s in [("(", ")"), ("", "")]
-                for t in ["physical, peculiar",
-                          "comoving", "physical"]]
+        filekey = self.filename[:self.filename.rfind(".parameter")]
+        df = AHFDataFile(filekey, self)
 
-        f = open(self.filename, "r")
-        # Read the first line as a list of all fields.
-        fields = f.readline()[1:].strip().split()
+        for attr in ["omega_matter",
+                     "omega_lambda",
+                     "hubble_constant"]:
+            setattr(self, attr, getattr(df, attr))
 
-        # Get box size, cosmological parameters, and units.
-        while True:
-            line = f.readline()
-            if line is None or not line.startswith("#"):
-                break
-            elif line.startswith("#Om = "):
-                pars = line[1:].split(";")
-                for j, par in enumerate(["omega_matter",
-                                         "omega_lambda",
-                                         "hubble_constant"]):
-                    v = float(pars[j].split(" = ")[1])
-                    setattr(self, par, v)
-            elif line.startswith("#Box size:"):
-                pars = line.split(":")[1].strip().split()
-                self.box_size = self.quan(float(pars[0]), pars[1])
-            # Looking for <quantities> in <units>
-            elif line.startswith("#Units:"):
-                if " in " not in line: continue
-                quan, punits = line[8:].strip().split(" in ", 2)
-                for rem in rems:
-                    while rem in punits:
-                        pre, mid, pos = punits.partition(rem)
-                        punits = pre + pos
-                try:
-                    self.quan(1, punits)
-                except UnitParseError:
-                    punits = ""
-                for group in fgroups:
-                    if group.in_group(quan):
-                        group.units = punits
-                        break
+        f = open("%s.AHF_halos" % df.data_filekey)
+        line = f.readline()
         f.close()
 
-        fi = {}
-        for i, field in enumerate(fields):
-            for group in fgroups:
-                units = ""
-                if group.in_group(field):
-                    units = getattr(group, "units", "")
-                    break
-            fi[field] = {"column": i, "units": units}
+        fields = [key[:key.rfind("(")]
+                  for key in line[1:].strip().split()]
+        fi = dict([(field, {"column": i})
+                   for i, field in enumerate(fields)])
 
         # the scale factor comes from the catalog file header
-        fields.append("scale_factor")
-        fi["scale_factor"] = {"column": "header", "units": ""}
+        fields.append("redshift")
+        fi["redshift"] = {"column": "header", "units": ""}
 
         self.field_list = fields
         self.field_info.update(fi)
@@ -127,9 +89,9 @@ class AHFArbor(CatalogArbor):
         .parameter file.
         """
         fn = args[0]
-        if not fn.endswith(".AHF_halos"):
+        if not fn.endswith(".parameter"):
             return False
-        key = fn[:fn.rfind(".z")]
-        if not os.path.exists(key + ".parameter"):
+        key = fn[:fn.rfind(".parameter")]
+        if not os.path.exists(key + ".log"):
             return False
         return True
