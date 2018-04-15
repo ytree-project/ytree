@@ -879,6 +879,7 @@ class CatalogArbor(Arbor):
         trees = []
         nfiles = len(self.data_files)
         descs = lastids = None
+        pbar = get_pbar("Planting trees", len(self.data_files))
         for i, dfl in enumerate(self.data_files):
             if not isinstance(dfl, list):
                 dfl = [dfl]
@@ -934,6 +935,8 @@ class CatalogArbor(Arbor):
                     descs[ib:ib+bs] = batch
                     lastids[ib:ib+bs] = hid
                     ib += bs
+            pbar.update(i)
+        pbar.finish()
 
         self._trees = np.array(trees)
 
