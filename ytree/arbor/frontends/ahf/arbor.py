@@ -64,23 +64,36 @@ class AHFArbor(CatalogArbor):
         self.field_list = fields
         self.field_info.update(fi)
 
+    _fprefix = None
+    @property
+    def _prefix(self):
+        if self._fprefix is None:
+            self._fprefix = self.filename.rsplit("_", 1)[0]
+        return self._fprefix
+
     def _get_data_files(self):
         """
         Get all *.parameter files and sort them in reverse order.
         """
-        prefix = self.filename.rsplit("_", 1)[0]
-        suffix = self._suffix
-        my_files = glob.glob("%s_*%s" % (prefix, suffix))
+        my_files = glob.glob("%s_*%s" % (self._prefix, self._suffix))
         # sort by catalog number
         my_files.sort(
             key=lambda x:
-            self._get_file_index(x, prefix, suffix),
-            reverse=True)
+            self._get_file_index(x))
         self.data_files = \
           [self._data_file_class(f, self) for f in my_files]
 
-    def _get_file_index(self, f, prefix, suffix):
-        return int(f[f.find(prefix)+len(prefix)+1:f.rfind(suffix)]),
+        # Set the mtree file for file i to that of i-1, since
+        # AHF thinks in terms of progenitors and not descendents.
+        for i, data_file in enumerate(self.data_files[:-1]):
+            data_file.mtree_filename = \
+              self.data_files[i+1].mtree_filename
+        self.data_files[-1].mtree_filename = None
+        self.data_files.reverse()
+
+    def _get_file_index(self, f):
+        return int(f[f.find(self._prefix) + len(self._prefix)+1:
+                     f.rfind(self._suffix)]),
 
     @classmethod
     def _is_valid(self, *args, **kwargs):

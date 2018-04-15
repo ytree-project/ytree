@@ -867,8 +867,11 @@ class CatalogArbor(Arbor):
         raise NotImplementedError
 
     def _plant_trees(self):
-        fields, _ = \
-          self.field_info.resolve_field_dependencies(["halo_id", "desc_id"])
+        # this can be called once with the list, but fields are
+        # not guaranteed to be returned in order.
+        fields = \
+          [self.field_info.resolve_field_dependencies([field])[0][0]
+           for field in ["halo_id", "desc_id"]]
         halo_id_f, desc_id_f = fields
         dtypes = dict((field, np.int64) for field in fields)
         uid = 0
@@ -891,6 +894,11 @@ class CatalogArbor(Arbor):
                 for it in range(nhalos):
                     descid = data[desc_id_f][it]
                     root = i == 0 or descid == -1
+                    # The data says a descendant exists, but it's not there.
+                    # This shouldn't happen, but it does sometimes.
+                    if not root and descid not in lastids:
+                        root = True
+                        descid = data[desc_id_f][it] = -1
                     tree_node = TreeNode(uid, arbor=self, root=root)
                     tree_node._fi = it
                     tree_node.data_file = data_file
