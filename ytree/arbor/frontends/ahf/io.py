@@ -65,7 +65,8 @@ class AHFDataFile(CatalogDataFile):
         pars = {"Redshift": "redshift",
                 "Omega0": "omega_matter",
                 "OmegaLambda": "omega_lambda",
-                "Hubble parameter": "hubble_constant"}
+                "Hubble parameter": "hubble_constant",
+                "Boxsize": "box_size"}
         npars = len(pars.keys())
         vals = {}
 

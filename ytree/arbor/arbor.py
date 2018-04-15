@@ -387,6 +387,7 @@ class Arbor(object):
     def _setup_fields(self):
         self.derived_field_list = []
         self.analysis_field_list = []
+        self.field_info.setup_known_fields()
         self.field_info.setup_aliases()
         self.field_info.setup_derived_fields()
 

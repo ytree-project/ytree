@@ -29,8 +29,17 @@ class FieldInfoContainer(dict):
     """
 
     alias_fields = ()
+    known_fields = ()
     def __init__(self, arbor):
         self.arbor = weakref.proxy(arbor)
+
+    def setup_known_fields(self):
+        for field, units in self.known_fields:
+            if field not in self:
+                continue
+            funits = self[field].get("units")
+            if funits is None:
+                self[field]["units"] = units
 
     def setup_aliases(self):
         """

@@ -42,6 +42,7 @@ class AHFArbor(CatalogArbor):
                      "omega_lambda",
                      "hubble_constant"]:
             setattr(self, attr, getattr(df, attr))
+        self.box_size = self.quan(df.box_size, "kpc/h")
 
         # fields from from the .AHF_halos files
         f = open("%s.AHF_halos" % df.data_filekey)
