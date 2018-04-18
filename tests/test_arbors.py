@@ -15,6 +15,8 @@ arbor tests
 
 from ytree.arbor.frontends.consistent_trees import \
     ConsistentTreesArbor
+from ytree.arbor.frontends.ahf import \
+    AHFArbor
 from ytree.arbor.frontends.rockstar import \
     RockstarArbor
 from ytree.arbor.frontends.tree_farm import \
@@ -24,6 +26,10 @@ from ytree.arbor.frontends.lhalotree import \
 from ytree.utilities.testing import \
     ArborTest, \
     TempDirTest
+
+class AHFArborTest(TempDirTest, ArborTest):
+    arbor_type = AHFArbor
+    test_filename = "ahf_halos/snap_N64L16_000.parameter"
 
 class ConsistentTreesArborTest(TempDirTest, ArborTest):
     arbor_type = ConsistentTreesArbor
