@@ -8,7 +8,7 @@
 This is ytree, a [yt](https://github.com/yt-project/yt) extension for generating and working with
 merger-tree data.  ytree supports:
 
- * loading merger-tree data from Consistent-Trees, Rockstar, and LHaloTree formats
+ * loading merger-tree data from the Amiga Halo Finder, Consistent-Trees, Rockstar, and LHaloTree formats
 
  * creating merger trees from Gadget's inline FOF/SUBFIND catalogs
 
