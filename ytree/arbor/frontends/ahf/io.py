@@ -138,7 +138,7 @@ class AHFDataFile(CatalogDataFile):
         for line, offset in f_text_block(f):
             if line.startswith("#"):
                 continue
-            if line[0].isnumeric():
+            if line[0].isdigit():
                 oline = line.split()
                 descid = int(oline[0])
                 descpart = int(oline[1])
