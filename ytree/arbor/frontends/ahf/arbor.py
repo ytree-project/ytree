@@ -16,9 +16,6 @@ AHFArbor class and member functions
 import glob
 import os
 
-from yt.units.yt_array import \
-    UnitParseError
-
 from ytree.arbor.arbor import \
     CatalogArbor
 from ytree.arbor.frontends.ahf.fields import \
