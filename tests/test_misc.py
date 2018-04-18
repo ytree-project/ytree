@@ -14,7 +14,7 @@ miscellaneous utility tests
 #-----------------------------------------------------------------------------
 
 import os
-from ytree.arbor.frontends.rockstar.misc import \
+from ytree.utilities.io import \
     f_text_block
 from ytree.utilities.testing import \
     requires_file, \

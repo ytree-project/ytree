@@ -13,8 +13,6 @@ RockstarArbor miscellany
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import numpy as np
-
 class Group(object):
     def __init__(self, name=None):
         self.things = None
