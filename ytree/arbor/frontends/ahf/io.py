@@ -79,7 +79,14 @@ class AHFDataFile(CatalogDataFile):
         if self.fh is None:
             self.fh = open(self.halos_filename, "r")
 
-    def _compute_tree(self):
+    _links = None
+    @property
+    def links(self):
+        if self._links is None:
+            self._compute_links()
+        return self._links
+
+    def _compute_links(self):
         """
         Compute the tree from the graph.
 
@@ -99,7 +106,8 @@ class AHFDataFile(CatalogDataFile):
 
         data = self._read_mtree()
         if data is None:
-            return None
+            self._links = -1
+            return
 
         m = data["shared"]**2 / (data["prog_part"] * data["desc_part"])
 
@@ -111,9 +119,13 @@ class AHFDataFile(CatalogDataFile):
             descids[i] = data["desc_id"][prf][m[prf].argmax()]
         udata = {"prog_id": progids, "desc_id": descids}
 
-        return udata
+        self._links = udata
 
     def _read_mtree(self):
+        """
+        Read map of progenitors to descendents.
+        This is the ".AHF_mtree" file.
+        """
         if self.mtree_filename is None:
             return None
 
@@ -164,7 +176,6 @@ class AHFDataFile(CatalogDataFile):
         # If we needs desc_ids, make sure to get IDs so
         # we can link them.
         if tfields:
-            links = self._compute_tree()
             if "ID" not in rfields:
                 rfields.append("ID")
 
@@ -187,29 +198,12 @@ class AHFDataFile(CatalogDataFile):
             if self.offsets is None:
                 self.offsets = np.array(offsets)
 
-            if tfields:
-                descids = \
-                  np.empty(len(field_data["ID"]),
-                          dtype=dtypes.get(field, self._default_dtype))
-                if links is None:
-                    descids[:] = -1
-                else:
-                    for i, hid in enumerate(field_data["ID"]):
-                        inlink = hid == links["prog_id"]
-                        if not inlink.any():
-                            descids[i] = -1
-                        else:
-                            descids[i] = \
-                          links["desc_id"][np.where(inlink)[0][0]]
-                field_data["desc_id"] = descids
-
         else:
             ntrees = len(tree_nodes)
             field_data = \
-              dict((field,
-                    np.empty(ntrees,
-                             dtype=dtypes.get(field, self._default_dtype)))
-                    for field in fields)
+              dict((field, np.empty(
+                  ntrees, dtype=dtypes.get(field, self._default_dtype)))
+                  for field in rfields + hfields)
 
             # fields from the file header
             for field in hfields:
@@ -226,6 +220,23 @@ class AHFDataFile(CatalogDataFile):
                     dtype = dtypes.get(field, self._default_dtype)
                     field_data[field][i] = dtype(sline[fi[field]["column"]])
             self.close()
+
+        # use data from the mtree file to get descendant ids
+        if tfields:
+            links = self.links
+            descids = np.empty(
+                len(field_data["ID"]),
+                dtype=dtypes.get(field, self._default_dtype))
+            if self.links == -1:
+                descids[:] = -1
+            else:
+                for i, hid in enumerate(field_data["ID"]):
+                    inlink = hid == links["prog_id"]
+                    if not inlink.any():
+                        descids[i] = -1
+                    else:
+                        descids[i] = links["desc_id"][np.where(inlink)[0][0]]
+            field_data["desc_id"] = descids
 
         for field in field_data:
             if isinstance(field_data[field], np.ndarray):
