@@ -18,15 +18,24 @@ of the first ".parameter" file.
 .. code-block:: python
 
    import ytree
-   a = ytree.load("ahf_halos/snap_N64L16_000.parameter")
+   a = ytree.load("ahf_halos/snap_N64L16_000.parameter",
+                  hubble_constant=0.7)
 
-.. note:: There will be no ".AHF_mtree" file for index 0 as these files store
-          links between files N and N-1. Additionally, `ytree` is able to load
-          data where the graph has been calculated instead of the tree.
-          However, even in this case, only the tree is preserved in `ytree`.
-          See the `Amiga Halo Finder Documentation
-          <http://popia.ft.uam.es/AHF/Documentation.html>`_ for a discussion
-          of the difference between graphs and trees.
+.. note:: Three important notes about loading AHF data:
+
+          1. The dimensionless Hubble parameter is not provided in AHF
+             outputs.  This should be supplied by hand using the
+             ``hubble_constant`` keyword. The default value is 1.0.
+
+          2. There will be no ".AHF_mtree" file for index 0 as the
+             ".AHF_mtree" files store links between files N-1 and N.
+
+          3. ytree is able to load data where the graph has been
+             calculated instead of the tree. However, even in this case,
+             only the tree is preserved in ytree. See the `Amiga Halo
+             Finder Documentation
+             <http://popia.ft.uam.es/AHF/Documentation.html>`_
+             for a discussion of the difference between graphs and trees.
 
 Consistent-Trees
 ----------------

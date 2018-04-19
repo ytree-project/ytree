@@ -1010,6 +1010,9 @@ def load(filename, method=None, **kwargs):
     >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.h5")
     >>> # LHaloTree catalogs
     >>> a = ytree.load("my_halos/trees_063.0")
+    >>> # Amiga Halo Finder
+    >>> a = ytree.load("ahf_halos/snap_N64L16_000.parameter",
+    ...                hubble_constant=0.7)
 
     """
     if not os.path.exists(filename):
