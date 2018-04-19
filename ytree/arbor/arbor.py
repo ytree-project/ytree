@@ -96,7 +96,6 @@ class Arbor(object):
 
         self.filename = filename
         self.basename = os.path.basename(filename)
-        self.unit_registry = UnitRegistry()
         self._parse_parameter_file()
         self._set_units()
         self._root_field_data = FieldContainer(self)
@@ -345,6 +344,8 @@ class Arbor(object):
         """
         Unit system registry.
         """
+        if self._unit_registry is None:
+            self._unit_registry = UnitRegistry()
         return self._unit_registry
 
     @unit_registry.setter

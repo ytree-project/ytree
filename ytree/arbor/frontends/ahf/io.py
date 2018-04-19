@@ -18,6 +18,8 @@ import numpy as np
 import os
 import weakref
 
+from ytree.arbor.frontends.ahf.misc import \
+    parse_AHF_file
 from ytree.arbor.io import \
     CatalogDataFile
 from ytree.utilities.io import \
@@ -58,33 +60,17 @@ class AHFDataFile(CatalogDataFile):
 
     def _parse_header(self):
         """
-        Get header information from the .log file.
-        Use that to get the name of the data file.
+        Get header information from the .log and .parameter
+        files. Use that to get the name of the data file.
         """
 
-        pars = {"Redshift": "redshift",
-                "Omega0": "omega_matter",
-                "OmegaLambda": "omega_lambda",
-                "Hubble parameter": "hubble_constant",
-                "Boxsize": "box_size"}
-        npars = len(pars.keys())
-        vals = {}
-
-        f = open("%s.log" % self.filekey, "r")
-        while True:
-            line = f.readline()
-            if line is None:
-                break
-            if len(vals.keys()) == npars:
-                break
-            for par in pars:
-                key = pars[par]
-                if key in vals:
-                    continue
-                if "%s:" % par in line:
-                    val = float(line.split(":")[1])
-                    vals[key] = val
-        f.close()
+        pars = {"simu.omega0": "omega_matter",
+                "simu.lambda0": "omega_lambda",
+                "simu.boxsize": "box_size"}
+        vals = parse_AHF_file(
+            self.filekey + ".log", pars, sep=":")
+        vals.update(parse_AHF_file(
+            self.filekey + ".parameter", {"z": "redshift"}))
 
         for par, val in vals.items():
             setattr(self, par, val)

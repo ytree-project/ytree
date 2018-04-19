@@ -22,6 +22,8 @@ from ytree.arbor.frontends.ahf.fields import \
     AHFFieldInfo
 from ytree.arbor.frontends.ahf.io import \
     AHFDataFile
+from yt.units.unit_registry import \
+    UnitRegistry
 
 class AHFArbor(CatalogArbor):
     """
@@ -33,13 +35,17 @@ class AHFArbor(CatalogArbor):
     _field_info_class = AHFFieldInfo
     _data_file_class = AHFDataFile
 
+    def __init__(self, filename, hubble_constant=1.0):
+        self.unit_registry = UnitRegistry()
+        self.hubble_constant = hubble_constant
+        super(AHFArbor, self).__init__(filename)
+
     def _parse_parameter_file(self):
         df = AHFDataFile(self.filename, self)
         for attr in ["omega_matter",
-                     "omega_lambda",
-                     "hubble_constant"]:
+                     "omega_lambda"]:
             setattr(self, attr, getattr(df, attr))
-        self.box_size = self.quan(df.box_size, "kpc/h")
+        self.box_size = self.quan(df.box_size, "Mpc/h")
 
         # fields from from the .AHF_halos files
         f = open("%s.AHF_halos" % df.data_filekey)
