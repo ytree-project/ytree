@@ -144,7 +144,10 @@ def compare_trees(t1, t2, groups=None, fields=None):
 
     for field in fields:
         for group in groups:
-            assert (t1[group, field] == t2[group, field]).all()
+            assert_array_equal(
+                t1[group, field], t2[group, field],
+                err_msg="Tree comparison failed for %s field: %s." %
+                (group, field))
     t1.reset()
     t2.reset()
 

@@ -5,6 +5,38 @@ Loading Data
 
 Below are instructions for loading all supported datasets.
 
+Amiga Halo Finder
+-----------------
+
+The `Amiga Halo Finder <http://popia.ft.uam.es/AHF/Download.html>`_ format
+stores data in a series of files, with one each per snapshot.  Parameters
+are stored in ".parameters" and ".log" files, halo information in
+".AHF_halos" files, and descendent/ancestor links are stored in ".AHF_mtree"
+files.  Make sure to keep all of these together.  To load, provide the name
+of the first ".parameter" file.
+
+.. code-block:: python
+
+   import ytree
+   a = ytree.load("ahf_halos/snap_N64L16_000.parameter",
+                  hubble_constant=0.7)
+
+.. note:: Three important notes about loading AHF data:
+
+          1. The dimensionless Hubble parameter is not provided in AHF
+             outputs.  This should be supplied by hand using the
+             ``hubble_constant`` keyword. The default value is 1.0.
+
+          2. There will be no ".AHF_mtree" file for index 0 as the
+             ".AHF_mtree" files store links between files N-1 and N.
+
+          3. ytree is able to load data where the graph has been
+             calculated instead of the tree. However, even in this case,
+             only the tree is preserved in ytree. See the `Amiga Halo
+             Finder Documentation
+             <http://popia.ft.uam.es/AHF/Documentation.html>`_
+             for a discussion of the difference between graphs and trees.
+
 Consistent-Trees
 ----------------
 
@@ -33,8 +65,6 @@ load in this format, simply provide the path to one of these files.
 
 LHaloTree
 ---------
-
-.. todo:: New in version X.X?
 
 The `LHaloTree <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`_
 format is typically one or more files with a naming convention like

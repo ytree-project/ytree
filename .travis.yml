@@ -71,4 +71,4 @@ before_script:
 
 script:
   - |
-    pytest tests
+    travis_wait 20 pytest tests

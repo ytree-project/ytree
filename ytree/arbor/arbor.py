@@ -96,7 +96,6 @@ class Arbor(object):
 
         self.filename = filename
         self.basename = os.path.basename(filename)
-        self.unit_registry = UnitRegistry()
         self._parse_parameter_file()
         self._set_units()
         self._root_field_data = FieldContainer(self)
@@ -345,6 +344,8 @@ class Arbor(object):
         """
         Unit system registry.
         """
+        if self._unit_registry is None:
+            self._unit_registry = UnitRegistry()
         return self._unit_registry
 
     @unit_registry.setter
@@ -387,6 +388,7 @@ class Arbor(object):
     def _setup_fields(self):
         self.derived_field_list = []
         self.analysis_field_list = []
+        self.field_info.setup_known_fields()
         self.field_info.setup_aliases()
         self.field_info.setup_derived_fields()
 
@@ -867,14 +869,18 @@ class CatalogArbor(Arbor):
         raise NotImplementedError
 
     def _plant_trees(self):
-        fields, _ = \
-          self.field_info.resolve_field_dependencies(["halo_id", "desc_id"])
+        # this can be called once with the list, but fields are
+        # not guaranteed to be returned in order.
+        fields = \
+          [self.field_info.resolve_field_dependencies([field])[0][0]
+           for field in ["halo_id", "desc_id"]]
         halo_id_f, desc_id_f = fields
         dtypes = dict((field, np.int64) for field in fields)
         uid = 0
         trees = []
         nfiles = len(self.data_files)
         descs = lastids = None
+        pbar = get_pbar("Planting trees", len(self.data_files))
         for i, dfl in enumerate(self.data_files):
             if not isinstance(dfl, list):
                 dfl = [dfl]
@@ -891,6 +897,11 @@ class CatalogArbor(Arbor):
                 for it in range(nhalos):
                     descid = data[desc_id_f][it]
                     root = i == 0 or descid == -1
+                    # The data says a descendant exists, but it's not there.
+                    # This shouldn't happen, but it does sometimes.
+                    if not root and descid not in lastids:
+                        root = True
+                        descid = data[desc_id_f][it] = -1
                     tree_node = TreeNode(uid, arbor=self, root=root)
                     tree_node._fi = it
                     tree_node.data_file = data_file
@@ -925,6 +936,8 @@ class CatalogArbor(Arbor):
                     descs[ib:ib+bs] = batch
                     lastids[ib:ib+bs] = hid
                     ib += bs
+            pbar.update(i)
+        pbar.finish()
 
         self._trees = np.array(trees)
 
@@ -997,6 +1010,9 @@ def load(filename, method=None, **kwargs):
     >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.h5")
     >>> # LHaloTree catalogs
     >>> a = ytree.load("my_halos/trees_063.0")
+    >>> # Amiga Halo Finder
+    >>> a = ytree.load("ahf_halos/snap_N64L16_000.parameter",
+    ...                hubble_constant=0.7)
 
     """
     if not os.path.exists(filename):

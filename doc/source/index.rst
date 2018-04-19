@@ -9,10 +9,11 @@ merger-trees from Gadget FoF/Subfind catalogs, either for all halos or for a
 specific set of halos.  ytree is able to load in merger-tree from the following
 formats:
 
-- `consistent-trees <https://bitbucket.org/pbehroozi/consistent-trees>`_
+- `Amiga Halo Finder <http://popia.ft.uam.es/AHF/Download.html>`_
+- `Consistent-Trees <https://bitbucket.org/pbehroozi/consistent-trees>`_
+- `LHaloTree <http://adsabs.harvard.edu/abs/2005MNRAS.364.1105S>`_
 - `Rockstar <https://bitbucket.org/gfcstanford/rockstar>`_ halo catalogs
   without consistent-trees
-- `LHaloTree <http://adsabs.harvard.edu/abs/2005MNRAS.364.1105S>`_
 - :ref:`merger-trees made with ytree <treefarm>`
 
 All formats can be saved with a universal format that can be reloaded

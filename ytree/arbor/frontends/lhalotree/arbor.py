@@ -206,6 +206,6 @@ class LHaloTreeArbor(Arbor):
         try:
             kwargs.update(silent=True, validate=True)
             LHaloTreeReader(*args, **kwargs)
-        except IOError:
+        except (IOError, TypeError):
             return False
         return True
