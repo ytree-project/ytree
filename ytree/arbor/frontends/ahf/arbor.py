@@ -27,8 +27,7 @@ from yt.units.unit_registry import \
 
 class AHFArbor(CatalogArbor):
     """
-    Class for Arbors created from AHF out_*.list files.
-    Use only descendent IDs to determine tree relationship.
+    Arbor for Amiga Halo Finder data.
     """
 
     _suffix = ".parameter"

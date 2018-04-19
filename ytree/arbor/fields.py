@@ -34,6 +34,10 @@ class FieldInfoContainer(dict):
         self.arbor = weakref.proxy(arbor)
 
     def setup_known_fields(self):
+        """
+        Add units for fields on disk as defined in the known_fields
+        tuple.
+        """
         for field, units in self.known_fields:
             if field not in self:
                 continue

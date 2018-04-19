@@ -36,7 +36,7 @@ from ytree.arbor.frontends.lhalotree.utils import LHaloTreeReader
 
 class LHaloTreeArbor(Arbor):
     """
-    Arbors from consistent-trees output files.
+    Arbors for LHaloTree data.
     """
 
     _field_info_class = LHaloTreeFieldInfo
