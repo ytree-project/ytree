@@ -24,25 +24,6 @@ from ytree.arbor.io import \
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
-class YTreeDataFile(object):
-    def __init__(self, filename):
-        if not os.path.exists(filename):
-            mylog.warn(("Cannot find data file: %s. " +
-                        "Will not be able to load field data.") % filename)
-
-        self.filename = filename
-        self.fh = None
-        self._field_cache = None
-        self._start_index = None
-        self._end_index = None
-
-    def open(self):
-        self.fh = h5py.File(self.filename, "r")
-
-    def close(self):
-        self.fh.close()
-        self.fh = None
-
 class YTreeDataFile(DataFile):
     def __init__(self, filename):
         super(YTreeDataFile, self).__init__(filename)
