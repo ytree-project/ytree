@@ -227,16 +227,20 @@ contained in the file.  It should also, optionally, take a list of
 :class:`~ytree.arbor.tree_node.TreeNode` instances and return fields
 only for them.
 
-Universal Field Aliases (``fields.py``)
+Field Units and Aliases (``fields.py``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The :class:`~ytree.arbor.fields.FieldInfoContainer` class holds
+information about field names and units.  Your subclass can define
+two tuples, ``known_fields`` and ``alias_fields``.  The
+``known_fields`` tuple is used to set units for fields on disk.
+This is useful especially if there is no way to get this information
+from the file.  The convention for each entry is (name on disk, units).
 
 By creating aliases to standardized names, scripts can be run on
 multiple types of data with little or no alteration for
-frontend-specific field names.  In ``fields.py``, you will subclass the
-:class:`~ytree.arbor.fields.FieldInfoContainer` class.  Most likely,
-all that will need to be done is to add the list of fields with
-universal alias names.  This is done with the ``alias_fields`` tuple.
-The convention for each entry is (alias name, name on disk, field units).
+frontend-specific field names.  This is done with the ``alias_fields``
+tuple. The convention for each entry is (alias name, name on disk,
+field units).
 
 .. code-block:: python
 
@@ -244,7 +248,14 @@ The convention for each entry is (alias name, name on disk, field units).
         FieldInfoContainer
 
    class NewCodeFieldInfo(FieldInfoContainer):
+       known_fields = (
+           # name on disk, units
+           ("Mass", "Msun/h"),
+           ("PX", "kpc/h"),
+       )
+
        alias_fields = (
+           # alias name, name on disk, units for alias
            ("mass", "Mass", "Msun"),
            ("position_x", "PX", "Mpc/h"),
            ...
