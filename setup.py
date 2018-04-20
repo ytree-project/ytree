@@ -1,11 +1,15 @@
 from setuptools import setup
 
+with open('README.md') as f:
+    long_description = f.read()
+
 setup(name="ytree",
-      version="2.1.0",
-      description="Merger-tree for FoF, Rockstar, and consistent-trees based on yt.",
+      version="2.2.0.dev1",
+      description="An extension of yt for working with merger-tree data.",
+      long_description=long_description,
       author="Britton Smith",
       author_email="brittonsmith@gmail.com",
-      license="BSD",
+      license="BSD 3-Clause",
       keywords=["simulation", "merger-tree", "astronomy", "astrophysics"],
       url="https://github.com/brittonsmith/ytree",
       packages=["ytree"],
@@ -30,4 +34,5 @@ setup(name="ytree",
           'numpy',
           'yt>=3.4',
       ],
+      python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*'
 )
