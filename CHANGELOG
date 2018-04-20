@@ -1,3 +1,35 @@
+== Version 2.1 ==
+_Release date - Apr 20, 2018_
+
+  * New feature: support for LHaloTree format
+  * New feature: support for Amiga Halo Finder format
+
+== Version 2.0.2 ==
+_Release date - Feb 16, 2018_
+
+  * Enhancement: significantly improved i/o for ytree frontend
+
+== Version 2.0 ==
+_Release date - Aug 07, 2017_
+
+This is significant overhaul of the ytree machinery.
+
+  * New feature: tree building and field i/o now occur on-demand.
+  * New feature: support for yt-like derived fields that can be
+	defined with simple functions.
+  * New feature: support for yt-like alias fields allowing for universal
+	field naming conventions to simplify writing scripts for multiple
+	data formats.
+  * New feature: support for analysis fields which allow users to save the
+	results of expensive halo analysis to fields associated with each
+	halo.
+  * New feature: all fields in consistent-trees and Rockstar now fully
+	supported with units.
+  * New feature: an optimized format for saving and reloading trees for
+	fast field access.
+  * Enhancement: significantly improved documentation including a guide to
+	adding support for new file formats.
+
 == Version 1.1 ==
 _Release date - Jan 12, 2017_
 
