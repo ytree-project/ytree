@@ -15,14 +15,11 @@ YTreeArbor io classes and member functions
 
 import h5py
 import numpy as np
-import os
 
 from ytree.arbor.io import \
     DataFile, \
     RootFieldIO, \
     TreeFieldIO
-from ytree.utilities.logger import \
-    ytreeLogger as mylog
 
 class YTreeDataFile(DataFile):
     def __init__(self, filename):
