@@ -1,39 +1,54 @@
 name: ytree
 dependencies:
-- openssl=1.0.2l=0
-- pip=9.0.1=py35_1
-- python=3.5.3=1
-- readline=6.2=2
-- setuptools=27.2.0=py35_0
-- sqlite=3.13.0=0
-- tk=8.5.18=0
-- wheel=0.29.0=py35_0
-- xz=5.2.2=1
-- zlib=1.2.8=3
-- pip:
-  - appnope==0.1.0
-  - configparser==3.5.0
-  - cycler==0.10.0
-  - cython==0.26
-  - decorator==4.1.2
-  - h5py==2.7.0
-  - ipython==6.1.0
-  - ipython-genutils==0.2.0
-  - jedi==0.10.2
-  - matplotlib==2.0.2
-  - mpmath==0.19
-  - numpy==1.13.1
-  - pexpect==4.2.1
-  - pickleshare==0.7.4
-  - prompt-toolkit==1.0.15
-  - ptyprocess==0.5.2
-  - pygments==2.2.0
-  - pyparsing==2.2.0
-  - python-dateutil==2.6.1
-  - pytz==2017.2
-  - simplegeneric==0.8.1
-  - six==1.10.0
-  - sympy==1.1.1
-  - traitlets==4.3.2
-  - wcwidth==0.1.7
-  - yt==3.3.5
+  - ca-certificates=2018.03.07=0
+  - certifi=2018.4.16=py36_0
+  - cython=0.28.2=py36h1de35cc_0
+  - intel-openmp=2018.0.0=8
+  - libcxx=4.0.1=h579ed51_0
+  - libcxxabi=4.0.1=hebd6815_0
+  - libedit=3.1=hb4e282d_0
+  - libffi=3.2.1=h475c297_4
+  - libgfortran=3.0.1=h93005f0_2
+  - mkl=2018.0.2=1
+  - mkl_fft=1.0.1=py36h917ab60_0
+  - mkl_random=1.0.1=py36h78cc56f_0
+  - ncurses=6.0=hd04f020_2
+  - numpy=1.14.2=py36ha9ae307_1
+  - openssl=1.0.2o=h26aff7b_0
+  - pip=9.0.3=py36_0
+  - python=3.6.5=hc167b69_0
+  - readline=7.0=hc1231fa_4
+  - setuptools=39.0.1=py36_0
+  - sqlite=3.23.1=hf1716c9_0
+  - tk=8.6.7=h35a86e2_3
+  - wheel=0.31.0=py36_0
+  - xz=5.2.3=h0278029_2
+  - zlib=1.2.11=hf3cbc9b_2
+  - pip:
+    - appnope==0.1.0
+    - backcall==0.1.0
+    - configparser==3.5.0
+    - cycler==0.10.0
+    - decorator==4.3.0
+    - h5py==2.7.1
+    - ipython==6.3.1
+    - ipython-genutils==0.2.0
+    - jedi==0.12.0
+    - kiwisolver==1.0.1
+    - matplotlib==2.2.2
+    - mpmath==1.0.0
+    - parso==0.2.0
+    - pexpect==4.5.0
+    - pickleshare==0.7.4
+    - prompt-toolkit==1.0.15
+    - ptyprocess==0.5.2
+    - pygments==2.2.0
+    - pyparsing==2.2.0
+    - python-dateutil==2.7.2
+    - pytz==2018.4
+    - simplegeneric==0.8.1
+    - six==1.11.0
+    - sympy==1.1.1
+    - traitlets==4.3.2
+    - wcwidth==0.1.7
+    - yt==3.4.1
