@@ -3,6 +3,10 @@ from setuptools import setup
 with open('README.md') as f:
     long_description = f.read()
 
+dev_requirements = [
+     'pytest', 'twine', 'pep8', 'flake8', 'wheel',
+     'sphinx', 'sphinx-autobuild', 'sphinx_rtd_theme']
+
 setup(name="ytree",
       version="2.2.0.dev1",
       description="An extension of yt for working with merger-tree data.",
@@ -34,5 +38,9 @@ setup(name="ytree",
           'numpy',
           'yt>=3.4',
       ],
+      extras_require={
+          'dev': dev_requirements,
+          'rtd': [pkg for pkg in dev_requirements if 'sphinx' not in pkg],
+      }
       python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*'
 )
