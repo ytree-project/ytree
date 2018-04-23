@@ -1,14 +1,30 @@
 from setuptools import setup
 
+def get_version(filename):
+    """
+    Get version from a file.
+
+    Inspired by https://github.mabuchilab/QNET/.
+    """
+    with open(filename) as f:
+        for line in f.readlines():
+            if line.startswith("__version__"):
+                return line.split("=")[1].strip()[1:-1]
+    raise RuntimeError(
+        "Could not get version from %s." % filename)
+
+
+VERSION = get_version("ytree/__init__.py")
+
 with open('README.md') as f:
     long_description = f.read()
 
 dev_requirements = [
-     'pytest', 'twine', 'pep8', 'flake8', 'wheel',
-     'sphinx', 'sphinx-autobuild', 'sphinx_rtd_theme']
+    'pytest', 'twine', 'pep8', 'flake8', 'wheel',
+    'sphinx', 'sphinx-autobuild', 'sphinx_rtd_theme']
 
 setup(name="ytree",
-      version="2.2.0.dev1",
+      version=VERSION,
       description="An extension of yt for working with merger-tree data.",
       long_description=long_description,
       author="Britton Smith",
