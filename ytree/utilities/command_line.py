@@ -22,6 +22,7 @@ def statistics(args):
     return { 'box_size': arbor.box_size,
              'omega_lambda': arbor.omega_lambda,
              'omega_matter': arbor.omega_matter,
+             'hubble_constant': arbor.hubble_constant,
              'tree_count': arbor.trees.size,
              'field_list': arbor.field_list,
              'derived_field_list': arbor.derived_field_list }
