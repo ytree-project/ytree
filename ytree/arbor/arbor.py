@@ -501,6 +501,38 @@ class Arbor(object):
         pbar.finish()
         return np.array(halos)
 
+    def select_before(self, redshift = 0.0, inclusive = True, fields = None):
+        r"""
+        Select all halos based after a specified redshift.  The inclusivity of
+        the cut is specified by a boolean.
+        """
+        return self._select_redshift(redshift, False, inclusive, fields)
+
+    def select_after(self, redshift = 0.0, inclusive = True, fields = None):
+        r"""
+        Select all halos based before a specified redshift.  The inclusivity of
+        the cut is specified by a boolean.
+        """
+        return self._select_redshift(redshift, True, inclusive, fields)
+
+    def _select_redshift(self, redshift = 0.0, less_than = True,
+                         inclusive = True, fields = None):
+        # We do some input validation here so that we can use our string for
+        # selecting the redshift.
+        if fields is None:
+            fields = ["redshift"]
+        try:
+            '{:f}'.format(redshift)
+        except (TypeError, ValueError):
+            # Can't turn it into a float
+            raise RuntimeError
+        my_halos = self.select_halos(
+            'tree["tree", "redshift"] {0:s}{1} {2:f}'.format(
+                {True: '<', False: '>'}.get(less_than, '<'),
+                {True: '=', False: ''}.get(inclusive, '='), redshift),
+                fields=fields)
+        return my_halos
+
     def add_analysis_field(self, name, units):
         r"""
         Add an empty field to be filled by analysis operations.

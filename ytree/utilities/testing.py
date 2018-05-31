@@ -14,6 +14,7 @@ testing utilities
 #-----------------------------------------------------------------------------
 
 import h5py
+import numpy as np
 from numpy.testing import \
     assert_array_equal
 import os
@@ -97,6 +98,16 @@ class ArborTest(object):
 
     def test_save_and_reload(self):
         save_and_compare(self.arbor)
+
+    def test_select_redshift(self):
+        v1 = self.arbor.select_before(1.0, inclusive = False)
+        assert all( _["redshift"] > 1.0 for _ in v1)
+        v2 = self.arbor.select_before(1.0, inclusive = True)
+        assert all( _["redshift"] >= 1.0 for _ in v2)
+        v3 = self.arbor.select_after(1.0, inclusive = False)
+        assert all( _["redshift"] < 1.0 for _ in v3)
+        v4 = self.arbor.select_after(1.0, inclusive = True)
+        assert all( _["redshift"] <= 1.0 for _ in v4)
 
 def save_and_compare(arbor):
     """
