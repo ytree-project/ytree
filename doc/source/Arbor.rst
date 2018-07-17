@@ -178,6 +178,25 @@ minimally accept a list of ancestors and return a single ``TreeNode``.
    >>> a.set_selector("max_field_value", "mass")
    >>> print (a[0]["prog"])
 
+Searching for Halos
+-------------------
+
+The :func:`~ytree.arbor.arbor.Arbor.select_halos` function can be used to
+search the ``Arbor`` for halos matching a specific set of criteria.
+This is similar to the type of selection done with a relational database.
+
+.. code-block:: python
+
+   >>> halos = a.select_halos('tree["tree", "redshift"] > 1',
+   ...                        fields=["redshift"])
+   >>> print (halos)
+   [TreeNode[8987], TreeNode[6713], TreeNode[6091], TreeNode[448], ...,
+    TreeNode[9683], TreeNode[8316], TreeNode[10788]]
+
+The selection criteria string should be designed to ``eval`` correctly
+with a ``TreeNode`` object named, "tree".  The ``fields`` keyword can
+be used to specify a list of fields to preload for speeding up selection.
+
 Saving Arbors and Trees
 -----------------------
 

@@ -18,6 +18,7 @@ used to save the entire arbor or individual trees.
    ~ytree.arbor.arbor.load
    ~ytree.arbor.arbor.Arbor
    ~ytree.arbor.arbor.Arbor.save_arbor
+   ~ytree.arbor.arbor.Arbor.select_halos
    ~ytree.arbor.tree_node.TreeNode.save_tree
    ~ytree.arbor.arbor.Arbor.set_selector
    ~ytree.arbor.tree_node_selector.TreeNodeSelector

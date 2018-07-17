@@ -471,6 +471,48 @@ class Arbor(object):
                      fields=None):
         """
         Select halos from the arbor based on a set of criteria given as a string.
+
+
+        Parameters
+        ----------
+
+        criteria: string
+            A string that will eval to a Numpy-like selection operation
+            performed on a TreeNode object called "tree".
+            Example: 'tree["tree", "redshift"] > 1'
+        trees : optional, list or array of TreeNodes
+            A list or array of TreeNode objects in which to search. If none given,
+            the search is performed over the full arbor.
+        select_from : optional, "tree" or "prog"
+            Determines whether to perform the search over the full tree or just
+            the main progenitors. Note, the value given must be consistent with
+            what appears in the criteria string. For example, a criteria
+            string of 'tree["tree", "redshift"] > 1' cannot be used when setting
+            select_from to "prog".
+            Default: "tree".
+        fields : optional, list of strings
+            Use to provide a list of fields required by the criteria evaluation.
+            If given, fields will be preloaded in an optimized way and the search
+            will go faster.
+            Default: None.
+
+        Returns
+        -------
+
+        halos : array of TreeNodes
+            A flat array of all TreeNodes meeting the criteria.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("tree_0_0_0.dat")
+        >>> halos = a.select_halos('tree["tree", "redshift"] > 1',
+        ...                        fields=["redshift"])
+        >>>
+        >>> halos = a.select_halos('tree["prog", "mass"].to("Msun") >= 1e10',
+        ...                        select_from="prog", fields=["mass"])
+
         """
 
         if select_from not in ["tree", "prog"]:
@@ -495,7 +537,12 @@ class Arbor(object):
         halos = []
         pbar = get_pbar("Selecting halos", self.trees.size)
         for tree in trees:
-            my_filter = eval(criteria)
+            my_filter = np.asarray(eval(criteria))
+            if my_filter.size != tree[select_from].size:
+                raise RuntimeError(
+                    ("Filter array and tree array sizes do not match. " +
+                     "Make sure select_from (\"%s\") matches criteria (\"%s\").") %
+                    (select_from, criteria))
             halos.extend(tree[select_from][my_filter])
             pbar.update(1)
         pbar.finish()
@@ -988,7 +1035,7 @@ def load(filename, method=None, **kwargs):
         ConsistentTrees, Rockstar, TreeFarm, YTree.  If not
         given, the type will be determined based on characteristics
         of the input file.
-    **kwargs : optional, dict
+    kwargs : optional, dict
         Additional keyword arguments are passed to _is_valid and
         the determined type.
 
