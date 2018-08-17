@@ -74,7 +74,7 @@ before_script:
 
 script:
   - |
-    travis_wait 30 pytest --cov=ytree tests
+    pytest --cov=ytree tests
     coverage report
 
 after_success:

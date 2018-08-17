@@ -25,8 +25,6 @@ from yt.testing import \
     assert_rel_equal
 from yt.funcs import \
     get_pbar
-from yt.extern.six.moves import \
-    zip as izip
 
 from ytree.arbor.arbor import \
     load
@@ -77,6 +75,7 @@ class ArborTest(object):
 
     arbor_type = None
     test_filename = None
+    tree_skip = 1
 
     _arbor = None
     @property
@@ -96,9 +95,9 @@ class ArborTest(object):
         assert isinstance(self.arbor, self.arbor_type)
 
     def test_save_and_reload(self):
-        save_and_compare(self.arbor)
+        save_and_compare(self.arbor, skip=self.tree_skip)
 
-def save_and_compare(arbor):
+def save_and_compare(arbor, skip=1):
     """
     Check that arbor saves correctly.
     """
@@ -106,9 +105,9 @@ def save_and_compare(arbor):
     fn = arbor.save_arbor()
     save_arbor = load(fn)
     assert isinstance(save_arbor, YTreeArbor)
-    compare_arbors(save_arbor, arbor)
+    compare_arbors(save_arbor, arbor, skip=skip)
 
-def compare_arbors(a1, a2, groups=None, fields=None):
+def compare_arbors(a1, a2, groups=None, fields=None, skip=1):
     """
     Compare all fields for all trees in two arbors.
     """
@@ -122,12 +121,10 @@ def compare_arbors(a1, a2, groups=None, fields=None):
     for field in fields:
         assert (a1[field] == a2[field]).all()
 
-    i = 0
-    ntot = len(a1)
+    ntot = a1.size
     pbar = get_pbar("Comparing trees", ntot)
-    for t1, t2 in izip(a1, a2):
-        compare_trees(t1, t2, groups=groups, fields=fields)
-        i += 1
+    for i in range(0, ntot, skip):
+        compare_trees(a1[i], a2[i], groups=groups, fields=fields)
         pbar.update(i)
     pbar.finish()
 
