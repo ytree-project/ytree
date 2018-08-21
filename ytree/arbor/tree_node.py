@@ -220,7 +220,8 @@ class TreeNode(object):
                     self.arbor._setup_tree(self)
                     return getattr(self, "_%s_nodes" % key)
                 # return field value for this node
-                self.arbor._node_io.get_fields(self, fields=[key])
+                self.arbor._node_io.get_fields(self, fields=[key],
+                                               root_only=self.is_root)
                 if self.is_root:
                     # temporary hack for analysis fields
                     if self.arbor.field_info[key].get("type") == "analysis":
