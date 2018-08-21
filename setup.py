@@ -33,6 +33,12 @@ setup(name="ytree",
       license="BSD 3-Clause",
       keywords=["simulation", "merger-tree", "astronomy", "astrophysics"],
       url="https://github.com/brittonsmith/ytree",
+      project_urls={
+          'Homepage': 'https://github.com/brittonsmith/ytree',
+          'Documentation': 'https://ytree.readthedocs.io/',
+          'Source': 'https://github.com/brittonsmith/ytree',
+          'Tracker': 'https://github.com/brittonsmith/ytree/issues'
+      },
       packages=["ytree"],
       include_package_data=True,
       classifiers=[
