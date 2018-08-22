@@ -128,9 +128,10 @@ class Arbor(object):
     def is_setup(self, tree_node):
         """
         Return True if arrays of uids and descendent uids have
-        been read in.
+        been read in. Setup has also completed if tree is already
+        grown.
         """
-        return tree_node.root != -1 or \
+        return self.is_grown(tree_node) or \
           tree_node._uids is not None
 
     def _setup_tree(self, tree_node, **kwargs):
@@ -158,7 +159,7 @@ class Arbor(object):
         Return True if a tree has been fully assembled, i.e.,
         the hierarchy of ancestor tree nodes has been built.
         """
-        return hasattr(tree_node, "treeid")
+        return tree_node.root != -1
 
     def _grow_tree(self, tree_node, **kwargs):
         """
@@ -303,7 +304,6 @@ class Arbor(object):
         If given a string, return an array of field values for the
         roots of all trees.
         If given an integer, return a tree from the list of trees.
-
         """
         if isinstance(key, string_types):
             if key in ("tree", "prog"):
@@ -791,7 +791,8 @@ class Arbor(object):
 
         self._node_io_loop(self._setup_tree, root_nodes=roots,
                            pbar="Setting up trees")
-        self._root_io.get_fields(self, fields=fields)
+        if all_trees:
+            self._root_io.get_fields(self, fields=fields)
 
         # determine file layout
         nn = 0 # node count
@@ -955,10 +956,6 @@ class CatalogArbor(Arbor):
                     batch[it] = tree_node
                     if root:
                         trees.append(tree_node)
-                        if self.field_info["uid"]["source"] == "arbor":
-                            tree_node._root_field_data["uid"] = \
-                              tree_node.uid
-                            tree_node._root_field_data["desc_uid"] = -1
                     else:
                         ancs[descid].append(tree_node)
                     uid += 1
@@ -1014,9 +1011,6 @@ class CatalogArbor(Arbor):
 
     def _grow_tree(self, tree_node):
         pass
-
-    def is_grown(self, tree_node):
-        return True
 
 
 global load_warn

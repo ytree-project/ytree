@@ -74,7 +74,7 @@ class FieldInfoContainer(dict):
         self.arbor.add_derived_field(
             "redshift", _redshift, units="", force_add=False)
 
-    def resolve_field_dependencies(self, fields, fcache=None):
+    def resolve_field_dependencies(self, fields, fcache=None, fsize=None):
         """
         Divide fields into those to be read and those to generate.
         """
@@ -87,9 +87,16 @@ class FieldInfoContainer(dict):
         while len(fields_to_resolve) > 0:
             field = fields_to_resolve.pop(0)
             if field in fcache:
-                continue
+                # Check that the field array is the size we want.
+                # It might not be if it was previously gotten just
+                # for the root and now we want it for the whole tree.
+                if fsize is None or fcache[field].size == fsize:
+                    continue
+                del fcache[field]
+
             if field not in self:
                 raise ArborFieldNotFound(field, self.arbor)
+
             ftype = self[field].get("type")
             if ftype == "derived" or ftype == "alias":
                 deps = self[field]["dependencies"]
@@ -105,6 +112,7 @@ class FieldInfoContainer(dict):
             else:
                 if field not in fields_to_read:
                     fields_to_read.append(field)
+
         return fields_to_read, fields_to_generate
 
 class FieldContainer(dict):

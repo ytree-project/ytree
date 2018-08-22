@@ -41,7 +41,7 @@ class TreeNode(object):
         self.arbor = weakref.proxy(arbor)
         if root:
             self.root = -1
-            self._root_field_data = FieldContainer(arbor)
+            self.treeid = 0
             self._tree_field_data = FieldContainer(arbor)
         else:
             self.root = None
@@ -58,8 +58,7 @@ class TreeNode(object):
 
         if not self.is_root:
             return
-        for attr in ["_root_field_data", "_tree_field_data"]:
-            getattr(self, attr).clear()
+        self._tree_field_data.clear()
 
     def reset(self):
         """
@@ -195,34 +194,30 @@ class TreeNode(object):
             if ftype not in arr_types:
                 raise SyntaxError(
                     "First argument must be one of %s." % str(arr_types))
-            self.arbor._setup_tree(self)
-            self.arbor._node_io.get_fields(self, fields=[field], root_only=False)
-
-            # field is an actual field
-            if isinstance(field, string_types):
-                indices = getattr(self, "_%s_field_indices" % ftype)
-                return self.root._tree_field_data[field][indices]
-            else:
+            if not isinstance(field, string_types):
                 raise SyntaxError("Second argument must be a string.")
 
+            self.arbor._node_io.get_fields(self, fields=[field], root_only=False)
+            indices = getattr(self, "_%s_field_indices" % ftype)
+            return self.root._tree_field_data[field][indices]
+
         else:
-            if isinstance(key, string_types):
-                # return the progenitor list or tree nodes in a list
-                if key in arr_types:
-                    self.arbor._setup_tree(self)
-                    return getattr(self, "_%s_nodes" % key)
-                # return field value for this node
-                self.arbor._node_io.get_fields(self, fields=[key],
-                                               root_only=self.is_root)
-                if self.is_root:
-                    # temporary hack for analysis fields
-                    if self.arbor.field_info[key].get("type") == "analysis":
-                        return self._tree_field_data[key][0]
-                    return self._root_field_data[key]
-                else:
-                    return self.root._tree_field_data[key][self.treeid]
-            else:
+            if not isinstance(key, string_types):
                 raise SyntaxError("Single argument must be a string.")
+
+            # return the progenitor list or tree nodes in a list
+            if key in arr_types:
+                self.arbor._setup_tree(self)
+                return getattr(self, "_%s_nodes" % key)
+
+            # return field value for this node
+            self.arbor._node_io.get_fields(self, fields=[key],
+                                           root_only=self.is_root)
+            if self.is_root:
+                data_object = self
+            else:
+                data_object = self.root
+            return data_object._tree_field_data[key][self.treeid]
 
     def __repr__(self):
         return "TreeNode[%d]" % self.uid
