@@ -44,7 +44,7 @@ class FieldIO(object):
         """
         Figure out which objects are responsible for storing field data.
         """
-        return data_object, data_object._field_data
+        return data_object
 
     def _read_fields(self, *args, **kwargs):
         """
@@ -65,7 +65,7 @@ class FieldIO(object):
         Load field data for a data object into storage structures.
         """
 
-        if fields is None or len(fields) == 0:
+        if not fields:
             return
 
         # hack to make sure root_only is False if this is not a root
@@ -73,8 +73,9 @@ class FieldIO(object):
           not data_object.is_root:
             kwargs["root_only"] = False
 
-        storage_object, fcache = \
+        storage_object = \
           self._determine_field_storage(data_object, **kwargs)
+        fcache = storage_object._field_data
 
         fi = self.arbor.field_info
 
@@ -151,8 +152,7 @@ class TreeFieldIO(FieldIO):
             storage_object = data_object
         else:
             storage_object = data_object.root
-        fcache = storage_object._field_data
-        return storage_object, fcache
+        return storage_object
 
     def _read_fields(self, root_node, fields, dtypes=None,
                      root_only=False):
@@ -205,7 +205,7 @@ class DefaultRootFieldIO(FieldIO):
     """
 
     def get_fields(self, data_object, fields=None):
-        if fields is None or len(fields) == 0:
+        if not fields:
             return
 
         fi = self.arbor.field_info
