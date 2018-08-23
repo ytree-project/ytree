@@ -40,7 +40,7 @@ class FieldIO(object):
         """
         raise NotImplementedError
 
-    def _determine_field_storage(self, data_object, **kwargs):
+    def _determine_field_storage(self, data_object):
         """
         Figure out which objects are responsible for storing field data.
         """
@@ -52,13 +52,14 @@ class FieldIO(object):
         """
         raise NotImplementedError
 
-    def _store_fields(self, storage_object, field_data, **kwargs):
+    def _store_fields(self, storage_object, fields):
         """
-        Store the field data in the proper place.
+        Only keep items on the fields list.
         """
-        if not field_data:
-            return
-        storage_object._field_data.update(field_data)
+        fcache = storage_object._field_data
+        remove = set(fcache).difference(fields)
+        for field in remove:
+            del fcache[field]
 
     def get_fields(self, data_object, fields=None, **kwargs):
         """
@@ -74,8 +75,9 @@ class FieldIO(object):
             kwargs["root_only"] = False
 
         storage_object = \
-          self._determine_field_storage(data_object, **kwargs)
+          self._determine_field_storage(data_object)
         fcache = storage_object._field_data
+        old_fields = list(fcache.keys())
 
         fi = self.arbor.field_info
 
@@ -98,9 +100,9 @@ class FieldIO(object):
 
         # Read in fields we need that are on disk.
         if fields_to_read:
-            field_data = self._read_fields(
+            read_data = self._read_fields(
                 storage_object, fields_to_read, **kwargs)
-            self._store_fields(storage_object, field_data, **kwargs)
+            fcache.update(read_data)
 
         # Generate all derived fields/aliases, but
         # only after dependencies have been generated.
@@ -127,8 +129,9 @@ class FieldIO(object):
                     data = fi[field]["function"](fcache)
                 if hasattr(data, "units") and units is not None:
                     data.convert_to_units(units)
-                fdata = {field: data}
-                self._store_fields(storage_object, fdata, **kwargs)
+                fcache[field] = data
+
+        self._store_fields(storage_object, set(old_fields).union(fields))
 
 class TreeFieldIO(FieldIO):
     """
@@ -147,7 +150,7 @@ class TreeFieldIO(FieldIO):
             data = self.arbor.arr(data, units)
         storage_object._field_data[name] = data
 
-    def _determine_field_storage(self, data_object, **kwargs):
+    def _determine_field_storage(self, data_object):
         if data_object.is_root:
             storage_object = data_object
         else:
@@ -232,7 +235,7 @@ class DefaultRootFieldIO(FieldIO):
             for i in range(self.arbor.trees.size):
                 field_data[field][i] = \
                   self.arbor.trees[i]._field_data[field][0]
-        self._store_fields(data_object, field_data)
+        data_object._field_data.update(field_data)
 
 class DataFile(object):
     """
