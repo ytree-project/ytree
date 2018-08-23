@@ -871,7 +871,7 @@ class Arbor(object):
             for field, fieldname in zip(fields, fieldnames):
                 for di, node in enumerate(my_nodes):
                     if node.is_root:
-                        ndata = node._tree_field_data[field]
+                        ndata = node._field_data[field]
                     else:
                         ndata = node["tree", field]
                         if field == "desc_uid":
@@ -1006,8 +1006,8 @@ class CatalogArbor(Arbor):
         # This should bypass any attempt to get this field in
         # the conventional way.
         if self.field_info["uid"]["source"] == "arbor":
-            tree_node._tree_field_data["uid"] = tree_node._uids
-            tree_node._tree_field_data["desc_uid"] = tree_node._descids
+            tree_node._field_data["uid"] = tree_node._uids
+            tree_node._field_data["desc_uid"] = tree_node._descids
 
     def _grow_tree(self, tree_node):
         pass

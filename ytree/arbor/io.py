@@ -136,26 +136,26 @@ class TreeFieldIO(FieldIO):
 
     def _initialize_analysis_field(self, storage_object,
                                    name, units, **kwargs):
-        if name in storage_object._tree_field_data:
+        if name in storage_object._field_data:
             return
         storage_object.arbor._setup_tree(storage_object)
         data = np.zeros(storage_object.uids.size)
         if units != "":
             data = self.arbor.arr(data, units)
-        storage_object._tree_field_data[name] = data
+        storage_object._field_data[name] = data
 
     def _determine_field_storage(self, data_object, **kwargs):
         if data_object.is_root:
             storage_object = data_object
         else:
             storage_object = data_object.root
-        fcache = storage_object._tree_field_data
+        fcache = storage_object._field_data
 
         return storage_object, fcache
 
     def _store_fields(self, storage_object, field_data, **kwargs):
         if not field_data: return
-        storage_object._tree_field_data.update(field_data)
+        storage_object._field_data.update(field_data)
 
     def _read_fields(self, root_node, fields, dtypes=None,
                      root_only=False):
@@ -245,7 +245,7 @@ class FallbackRootFieldIO(FieldIO):
                   self.arbor.arr(field_data[field], units)
             for i in range(self.arbor.trees.size):
                 field_data[field][i] = \
-                  self.arbor.trees[i]._tree_field_data[field][0]
+                  self.arbor.trees[i]._field_data[field][0]
         data_object._field_data.update(field_data)
 
 class DataFile(object):

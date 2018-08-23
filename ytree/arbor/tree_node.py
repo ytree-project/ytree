@@ -42,7 +42,7 @@ class TreeNode(object):
         if root:
             self.root = -1
             self.treeid = 0
-            self._tree_field_data = FieldContainer(arbor)
+            self._field_data = FieldContainer(arbor)
         else:
             self.root = None
 
@@ -58,7 +58,7 @@ class TreeNode(object):
 
         if not self.is_root:
             return
-        self._tree_field_data.clear()
+        self._field_data.clear()
 
     def reset(self):
         """
@@ -139,7 +139,7 @@ class TreeNode(object):
             treeid = self.treeid
         self.arbor._node_io.get_fields(self, fields=[key],
                                        root_only=False)
-        data = root._tree_field_data[key]
+        data = root._field_data[key]
         data[treeid] = value
 
     def __getitem__(self, key):
@@ -199,7 +199,7 @@ class TreeNode(object):
 
             self.arbor._node_io.get_fields(self, fields=[field], root_only=False)
             indices = getattr(self, "_%s_field_indices" % ftype)
-            return self.root._tree_field_data[field][indices]
+            return self.root._field_data[field][indices]
 
         else:
             if not isinstance(key, string_types):
@@ -217,7 +217,7 @@ class TreeNode(object):
                 data_object = self
             else:
                 data_object = self.root
-            return data_object._tree_field_data[key][self.treeid]
+            return data_object._field_data[key][self.treeid]
 
     def __repr__(self):
         return "TreeNode[%d]" % self.uid
