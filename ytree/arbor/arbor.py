@@ -98,7 +98,7 @@ class Arbor(object):
         self.basename = os.path.basename(filename)
         self._parse_parameter_file()
         self._set_units()
-        self._root_field_data = FieldContainer(self)
+        self._field_data = FieldContainer(self)
         self._node_io = self._tree_field_io_class(self)
         self._root_io = self._root_field_io_class(self)
         self._get_data_files()
@@ -310,8 +310,8 @@ class Arbor(object):
                 raise SyntaxError("Argument must be a field or integer.")
             self._root_io.get_fields(self, fields=[key])
             if self.field_info[key].get("type") == "analysis":
-                return self._root_field_data.pop(key)
-            return self._root_field_data[key]
+                return self._field_data.pop(key)
+            return self._field_data[key]
         return self.trees[key]
 
     def __len__(self):
@@ -829,7 +829,7 @@ class Arbor(object):
                    for key in ["units", "description"]
                    if key in fi)
             if all_trees:
-                rdata[fieldname] = self._root_field_data[field]
+                rdata[fieldname] = self._field_data[field]
             else:
                 rdata[fieldname] = self.arr([t[field] for t in trees])
             rtypes[fieldname] = "data"

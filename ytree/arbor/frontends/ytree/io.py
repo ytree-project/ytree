@@ -100,13 +100,13 @@ class YTreeRootFieldIO(RootFieldIO):
     def _initialize_analysis_field(self, storage_object,
                                    name, units, **kwargs):
         # Always refresh this because it may have changed.
-        if name in storage_object._root_field_data:
-            data = storage_object._root_field_data[name]
+        if name in storage_object._field_data:
+            data = storage_object._field_data[name]
         else:
             data = np.zeros(storage_object.size)
             if units != "":
                 data = self.arbor.arr(data, units)
-            storage_object._root_field_data[name] = data
+            storage_object._field_data[name] = data
 
         for i, halo in enumerate(storage_object):
             data[i] = halo[name]

@@ -69,7 +69,7 @@ class ArborArborRootFieldIO(RootFieldIO):
             dtypes = {}
         self.arbor.trees
 
-        fcache = storage_object._root_field_data
+        fcache = storage_object._field_data
 
         fh = h5py.File(self.arbor.filename, "r")
         field_data = {}

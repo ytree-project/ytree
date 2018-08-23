@@ -207,10 +207,10 @@ class RootFieldIO(FieldIO):
     """
 
     def _determine_field_storage(self, data_object, **kwargs):
-        return data_object, data_object._root_field_data
+        return data_object, data_object._field_data
 
     def _store_fields(self, storage_object, field_data, **kwargs):
-        storage_object._root_field_data.update(field_data)
+        storage_object._field_data.update(field_data)
 
 class FallbackRootFieldIO(FieldIO):
     """
@@ -226,7 +226,7 @@ class FallbackRootFieldIO(FieldIO):
 
         fields_to_get = []
         for field in fields:
-            if field not in data_object._root_field_data:
+            if field not in data_object._field_data:
                 fields_to_get.append(field)
         if not fields_to_get:
             return
@@ -246,7 +246,7 @@ class FallbackRootFieldIO(FieldIO):
             for i in range(self.arbor.trees.size):
                 field_data[field][i] = \
                   self.arbor.trees[i]._tree_field_data[field][0]
-        data_object._root_field_data.update(field_data)
+        data_object._field_data.update(field_data)
 
 class DataFile(object):
     """
