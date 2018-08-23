@@ -207,35 +207,36 @@ class DefaultRootFieldIO(FieldIO):
     specialized storage for root fields.
     """
 
-    def get_fields(self, data_object, fields=None):
+    def _read_fields(self, storage_object, fields, dtypes=None,
+                     root_only=True):
         if not fields:
             return
 
+        if dtypes is None:
+            dtypes = {}
+
+        store = "field_store"
+
+        self.arbor._node_io_loop(
+            self.arbor._node_io._read_fields, pbar="Reading root fields",
+            store=store, fields=fields, dtypes=dtypes, root_only=True)
+
         fi = self.arbor.field_info
-
-        fields_to_get = []
-        for field in fields:
-            if field not in data_object._field_data:
-                fields_to_get.append(field)
-        if not fields_to_get:
-            return
-
-        if fields_to_get:
-            self.arbor._node_io_loop(
-                self.arbor._node_io.get_fields, pbar="Getting root fields",
-                fields=fields_to_get, root_only=True)
-
+        fsize = self.arbor.size
         field_data = {}
-        for field in fields_to_get:
+        for field in fields:
+            data = np.empty(fsize, dtype=dtypes.get(field, float))
             units = fi[field].get("units", "")
-            field_data[field] = np.empty(self.arbor.trees.size)
             if units:
-                field_data[field] = \
-                  self.arbor.arr(field_data[field], units)
-            for i in range(self.arbor.trees.size):
-                field_data[field][i] = \
-                  self.arbor.trees[i]._field_data[field][0]
-        data_object._field_data.update(field_data)
+                data = self.arbor.arr(data, units)
+            for i, tree in enumerate(self.arbor.trees):
+                data[i] = getattr(tree, store)[field][0]
+            field_data[field] = data
+
+        for tree in self.arbor.trees:
+            delattr(tree, store)
+
+        return field_data
 
 class DataFile(object):
     """

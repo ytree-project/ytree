@@ -218,12 +218,18 @@ class Arbor(object):
             If None, the list will be self.trees (i.e., all
             root_nodes).
             Default: None.
+        store : optional, string
+            If not None, any return value captured from the function
+            will be stored in an attribute with this name associated
+            with the TreeNode.
+            Default: None.
         """
 
         pbar = kwargs.pop("pbar", None)
         root_nodes = kwargs.pop("root_nodes", None)
         if root_nodes is None:
             root_nodes = self.trees
+        store = kwargs.pop("store", None)
         data_files, node_list = self._node_io_loop_prepare(root_nodes)
         nnodes = sum([nodes.size for nodes in node_list])
 
@@ -238,7 +244,9 @@ class Arbor(object):
         for data_file, nodes in zip(data_files, node_list):
             self._node_io_loop_start(data_file)
             for node in nodes:
-                func(node, *args, **kwargs)
+                rval = func(node, *args, **kwargs)
+                if store is not None:
+                    setattr(node, store, rval)
                 pbar.update(1)
             self._node_io_loop_finish(data_file)
 
