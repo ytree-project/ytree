@@ -18,7 +18,7 @@ import numpy as np
 
 from ytree.arbor.io import \
     DataFile, \
-    RootFieldIO, \
+    FieldIO, \
     TreeFieldIO
 
 class YTreeDataFile(DataFile):
@@ -76,7 +76,7 @@ class YTreeTreeFieldIO(TreeFieldIO):
 
         return field_data
 
-class YTreeRootFieldIO(RootFieldIO):
+class YTreeRootFieldIO(FieldIO):
     def _read_fields(self, storage_object, fields, dtypes=None):
         if dtypes is None:
             dtypes = {}

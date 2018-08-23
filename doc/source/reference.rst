@@ -66,8 +66,7 @@ Internal Classes
    ~ytree.arbor.fields.FakeFieldContainer
    ~ytree.arbor.io.FieldIO
    ~ytree.arbor.io.TreeFieldIO
-   ~ytree.arbor.io.RootFieldIO
-   ~ytree.arbor.io.FallbackRootFieldIO
+   ~ytree.arbor.io.DefaultRootFieldIO
    ~ytree.arbor.io.DataFile
    ~ytree.arbor.io.CatalogDataFile
    ~ytree.arbor.tree_node.TreeNode

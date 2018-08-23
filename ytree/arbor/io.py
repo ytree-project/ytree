@@ -44,7 +44,7 @@ class FieldIO(object):
         """
         Figure out which objects are responsible for storing field data.
         """
-        raise NotImplementedError
+        return data_object, data_object._field_data
 
     def _read_fields(self, *args, **kwargs):
         """
@@ -56,7 +56,9 @@ class FieldIO(object):
         """
         Store the field data in the proper place.
         """
-        raise NotImplementedError
+        if not field_data:
+            return
+        storage_object._field_data.update(field_data)
 
     def get_fields(self, data_object, fields=None, **kwargs):
         """
@@ -150,12 +152,7 @@ class TreeFieldIO(FieldIO):
         else:
             storage_object = data_object.root
         fcache = storage_object._field_data
-
         return storage_object, fcache
-
-    def _store_fields(self, storage_object, field_data, **kwargs):
-        if not field_data: return
-        storage_object._field_data.update(field_data)
 
     def _read_fields(self, root_node, fields, dtypes=None,
                      root_only=False):
@@ -201,18 +198,7 @@ class TreeFieldIO(FieldIO):
 
         return field_data
 
-class RootFieldIO(FieldIO):
-    """
-    IO class for getting fields for the roots of all trees.
-    """
-
-    def _determine_field_storage(self, data_object, **kwargs):
-        return data_object, data_object._field_data
-
-    def _store_fields(self, storage_object, field_data, **kwargs):
-        storage_object._field_data.update(field_data)
-
-class FallbackRootFieldIO(FieldIO):
+class DefaultRootFieldIO(FieldIO):
     """
     Class for getting root fields from arbors that have no
     specialized storage for root fields.
@@ -246,7 +232,7 @@ class FallbackRootFieldIO(FieldIO):
             for i in range(self.arbor.trees.size):
                 field_data[field][i] = \
                   self.arbor.trees[i]._field_data[field][0]
-        data_object._field_data.update(field_data)
+        self._store_fields(data_object, field_data)
 
 class DataFile(object):
     """

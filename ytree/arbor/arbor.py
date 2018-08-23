@@ -45,7 +45,7 @@ from ytree.arbor.fields import \
 from ytree.arbor.misc import \
     _determine_output_filename
 from ytree.arbor.io import \
-    FallbackRootFieldIO, \
+    DefaultRootFieldIO, \
     TreeFieldIO
 from ytree.arbor.tree_node import \
     TreeNode
@@ -86,7 +86,7 @@ class Arbor(object):
     """
 
     _field_info_class = FieldInfoContainer
-    _root_field_io_class = FallbackRootFieldIO
+    _root_field_io_class = DefaultRootFieldIO
     _tree_field_io_class = TreeFieldIO
 
     def __init__(self, filename):

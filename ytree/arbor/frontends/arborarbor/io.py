@@ -16,7 +16,7 @@ ArborArbor io classes and member functions
 import h5py
 
 from ytree.arbor.io import \
-    RootFieldIO, \
+    FieldIO, \
     TreeFieldIO
 
 class ArborArborTreeFieldIO(TreeFieldIO):
@@ -63,7 +63,7 @@ class ArborArborTreeFieldIO(TreeFieldIO):
 
         return field_data
 
-class ArborArborRootFieldIO(RootFieldIO):
+class ArborArborRootFieldIO(FieldIO):
     def _read_fields(self, storage_object, fields, dtypes=None):
         if dtypes is None:
             dtypes = {}
