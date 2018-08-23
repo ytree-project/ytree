@@ -126,7 +126,7 @@ class FieldIO(object):
                 if ftype == "alias":
                     data = fcache[fi[field]["dependencies"][0]]
                 elif ftype == "derived":
-                    data = fi[field]["function"](fcache)
+                    data = fi[field]["function"](fi[field], fcache)
                 if hasattr(data, "units") and units is not None:
                     data.convert_to_units(units)
                 fcache[field] = data

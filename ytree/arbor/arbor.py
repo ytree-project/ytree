@@ -399,6 +399,7 @@ class Arbor(object):
         self.field_info.setup_known_fields()
         self.field_info.setup_aliases()
         self.field_info.setup_derived_fields()
+        self.field_info.setup_vector_fields()
 
     def _set_units(self):
         """
@@ -647,7 +648,7 @@ class Arbor(object):
 
     def add_derived_field(self, name, function,
                           units=None, description=None,
-                          force_add=True):
+                          vector_field=False, force_add=True):
         r"""
         Add a field that is a function of other fields.
 
@@ -664,6 +665,9 @@ class Arbor(object):
             The units in which the field will be returned.
         description : optional, string
             A short description of the field.
+        vector_field: optional, bool
+            If True, field is an xyz vector.
+            Default: False.
         force_add : optional, bool
             If True, add field even if it already exists and warn the
             user and raise an exception if dependencies do not exist.
@@ -699,20 +703,37 @@ class Arbor(object):
 
         if units is None:
             units = ""
+        info = {"name": name, "type": "derived", "function": function,
+                "units": units, "vector_field": vector_field,
+                "description": description}
+
         fc = FakeFieldContainer(self, name=name)
         try:
-            rv = function(fc)
+            rv = function(info, fc)
+        except TypeError as e:
+            raise RuntimeError(
+"""
+
+Field function syntax in ytree has changed. Field functions must
+now take two arguments, as in the following:
+def my_field(field, data):
+    return data['mass']
+
+Check the TypeError exception above for more details.
+""")
+            raise e
+
         except ArborFieldDependencyNotFound as e:
             if force_add:
                 raise e
             else:
                 return
+
         rv.convert_to_units(units)
+        info["dependencies"] = list(fc.keys())
+
         self.derived_field_list.append(name)
-        self.field_info[name] = \
-          {"type": "derived", "function": function,
-           "units": units, "description": description,
-           "dependencies": list(fc.keys())}
+        self.field_info[name] = info
 
     @classmethod
     def _is_valid(cls, *args, **kwargs):
