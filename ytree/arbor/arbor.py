@@ -136,7 +136,7 @@ class Arbor(object):
 
     def _setup_tree(self, tree_node, **kwargs):
         """
-        Create arrays of uids and descids and attach them to the
+        Create arrays of uids and desc_uids and attach them to the
         root node.
         """
         # skip if this is not a root or if already setup
@@ -151,7 +151,7 @@ class Arbor(object):
         field_data  = self._node_io._read_fields(tree_node, fields,
                                                  dtypes=dtypes, **kwargs)
         tree_node._uids      = field_data[halo_id_f]
-        tree_node._descids   = field_data[desc_id_f]
+        tree_node._desc_uids = field_data[desc_id_f]
         tree_node._tree_size = tree_node._uids.size
 
     def is_grown(self, tree_node):
@@ -189,7 +189,7 @@ class Arbor(object):
         # Separate loop for trees like lhalotree where descendent
         # can follow in order
         for i, node in enumerate(nodes):
-            descid      = tree_node.descids[i]
+            descid      = tree_node.desc_uids[i]
             if descid != -1:
                 desc = nodes[uidmap[descid]]
                 desc.add_ancestor(node)
@@ -985,6 +985,8 @@ class CatalogArbor(Arbor):
                     batch[it] = tree_node
                     if root:
                         trees.append(tree_node)
+                        # Do this to make "desc_uid" field work in _read_fields.
+                        tree_node.desc_uid = -1
                     else:
                         ancs[descid].append(tree_node)
                     uid += 1
@@ -1018,25 +1020,25 @@ class CatalogArbor(Arbor):
         if self.is_setup(tree_node):
             return
 
-        nodes   = []
-        uids    = []
-        descids = [-1]
+        nodes     = []
+        uids      = []
+        desc_uids = [-1]
         for i, node in enumerate(tree_node.twalk()):
             node.treeid = i
             node.root   = tree_node
             nodes.append(node)
             uids.append(node.uid)
             if i > 0:
-                descids.append(node.descendent.uid)
+                desc_uids.append(node.descendent.uid)
         tree_node._nodes     = np.array(nodes)
         tree_node._uids      = np.array(uids)
-        tree_node._descids   = np.array(descids)
+        tree_node._desc_uids = np.array(desc_uids)
         tree_node._tree_size = tree_node._uids.size
         # This should bypass any attempt to get this field in
         # the conventional way.
         if self.field_info["uid"]["source"] == "arbor":
             tree_node._field_data["uid"] = tree_node._uids
-            tree_node._field_data["desc_uid"] = tree_node._descids
+            tree_node._field_data["desc_uid"] = tree_node._desc_uids
 
     def _grow_tree(self, tree_node):
         pass

@@ -69,7 +69,7 @@ class TreeNode(object):
         attrs = ["_tfi", "_tn", "_pfi", "_pn"]
         if self.is_root:
             self.root = -1
-            attrs.extend(["_nodes", "_descids", "_uids"])
+            attrs.extend(["_nodes", "_desc_uids", "_uids"])
         else:
             self.root = None
         for attr in attrs:
@@ -104,14 +104,14 @@ class TreeNode(object):
             self.arbor._setup_tree(self)
         return self._uids
 
-    _descids = None
+    _desc_uids = None
     @property
-    def descids(self):
+    def desc_uids(self):
         if not self.is_root:
             return None
-        if self._descids is None:
+        if self._desc_uids is None:
             self.arbor._setup_tree(self)
-        return self._descids
+        return self._desc_uids
 
     _tree_size = None
     @property

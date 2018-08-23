@@ -52,8 +52,10 @@ class RockstarDataFile(CatalogDataFile):
 
         fi = self.arbor.field_info
         hfields = [field for field in fields
-                   if fi[field]["column"] == "header"]
-        rfields = set(fields).difference(hfields)
+                   if fi[field].get("source") == "header"]
+        afields = [field for field in fields
+                   if fi[field].get("source") == "arbor"]
+        rfields = set(fields).difference(hfields + afields)
 
         hfield_values = dict((field, getattr(self, field))
                              for field in hfields)
@@ -89,16 +91,25 @@ class RockstarDataFile(CatalogDataFile):
             for field in hfields:
                 field_data[field][:] = hfield_values[field]
 
+            # fields from arbor-related info
+            if afields:
+                for i in range(ntrees):
+                    for field in afields:
+                        dtype = dtypes.get(field, self._default_dtype)
+                        field_data[field][i] = \
+                          dtype(getattr(tree_nodes[i], field))
+
             # fields from the actual data
-            self.open()
-            f = self.fh
-            for i in range(ntrees):
-                f.seek(self.offsets[tree_nodes[i]._fi])
-                line = f.readline()
-                sline = line.split()
-                for field in rfields:
-                    dtype = dtypes.get(field, self._default_dtype)
-                    field_data[field][i] = dtype(sline[fi[field]["column"]])
-            self.close()
+            if rfields:
+                self.open()
+                f = self.fh
+                for i in range(ntrees):
+                    f.seek(self.offsets[tree_nodes[i]._fi])
+                    line = f.readline()
+                    sline = line.split()
+                    for field in rfields:
+                        dtype = dtypes.get(field, self._default_dtype)
+                        field_data[field][i] = dtype(sline[fi[field]["column"]])
+                self.close()
 
         return field_data
