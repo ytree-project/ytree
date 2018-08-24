@@ -97,6 +97,24 @@ class ArborTest(object):
     def test_save_and_reload(self):
         save_and_compare(self.arbor, skip=self.tree_skip)
 
+    def test_vector_fields(self):
+        a = self.arbor
+        t = a[0]
+        for field in a.field_info.vector_fields:
+            for i, ax in enumerate("xyz"):
+                assert_array_equal(
+                    a["%s_%s" % (field, ax)],
+                    a[field][:, i])
+
+                assert_array_equal(
+                    t["%s_%s" % (field, ax)],
+                    t[field][i])
+
+                for group in ["prog", "tree"]:
+                    assert_array_equal(
+                        t[group, "%s_%s" % (field, ax)],
+                        t[group, field][:, i])
+
 def save_and_compare(arbor, skip=1):
     """
     Check that arbor saves correctly.
