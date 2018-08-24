@@ -14,6 +14,7 @@ testing utilities
 #-----------------------------------------------------------------------------
 
 import h5py
+import numpy as np
 from numpy.testing import \
     assert_array_equal
 import os
@@ -101,6 +102,10 @@ class ArborTest(object):
         a = self.arbor
         t = a[0]
         for field in a.field_info.vector_fields:
+
+            magfield = np.sqrt((a[field]**2).sum(axis=1))
+            assert_array_equal(a["%s_magnitude" % field], magfield)
+
             for i, ax in enumerate("xyz"):
                 assert_array_equal(
                     a["%s_%s" % (field, ax)],
