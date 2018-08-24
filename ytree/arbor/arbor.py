@@ -1110,7 +1110,7 @@ def load(filename, method=None, **kwargs):
                           (method, arbor_registry.keys()))
 
     global load_warn
-    if method != "YTree" and load_warn:
+    if method not in ["YTree", "LHaloTree"] and load_warn:
         print(
             ("Performance will be improved by saving this arbor with " +
              "\"save_arbor\" and reloading:\n" +
