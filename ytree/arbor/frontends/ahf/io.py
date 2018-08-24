@@ -161,10 +161,15 @@ class AHFDataFile(CatalogDataFile):
             dtypes = {}
 
         fi = self.arbor.field_info
+
+        afields = [field for field in fields
+                   if fi[field].get("source") == "arbor"]
+        my_fields = set(fields).difference(afields)
+
         # Separate fields into one that come from the file header,
         # the mtree file, and the halos file.
         data_fields = defaultdict(list)
-        for field in fields:
+        for field in my_fields:
             source = fi[field]["file"]
             data_fields[source].append(field)
 
@@ -203,23 +208,32 @@ class AHFDataFile(CatalogDataFile):
             field_data = \
               dict((field, np.empty(
                   ntrees, dtype=dtypes.get(field, self._default_dtype)))
-                  for field in rfields + hfields)
+                  for field in afields + rfields + hfields)
 
             # fields from the file header
             for field in hfields:
                 field_data[field][:] = hfield_values[field]
 
+            # fields from arbor-related info
+            if afields:
+                for i in range(ntrees):
+                    for field in afields:
+                        dtype = dtypes.get(field, self._default_dtype)
+                        field_data[field][i] = \
+                          dtype(getattr(tree_nodes[i], field))
+
             # fields from the actual data
-            self.open()
-            f = self.fh
-            for i in range(ntrees):
-                f.seek(self.offsets[tree_nodes[i]._fi])
-                line = f.readline()
-                sline = line.split()
-                for field in rfields:
-                    dtype = dtypes.get(field, self._default_dtype)
-                    field_data[field][i] = dtype(sline[fi[field]["column"]])
-            self.close()
+            if rfields:
+                self.open()
+                f = self.fh
+                for i in range(ntrees):
+                    f.seek(self.offsets[tree_nodes[i]._fi])
+                    line = f.readline()
+                    sline = line.split()
+                    for field in rfields:
+                        dtype = dtypes.get(field, self._default_dtype)
+                        field_data[field][i] = dtype(sline[fi[field]["column"]])
+                self.close()
 
         # use data from the mtree file to get descendant ids
         if tfields:

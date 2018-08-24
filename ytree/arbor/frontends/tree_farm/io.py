@@ -61,9 +61,11 @@ class TreeFarmDataFile(CatalogDataFile):
             dtypes = {}
 
         fi = self.arbor.field_info
+        afields = [field for field in fields
+                   if fi[field].get("source") == "arbor"]
         hfields = [field for field in fields
-                   if fi[field]["source"] == "header"]
-        rfields = set(fields).difference(hfields)
+                   if fi[field].get("source") == "header"]
+        rfields = set(fields).difference(afields + hfields)
 
         hfield_values = dict((field, getattr(self, field))
                              for field in hfields)
@@ -80,11 +82,22 @@ class TreeFarmDataFile(CatalogDataFile):
             ntrees = len(tree_nodes)
             file_ids = np.array([node._fi for node in tree_nodes])
             field_data = {}
-            self.open()
-            fh = self.fh
-            for field in rfields:
-                field_data[field] = fh[field].value[file_ids]
-            self.close()
+
+            # fields from arbor-related info
+            if afields:
+                for field in afields:
+                    field_data[field] = \
+                      np.empty(ntrees, dtype=dtypes.get(field, self._default_dtype))
+                for i in range(ntrees):
+                    for field in afields:
+                        field_data[field][i] = getattr(tree_nodes[i], field)
+
+            if rfields:
+                self.open()
+                fh = self.fh
+                for field in rfields:
+                    field_data[field] = fh[field].value[file_ids]
+                self.close()
 
         for field in hfields:
             field_data[field] = hfield_values[field] * \

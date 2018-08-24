@@ -16,7 +16,8 @@ LHaloTreeArbor io classes and member functions
 import numpy as np
 # import weakref
 from ytree.arbor.io import \
-    TreeFieldIO, RootFieldIO
+    FieldIO, \
+    TreeFieldIO
 
 
 # class LHaloTreeFileID(object):
@@ -121,7 +122,7 @@ class LHaloTreeTreeFieldIO(TreeFieldIO):
         return field_data
 
 
-class LHaloTreeRootFieldIO(RootFieldIO):
+class LHaloTreeRootFieldIO(FieldIO):
     def _read_fields(self, storage_object, fields, dtypes=None):
         r"""Add root fields in bulk to same time."""
         if dtypes is None:

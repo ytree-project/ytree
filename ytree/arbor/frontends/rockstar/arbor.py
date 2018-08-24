@@ -91,7 +91,7 @@ class RockstarArbor(CatalogArbor):
 
         # the scale factor comes from the catalog file header
         fields.append("scale_factor")
-        fi["scale_factor"] = {"column": "header", "units": ""}
+        fi["scale_factor"] = {"source": "header", "units": ""}
 
         self.field_list = fields
         self.field_info.update(fi)

@@ -45,7 +45,7 @@ from ytree.arbor.fields import \
 from ytree.arbor.misc import \
     _determine_output_filename
 from ytree.arbor.io import \
-    FallbackRootFieldIO, \
+    DefaultRootFieldIO, \
     TreeFieldIO
 from ytree.arbor.tree_node import \
     TreeNode
@@ -86,7 +86,7 @@ class Arbor(object):
     """
 
     _field_info_class = FieldInfoContainer
-    _root_field_io_class = FallbackRootFieldIO
+    _root_field_io_class = DefaultRootFieldIO
     _tree_field_io_class = TreeFieldIO
 
     def __init__(self, filename):
@@ -98,7 +98,7 @@ class Arbor(object):
         self.basename = os.path.basename(filename)
         self._parse_parameter_file()
         self._set_units()
-        self._root_field_data = FieldContainer(self)
+        self._field_data = FieldContainer(self)
         self._node_io = self._tree_field_io_class(self)
         self._root_io = self._root_field_io_class(self)
         self._get_data_files()
@@ -128,14 +128,15 @@ class Arbor(object):
     def is_setup(self, tree_node):
         """
         Return True if arrays of uids and descendent uids have
-        been read in.
+        been read in. Setup has also completed if tree is already
+        grown.
         """
-        return tree_node.root != -1 or \
+        return self.is_grown(tree_node) or \
           tree_node._uids is not None
 
     def _setup_tree(self, tree_node, **kwargs):
         """
-        Create arrays of uids and descids and attach them to the
+        Create arrays of uids and desc_uids and attach them to the
         root node.
         """
         # skip if this is not a root or if already setup
@@ -150,7 +151,7 @@ class Arbor(object):
         field_data  = self._node_io._read_fields(tree_node, fields,
                                                  dtypes=dtypes, **kwargs)
         tree_node._uids      = field_data[halo_id_f]
-        tree_node._descids   = field_data[desc_id_f]
+        tree_node._desc_uids = field_data[desc_id_f]
         tree_node._tree_size = tree_node._uids.size
 
     def is_grown(self, tree_node):
@@ -158,7 +159,7 @@ class Arbor(object):
         Return True if a tree has been fully assembled, i.e.,
         the hierarchy of ancestor tree nodes has been built.
         """
-        return hasattr(tree_node, "treeid")
+        return tree_node.root != -1
 
     def _grow_tree(self, tree_node, **kwargs):
         """
@@ -188,7 +189,7 @@ class Arbor(object):
         # Separate loop for trees like lhalotree where descendent
         # can follow in order
         for i, node in enumerate(nodes):
-            descid      = tree_node.descids[i]
+            descid      = tree_node.desc_uids[i]
             if descid != -1:
                 desc = nodes[uidmap[descid]]
                 desc.add_ancestor(node)
@@ -217,12 +218,18 @@ class Arbor(object):
             If None, the list will be self.trees (i.e., all
             root_nodes).
             Default: None.
+        store : optional, string
+            If not None, any return value captured from the function
+            will be stored in an attribute with this name associated
+            with the TreeNode.
+            Default: None.
         """
 
         pbar = kwargs.pop("pbar", None)
         root_nodes = kwargs.pop("root_nodes", None)
         if root_nodes is None:
             root_nodes = self.trees
+        store = kwargs.pop("store", None)
         data_files, node_list = self._node_io_loop_prepare(root_nodes)
         nnodes = sum([nodes.size for nodes in node_list])
 
@@ -237,7 +244,9 @@ class Arbor(object):
         for data_file, nodes in zip(data_files, node_list):
             self._node_io_loop_start(data_file)
             for node in nodes:
-                func(node, *args, **kwargs)
+                rval = func(node, *args, **kwargs)
+                if store is not None:
+                    setattr(node, store, rval)
                 pbar.update(1)
             self._node_io_loop_finish(data_file)
 
@@ -303,15 +312,14 @@ class Arbor(object):
         If given a string, return an array of field values for the
         roots of all trees.
         If given an integer, return a tree from the list of trees.
-
         """
         if isinstance(key, string_types):
             if key in ("tree", "prog"):
                 raise SyntaxError("Argument must be a field or integer.")
             self._root_io.get_fields(self, fields=[key])
             if self.field_info[key].get("type") == "analysis":
-                return self._root_field_data.pop(key)
-            return self._root_field_data[key]
+                return self._field_data.pop(key)
+            return self._field_data[key]
         return self.trees[key]
 
     def __len__(self):
@@ -391,6 +399,7 @@ class Arbor(object):
         self.field_info.setup_known_fields()
         self.field_info.setup_aliases()
         self.field_info.setup_derived_fields()
+        self.field_info.setup_vector_fields()
 
     def _set_units(self):
         """
@@ -639,7 +648,7 @@ class Arbor(object):
 
     def add_derived_field(self, name, function,
                           units=None, description=None,
-                          force_add=True):
+                          vector_field=False, force_add=True):
         r"""
         Add a field that is a function of other fields.
 
@@ -656,6 +665,9 @@ class Arbor(object):
             The units in which the field will be returned.
         description : optional, string
             A short description of the field.
+        vector_field: optional, bool
+            If True, field is an xyz vector.
+            Default: False.
         force_add : optional, bool
             If True, add field even if it already exists and warn the
             user and raise an exception if dependencies do not exist.
@@ -691,20 +703,37 @@ class Arbor(object):
 
         if units is None:
             units = ""
+        info = {"name": name, "type": "derived", "function": function,
+                "units": units, "vector_field": vector_field,
+                "description": description}
+
         fc = FakeFieldContainer(self, name=name)
         try:
-            rv = function(fc)
+            rv = function(info, fc)
+        except TypeError as e:
+            raise RuntimeError(
+"""
+
+Field function syntax in ytree has changed. Field functions must
+now take two arguments, as in the following:
+def my_field(field, data):
+    return data['mass']
+
+Check the TypeError exception above for more details.
+""")
+            raise e
+
         except ArborFieldDependencyNotFound as e:
             if force_add:
                 raise e
             else:
                 return
+
         rv.convert_to_units(units)
+        info["dependencies"] = list(fc.keys())
+
         self.derived_field_list.append(name)
-        self.field_info[name] = \
-          {"type": "derived", "function": function,
-           "units": units, "description": description,
-           "dependencies": list(fc.keys())}
+        self.field_info[name] = info
 
     @classmethod
     def _is_valid(cls, *args, **kwargs):
@@ -791,7 +820,8 @@ class Arbor(object):
 
         self._node_io_loop(self._setup_tree, root_nodes=roots,
                            pbar="Setting up trees")
-        self._root_io.get_fields(self, fields=fields)
+        if all_trees:
+            self._root_io.get_fields(self, fields=fields)
 
         # determine file layout
         nn = 0 # node count
@@ -828,7 +858,7 @@ class Arbor(object):
                    for key in ["units", "description"]
                    if key in fi)
             if all_trees:
-                rdata[fieldname] = self._root_field_data[field]
+                rdata[fieldname] = self._field_data[field]
             else:
                 rdata[fieldname] = self.arr([t[field] for t in trees])
             rtypes[fieldname] = "data"
@@ -870,7 +900,7 @@ class Arbor(object):
             for field, fieldname in zip(fields, fieldnames):
                 for di, node in enumerate(my_nodes):
                     if node.is_root:
-                        ndata = node._tree_field_data[field]
+                        ndata = node._field_data[field]
                     else:
                         ndata = node["tree", field]
                         if field == "desc_uid":
@@ -955,10 +985,8 @@ class CatalogArbor(Arbor):
                     batch[it] = tree_node
                     if root:
                         trees.append(tree_node)
-                        if self.field_info["uid"]["source"] == "arbor":
-                            tree_node._root_field_data["uid"] = \
-                              tree_node.uid
-                            tree_node._root_field_data["desc_uid"] = -1
+                        # Do this to make "desc_uid" field work in _read_fields.
+                        tree_node.desc_uid = -1
                     else:
                         ancs[descid].append(tree_node)
                     uid += 1
@@ -992,31 +1020,28 @@ class CatalogArbor(Arbor):
         if self.is_setup(tree_node):
             return
 
-        nodes   = []
-        uids    = []
-        descids = [-1]
+        nodes     = []
+        uids      = []
+        desc_uids = [-1]
         for i, node in enumerate(tree_node.twalk()):
             node.treeid = i
             node.root   = tree_node
             nodes.append(node)
             uids.append(node.uid)
             if i > 0:
-                descids.append(node.descendent.uid)
+                desc_uids.append(node.descendent.uid)
         tree_node._nodes     = np.array(nodes)
         tree_node._uids      = np.array(uids)
-        tree_node._descids   = np.array(descids)
+        tree_node._desc_uids = np.array(desc_uids)
         tree_node._tree_size = tree_node._uids.size
         # This should bypass any attempt to get this field in
         # the conventional way.
         if self.field_info["uid"]["source"] == "arbor":
-            tree_node._tree_field_data["uid"] = tree_node._uids
-            tree_node._tree_field_data["desc_uid"] = tree_node._descids
+            tree_node._field_data["uid"] = tree_node._uids
+            tree_node._field_data["desc_uid"] = tree_node._desc_uids
 
     def _grow_tree(self, tree_node):
         pass
-
-    def is_grown(self, tree_node):
-        return True
 
 
 global load_warn

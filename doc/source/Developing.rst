@@ -147,14 +147,16 @@ There are generally two types of merger-tree data that ytree
 ingests:
 
 1. all merger-tree data (full trees, halos, etc.) contained within
-a single file.  An example of this is the consistent-trees frontend.
+a single file.  An example of this is the ``consistent-trees`` frontend.
 
 2. halos in files grouped by redshift (halo catalogs) that contain
 the halo id for the descendent halo which lives in the next catalog.
-An example of this is the rockstar frontend.
+An example of this is the ``rockstar`` frontend.
 
 Depending on your case, different base classes should be subclassed.
-This is discussed below.
+This is discussed below. There are also hybrid formats that use
+both merger-tree and halo catalog files together. An example of this
+is the ``ahf`` (Amiga Halo Finder) frontend.
 
 The ``_is_valid`` Function
 ##########################

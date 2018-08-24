@@ -18,9 +18,6 @@ import numpy as np
 import os
 import weakref
 
-from yt.funcs import \
-    just_one
-
 from ytree.utilities.exceptions import \
     ArborAnalysisFieldNotGenerated
 from ytree.utilities.logger import \
@@ -43,11 +40,11 @@ class FieldIO(object):
         """
         raise NotImplementedError
 
-    def _determine_field_storage(self, data_object, **kwargs):
+    def _determine_field_storage(self, data_object):
         """
         Figure out which objects are responsible for storing field data.
         """
-        raise NotImplementedError
+        return data_object
 
     def _read_fields(self, *args, **kwargs):
         """
@@ -55,18 +52,21 @@ class FieldIO(object):
         """
         raise NotImplementedError
 
-    def _store_fields(self, storage_object, field_data, **kwargs):
+    def _store_fields(self, storage_object, fields):
         """
-        Store the field data in the proper place.
+        Only keep items on the fields list.
         """
-        raise NotImplementedError
+        fcache = storage_object._field_data
+        remove = set(fcache).difference(fields)
+        for field in remove:
+            del fcache[field]
 
     def get_fields(self, data_object, fields=None, **kwargs):
         """
         Load field data for a data object into storage structures.
         """
 
-        if fields is None or len(fields) == 0:
+        if not fields:
             return
 
         # hack to make sure root_only is False if this is not a root
@@ -74,20 +74,35 @@ class FieldIO(object):
           not data_object.is_root:
             kwargs["root_only"] = False
 
-        storage_object, fcache = \
-          self._determine_field_storage(data_object, **kwargs)
+        storage_object = \
+          self._determine_field_storage(data_object)
+        fcache = storage_object._field_data
+        old_fields = list(fcache.keys())
 
         fi = self.arbor.field_info
 
+        # Determine size of field array we need.
+        # Set to None if root_only since any size will do.
+        if not hasattr(data_object, "root") or \
+          kwargs.get("root_only", False):
+            fsize = None
+        else:
+            if data_object.is_root:
+                root = data_object
+            else:
+                root = data_object.root
+            fsize = root.tree_size
+
         # Resolve field dependencies.
         fields_to_read, fields_to_generate = \
-          fi.resolve_field_dependencies(fields, fcache=fcache)
+          fi.resolve_field_dependencies(fields, fcache=fcache,
+                                        fsize=fsize)
 
         # Read in fields we need that are on disk.
         if fields_to_read:
-            field_data = self._read_fields(
+            read_data = self._read_fields(
                 storage_object, fields_to_read, **kwargs)
-            self._store_fields(storage_object, field_data, **kwargs)
+            fcache.update(read_data)
 
         # Generate all derived fields/aliases, but
         # only after dependencies have been generated.
@@ -111,11 +126,12 @@ class FieldIO(object):
                 if ftype == "alias":
                     data = fcache[fi[field]["dependencies"][0]]
                 elif ftype == "derived":
-                    data = fi[field]["function"](fcache)
+                    data = fi[field]["function"](fi[field], fcache)
                 if hasattr(data, "units") and units is not None:
                     data.convert_to_units(units)
-                fdata = {field: data}
-                self._store_fields(storage_object, fdata, **kwargs)
+                fcache[field] = data
+
+        self._store_fields(storage_object, set(old_fields).union(fields))
 
 class TreeFieldIO(FieldIO):
     """
@@ -126,40 +142,20 @@ class TreeFieldIO(FieldIO):
 
     def _initialize_analysis_field(self, storage_object,
                                    name, units, **kwargs):
-        if name in storage_object._tree_field_data:
+        if name in storage_object._field_data:
             return
         storage_object.arbor._setup_tree(storage_object)
         data = np.zeros(storage_object.uids.size)
         if units != "":
             data = self.arbor.arr(data, units)
-        storage_object._tree_field_data[name] = data
+        storage_object._field_data[name] = data
 
-    def _determine_field_storage(self, data_object, **kwargs):
-        root_only = kwargs.get("root_only", True)
-
+    def _determine_field_storage(self, data_object):
         if data_object.is_root:
             storage_object = data_object
         else:
             storage_object = data_object.root
-            root_only = False
-
-        if root_only:
-            fcache = storage_object._root_field_data
-        else:
-            fcache = storage_object._tree_field_data
-
-        return storage_object, fcache
-
-    def _store_fields(self, storage_object, field_data, **kwargs):
-        root_only = kwargs.get("root_only", True)
-
-        if not field_data: return
-        root_field_data = dict(
-            [(field, just_one(field_data[field]))
-             for field in field_data])
-        if not root_only:
-            storage_object._tree_field_data.update(field_data)
-        storage_object._root_field_data.update(root_field_data)
+        return storage_object
 
     def _read_fields(self, root_node, fields, dtypes=None,
                      root_only=False):
@@ -170,11 +166,15 @@ class TreeFieldIO(FieldIO):
         if dtypes is None:
             dtypes = {}
 
-        nhalos = root_node.tree_size
+        if root_only:
+            fsize = 1
+        else:
+            fsize = root_node.tree_size
+
         field_data = {}
         for field in fields:
             field_data[field] = \
-              np.empty(nhalos, dtype=dtypes.get(field, self._default_dtype))
+              np.empty(fsize, dtype=dtypes.get(field, self._default_dtype))
 
         if root_only:
             my_nodes = [root_node]
@@ -201,56 +201,42 @@ class TreeFieldIO(FieldIO):
 
         return field_data
 
-class RootFieldIO(FieldIO):
-    """
-    IO class for getting fields for the roots of all trees.
-    """
-
-    def _determine_field_storage(self, data_object, **kwargs):
-        return data_object, data_object._root_field_data
-
-    def _store_fields(self, storage_object, field_data, **kwargs):
-        storage_object._root_field_data.update(field_data)
-
-class FallbackRootFieldIO(FieldIO):
+class DefaultRootFieldIO(FieldIO):
     """
     Class for getting root fields from arbors that have no
     specialized storage for root fields.
     """
 
-    def get_fields(self, data_object, fields=None):
-        if fields is None or len(fields) == 0:
+    def _read_fields(self, storage_object, fields, dtypes=None,
+                     root_only=True):
+        if not fields:
             return
+
+        if dtypes is None:
+            dtypes = {}
+
+        store = "field_store"
+
+        self.arbor._node_io_loop(
+            self.arbor._node_io._read_fields, pbar="Reading root fields",
+            store=store, fields=fields, dtypes=dtypes, root_only=True)
 
         fi = self.arbor.field_info
-
-        fields_to_get = []
-        for field in fields:
-            if field not in data_object._root_field_data:
-                fields_to_get.append(field)
-        if not fields_to_get:
-            return
-
-        if fields_to_get:
-            self.arbor._node_io_loop(
-                self.arbor._node_io.get_fields, pbar="Getting root fields",
-                fields=fields_to_get, root_only=True)
-
+        fsize = self.arbor.size
         field_data = {}
-        for field in fields_to_get:
+        for field in fields:
+            data = np.empty(fsize, dtype=dtypes.get(field, float))
             units = fi[field].get("units", "")
-            field_data[field] = np.empty(self.arbor.trees.size)
             if units:
-                field_data[field] = \
-                  self.arbor.arr(field_data[field], units)
-            for i in range(self.arbor.trees.size):
-                if fi[field].get("type") == "analysis":
-                    field_data[field][i] = \
-                      self.arbor.trees[i]._tree_field_data[field][0]
-                else:
-                    field_data[field][i] = \
-                      self.arbor.trees[i]._root_field_data[field]
-        data_object._root_field_data.update(field_data)
+                data = self.arbor.arr(data, units)
+            for i, tree in enumerate(self.arbor.trees):
+                data[i] = getattr(tree, store)[field][0]
+            field_data[field] = data
+
+        for tree in self.arbor.trees:
+            delattr(tree, store)
+
+        return field_data
 
 class DataFile(object):
     """

@@ -41,8 +41,8 @@ class TreeNode(object):
         self.arbor = weakref.proxy(arbor)
         if root:
             self.root = -1
-            self._root_field_data = FieldContainer(arbor)
-            self._tree_field_data = FieldContainer(arbor)
+            self.treeid = 0
+            self._field_data = FieldContainer(arbor)
         else:
             self.root = None
 
@@ -58,8 +58,7 @@ class TreeNode(object):
 
         if not self.is_root:
             return
-        for attr in ["_root_field_data", "_tree_field_data"]:
-            getattr(self, attr).clear()
+        self._field_data.clear()
 
     def reset(self):
         """
@@ -70,7 +69,7 @@ class TreeNode(object):
         attrs = ["_tfi", "_tn", "_pfi", "_pn"]
         if self.is_root:
             self.root = -1
-            attrs.extend(["_nodes", "_descids", "_uids"])
+            attrs.extend(["_nodes", "_desc_uids", "_uids"])
         else:
             self.root = None
         for attr in attrs:
@@ -105,14 +104,14 @@ class TreeNode(object):
             self.arbor._setup_tree(self)
         return self._uids
 
-    _descids = None
+    _desc_uids = None
     @property
-    def descids(self):
+    def desc_uids(self):
         if not self.is_root:
             return None
-        if self._descids is None:
+        if self._desc_uids is None:
             self.arbor._setup_tree(self)
-        return self._descids
+        return self._desc_uids
 
     _tree_size = None
     @property
@@ -140,7 +139,7 @@ class TreeNode(object):
             treeid = self.treeid
         self.arbor._node_io.get_fields(self, fields=[key],
                                        root_only=False)
-        data = root._tree_field_data[key]
+        data = root._field_data[key]
         data[treeid] = value
 
     def __getitem__(self, key):
@@ -192,45 +191,33 @@ class TreeNode(object):
                 raise SyntaxError(
                     "Must be either 1 or 2 arguments.")
             ftype, field = key
-            if ftype == "line":
-                raise SyntaxError(
-                    "\"line\" has been deprecated. " +
-                    "Please use \"prog\" instead.")
             if ftype not in arr_types:
                 raise SyntaxError(
                     "First argument must be one of %s." % str(arr_types))
-            self.arbor._setup_tree(self)
-            self.arbor._node_io.get_fields(self, fields=[field], root_only=False)
-
-            # field is an actual field
-            if isinstance(field, string_types):
-                indices = getattr(self, "_%s_field_indices" % ftype)
-                return self.root._tree_field_data[field][indices]
-            else:
+            if not isinstance(field, string_types):
                 raise SyntaxError("Second argument must be a string.")
 
+            self.arbor._node_io.get_fields(self, fields=[field], root_only=False)
+            indices = getattr(self, "_%s_field_indices" % ftype)
+            return self.root._field_data[field][indices]
+
         else:
-            if isinstance(key, string_types):
-                # return the progenitor list or tree nodes in a list
-                if key == "line":
-                    raise SyntaxError(
-                        "\"line\" has been deprecated. " +
-                        "Please use \"prog\" instead.")
-                if key in arr_types:
-                    self.arbor._setup_tree(self)
-                    return getattr(self, "_%s_nodes" % key)
-                # return field value for this node
-                self.arbor._node_io.get_fields(self, fields=[key],
-                                               root_only=self.is_root)
-                if self.is_root:
-                    # temporary hack for analysis fields
-                    if self.arbor.field_info[key].get("type") == "analysis":
-                        return self._tree_field_data[key][0]
-                    return self._root_field_data[key]
-                else:
-                    return self.root._tree_field_data[key][self.treeid]
-            else:
+            if not isinstance(key, string_types):
                 raise SyntaxError("Single argument must be a string.")
+
+            # return the progenitor list or tree nodes in a list
+            if key in arr_types:
+                self.arbor._setup_tree(self)
+                return getattr(self, "_%s_nodes" % key)
+
+            # return field value for this node
+            self.arbor._node_io.get_fields(self, fields=[key],
+                                           root_only=self.is_root)
+            if self.is_root:
+                data_object = self
+            else:
+                data_object = self.root
+            return data_object._field_data[key][self.treeid]
 
     def __repr__(self):
         return "TreeNode[%d]" % self.uid

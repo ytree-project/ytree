@@ -14,6 +14,7 @@ testing utilities
 #-----------------------------------------------------------------------------
 
 import h5py
+import numpy as np
 from numpy.testing import \
     assert_array_equal
 import os
@@ -96,6 +97,28 @@ class ArborTest(object):
 
     def test_save_and_reload(self):
         save_and_compare(self.arbor, skip=self.tree_skip)
+
+    def test_vector_fields(self):
+        a = self.arbor
+        t = a[0]
+        for field in a.field_info.vector_fields:
+
+            magfield = np.sqrt((a[field]**2).sum(axis=1))
+            assert_array_equal(a["%s_magnitude" % field], magfield)
+
+            for i, ax in enumerate("xyz"):
+                assert_array_equal(
+                    a["%s_%s" % (field, ax)],
+                    a[field][:, i])
+
+                assert_array_equal(
+                    t["%s_%s" % (field, ax)],
+                    t[field][i])
+
+                for group in ["prog", "tree"]:
+                    assert_array_equal(
+                        t[group, "%s_%s" % (field, ax)],
+                        t[group, field][:, i])
 
 def save_and_compare(arbor, skip=1):
     """

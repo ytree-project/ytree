@@ -15,6 +15,8 @@ tests for backward compatibility with ytree 1.x
 
 import glob
 import h5py
+from numpy.testing import \
+    assert_array_equal
 import os
 from ytree.utilities.testing import \
     assert_array_rel_equal, \
@@ -65,6 +67,28 @@ class YTree1xTest(TempDirTest):
             compare_hdf5(basename, filename,
                          compare=assert_array_rel_equal,
                          decimals=15)
+
+    @requires_file(ytree_1x_data)
+    def test_1x_root_fields(self):
+        results_filenames = \
+          glob.glob(os.path.join(test_data_dir,
+                                 "ytree_1x/results/*.h5"))
+
+        fields = ["uid", "redshift"]
+        for filename in results_filenames:
+            basename = os.path.basename(filename)
+            arbor_filename = \
+              os.path.join(test_data_dir, "ytree_1x/arbors",
+                           "arbor_%s" % basename)
+            if "tree_farm" in filename:
+                tfields = fields + ["particle_mass"]
+            else:
+                tfields = fields + ["mvir"]
+
+            a = ytree.load(arbor_filename)
+            for field in tfields:
+                my_data = a.arr([t[field] for t in a])
+                assert_array_equal(my_data, a[field])
 
     @requires_file(ytree_1x_data)
     def test_1x_tree_farms(self):
