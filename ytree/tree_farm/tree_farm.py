@@ -16,8 +16,6 @@ TreeFarm class and member functions
 import numpy as np
 import os
 
-from yt.convenience import \
-    load as yt_load
 from yt.frontends.ytdata.utilities import \
     save_as_dataset
 from yt.funcs import \
@@ -40,6 +38,8 @@ from ytree.tree_farm.ancestry_short import \
 from ytree.tree_farm.halo_selector import \
     selector_registry, \
     clear_id_cache
+from ytree.utilities.io import \
+    yt_load
 from ytree.utilities.logger import \
     set_parallel_logger, \
     ytreeLogger as mylog

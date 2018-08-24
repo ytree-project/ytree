@@ -6,7 +6,7 @@ ytree logger
 """
 
 #-----------------------------------------------------------------------------
-# Copyright (c) 2016, Britton Smith <brittonsmith@gmail.com>
+# Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -15,11 +15,6 @@ ytree logger
 
 import logging
 import sys
-
-from yt.utilities.logger import \
-    ytLogger
-
-ytLogger.setLevel(40)
 
 # CRITICAL 50
 # ERROR    40
