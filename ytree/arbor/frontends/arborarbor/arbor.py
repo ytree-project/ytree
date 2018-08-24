@@ -80,7 +80,8 @@ class ArborArbor(Arbor):
         treeids = fh["data"]["tree_id"].value.astype(np.int64)
         fh.close()
 
-        roots = uids[descids == -1]
+        root_filter = descids == -1
+        roots = uids[root_filter]
         ntrees = roots.size
         self._trees = np.empty(ntrees, dtype=np.object)
         for i, root in enumerate(roots):
@@ -91,7 +92,7 @@ class ArborArbor(Arbor):
         self._field_cache = {}
         self._field_cache["uid"] = uids
         self._field_cache["desc_id"] = descids
-        self._ri = roots
+        self._ri = np.where(root_filter)[0]
 
     def _setup_tree(self, tree_node):
         # skip if this is not a root or if already setup
@@ -99,8 +100,8 @@ class ArborArbor(Arbor):
             return
 
         ifield = tree_node._fi
-        tree_node._uids    = self._field_cache["uid"][ifield]
-        tree_node._descids = self._field_cache["desc_id"][ifield]
+        tree_node._uids      = self._field_cache["uid"][ifield]
+        tree_node._desc_uids = self._field_cache["desc_id"][ifield]
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
