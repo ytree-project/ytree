@@ -32,8 +32,8 @@ class AncestryFilter(object):
     returns a filtered list of filtered list of ancestors.  For
     example, a filter could return only the most massive ancestor.
 
-    Required Arguments
-    ------------------
+    Parameters
+    ----------
     halo: halo data container
         Data container of the descendent halo.
     ancestors : list of halo data containers

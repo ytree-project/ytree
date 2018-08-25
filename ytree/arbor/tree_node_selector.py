@@ -53,8 +53,8 @@ class TreeNodeSelector(object):
     halo's ancestors to return when querying the line of main
     progenitors for a halo.
 
-    Required Arguments
-    ------------------
+    Parameters
+    ----------
     ancestors : list of TreeNode objects
         List of TreeNode objects from which to select.
 

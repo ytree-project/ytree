@@ -56,8 +56,8 @@ class HaloSelector(object):
     A HaloSelector is a function that is responsible for creating a list
     of ids of halos that are potentially ancestors of a given halo.
 
-    Required Arguments
-    ------------------
+    Parameters
+    ----------
     hc : halo container object
         Halo container associated with the target halo.
     ds2 : halo catalog-type dataset

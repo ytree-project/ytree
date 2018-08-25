@@ -31,8 +31,8 @@ class AncestryChecker(object):
     An AncestryCheck is a function that is responsible for determining
     whether one halo is an ancestor of another.
 
-    Required Arguments
-    ------------------
+    Parameters
+    ----------
     descendent_ids : list of ints
         Member ids for first halo.
     ancestor_ids : list of int

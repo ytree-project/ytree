@@ -29,8 +29,8 @@ class AncestryShort(object):
     An AncestryShort takes a halo and an ancestor halo and
     determines if the ancestry search should come to an end.
 
-    Required Arguments
-    ------------------
+    Parameters
+    ----------
     halo: halo data container
         Data container of the descendent halo.
     ancestor : halo data container
