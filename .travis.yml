@@ -79,3 +79,14 @@ script:
 
 after_success:
   - coveralls
+
+deploy:
+  provider: pypi
+  distributions: sdist bdist_wheel --universal
+  user: brittonsmith
+  password:
+    secure: sUj8IKNaYbFKjzTRe04Jnho9ayXjzelRHxlWQIIQPTC80qUzpDBWk5gdDASUMEb9q+MdP7M3CW0tkrzNHtAq6vLfOI0j533aO6iB3gXgubtqTNOCfuskuKXe7NLaQ3zSCtNA1JgQNRR6UxxehjV2namYHv6kSWWwETFF5omdPqVmunByFlYxRPORhJERyFhAT090zOTfggxCj6nH1okv1SBK7z4DLOP80K+0dgJBa/vRod7bchtJjWczv4shmr712ltaIgKUxNFy027yEMocte2CdZ/zKACxaG5j6pYAo30oTc72aUS/cYa0J5s6jITwZ6cNS6THfyON0POD9eu6a8GXBi57x4xHyb1tR0ZQkcMDgt8bdQ6XaCcp96oxC6QqjmParsDp0dXDHyw6A1SKBKzuGF0pMqvrTiFq2wEJTrc85Bd1eq30MERxIARjkYxnWg6jYW4Ns9BgMVmS567x2RzYEnHia4Ntr3kIyCxlxBmlm22jPj62ZyxhM5Bpbc1yE8J9M8NBnPCU2MvB5XoEnXLXt3X4Y41T9SjWaH/nyoFUp834ASoFgVDFNvGbui+dfBkudtJHtJvyzY0rhqihm/GoaL8WwtQyEbrm3cGGNpRWbl+U0qua3ffFsaaXZvqi+2knUqsdstig1EAocSCOF9cfQ2HDeP2f8zhRHPQvTAk=
+  on:
+    tags: true
+    repo: brittonsmith/ytree
+    os: linux
