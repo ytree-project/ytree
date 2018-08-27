@@ -81,7 +81,7 @@ providing a defining function and calling
 
 .. code-block:: python
 
-   >>> def potential_field(data):
+   >>> def potential_field(field, data):
    ...     # data.arbor points to the parent Arbor
    ...     return data["mass"] / data["virial_radius"]
    ...
@@ -89,11 +89,49 @@ providing a defining function and calling
    [  2.88624262e+14   2.49542426e+14   2.46280488e+14, ...
    3.47503685e+12   3.47503685e+12   3.47503685e+12] Msun/Mpc
 
-Field functions should only take a single argument, representing
-the entity for which the field is defined.  This argument will
-also have access to the parent ``Arbor``.
+Field functions should take two arguments. The first is a dictionary
+that will contain basic information about the field, such as its name.
+The second argument represents the data container for which the field
+will be defined. It can be used to access field data for any other
+available field.  This argument will also have access to the parent
+``Arbor`` as ``data.arbor``.
 
 .. _analysis-fields:
+
+Vector Fields
+-------------
+
+For fields that have x, y, and z components, such as position, velocity,
+and angular momentum, a single field can be queried to return an array
+with all the components. For example, for fields named "position_x",
+"position_y", and "position_z", the field "position" will return the
+full vector.
+
+.. code-block:: python
+
+   >>> print (a["position"])
+   [[0.0440018, 0.0672202, 0.9569643],
+    [0.7383264, 0.1961563, 0.0238852],
+    [0.7042797, 0.6165487, 0.500576 ],
+    ...
+    [0.1822363, 0.1324423, 0.1722414],
+    [0.8649974, 0.4718005, 0.7349876]]) unitary
+
+A list of defined vector fields can be seen by doing:
+
+.. code-block:: python
+
+   >>> print (a.field_info.vector_fields)
+   ('position', 'velocity', 'angular_momentum')
+
+For all vector fields, a "_magnitude" field also exists, defined as the
+quadrature sum of the components.
+
+.. code-block:: python
+
+   >>> print (a["velocity_magnitude"])
+   [ 488.26936644  121.97143067  146.81450507, ...
+     200.74057711  166.13782652  529.7336846 ] km/s
 
 Analysis Fields
 ---------------

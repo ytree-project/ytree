@@ -679,7 +679,7 @@ class Arbor(object):
 
         >>> import ytree
         >>> a = ytree.load("tree_0_0_0.dat")
-        >>> def _redshift(arbor, data):
+        >>> def _redshift(field, data):
         ...     return 1. / data["scale"] - 1
         ...
         >>> a.add_derived_field("redshift", _redshift)
