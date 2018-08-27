@@ -42,6 +42,7 @@ class TreeNode(object):
         if root:
             self.root = -1
             self.treeid = 0
+            self.descendent = None
             self._field_data = FieldContainer(arbor)
         else:
             self.root = None
