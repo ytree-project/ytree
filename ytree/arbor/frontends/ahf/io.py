@@ -94,7 +94,7 @@ class AHFDataFile(CatalogDataFile):
         have both multiple progenitors and descendents.
 
         Use the weight function to determine a unique
-        descendant for each halo.
+        descendent for each halo.
 
         descendent = max (M_ij = N_ij^2 / (N_i * N_j)),
 
@@ -235,7 +235,7 @@ class AHFDataFile(CatalogDataFile):
                         field_data[field][i] = dtype(sline[fi[field]["column"]])
                 self.close()
 
-        # use data from the mtree file to get descendant ids
+        # use data from the mtree file to get descendent ids
         if tfields:
             links = self.links
             descids = np.empty(
