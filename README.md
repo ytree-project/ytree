@@ -38,7 +38,7 @@ pip install -e .
 ## Getting Started
 
 Below is a notebook that demonstrates how to use ytree with merger-tree data.  For
-more information, see the full [ytree documenation](http://ytree.readthedocs.io).
+more information, see the full [ytree documenation](https://ytree.readthedocs.io).
 
  * [Introduction](https://github.com/brittonsmith/ytree/blob/master/doc/source/notebooks/Intro_to_ytree.ipynb)
 
@@ -51,7 +51,7 @@ Sampled data for all merger-tree formats supported by ytree is available on the
 ## Contributing
 
 ytree would be much better with your contribution!  As an extension of
-[the yt Project](http://yt-project.org/), we follow the yt
+[the yt Project](https://yt-project.org/), we follow the yt
 [guidelines for contributing](https://github.com/yt-project/yt#contributing).
 
 ## Citing ytree
@@ -61,7 +61,7 @@ If you use ytree in your work, please cite the following:
 
 ```
 Britton Smith, & Meagan Lang. (2018, February 16). ytree: merger-tree toolkit. Zenodo.
-http://doi.org/10.5281/zenodo.1174374
+https://doi.org/10.5281/zenodo.1174374
 ```
 
 For BibTeX users:
@@ -79,10 +79,10 @@ For BibTeX users:
 ```
 
 If possible, please also add a footnote pointing to
-http://ytree.readthedocs.io.
+https://ytree.readthedocs.io.
 
 ## Resources
 
- * The latest documentation can be found at http://ytree.readthedocs.io
+ * The latest documentation can be found at https://ytree.readthedocs.io
 
- * ytree is an extension of [the yt Project](http://yt-project.org/). The [yt-project community resources](https://github.com/yt-project/yt#resources) can be used for ytree-related communication.
+ * ytree is an extension of [the yt Project](https://yt-project.org/). The [yt-project community resources](https://github.com/yt-project/yt#resources) can be used for ytree-related communication.
