@@ -974,7 +974,7 @@ class CatalogArbor(Arbor):
                 for it in range(nhalos):
                     descid = data[desc_id_f][it]
                     root = i == 0 or descid == -1
-                    # The data says a descendant exists, but it's not there.
+                    # The data says a descendent exists, but it's not there.
                     # This shouldn't happen, but it does sometimes.
                     if not root and descid not in lastids:
                         root = True
