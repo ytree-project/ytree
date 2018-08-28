@@ -19,4 +19,4 @@ from ytree.arbor.tree_node_selector import \
     TreeNodeSelector, \
     add_tree_node_selector
 
-__version__ = '2.2.dev1'
+__version__ = '2.2.0'

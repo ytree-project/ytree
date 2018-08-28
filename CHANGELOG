@@ -1,3 +1,11 @@
+== Version 2.2.0 ==
+_Release date - Aug 28, 2018_
+
+  * New feature: add vector fields.
+  * New feature: add select_halos function.
+  * Enhancement: significant refactor of field and i/o systems
+  * Enhancement: upgrades to testing infrastructure
+
 == Version 2.1.1 ==
 _Release date - Apr 23, 2018_
 
