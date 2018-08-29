@@ -59,18 +59,23 @@ file in your home directory at the location ``~/.config/ytree/ytreerc``.
 This path should point to the outer directory containing all the
 sample datasets.
 
-Run the Tests
-^^^^^^^^^^^^^
+Installing Development Dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Before running the tests, you will the ``pytest`` and ``flake8`` packages.
-These can be installed with pip.
+A number of additional packages are required for testing. These can be
+installed with pip from within the ``ytree`` source by doing:
 
 .. code-block:: bash
 
-   $ pip install pytest flake8
+   $ pip install -e .[dev]
 
-Once installed, the tests are run from the top level of the ytree
-source.
+To see how these dependencies are defined, have a look at the
+``extras_require`` keyword argument in the ``setup.py`` file.
+
+Run the Tests
+^^^^^^^^^^^^^
+
+The tests are run from the top level of the ytree source.
 
 .. code-block:: bash
 
