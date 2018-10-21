@@ -77,7 +77,6 @@ class FieldIO(object):
         storage_object = \
           self._determine_field_storage(data_object)
         fcache = storage_object._field_data
-        old_fields = list(fcache.keys())
 
         fi = self.arbor.field_info
 
@@ -97,6 +96,11 @@ class FieldIO(object):
         fields_to_read, fields_to_generate = \
           fi.resolve_field_dependencies(fields, fcache=fcache,
                                         fsize=fsize)
+
+        # Keep list of fields present before getting new ones.
+        # We need to do this after trees have been setup since
+        # that will add fields to the field cache in some cases.
+        old_fields = list(fcache.keys())
 
         # Read in fields we need that are on disk.
         if fields_to_read:
