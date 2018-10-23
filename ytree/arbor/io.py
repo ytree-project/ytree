@@ -89,7 +89,7 @@ class FieldIO(object):
             if data_object.is_root:
                 root = data_object
             else:
-                root = data_object.root
+                root = data_object.find_root()
             fsize = root.tree_size
 
         # Resolve field dependencies.
@@ -155,11 +155,7 @@ class TreeFieldIO(FieldIO):
         storage_object._field_data[name] = data
 
     def _determine_field_storage(self, data_object):
-        if data_object.is_root:
-            storage_object = data_object
-        else:
-            storage_object = data_object.root
-        return storage_object
+        return data_object.find_root()
 
     def _read_fields(self, root_node, fields, dtypes=None,
                      root_only=False):
