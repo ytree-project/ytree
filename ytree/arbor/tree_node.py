@@ -51,6 +51,17 @@ class TreeNode(object):
     def is_root(self):
         return self.root in [-1, self]
 
+    def find_root(self):
+        """
+        Find the root node.
+        """
+        my_node = self
+        while not my_node.is_root:
+            if my_node.descendent == -1:
+                break
+            my_node = my_node.descendent
+        return my_node
+
     def clear_fields(self):
         """
         If a root node, delete field data.

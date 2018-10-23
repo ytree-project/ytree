@@ -20,6 +20,7 @@ from ytree.utilities.io import \
     f_text_block
 from ytree.utilities.testing import \
     requires_file, \
+    TempDirTest, \
     test_data_dir
 
 R0 = os.path.join(test_data_dir, "rockstar/rockstar_halos/out_0.list")
@@ -44,14 +45,30 @@ def test_f_text_block():
         for l1, l2 in zip(lines, lines2):
             assert l1 == l2
 
-@requires_file(R0)
-def test_tree_field_clobber():
+class MiscTest(TempDirTest):
     """
-    Test for an issue where the uid and desc_uid fields would be
-    deleted if the tree was setup in the middle of getting fields.
-    Fixed in PR #19: https://github.com/brittonsmith/ytree/pull/19
+    Some miscellaneous tests in temporary directories
+    """
+
+    @requires_file(R0)
+    def test_tree_field_clobber(self):
+        """
+        Test for an issue where the uid and desc_uid fields would be
+        deleted if the tree was setup in the middle of getting fields.
+        Fixed in PR #19: https://github.com/brittonsmith/ytree/pull/19
+        """
+        a = ytree_load(R0)
+        t = a[a['mass'].argmax()]
+        t['prog', 'redshift']
+        t.save_tree()
+
+@requires_file(R0)
+def test_field_access_without_tree_setup():
+    """
+    Test field access on non-root nodes of catalog arbors where
+    setup_tree has not been called.
+    Fixed in PR #20: https://github.com/brittonsmith/ytree/pull/20
     """
     a = ytree_load(R0)
     t = a[a['mass'].argmax()]
-    t['prog', 'redshift']
-    t.save_tree()
+    t.ancestors[0]['desc_uid']
