@@ -46,65 +46,54 @@ class RockstarDataFile(CatalogDataFile):
                 self.scale_factor = float(line.split(" = ")[1])
         self.close()
 
-    def _read_fields(self, fields, tree_nodes=None, dtypes=None):
-        if dtypes is None:
-            dtypes = {}
+    def _read_data_default(self, rfields, dtypes):
+        if not rfields:
+            return {}
 
         fi = self.arbor.field_info
-        afields, hfields, rfields = self._get_field_sources(fields)
+        field_data = \
+          self._create_field_arrays(rfields, dtypes)
+        offsets = []
 
-        hfield_values = self._get_header_fields(hfields)
+        self.open()
+        f = self.fh
+        f.seek(self._hoffset)
+        file_size = self.file_size - self._hoffset
+        for line, offset in f_text_block(f, file_size=file_size):
+            offsets.append(offset)
+            sline = line.split()
+            for field in rfields:
+                field_data[field].append(sline[fi[field]["column"]])
+        self.close()
 
-        if tree_nodes is None:
-            field_data = dict((field, []) for field in fields)
-            offsets = []
-            self.open()
-            f = self.fh
-            f.seek(self._hoffset)
-            file_size = self.file_size - self._hoffset
-            for line, offset in f_text_block(f, file_size=file_size):
-                offsets.append(offset)
-                sline = line.split()
-                for field in hfields:
-                    field_data[field].append(hfield_values[field])
-                for field in rfields:
-                    field_data[field].append(sline[fi[field]["column"]])
-            self.close()
+        for field in rfields:
+            dtype = dtypes.get(field, self._default_dtype)
+            field_data[field] = \
+              np.array(field_data[field], dtype=dtype)
 
-            for field in fields:
+        if self.offsets is None:
+            self.offsets = np.array(offsets)
+
+        return field_data
+
+    def _read_data_select(self, rfields, tree_nodes, dtypes):
+        if not rfields:
+            return {}
+
+        fi = self.arbor.field_info
+        nt = len(tree_nodes)
+        field_data = \
+          self._create_field_arrays(rfields, dtypes, size=nt)
+
+        self.open()
+        f = self.fh
+        for i in range(nt):
+            f.seek(self.offsets[tree_nodes[i]._fi])
+            line = f.readline()
+            sline = line.split()
+            for field in rfields:
                 dtype = dtypes.get(field, self._default_dtype)
-                field_data[field] = \
-                  np.array(field_data[field], dtype=dtype)
-
-            if self.offsets is None:
-                self.offsets = np.array(offsets)
-
-        else:
-            ntrees = len(tree_nodes)
-            field_data = \
-              dict((field,
-                    np.empty(ntrees,
-                             dtype=dtypes.get(field, self._default_dtype)))
-                    for field in fields)
-
-            # fields from the file header
-            for field in hfields:
-                field_data[field][:] = hfield_values[field]
-
-            # fields from arbor-related info
-            self._get_arbor_fields(afields, tree_nodes, field_data)
-
-            # fields from the actual data
-            if rfields:
-                self.open()
-                f = self.fh
-                for i in range(ntrees):
-                    f.seek(self.offsets[tree_nodes[i]._fi])
-                    line = f.readline()
-                    sline = line.split()
-                    for field in rfields:
-                        dtype = dtypes.get(field, self._default_dtype)
-                        field_data[field][i] = dtype(sline[fi[field]["column"]])
-                self.close()
+                field_data[field][i] = dtype(sline[fi[field]["column"]])
+        self.close()
 
         return field_data
