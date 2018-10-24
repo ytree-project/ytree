@@ -207,6 +207,17 @@ class DefaultRootFieldIO(FieldIO):
     specialized storage for root fields.
     """
 
+    def _initialize_analysis_field(self, storage_object,
+                                   name, units, **kwargs):
+        data = np.zeros(storage_object.size)
+        if units != "":
+            data = self.arbor.arr(data, units)
+        for i, t in enumerate(storage_object):
+            if name not in t._field_data:
+                continue
+            data[i] = t[name]
+        storage_object._field_data[name] = data
+
     def _read_fields(self, storage_object, fields, dtypes=None,
                      root_only=True):
         if not fields:
