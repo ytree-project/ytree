@@ -156,6 +156,80 @@ class AHFDataFile(CatalogDataFile):
             data[field] = np.array(data[field])
         return data
 
+    def _read_data_default(self, rfields, dtypes):
+        if not rfields:
+            return {}
+
+        fi = self.arbor.field_info
+        field_data = self._create_field_arrays(rfields, dtypes)
+        offsets = []
+
+        self.open()
+        f = self.fh
+        f.seek(self._hoffset)
+        file_size = self.file_size - self._hoffset
+        for line, offset in f_text_block(f, file_size=file_size):
+            offsets.append(offset)
+            sline = line.split()
+            for field in rfields:
+                dtype = dtypes.get(field, self._default_dtype)
+                field_data[field].append(dtype(sline[fi[field]["column"]]))
+        self.close()
+
+        if self.offsets is None:
+            self.offsets = np.array(offsets)
+
+        return field_data
+
+    def _read_data_select(self, rfields, tree_nodes, dtypes):
+        if not rfields:
+            return {}
+
+        fi = self.arbor.field_info
+        nt = len(tree_nodes)
+        field_data = self._create_field_arrays(
+            rfields, dtypes, size=nt)
+
+        self.open()
+        f = self.fh
+
+        for i in range(nt):
+            f.seek(self.offsets[tree_nodes[i]._fi])
+            line = f.readline()
+            sline = line.split()
+            for field in rfields:
+                dtype = dtypes.get(field, self._default_dtype)
+                field_data[field][i] = dtype(sline[fi[field]["column"]])
+        self.close()
+
+        return field_data
+
+    def _get_mtree_fields(self, tfields, dtypes, field_data):
+        """
+        Use data from the mtree file to get descendent ids.
+        """
+
+        if not tfields:
+            return
+
+        links = self.links
+        descids = np.empty(
+            len(field_data["ID"]),
+            dtype=dtypes.get('desc_id', self._default_dtype))
+
+        if self.links == -1:
+            descids[:] = -1
+        else:
+            for i, hid in enumerate(field_data["ID"]):
+                inlink = hid == links["prog_id"]
+                if not inlink.any():
+                    descids[i] = -1
+                else:
+                    descids[i] = \
+                      links["desc_id"][np.where(inlink)[0][0]]
+
+        field_data["desc_id"] = descids
+
     def _read_fields(self, fields, tree_nodes=None, dtypes=None):
         if dtypes is None:
             dtypes = {}
@@ -174,8 +248,6 @@ class AHFDataFile(CatalogDataFile):
             data_fields[source].append(field)
 
         hfields = data_fields.pop("header", [])
-        hfield_values = dict((field, getattr(self, field))
-                             for field in hfields)
         rfields = data_fields.pop("halos", [])
         tfields = data_fields.pop("mtree", [])
         # If we needs desc_ids, make sure to get IDs so
@@ -184,79 +256,28 @@ class AHFDataFile(CatalogDataFile):
             if "ID" not in rfields:
                 rfields.append("ID")
 
+        field_data = {}
         if tree_nodes is None:
-            field_data = dict((field, []) for field in rfields + hfields)
-            offsets = []
-            self.open()
-            f = self.fh
-            f.seek(self._hoffset)
-            file_size = self.file_size - self._hoffset
-            for line, offset in f_text_block(f, file_size=file_size):
-                offsets.append(offset)
-                sline = line.split()
-                for field in hfields:
-                    field_data[field].append(hfield_values[field])
-                for field in rfields:
-                    dtype = dtypes.get(field, self._default_dtype)
-                    field_data[field].append(dtype(sline[fi[field]["column"]]))
-            self.close()
-            if self.offsets is None:
-                self.offsets = np.array(offsets)
+            field_data.update(
+                self._read_data_default(rfields, dtypes))
 
         else:
-            ntrees = len(tree_nodes)
-            field_data = \
-              dict((field, np.empty(
-                  ntrees, dtype=dtypes.get(field, self._default_dtype)))
-                  for field in afields + rfields + hfields)
-
-            # fields from the file header
-            for field in hfields:
-                field_data[field][:] = hfield_values[field]
+            # fields from the actual data
+            field_data.update(
+                self._read_data_select(rfields, tree_nodes, dtypes))
 
             # fields from arbor-related info
-            if afields:
-                for i in range(ntrees):
-                    for field in afields:
-                        dtype = dtypes.get(field, self._default_dtype)
-                        field_data[field][i] = \
-                          dtype(getattr(tree_nodes[i], field))
+            field_data.update(
+                self._get_arbor_fields(afields, tree_nodes, dtypes))
 
-            # fields from the actual data
-            if rfields:
-                self.open()
-                f = self.fh
-                for i in range(ntrees):
-                    f.seek(self.offsets[tree_nodes[i]._fi])
-                    line = f.readline()
-                    sline = line.split()
-                    for field in rfields:
-                        dtype = dtypes.get(field, self._default_dtype)
-                        field_data[field][i] = dtype(sline[fi[field]["column"]])
-                self.close()
+            # fields from the file header
+            hfield_values = self._get_header_fields(hfields)
+            nt = len(tree_nodes)
+            for field in hfields:
+                field_data[field] = hfield_values[field] * \
+                  np.ones(nt, dtypes.get(field, self._default_dtype))
 
         # use data from the mtree file to get descendent ids
-        if tfields:
-            links = self.links
-            descids = np.empty(
-                len(field_data["ID"]),
-                dtype=dtypes.get(field, self._default_dtype))
-            if self.links == -1:
-                descids[:] = -1
-            else:
-                for i, hid in enumerate(field_data["ID"]):
-                    inlink = hid == links["prog_id"]
-                    if not inlink.any():
-                        descids[i] = -1
-                    else:
-                        descids[i] = links["desc_id"][np.where(inlink)[0][0]]
-            field_data["desc_id"] = descids
-
-        for field in field_data:
-            if isinstance(field_data[field], np.ndarray):
-                continue
-            field_data[field] = \
-              np.array(field_data[field],
-                       dtype=dtypes.get(field, self._default_dtype))
+        self._get_mtree_fields(tfields, dtypes, field_data)
 
         return field_data

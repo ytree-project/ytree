@@ -328,6 +328,9 @@ class CatalogDataFile(DataFile):
         Get fields from arbor/tree_node properties.
         """
 
+        if not afields:
+            return {}
+
         nt = len(tree_nodes)
         field_data = self._create_field_arrays(afields, dtypes, size=nt)
 
