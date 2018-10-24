@@ -56,56 +56,35 @@ class TreeFarmDataFile(CatalogDataFile):
         self.arbor.field_list = fields
         self.arbor.field_info.update(fi)
 
-    def _read_fields(self, fields, tree_nodes=None, dtypes=None):
-        if dtypes is None:
-            dtypes = {}
+    def _read_data_default(self, rfields, dtypes):
+        field_data = {}
+        if not rfields:
+            return field_data
 
-        fi = self.arbor.field_info
-        afields = [field for field in fields
-                   if fi[field].get("source") == "arbor"]
-        hfields = [field for field in fields
-                   if fi[field].get("source") == "header"]
-        rfields = set(fields).difference(afields + hfields)
+        self.open()
+        fh = self.fh
+        field_data = dict((field, fh[field].value)
+                          for field in rfields)
+        self.close()
 
-        hfield_values = dict((field, getattr(self, field))
-                             for field in hfields)
+        for field, dtype in dtypes.items():
+            field_data[field] = field_data[field].astype(dtype)
+        return field_data
 
-        if tree_nodes is None:
-            ntrees = self.nhalos
-            self.open()
-            fh = self.fh
-            field_data = dict((field, fh[field].value)
-                              for field in rfields)
-            self.close()
+    def _read_data_select(self, rfields, tree_nodes, dtypes):
+        field_data = {}
+        if not rfields:
+            return field_data
 
-        else:
-            ntrees = len(tree_nodes)
-            file_ids = np.array([node._fi for node in tree_nodes])
-            field_data = {}
+        file_ids = np.array([node._fi for node in tree_nodes])
+        self.open()
+        fh = self.fh
+        for field in rfields:
+            field_data[field] = fh[field].value[file_ids]
+        self.close()
 
-            # fields from arbor-related info
-            if afields:
-                for field in afields:
-                    field_data[field] = \
-                      np.empty(ntrees, dtype=dtypes.get(field, self._default_dtype))
-                for i in range(ntrees):
-                    for field in afields:
-                        field_data[field][i] = getattr(tree_nodes[i], field)
-
-            if rfields:
-                self.open()
-                fh = self.fh
-                for field in rfields:
-                    field_data[field] = fh[field].value[file_ids]
-                self.close()
-
-        for field in hfields:
-            field_data[field] = hfield_values[field] * \
-              np.ones(ntrees, dtypes.get(field, self._default_dtype))
-        for field in dtypes:
-            if field in hfields: continue
-            field_data[field] = field_data[field].astype(dtypes[field])
-
+        for field, dtype in dtypes.items():
+            field_data[field] = field_data[field].astype(dtype)
         return field_data
 
 class TreeFarmTreeFieldIO(TreeFieldIO):

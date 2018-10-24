@@ -264,6 +264,13 @@ class DataFile(object):
             self.fh.close()
             self.fh = None
 
+
+# A dict of arbor field generators.
+arbor_fields = {}
+arbor_fields['uid'] = lambda t: t.uid
+# This will only be called for a root.
+arbor_fields['desc_uid'] = lambda t: -1
+
 class CatalogDataFile(DataFile):
     """
     Base class for halo catalog files.
@@ -277,7 +284,120 @@ class CatalogDataFile(DataFile):
         self._parse_header()
 
     def _parse_header(self):
+        """
+        Load any relevant data from the file header.
+        """
         raise NotImplementedError
 
-    def _read_fields(self, *args, **kwargs):
+    def _get_field_sources(self, fields):
+        """
+        Distinguish field sources.
+
+        Distinguish fields to be read from disk, from the file header,
+        and from arbor properties.
+        """
+
+        fi = self.arbor.field_info
+        afields = [field for field in fields
+                   if fi[field].get("source") == "arbor"]
+        hfields = [field for field in fields
+                   if fi[field].get("source") == "header"]
+        rfields = set(fields).difference(hfields + afields)
+
+        return afields, hfields, rfields
+
+    def _create_field_arrays(self, fields, dtypes, size=None):
+        """
+        Initialize empty field arrays.
+        """
+
+        if size is None:
+            field_data = dict((field, []) for field in fields)
+
+        else:
+            field_data = \
+              dict((field, np.empty(
+                  size, dtype=dtypes.get(field, self._default_dtype)))
+                  for field in fields)
+
+        return field_data
+
+    def _get_arbor_fields(self, afields, tree_nodes, dtypes):
+        """
+        Get fields from arbor/tree_node properties.
+        """
+
+        if not afields:
+            return {}
+
+        nt = len(tree_nodes)
+        field_data = self._create_field_arrays(afields, dtypes, size=nt)
+
+        for field in afields:
+            for i in range(nt):
+                field_data[field][i] = \
+                  arbor_fields[field](tree_nodes[i])
+
+        return field_data
+
+    def _get_header_fields(self, hfields, tree_nodes, dtypes):
+        """
+        Get fields from file header.
+        """
+
+        if not hfields:
+            return {}
+
+        field_data = {}
+        hfield_values = dict((field, getattr(self, field))
+                             for field in hfields)
+        nt = len(tree_nodes)
+        for field in hfields:
+            field_data[field] = hfield_values[field] * \
+              np.ones(nt, dtypes.get(field, self._default_dtype))
+
+        return field_data
+
+    def _read_data_default(self, rfields, dtypes):
+        """
+        Read field data for all halos in the file.
+        """
         raise NotImplementedError
+
+    def _read_data_select(self, rfields, tree_nodes, dtypes):
+        """
+        Read field data for a given set of halos.
+        """
+        raise NotImplementedError
+
+    def _read_fields(self, fields, tree_nodes=None, dtypes=None):
+        """
+        Read all requested fields from disk, header, or arbor properties.
+        """
+        if dtypes is None:
+            dtypes = {}
+
+        field_data = {}
+        afields, hfields, rfields = self._get_field_sources(fields)
+
+        if tree_nodes is None:
+            field_data = self._read_data_default(
+                fields, dtypes)
+
+        else:
+            # fields from the actual data
+            field_data.update(
+                self._read_data_select(
+                    rfields, tree_nodes, dtypes))
+
+            # fields from arbor-related info
+            field_data.update(
+                self._get_arbor_fields(
+                    afields, tree_nodes, dtypes))
+
+            # fields from the file header
+            field_data.update(
+                self._get_header_fields(
+                    hfields, tree_nodes, dtypes))
+
+        return field_data

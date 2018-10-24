@@ -985,8 +985,6 @@ class CatalogArbor(Arbor):
                     batch[it] = tree_node
                     if root:
                         trees.append(tree_node)
-                        # Do this to make "desc_uid" field work in _read_fields.
-                        tree_node.desc_uid = -1
                     else:
                         ancs[descid].append(tree_node)
                     uid += 1
