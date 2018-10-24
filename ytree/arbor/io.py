@@ -264,6 +264,13 @@ class DataFile(object):
             self.fh.close()
             self.fh = None
 
+
+# A dict of arbor field generators.
+arbor_fields = {}
+arbor_fields['uid'] = lambda t: t.uid
+# This will only be called for a root.
+arbor_fields['desc_uid'] = lambda t: -1
+
 class CatalogDataFile(DataFile):
     """
     Base class for halo catalog files.
@@ -328,7 +335,8 @@ class CatalogDataFile(DataFile):
 
         for field in afields:
             for i in range(nt):
-                field_data[field][i] = getattr(tree_nodes[i], field)
+                field_data[field][i] = \
+                  arbor_fields[field](tree_nodes[i])
 
         return field_data
 
