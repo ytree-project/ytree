@@ -51,14 +51,9 @@ class RockstarDataFile(CatalogDataFile):
             dtypes = {}
 
         fi = self.arbor.field_info
-        hfields = [field for field in fields
-                   if fi[field].get("source") == "header"]
-        afields = [field for field in fields
-                   if fi[field].get("source") == "arbor"]
-        rfields = set(fields).difference(hfields + afields)
+        afields, hfields, rfields = self._get_field_sources(fields)
 
-        hfield_values = dict((field, getattr(self, field))
-                             for field in hfields)
+        hfield_values = self._get_header_fields(hfields)
 
         if tree_nodes is None:
             field_data = dict((field, []) for field in fields)
@@ -92,12 +87,7 @@ class RockstarDataFile(CatalogDataFile):
                 field_data[field][:] = hfield_values[field]
 
             # fields from arbor-related info
-            if afields:
-                for i in range(ntrees):
-                    for field in afields:
-                        dtype = dtypes.get(field, self._default_dtype)
-                        field_data[field][i] = \
-                          dtype(getattr(tree_nodes[i], field))
+            self._get_arbor_fields(afields, tree_nodes, field_data)
 
             # fields from the actual data
             if rfields:

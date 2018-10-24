@@ -281,3 +281,38 @@ class CatalogDataFile(DataFile):
 
     def _read_fields(self, *args, **kwargs):
         raise NotImplementedError
+
+    def _get_field_sources(self, fields):
+        """
+        Distinguish field sources.
+
+        Distinguish fields to be read from disk, from the file header,
+        and from arbor properties.
+        """
+
+        fi = self.arbor.field_info
+        afields = [field for field in fields
+                   if fi[field].get("source") == "arbor"]
+        hfields = [field for field in fields
+                   if fi[field].get("source") == "header"]
+        rfields = set(fields).difference(hfields + afields)
+
+        return afields, hfields, rfields
+
+    def _get_header_fields(self, hfields):
+        """
+        Get fields from file header.
+        """
+
+        return dict((field, getattr(self, field))
+                    for field in hfields)
+
+    def _get_arbor_fields(self, afields, tree_nodes, field_data):
+        """
+        Get fields from arbor/tree_node properties.
+        """
+
+        nt = len(tree_nodes)
+        for field in afields:
+            for i in range(nt):
+                field_data[field][i] = getattr(tree_nodes[i], field)
