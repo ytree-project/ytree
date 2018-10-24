@@ -271,11 +271,9 @@ class AHFDataFile(CatalogDataFile):
                 self._get_arbor_fields(afields, tree_nodes, dtypes))
 
             # fields from the file header
-            hfield_values = self._get_header_fields(hfields)
-            nt = len(tree_nodes)
-            for field in hfields:
-                field_data[field] = hfield_values[field] * \
-                  np.ones(nt, dtypes.get(field, self._default_dtype))
+            field_data.update(
+                self._get_header_fields(
+                    hfields, tree_nodes, dtypes))
 
         # use data from the mtree file to get descendent ids
         self._get_mtree_fields(tfields, dtypes, field_data)

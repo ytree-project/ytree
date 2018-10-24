@@ -315,14 +315,6 @@ class CatalogDataFile(DataFile):
 
         return field_data
 
-    def _get_header_fields(self, hfields):
-        """
-        Get fields from file header.
-        """
-
-        return dict((field, getattr(self, field))
-                    for field in hfields)
-
     def _get_arbor_fields(self, afields, tree_nodes, dtypes):
         """
         Get fields from arbor/tree_node properties.
@@ -337,6 +329,24 @@ class CatalogDataFile(DataFile):
         for field in afields:
             for i in range(nt):
                 field_data[field][i] = getattr(tree_nodes[i], field)
+
+        return field_data
+
+    def _get_header_fields(self, hfields, tree_nodes, dtypes):
+        """
+        Get fields from file header.
+        """
+
+        if not hfields:
+            return {}
+
+        field_data = {}
+        hfield_values = dict((field, getattr(self, field))
+                             for field in hfields)
+        nt = len(tree_nodes)
+        for field in hfields:
+            field_data[field] = hfield_values[field] * \
+              np.ones(nt, dtypes.get(field, self._default_dtype))
 
         return field_data
 
@@ -377,10 +387,9 @@ class CatalogDataFile(DataFile):
                 self._get_arbor_fields(
                     afields, tree_nodes, dtypes))
 
-            hfield_values = self._get_header_fields(hfields)
-            nt = len(tree_nodes)
-            for field in hfields:
-                field_data[field] = hfield_values[field] * \
-                  np.ones(nt, dtypes.get(field, self._default_dtype))
+            # fields from the file header
+            field_data.update(
+                self._get_header_fields(
+                    hfields, tree_nodes, dtypes))
 
         return field_data
