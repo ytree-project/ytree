@@ -311,7 +311,7 @@ class CatalogDataFile(DataFile):
             field_data = \
               dict((field, np.empty(
                   size, dtype=dtypes.get(field, self._default_dtype)))
-                    for field in fields)
+                  for field in fields)
 
         return field_data
 
