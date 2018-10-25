@@ -36,7 +36,7 @@ extensions = [
     'sphinx.ext.viewcode',
 ]
 
-autosummary_generate = glob.glob("reference.rst")
+autosummary_generate = glob.glob("api_reference.rst")
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
