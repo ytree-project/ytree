@@ -13,6 +13,30 @@ The `CREDITS file
 contains the most up-to-date list of everyone who has contributed to the
 ytree source code.
 
+Version 2.2.1
+-------------
+
+Release data: *October 24, 2018*
+
+Enhancements
+^^^^^^^^^^^^
+
+ * Refactor of CatalogDataFile class
+   (`PR #21 <https://github.com/brittonsmith/ytree/pull/21>`__)
+ * Simplify requirements file for docs build on readthedocs.io
+   (`PR #22 <https://github.com/brittonsmith/ytree/pull/22>`__)
+
+Bugfixes
+^^^^^^^^
+
+ * Restore access to analysis fields for tree roots
+   (`PR #23 <https://github.com/brittonsmith/ytree/pull/23>`__)
+ * fix field access on non-root nodes when tree is not setup
+   (`PR #20 <https://github.com/brittonsmith/ytree/pull/20>`__)
+ * fix issue of uid and desc_uid fields being clobbered during
+   initial field access
+   (`PR #19 <https://github.com/brittonsmith/ytree/pull/19>`__)
+
 Version 2.2
 -----------
 
