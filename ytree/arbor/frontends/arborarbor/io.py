@@ -47,7 +47,7 @@ class ArborArborTreeFieldIO(TreeFieldIO):
                         rfield, ax = field.rsplit("_", 1)
                         rdata = f["data/%s" % rfield][:, "xyz".find(ax)]
                     else:
-                        rdata = f["data/%s" % field].value
+                        rdata = f["data/%s" % field][()]
                     dtype = dtypes.get(field)
                     if dtype is not None:
                         rdata = rdata.astype(dtype)
@@ -83,7 +83,7 @@ class ArborArborRootFieldIO(FieldIO):
                         rfield, ax = field.rsplit("_", 1)
                         rdata = fh["data/%s" % rfield][:, "xyz".find(ax)]
                     else:
-                        rdata = fh["data/%s" % field].value
+                        rdata = fh["data/%s" % field][()]
                     dtype = dtypes.get(field)
                     if dtype is not None:
                         rdata = rdata.astype(dtype)

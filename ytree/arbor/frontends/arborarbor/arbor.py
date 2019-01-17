@@ -75,9 +75,9 @@ class ArborArbor(Arbor):
 
     def _plant_trees(self):
         fh = h5py.File(self.filename, "r")
-        uids    = fh["data"]["uid"].value.astype(np.int64)
-        descids = fh["data"]["desc_id"].value.astype(np.int64)
-        treeids = fh["data"]["tree_id"].value.astype(np.int64)
+        uids    = fh["data"]["uid"][()].astype(np.int64)
+        descids = fh["data"]["desc_id"][()].astype(np.int64)
+        treeids = fh["data"]["tree_id"][()].astype(np.int64)
         fh.close()
 
         root_filter = descids == -1

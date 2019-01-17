@@ -67,7 +67,7 @@ def _hdf5_yt_array_lite(fh, field):
     if "units" in fh[field].attrs:
         units = fh[field].attrs["units"]
     if units == "dimensionless": units = ""
-    return (fh[field].value, units)
+    return (fh[field][()], units)
 
 def f_text_block(f, block_size=32768, file_size=None, sep="\n"):
     """
