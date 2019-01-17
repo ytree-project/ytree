@@ -76,6 +76,11 @@ class FieldInfoContainer(dict):
         self.arbor.add_derived_field(
             "redshift", _redshift, units="", force_add=False)
 
+        def _time(field, data):
+            return data.arbor.cosmology.t_from_z(data["redshift"])
+        self.arbor.add_derived_field(
+            "time", _time, units="Myr", force_add=False)
+
     def setup_vector_fields(self):
         """
         Add vector and magnitude fields.
