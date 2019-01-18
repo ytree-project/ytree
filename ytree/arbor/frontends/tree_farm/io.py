@@ -63,7 +63,7 @@ class TreeFarmDataFile(CatalogDataFile):
 
         self.open()
         fh = self.fh
-        field_data = dict((field, fh[field].value)
+        field_data = dict((field, fh[field][()])
                           for field in rfields)
         self.close()
 
@@ -80,7 +80,7 @@ class TreeFarmDataFile(CatalogDataFile):
         self.open()
         fh = self.fh
         for field in rfields:
-            field_data[field] = fh[field].value[file_ids]
+            field_data[field] = fh[field][()][file_ids]
         self.close()
 
         for field, dtype in dtypes.items():

@@ -198,10 +198,10 @@ def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
             err_msg = "%s field not equal for %s and %s" % \
               (key, fh1.file.filename, fh2.file.filename)
             if fh1[key].dtype == "int":
-                assert_array_equal(fh1[key].value, fh2[key].value,
+                assert_array_equal(fh1[key][()], fh2[key][()],
                                    err_msg=err_msg)
             else:
-                compare(fh1[key].value, fh2[key].value,
+                compare(fh1[key][()], fh2[key][()],
                         err_msg=err_msg, **kwargs)
 
 def assert_array_rel_equal(a1, a2, decimals=16, **kwargs):
