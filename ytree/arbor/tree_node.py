@@ -194,7 +194,7 @@ class TreeNode(object):
 
         Returns
         -------
-        float, ndarray/YTArray, TreeNode
+        float, ndarray/unyt_array, TreeNode
 
         """
         arr_types = ("prog", "tree")

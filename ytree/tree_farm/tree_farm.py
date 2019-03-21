@@ -15,6 +15,8 @@ TreeFarm class and member functions
 
 import numpy as np
 import os
+from unyt import \
+    unyt_array
 
 from yt.frontends.ytdata.utilities import \
     save_as_dataset
@@ -23,8 +25,6 @@ from yt.funcs import \
     get_pbar, \
     get_output_filename, \
     iterable
-from yt.units.yt_array import \
-    YTArray
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm, \
     parallel_objects
@@ -287,7 +287,7 @@ class TreeFarm(object):
                 target_ids = root_ids
                 if not iterable(target_ids):
                     target_ids = np.array([target_ids])
-                if isinstance(target_ids, YTArray):
+                if isinstance(target_ids, unyt_array):
                     target_ids = target_ids.d
                 if target_ids.dtype != np.int64:
                     target_ids = target_ids.astype(np.int64)
@@ -467,7 +467,7 @@ class TreeFarm(object):
             pbar.finish()
         for hp in fields:
             if data[hp] and hasattr(data[hp][0], "units"):
-                data[hp] = YTArray(data[hp]).in_base()
+                data[hp] = unyt_array(data[hp]).in_base()
             else:
                 data[hp] = np.array(data[hp])
             shape = data[hp].shape

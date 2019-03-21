@@ -19,6 +19,9 @@ import functools
 import json
 import numpy as np
 import os
+from unyt import \
+    unyt_array, \
+    unyt_quantity
 
 from yt.extern.six import \
     add_metaclass, \
@@ -32,9 +35,6 @@ from yt.units.dimensions import \
     length
 from yt.units.unit_registry import \
     UnitRegistry
-from yt.units.yt_array import \
-    YTArray, \
-    YTQuantity
 from yt.utilities.cosmology import \
     Cosmology
 
@@ -81,7 +81,7 @@ class Arbor(object):
     :func:`~ytree.arbor.arbor.Arbor.trees`.
     Arbors can be saved in a universal format with
     :func:`~ytree.arbor.arbor.Arbor.save_arbor`.  Also, provide some
-    convenience functions for creating YTArrays and YTQuantities and
+    convenience functions for creating unyt_arrays and unyt_quantities and
     a cosmology calculator.
     """
 
@@ -450,11 +450,11 @@ class Arbor(object):
     @property
     def arr(self):
         """
-        Create a YTArray using the Arbor's unit registry.
+        Create a unyt_array using the Arbor's unit registry.
         """
         if self._arr is not None:
             return self._arr
-        self._arr = functools.partial(YTArray,
+        self._arr = functools.partial(unyt_array,
                                       registry=self.unit_registry)
         return self._arr
 
@@ -462,11 +462,11 @@ class Arbor(object):
     @property
     def quan(self):
         """
-        Create a YTQuantity using the Arbor's unit registry.
+        Create a unyt_quantity using the Arbor's unit registry.
         """
         if self._quan is not None:
             return self._quan
-        self._quan = functools.partial(YTQuantity,
+        self._quan = functools.partial(unyt_quantity,
                                        registry=self.unit_registry)
         return self._quan
 

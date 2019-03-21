@@ -14,11 +14,11 @@ HaloSelector functions
 #-----------------------------------------------------------------------------
 
 import numpy as np
+from unyt import \
+    unyt_quantity
 
 from yt.funcs import \
     iterable
-from yt.units.yt_array import \
-    YTQuantity
 from yt.utilities.operator_registry import \
     OperatorRegistry
 from yt.utilities.exceptions import \
@@ -93,7 +93,7 @@ def sphere_selector(hc, ds2, radius_field, factor=1,
     factor : float, optional
         Multiplicative factor of the halo radius in which
         potential halos will be gathered.  Default: 1.
-    min_radius : YTQuantity or tuple of (value, unit)
+    min_radius : unyt_quantity or tuple of (value, unit)
         An absolute minimum radius for the sphere.
 
     Returns
@@ -104,13 +104,13 @@ def sphere_selector(hc, ds2, radius_field, factor=1,
     """
 
     if min_radius is not None:
-        if isinstance(min_radius, YTQuantity):
+        if isinstance(min_radius, unyt_quantity):
             pass
         elif iterable(min_radius) and len(min_radius) == 2:
             min_radius = ds2.quan(min_radius[0], min_radius[1])
         else:
             raise RuntimeError(
-                "min_radius should be YTQuantity or (value, unit) tuple.")
+                "min_radius should be unyt_quantity or (value, unit) tuple.")
 
     # Never mix code units from multiple datasets!!!
     center = ds2.arr(hc.position.to("code_length").d, "code_length")
