@@ -272,8 +272,8 @@ class TreeFarm(object):
                 continue
 
             if ds1 is None:
-                ds1 = self._load_ds(fn1, index_ptype=halo_type)
-            ds2 = self._load_ds(fn2, index_ptype=halo_type)
+                ds1 = self._load_ds(fn1)
+            ds2 = self._load_ds(fn2)
 
             if self.comm.rank == 0:
                 _print_link_info(ds1, ds2)
@@ -366,8 +366,8 @@ class TreeFarm(object):
                 continue
 
             if ds1 is None:
-                ds1 = self._load_ds(fn1, index_ptype=halo_type)
-            ds2 = self._load_ds(fn2, index_ptype=halo_type)
+                ds1 = self._load_ds(fn1)
+            ds2 = self._load_ds(fn2)
 
             if self.comm.rank == 0:
                 _print_link_info(ds1, ds2)
@@ -402,7 +402,7 @@ class TreeFarm(object):
             return
 
         if ds2 is None:
-            ds2 = self._load_ds(fn2, index_ptype=halo_type)
+            ds2 = self._load_ds(fn2)
         if self.comm.rank == 0:
             self._save_catalog(filename, ds2, halo_type, fields)
 
