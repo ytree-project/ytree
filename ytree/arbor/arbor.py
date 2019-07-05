@@ -31,9 +31,10 @@ from yt.frontends.ytdata.utilities import \
 from yt.funcs import \
     get_pbar, \
     TqdmProgressBar
-from yt.units.dimensions import \
+from unyt.dimensions import \
+    dimensionless, \
     length
-from yt.units.unit_registry import \
+from unyt.unit_registry import \
     UnitRegistry
 from yt.utilities.cosmology import \
     Cosmology
@@ -376,7 +377,11 @@ class Arbor(object):
         # reset the unit registry lut while preserving other changes
         self.unit_registry = UnitRegistry.from_json(
             self.unit_registry.to_json())
-        self.unit_registry.modify("h", self.hubble_constant)
+        if 'h' in self.unit_registry:
+            self.unit_registry.modify("h", self.hubble_constant)
+        else:
+            self.unit_registry.add(
+                'h', self.hubble_constant, dimensionless)
 
     _box_size = None
     @property
@@ -407,7 +412,7 @@ class Arbor(object):
         Note, we are using comoving units all the time since
         we are dealing with data at multiple redshifts.
         """
-        for my_unit in ["m", "pc", "AU", "au"]:
+        for my_unit in ["m", "pc", "AU"]:
             new_unit = "%scm" % my_unit
             self._unit_registry.add(
                 new_unit, self._unit_registry.lut[my_unit][0],

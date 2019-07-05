@@ -15,7 +15,7 @@ RockstarArbor class and member functions
 
 import glob
 
-from yt.units.yt_array import \
+from unyt.exceptions import \
     UnitParseError
 
 from ytree.arbor.arbor import \

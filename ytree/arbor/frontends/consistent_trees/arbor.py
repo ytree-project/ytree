@@ -17,7 +17,7 @@ import numpy as np
 
 from yt.funcs import \
     get_pbar
-from yt.units.yt_array import \
+from unyt.exceptions import \
     UnitParseError
 
 from ytree.arbor.arbor import \

@@ -18,7 +18,7 @@ from collections import \
 import glob
 import h5py
 
-from yt.units.unit_registry import \
+from unyt.unit_registry import \
     UnitRegistry
 
 from ytree.arbor.arbor import \
