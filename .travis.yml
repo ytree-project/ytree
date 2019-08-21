@@ -85,6 +85,7 @@ jobs:
 
     - stage: deploy
       name: "deploy to pypi"
+      if: (tag =~ ^ytree) AND (branch = master)
       python: 3.6
       before_script: skip
       before_install: skip
