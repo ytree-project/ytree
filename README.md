@@ -1,7 +1,7 @@
 # ytree
 
-[![Build Status](https://travis-ci.org/brittonsmith/ytree.svg?branch=master)](https://travis-ci.org/brittonsmith/ytree)
-[![Coverage Status](https://coveralls.io/repos/github/brittonsmith/ytree/badge.svg)](https://coveralls.io/github/brittonsmith/ytree)
+[![Build Status](https://travis-ci.org/ytree-project/treefarm.svg?branch=master)](https://travis-ci.org/ytree-project/treefarm)
+[![Coverage Status](https://coveralls.io/repos/github/ytree-project/ytree/badge.svg?branch=master)](https://coveralls.io/github/ytree-project/ytree?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/ytree/badge/?version=latest)](http://ytree.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/ytree.svg)](https://badge.fury.io/py/ytree)
 [![DOI](https://zenodo.org/badge/98564214.svg)](https://zenodo.org/badge/latestdoi/98564214)
@@ -30,7 +30,7 @@ pip install ytree
 To get the development version, clone this repository and install like this:
 
 ```
-git clone https://github.com/brittonsmith/ytree
+git clone https://github.com/ytree-project/ytree
 cd ytree
 pip install -e .
 ```
@@ -40,7 +40,7 @@ pip install -e .
 Below is a notebook that demonstrates how to use ytree with merger-tree data.  For
 more information, see the full [ytree documenation](https://ytree.readthedocs.io).
 
- * [Introduction](https://github.com/brittonsmith/ytree/blob/master/doc/source/notebooks/Intro_to_ytree.ipynb)
+ * [Introduction](https://github.com/ytree-project/ytree/blob/master/doc/source/notebooks/Intro_to_ytree.ipynb)
 
 ## Sample Data
 
