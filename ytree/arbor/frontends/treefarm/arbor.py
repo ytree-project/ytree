@@ -23,9 +23,9 @@ from yt.units.unit_registry import \
 
 from ytree.arbor.arbor import \
     CatalogArbor
-from ytree.arbor.frontends.tree_farm.fields import \
+from ytree.arbor.frontends.treefarm.fields import \
     TreeFarmFieldInfo
-from ytree.arbor.frontends.tree_farm.io import \
+from ytree.arbor.frontends.treefarm.io import \
     TreeFarmDataFile, \
     TreeFarmTreeFieldIO
 from ytree.utilities.io import \
@@ -34,7 +34,7 @@ from ytree.utilities.io import \
 
 class TreeFarmArbor(CatalogArbor):
     """
-    Class for Arbors created with :class:`~ytree.tree_farm.TreeFarm`.
+    Class for Arbors created with :class:`~ytree.treefarm.TreeFarm`.
     """
 
     _suffix = ".h5"
