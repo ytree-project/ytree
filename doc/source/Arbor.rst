@@ -3,7 +3,7 @@
 Working with Merger-Trees
 =========================
 
-The :class:`~ytree.arbor.arbor.Arbor` class is responsible for loading
+The :class:`~ytree.data_structures.arbor.Arbor` class is responsible for loading
 and providing access to merger-tree data.  Below, we demonstrate how
 to load data and what can be done with it.
 
@@ -11,7 +11,7 @@ Loading Merger-Tree Data
 ------------------------
 
 ``ytree`` can load merger-tree data from multiple sources using
-the :func:`~ytree.arbor.load` command.
+the :func:`~ytree.data_structures.load` command.
 
 .. code-block:: python
 
@@ -100,7 +100,7 @@ Individual trees can be accessed by indexing the ``Arbor`` object.
    >>> print (a[0])
    TreeNode[12900]
 
-A :class:`~ytree.arbor.tree_node.TreeNode` is one halo in a merger-tree.
+A :class:`~ytree.data_structures.tree_node.TreeNode` is one halo in a merger-tree.
 The number is the universal identifier associated with halo.  It is unique
 to the whole arbor.  Fields can be accessed for any given ``TreeNode`` in
 the same dictionary-like fashion.
@@ -158,7 +158,7 @@ Customizing the Progenitor Line
 
 By default, the progenitor line is defined as the line of the most
 massive ancestors.  This can be changed by  calling the
-:func:`~ytree.arbor.arbor.Arbor.set_selector`.
+:func:`~ytree.data_structures.arbor.Arbor.set_selector`.
 
 .. code-block:: python
 
@@ -181,7 +181,7 @@ minimally accept a list of ancestors and return a single ``TreeNode``.
 Searching for Halos
 -------------------
 
-The :func:`~ytree.arbor.arbor.Arbor.select_halos` function can be used to
+The :func:`~ytree.data_structures.arbor.Arbor.select_halos` function can be used to
 search the ``Arbor`` for halos matching a specific set of criteria.
 This is similar to the type of selection done with a relational database.
 
@@ -201,8 +201,8 @@ Saving Arbors and Trees
 -----------------------
 
 ``Arbors`` of any type can be saved to a universal file format with the
-:func:`~ytree.arbor.arbor.Arbor.save_arbor` function.  These can be
-reloaded with the :func:`~ytree.arbor.arbor.load` command.  This
+:func:`~ytree.data_structures.arbor.Arbor.save_arbor` function.  These can be
+reloaded with the :func:`~ytree.data_structures.arbor.load` command.  This
 format is optimized for fast tree-building and field-access and so is
 recommended for most situations.
 
@@ -218,7 +218,7 @@ By default, all trees and all fields will be saved, but this can be
 customized with the ``trees`` and ``fields`` keywords.
 
 For convenience, individual trees can also be saved by calling
-:func:`~ytree.arbor.tree_node.TreeNode.save_tree`.
+:func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.
 
 .. code-block:: python
 
