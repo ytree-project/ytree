@@ -30,9 +30,9 @@ of the first ".parameter" file.
           2. There will be no ".AHF_mtree" file for index 0 as the
              ".AHF_mtree" files store links between files N-1 and N.
 
-          3. ytree is able to load data where the graph has been
+          3. ``ytree`` is able to load data where the graph has been
              calculated instead of the tree. However, even in this case,
-             only the tree is preserved in ytree. See the `Amiga Halo
+             only the tree is preserved in ``ytree``. See the `Amiga Halo
              Finder Documentation
              <http://popia.ft.uam.es/AHF/Documentation.html>`_
              for a discussion of the difference between graphs and trees.
@@ -72,7 +72,7 @@ format is typically one or more files with a naming convention like
 with a suffix ".a_list" that contains a list of the scale factors
 at the time of each simulation snapshot.
 
-In addition to the LHaloTree files, ytree also requires additional
+In addition to the LHaloTree files, ``ytree`` also requires additional
 information about the simulation from a parameter file (in
 `Gadget <http://wwwmpa.mpa-garching.mpg.de/gadget/>`_ format). At
 minimum, the parameter file should contain the cosmological parameters
@@ -133,9 +133,9 @@ explicitly from python.
 TreeFarm
 --------
 
-Merger-trees created with :ref:`TreeFarm <treefarm>` (ytree's merger-tree 
-code for Gadget FoF/SUBFIND catalogs) can be loaded in by providing the
-path to one of the catalogs created during the calculation.
+Merger-trees created with `treefarm <https://treefarm.readthedocs.io/>`_
+can be loaded in by providing the path to one of the catalogs created
+during the calculation.
 
 .. code-block:: python
 
@@ -162,7 +162,7 @@ providing the path to the primary hdf5 file.
 Saved Arbors from ytree 1.1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Arbors created with version 1.1 of ytree and earlier can be reloaded by
+Arbors created with version 1.1 of ``ytree`` and earlier can be reloaded by
 providing the single file created.  It is recommended that arbors be
 re-saved into the newer format as this will significantly improve
 performance.

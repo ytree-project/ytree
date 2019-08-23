@@ -21,7 +21,7 @@ _frontends = [
     "consistent_trees",
     "lhalotree",
     "rockstar",
-    "tree_farm",
+    "treefarm",
     "ytree",
 ]
 

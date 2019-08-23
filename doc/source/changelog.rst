@@ -3,15 +3,15 @@
 ChangeLog
 =========
 
-This is a log of changes to ytree over its release history.
+This is a log of changes to ``ytree`` over its release history.
 
 Contributors
 ------------
 
 The `CREDITS file
-<https://github.com/brittonsmith/ytree/blob/master/CREDITS>`__
+<https://github.com/ytree-project/ytree/blob/master/CREDITS>`__
 contains the most up-to-date list of everyone who has contributed to the
-ytree source code.
+``ytree`` source code.
 
 Version 2.2.1
 -------------
@@ -22,20 +22,20 @@ Enhancements
 ^^^^^^^^^^^^
 
  * Refactor of CatalogDataFile class
-   (`PR #21 <https://github.com/brittonsmith/ytree/pull/21>`__)
+   (`PR #21 <https://github.com/ytree-project/ytree/pull/21>`__)
  * Simplify requirements file for docs build on readthedocs.io
-   (`PR #22 <https://github.com/brittonsmith/ytree/pull/22>`__)
+   (`PR #22 <https://github.com/ytree-project/ytree/pull/22>`__)
 
 Bugfixes
 ^^^^^^^^
 
  * Restore access to analysis fields for tree roots
-   (`PR #23 <https://github.com/brittonsmith/ytree/pull/23>`__)
+   (`PR #23 <https://github.com/ytree-project/ytree/pull/23>`__)
  * fix field access on non-root nodes when tree is not setup
-   (`PR #20 <https://github.com/brittonsmith/ytree/pull/20>`__)
+   (`PR #20 <https://github.com/ytree-project/ytree/pull/20>`__)
  * fix issue of uid and desc_uid fields being clobbered during
    initial field access
-   (`PR #19 <https://github.com/brittonsmith/ytree/pull/19>`__)
+   (`PR #19 <https://github.com/ytree-project/ytree/pull/19>`__)
 
 Version 2.2
 -----------

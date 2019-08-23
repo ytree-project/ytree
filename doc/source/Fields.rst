@@ -3,7 +3,7 @@
 Fields in ytree
 ===============
 
-ytree supports multiple types of fields, each representing numerical
+``ytree`` supports multiple types of fields, each representing numerical
 values associated with each halo in the ``Arbor``.  These include the
 :ref:`native fields <native-fields>` stored on disk, :ref:`alias fields
 <alias-fields>`, :ref:`derived fields <derived-fields>`, and
@@ -48,7 +48,7 @@ Alias Fields
 ------------
 
 Because the various dataset formats use different naming conventions for
-similar fields, ytree allows fields to be referred to by aliases.  This
+similar fields, ``ytree`` allows fields to be referred to by aliases.  This
 allows for a universal set of names for the most common fields.  Many are
 added by default, including "mass", "virial_radius", "position_<xyz>",
 and "velocity_<xyz>".  The list of available alias and derived fields

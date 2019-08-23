@@ -19,7 +19,7 @@ from ytree.arbor.frontends.ahf import \
     AHFArbor
 from ytree.arbor.frontends.rockstar import \
     RockstarArbor
-from ytree.arbor.frontends.tree_farm import \
+from ytree.arbor.frontends.treefarm import \
     TreeFarmArbor
 from ytree.arbor.frontends.lhalotree import \
     LHaloTreeArbor

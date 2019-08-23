@@ -15,13 +15,9 @@ io utilities
 
 import numpy as np
 
-from yt.convenience import \
-    load as _yt_load
 from yt.units.yt_array import \
     YTArray, \
     YTQuantity
-from yt.utilities.logger import \
-    ytLogger
 
 def parse_h5_attr(f, attr):
     """A Python3-safe function for getting hdf5 attributes.
@@ -104,16 +100,3 @@ def f_text_block(f, block_size=32768, file_size=None, sep="\n"):
     if lbuff:
         loc = f.tell() - len(lbuff)
         yield lbuff, loc
-
-def yt_load(filename, **kwargs):
-    """
-    Suppress logging for yt.load, but return to original setting.
-
-    This allows yt.load to show logs in scripts, but not in ytree.
-    """
-    level = ytLogger.level
-    if level > 10 and level < 40:
-        ytLogger.setLevel(40)
-    ds = _yt_load(filename, **kwargs)
-    ytLogger.setLevel(level)
-    return ds
