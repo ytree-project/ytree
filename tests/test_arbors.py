@@ -13,15 +13,15 @@ arbor tests
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.arbor.frontends.consistent_trees import \
+from ytree.frontends.consistent_trees import \
     ConsistentTreesArbor
-from ytree.arbor.frontends.ahf import \
+from ytree.frontends.ahf import \
     AHFArbor
-from ytree.arbor.frontends.rockstar import \
+from ytree.frontends.rockstar import \
     RockstarArbor
-from ytree.arbor.frontends.treefarm import \
+from ytree.frontends.treefarm import \
     TreeFarmArbor
-from ytree.arbor.frontends.lhalotree import \
+from ytree.frontends.lhalotree import \
     LHaloTreeArbor
 from ytree.utilities.testing import \
     ArborTest, \

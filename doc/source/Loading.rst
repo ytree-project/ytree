@@ -148,8 +148,8 @@ Saved Arbors
 ------------
 
 Once merger-tree data has been loaded, it can be saved to a
-universal format using :func:`~ytree.arbor.arbor.Arbor.save_arbor` or
-:func:`~ytree.arbor.tree_node.TreeNode.save_tree`.  These can be loaded by
+universal format using :func:`~ytree.data_structures.arbor.Arbor.save_arbor` or
+:func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.  These can be loaded by
 providing the path to the primary hdf5 file.
 
 .. code-block:: python

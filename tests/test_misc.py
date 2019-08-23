@@ -14,7 +14,7 @@ miscellaneous utility tests
 #-----------------------------------------------------------------------------
 
 import os
-from ytree.arbor.arbor import \
+from ytree.data_structures.arbor import \
     load as ytree_load
 from ytree.utilities.io import \
     f_text_block

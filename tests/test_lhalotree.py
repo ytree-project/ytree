@@ -20,8 +20,10 @@ import ytree
 from ytree.utilities.testing import \
     requires_file, \
     test_data_dir
-from ytree.arbor.frontends.lhalotree import utils as lhtutils
-from ytree.arbor.frontends.lhalotree.arbor import LHaloTreeArbor
+from ytree.frontends.lhalotree import \
+    utils as lhtutils
+from ytree.frontends.lhalotree.arbor import \
+    LHaloTreeArbor
 
 
 MMT = os.path.join(test_data_dir, 'lhalotree', 'trees_063.0')

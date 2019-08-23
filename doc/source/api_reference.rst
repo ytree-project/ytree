@@ -6,25 +6,25 @@ API Reference
 Working with Merger-Trees
 -------------------------
 
-The :func:`~ytree.arbor.arbor.load` can load all supported
+The :func:`~ytree.data_structures.arbor.load` can load all supported
 merger-tree formats.  Once loaded, the
-:func:`~ytree.arbor.arbor.Arbor.save_arbor` and
-:func:`~ytree.arbor.tree_node.TreeNode.save_tree` functions can be
+:func:`~ytree.data_structures.arbor.Arbor.save_arbor` and
+:func:`~ytree.data_structures.tree_node.TreeNode.save_tree` functions can be
 used to save the entire arbor or individual trees.
 
 .. autosummary::
    :toctree: generated/
 
-   ~ytree.arbor.arbor.load
-   ~ytree.arbor.arbor.Arbor
-   ~ytree.arbor.arbor.Arbor.save_arbor
-   ~ytree.arbor.arbor.Arbor.select_halos
-   ~ytree.arbor.tree_node.TreeNode.save_tree
-   ~ytree.arbor.arbor.Arbor.set_selector
-   ~ytree.arbor.tree_node_selector.TreeNodeSelector
-   ~ytree.arbor.tree_node_selector.add_tree_node_selector
-   ~ytree.arbor.tree_node_selector.max_field_value
-   ~ytree.arbor.tree_node_selector.min_field_value
+   ~ytree.data_structures.arbor.load
+   ~ytree.data_structures.arbor.Arbor
+   ~ytree.data_structures.arbor.Arbor.save_arbor
+   ~ytree.data_structures.arbor.Arbor.select_halos
+   ~ytree.data_structures.tree_node.TreeNode.save_tree
+   ~ytree.data_structures.arbor.Arbor.set_selector
+   ~ytree.data_structures.tree_node_selector.TreeNodeSelector
+   ~ytree.data_structures.tree_node_selector.add_tree_node_selector
+   ~ytree.data_structures.tree_node_selector.max_field_value
+   ~ytree.data_structures.tree_node_selector.min_field_value
 
 Internal Classes
 ----------------
@@ -32,41 +32,41 @@ Internal Classes
 .. autosummary::
    :toctree: generated/
 
-   ~ytree.arbor.arbor.Arbor
-   ~ytree.arbor.arbor.CatalogArbor
-   ~ytree.arbor.fields.FieldInfoContainer
-   ~ytree.arbor.fields.FieldContainer
-   ~ytree.arbor.fields.FakeFieldContainer
-   ~ytree.arbor.io.FieldIO
-   ~ytree.arbor.io.TreeFieldIO
-   ~ytree.arbor.io.DefaultRootFieldIO
-   ~ytree.arbor.io.DataFile
-   ~ytree.arbor.io.CatalogDataFile
-   ~ytree.arbor.tree_node.TreeNode
-   ~ytree.arbor.tree_node_selector.TreeNodeSelector
-   ~ytree.arbor.frontends.ahf.arbor.AHFArbor
-   ~ytree.arbor.frontends.ahf.fields.AHFFieldInfo
-   ~ytree.arbor.frontends.ahf.io.AHFDataFile
-   ~ytree.arbor.frontends.arborarbor.arbor.ArborArbor
-   ~ytree.arbor.frontends.arborarbor.fields.ArborArborFieldInfo
-   ~ytree.arbor.frontends.arborarbor.io.ArborArborTreeFieldIO
-   ~ytree.arbor.frontends.arborarbor.io.ArborArborRootFieldIO
-   ~ytree.arbor.frontends.consistent_trees.arbor.ConsistentTreesArbor
-   ~ytree.arbor.frontends.consistent_trees.fields.ConsistentTreesFieldInfo
-   ~ytree.arbor.frontends.consistent_trees.io.ConsistentTreesDataFile
-   ~ytree.arbor.frontends.consistent_trees.io.ConsistentTreesTreeFieldIO
-   ~ytree.arbor.frontends.lhalotree.arbor.LHaloTreeArbor
-   ~ytree.arbor.frontends.lhalotree.fields.LHaloTreeFieldInfo
-   ~ytree.arbor.frontends.lhalotree.io.LHaloTreeTreeFieldIO
-   ~ytree.arbor.frontends.lhalotree.io.LHaloTreeRootFieldIO
-   ~ytree.arbor.frontends.rockstar.arbor.RockstarArbor
-   ~ytree.arbor.frontends.rockstar.fields.RockstarFieldInfo
-   ~ytree.arbor.frontends.rockstar.io.RockstarDataFile
-   ~ytree.arbor.frontends.treefarm.arbor.TreeFarmArbor
-   ~ytree.arbor.frontends.treefarm.fields.TreeFarmFieldInfo
-   ~ytree.arbor.frontends.treefarm.io.TreeFarmDataFile
-   ~ytree.arbor.frontends.treefarm.io.TreeFarmTreeFieldIO
-   ~ytree.arbor.frontends.ytree.arbor.YTreeArbor
-   ~ytree.arbor.frontends.ytree.io.YTreeDataFile
-   ~ytree.arbor.frontends.ytree.io.YTreeTreeFieldIO
-   ~ytree.arbor.frontends.ytree.io.YTreeRootFieldIO
+   ~ytree.data_structures.arbor.Arbor
+   ~ytree.data_structures.arbor.CatalogArbor
+   ~ytree.data_structures.fields.FieldInfoContainer
+   ~ytree.data_structures.fields.FieldContainer
+   ~ytree.data_structures.fields.FakeFieldContainer
+   ~ytree.data_structures.io.FieldIO
+   ~ytree.data_structures.io.TreeFieldIO
+   ~ytree.data_structures.io.DefaultRootFieldIO
+   ~ytree.data_structures.io.DataFile
+   ~ytree.data_structures.io.CatalogDataFile
+   ~ytree.data_structures.tree_node.TreeNode
+   ~ytree.data_structures.tree_node_selector.TreeNodeSelector
+   ~ytree.frontends.ahf.arbor.AHFArbor
+   ~ytree.frontends.ahf.fields.AHFFieldInfo
+   ~ytree.frontends.ahf.io.AHFDataFile
+   ~ytree.frontends.arborarbor.arbor.ArborArbor
+   ~ytree.frontends.arborarbor.fields.ArborArborFieldInfo
+   ~ytree.frontends.arborarbor.io.ArborArborTreeFieldIO
+   ~ytree.frontends.arborarbor.io.ArborArborRootFieldIO
+   ~ytree.frontends.consistent_trees.arbor.ConsistentTreesArbor
+   ~ytree.frontends.consistent_trees.fields.ConsistentTreesFieldInfo
+   ~ytree.frontends.consistent_trees.io.ConsistentTreesDataFile
+   ~ytree.frontends.consistent_trees.io.ConsistentTreesTreeFieldIO
+   ~ytree.frontends.lhalotree.arbor.LHaloTreeArbor
+   ~ytree.frontends.lhalotree.fields.LHaloTreeFieldInfo
+   ~ytree.frontends.lhalotree.io.LHaloTreeTreeFieldIO
+   ~ytree.frontends.lhalotree.io.LHaloTreeRootFieldIO
+   ~ytree.frontends.rockstar.arbor.RockstarArbor
+   ~ytree.frontends.rockstar.fields.RockstarFieldInfo
+   ~ytree.frontends.rockstar.io.RockstarDataFile
+   ~ytree.frontends.treefarm.arbor.TreeFarmArbor
+   ~ytree.frontends.treefarm.fields.TreeFarmFieldInfo
+   ~ytree.frontends.treefarm.io.TreeFarmDataFile
+   ~ytree.frontends.treefarm.io.TreeFarmTreeFieldIO
+   ~ytree.frontends.ytree.arbor.YTreeArbor
+   ~ytree.frontends.ytree.io.YTreeDataFile
+   ~ytree.frontends.ytree.io.YTreeTreeFieldIO
+   ~ytree.frontends.ytree.io.YTreeRootFieldIO
