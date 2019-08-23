@@ -54,7 +54,6 @@ ytree would be much better with your contribution!  As an extension of
 
 ## Citing ytree
 
-
 If you use ytree in your work, please cite the following:
 
 ```
