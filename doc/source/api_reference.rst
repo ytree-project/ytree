@@ -26,33 +26,6 @@ used to save the entire arbor or individual trees.
    ~ytree.arbor.tree_node_selector.max_field_value
    ~ytree.arbor.tree_node_selector.min_field_value
 
-Making Merger-Trees
--------------------
-
-.. autosummary::
-   :toctree: generated/
-
-   ~ytree.tree_farm.tree_farm.TreeFarm
-   ~ytree.tree_farm.tree_farm.TreeFarm.trace_ancestors
-   ~ytree.tree_farm.tree_farm.TreeFarm.trace_descendents
-   ~ytree.tree_farm.tree_farm.TreeFarm.set_selector
-   ~ytree.tree_farm.tree_farm.TreeFarm.set_ancestry_checker
-   ~ytree.tree_farm.tree_farm.TreeFarm.set_ancestry_filter
-   ~ytree.tree_farm.tree_farm.TreeFarm.set_ancestry_short
-   ~ytree.tree_farm.ancestry_checker.AncestryChecker
-   ~ytree.tree_farm.ancestry_checker.add_ancestry_checker
-   ~ytree.tree_farm.ancestry_checker.common_ids
-   ~ytree.tree_farm.ancestry_filter.AncestryFilter
-   ~ytree.tree_farm.ancestry_filter.add_ancestry_filter
-   ~ytree.tree_farm.ancestry_filter.most_massive
-   ~ytree.tree_farm.ancestry_short.AncestryShort
-   ~ytree.tree_farm.ancestry_short.add_ancestry_short
-   ~ytree.tree_farm.ancestry_short.above_mass_fraction
-   ~ytree.tree_farm.halo_selector.HaloSelector
-   ~ytree.tree_farm.halo_selector.add_halo_selector
-   ~ytree.tree_farm.halo_selector.sphere_selector
-   ~ytree.tree_farm.halo_selector.all_selector
-
 Internal Classes
 ----------------
 
