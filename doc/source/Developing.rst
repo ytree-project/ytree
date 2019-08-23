@@ -17,7 +17,7 @@ Step zero, get out of that nutshell!
 After that, the process for making contributions to ytree is roughly as
 follows:
 
-1. Fork the `main ytree repository <https://github.com/brittonsmith/ytree>`__.
+1. Fork the `main ytree repository <https://github.com/ytree-project/ytree>`__.
 
 2. Create a new branch.
 

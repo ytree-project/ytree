@@ -12,12 +12,12 @@ have installed ``yt`` following the instructions `here
     $ pip install ytree
 
 If you'd like to install the development version, the repository can
-be found at `<https://github.com/brittonsmith/ytree>`__.  This can be
+be found at `<https://github.com/ytree-project/ytree>`__.  This can be
 installed by doing:
 
 .. code-block:: bash
 
-   $ git clone https://github.com/brittonsmith/ytree
+   $ git clone https://github.com/ytree-project/ytree
    $ cd ytree
    $ pip install -e .
 
