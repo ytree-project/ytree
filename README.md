@@ -6,14 +6,12 @@
 [![PyPI version](https://badge.fury.io/py/ytree.svg)](https://badge.fury.io/py/ytree)
 [![DOI](https://zenodo.org/badge/98564214.svg)](https://zenodo.org/badge/latestdoi/98564214)
 
-This is ytree, a [yt](https://github.com/yt-project/yt) extension for generating and working with
+This is ytree, a [yt](https://github.com/yt-project/yt) extension for working with
 merger-tree data.  ytree supports:
 
- * loading merger-tree data from the Amiga Halo Finder, Consistent-Trees, Rockstar, and LHaloTree formats
+ * loading merger-tree data from the Amiga Halo Finder, Consistent-Trees, Rockstar, LHaloTree, and treefarm formats
 
- * creating merger trees from Gadget's inline FOF/SUBFIND catalogs
-
- * fast, on-demand loading of trees and fields
+ * on-demand loading of trees and fields
 
  * symbolic units, derived fields, and alias fields
 
