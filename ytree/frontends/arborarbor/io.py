@@ -15,7 +15,7 @@ ArborArbor io classes and member functions
 
 import h5py
 
-from ytree.arbor.io import \
+from ytree.data_structures.io import \
     FieldIO, \
     TreeFieldIO
 

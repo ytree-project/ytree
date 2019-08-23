@@ -15,7 +15,7 @@ RockstarArbor io classes and member functions
 
 import numpy as np
 
-from ytree.arbor.io import \
+from ytree.data_structures.io import \
     CatalogDataFile
 from ytree.utilities.io import \
     f_text_block

@@ -18,7 +18,7 @@ import glob
 from yt.units.yt_array import \
     UnitParseError
 
-from ytree.arbor.arbor import \
+from ytree.data_structures.arbor import \
     CatalogArbor
 from ytree.frontends.rockstar.fields import \
     RockstarFieldInfo, \

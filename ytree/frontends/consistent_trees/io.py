@@ -15,7 +15,7 @@ ConsistentTreesArbor io classes and member functions
 
 import numpy as np
 
-from ytree.arbor.io import \
+from ytree.data_structures.io import \
     DataFile, \
     TreeFieldIO
 

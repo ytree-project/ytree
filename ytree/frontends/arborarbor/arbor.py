@@ -19,14 +19,14 @@ import numpy as np
 from yt.units.unit_registry import \
     UnitRegistry
 
-from ytree.arbor.arbor import \
+from ytree.data_structures.arbor import \
     Arbor
 from ytree.frontends.arborarbor.fields import \
     ArborArborFieldInfo
 from ytree.frontends.arborarbor.io import \
     ArborArborRootFieldIO, \
     ArborArborTreeFieldIO
-from ytree.arbor.tree_node import \
+from ytree.data_structures.tree_node import \
     TreeNode
 from ytree.utilities.io import \
     _hdf5_yt_attr

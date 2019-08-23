@@ -38,18 +38,18 @@ from yt.units.yt_array import \
 from yt.utilities.cosmology import \
     Cosmology
 
-from ytree.arbor.fields import \
+from ytree.data_structures.fields import \
     FakeFieldContainer, \
     FieldContainer, \
     FieldInfoContainer
-from ytree.arbor.misc import \
+from ytree.data_structures.misc import \
     _determine_output_filename
-from ytree.arbor.io import \
+from ytree.data_structures.io import \
     DefaultRootFieldIO, \
     TreeFieldIO
-from ytree.arbor.tree_node import \
+from ytree.data_structures.tree_node import \
     TreeNode
-from ytree.arbor.tree_node_selector import \
+from ytree.data_structures.tree_node_selector import \
     tree_node_selector_registry
 from ytree.utilities.exceptions import \
     ArborFieldAlreadyExists, \
@@ -78,9 +78,9 @@ class Arbor(object):
 
     Loads a merger-tree output file or a series of halo catalogs
     and create trees, stored in an array in
-    :func:`~ytree.arbor.arbor.Arbor.trees`.
+    :func:`~ytree.data_structures.arbor.Arbor.trees`.
     Arbors can be saved in a universal format with
-    :func:`~ytree.arbor.arbor.Arbor.save_arbor`.  Also, provide some
+    :func:`~ytree.data_structures.arbor.Arbor.save_arbor`.  Also, provide some
     convenience functions for creating YTArrays and YTQuantities and
     a cosmology calculator.
     """
@@ -739,7 +739,7 @@ Check the TypeError exception above for more details.
     def _is_valid(cls, *args, **kwargs):
         """
         Check if input file works with a specific Arbor class.
-        This is used with :func:`~ytree.arbor.arbor.load` function.
+        This is used with :func:`~ytree.data_structures.arbor.load` function.
         """
         return False
 

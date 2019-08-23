@@ -13,9 +13,9 @@ ytree imports
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.arbor import \
+from ytree.data_structures import \
     load
-from ytree.arbor.tree_node_selector import \
+from ytree.data_structures.tree_node_selector import \
     TreeNodeSelector, \
     add_tree_node_selector
 

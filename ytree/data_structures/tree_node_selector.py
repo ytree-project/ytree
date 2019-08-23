@@ -23,7 +23,7 @@ tree_node_selector_registry = OperatorRegistry()
 def add_tree_node_selector(name, function):
     r"""
     Add a TreeNodeSelector to the registry of known selectors, so they
-    can be chosen with :func:`~ytree.arbor.arbor.Arbor.set_selector`.
+    can be chosen with :func:`~ytree.data_structures.arbor.Arbor.set_selector`.
 
     Parameters
     ----------

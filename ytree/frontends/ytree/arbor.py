@@ -20,13 +20,13 @@ import numpy as np
 from yt.units.unit_registry import \
     UnitRegistry
 
-from ytree.arbor.arbor import \
+from ytree.data_structures.arbor import \
     Arbor
 from ytree.frontends.ytree.io import \
     YTreeDataFile, \
     YTreeRootFieldIO, \
     YTreeTreeFieldIO
-from ytree.arbor.tree_node import \
+from ytree.data_structures.tree_node import \
     TreeNode
 from ytree.utilities.io import \
     _hdf5_yt_attr, \
@@ -35,8 +35,8 @@ from ytree.utilities.io import \
 class YTreeArbor(Arbor):
     """
     Class for Arbors created from the
-    :func:`~ytree.arbor.arbor.Arbor.save_arbor`
-    or :func:`~ytree.arbor.tree_node.TreeNode.save_tree` functions.
+    :func:`~ytree.data_structures.arbor.Arbor.save_arbor`
+    or :func:`~ytree.data_structures.tree_node.TreeNode.save_tree` functions.
     """
     _root_field_io_class = YTreeRootFieldIO
     _tree_field_io_class = YTreeTreeFieldIO

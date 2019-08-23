@@ -19,7 +19,7 @@ import weakref
 from yt.extern.six import \
     string_types
 
-from ytree.arbor.fields import \
+from ytree.data_structures.fields import \
     FieldContainer
 
 class TreeNode(object):

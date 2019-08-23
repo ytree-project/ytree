@@ -27,7 +27,7 @@ from yt.testing import \
 from yt.funcs import \
     get_pbar
 
-from ytree.arbor.arbor import \
+from ytree.data_structures.arbor import \
     load
 from ytree.frontends.ytree import \
     YTreeArbor

@@ -16,7 +16,7 @@ AHFArbor class and member functions
 import glob
 import os
 
-from ytree.arbor.arbor import \
+from ytree.data_structures.arbor import \
     CatalogArbor
 from ytree.frontends.ahf.fields import \
     AHFFieldInfo

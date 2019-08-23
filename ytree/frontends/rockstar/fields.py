@@ -13,7 +13,7 @@ RockstarArbor fields
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.arbor.fields import \
+from ytree.data_structures.fields import \
     FieldInfoContainer
 from ytree.frontends.rockstar.misc import \
     Group

@@ -15,7 +15,7 @@ LHaloTreeArbor io classes and member functions
 
 import numpy as np
 # import weakref
-from ytree.arbor.io import \
+from ytree.data_structures.io import \
     FieldIO, \
     TreeFieldIO
 

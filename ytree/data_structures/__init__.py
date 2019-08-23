@@ -13,10 +13,10 @@ arbor imports
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.arbor.arbor import \
+from ytree.data_structures.arbor import \
     Arbor, \
     load
-from ytree.arbor.tree_node_selector import \
+from ytree.data_structures.tree_node_selector import \
     TreeNodeSelector, \
     add_tree_node_selector
 

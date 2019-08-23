@@ -20,7 +20,7 @@ import weakref
 
 from ytree.frontends.ahf.misc import \
     parse_AHF_file
-from ytree.arbor.io import \
+from ytree.data_structures.io import \
     CatalogDataFile
 from ytree.utilities.io import \
     f_text_block

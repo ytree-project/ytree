@@ -22,9 +22,9 @@ from yt.funcs import \
 from yt.units.yt_array import \
     UnitParseError
 
-from ytree.arbor.arbor import \
+from ytree.data_structures.arbor import \
     Arbor
-from ytree.arbor.tree_node import \
+from ytree.data_structures.tree_node import \
     TreeNode
 
 from ytree.frontends.lhalotree.fields import \

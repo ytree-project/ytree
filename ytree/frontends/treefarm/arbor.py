@@ -21,7 +21,7 @@ import h5py
 from yt.units.unit_registry import \
     UnitRegistry
 
-from ytree.arbor.arbor import \
+from ytree.data_structures.arbor import \
     CatalogArbor
 from ytree.frontends.treefarm.fields import \
     TreeFarmFieldInfo
