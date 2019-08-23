@@ -142,7 +142,7 @@ consistent-trees ``__init__.py`` looks like this:
 
 .. code-block:: python
 
-   from ytree.arbor.frontends.consistent_trees.arbor import \
+   from ytree.frontends.consistent_trees.arbor import \
        ConsistentTreesArbor
 
 Two Types of Arbors
