@@ -3,7 +3,7 @@
 ChangeLog
 =========
 
-This is a log of changes to ytree over its release history.
+This is a log of changes to ``ytree`` over its release history.
 
 Contributors
 ------------
@@ -11,7 +11,7 @@ Contributors
 The `CREDITS file
 <https://github.com/ytree-project/ytree/blob/master/CREDITS>`__
 contains the most up-to-date list of everyone who has contributed to the
-ytree source code.
+``ytree`` source code.
 
 Version 2.2.1
 -------------

@@ -3,18 +3,18 @@
 Developer Guide
 ===============
 
-ytree is developed using the same conventions as yt.  The `yt
+``ytree`` is developed using the same conventions as yt.  The `yt
 Developer Guide <http://yt-project.org/docs/dev/developing/index.html>`_
 is a good reference for code style, communication with other developers,
 working with git, and issuing pull requests.  Below is a brief guide of
-aspects that are specific to ytree.
+aspects that are specific to ``ytree``.
 
 Contributing in a Nutshell
 --------------------------
 
 Step zero, get out of that nutshell!
 
-After that, the process for making contributions to ytree is roughly as
+After that, the process for making contributions to ``ytree`` is roughly as
 follows:
 
 1. Fork the `main ytree repository <https://github.com/ytree-project/ytree>`__.
@@ -33,17 +33,17 @@ will help with the mechanics of git and pull requests.
 Testing
 -------
 
-The ytree source comes with a series of tests that can be run to
+The ``ytree`` source comes with a series of tests that can be run to
 ensure nothing unexpected happens after changes have been made.  These
 tests will automatically run when a pull request is issued or updated,
 but they can also be run locally very easily.  At present, the suite
-of tests for ytree takes about three minutes to run.
+of tests for ``ytree`` takes about three minutes to run.
 
 Testing Data
 ^^^^^^^^^^^^
 
 The first order of business is to obtain the sample datasets.  See
-:ref:`sample-data` for how to do so.  Next, ytree must be configure to
+:ref:`sample-data` for how to do so.  Next, ``ytree`` must be configure to
 know the location of this data.  This is done by creating a configuration
 file in your home directory at the location ``~/.config/ytree/ytreerc``.
 
@@ -75,7 +75,7 @@ To see how these dependencies are defined, have a look at the
 Run the Tests
 ^^^^^^^^^^^^^
 
-The tests are run from the top level of the ytree source.
+The tests are run from the top level of the ``ytree`` source.
 
 .. code-block:: bash
 
@@ -107,7 +107,7 @@ Where do the files go?
 ^^^^^^^^^^^^^^^^^^^^^^
 
 As in yt, the code specific to one file format is referred to as a
-"frontend".  Within the ytree source, each frontend is located in
+"frontend".  Within the ``ytree`` source, each frontend is located in
 its own directory within ``ytree/arbor/frontends``.  Name your
 directory using lowercase and underscores and put it in there.
 
@@ -148,7 +148,7 @@ consistent-trees ``__init__.py`` looks like this:
 Two Types of Arbors
 ^^^^^^^^^^^^^^^^^^^
 
-There are generally two types of merger-tree data that ytree
+There are generally two types of merger-tree data that ``ytree``
 ingests:
 
 1. all merger-tree data (full trees, halos, etc.) contained within

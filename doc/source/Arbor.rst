@@ -10,7 +10,7 @@ to load data and what can be done with it.
 Loading Merger-Tree Data
 ------------------------
 
-ytree can load merger-tree data from multiple sources using
+``ytree`` can load merger-tree data from multiple sources using
 the :func:`~ytree.arbor.load` command.
 
 .. code-block:: python
@@ -44,8 +44,8 @@ the available fields can be accessed.
    ['scale', 'id', 'desc_scale', 'desc_id', 'num_prog', ...]
 
 Similar to `yt <http://yt-project.org/docs/dev/analyzing/fields.html>`__,
-ytree supports accessing fields by their native names as well as generalized
-aliases.  For more information on fields in ytree, see :ref:`fields`.
+``ytree`` supports accessing fields by their native names as well as generalized
+aliases.  For more information on fields in ``ytree``, see :ref:`fields`.
 
 How many trees are there?
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -76,7 +76,7 @@ dictionary-like manner.
    [  6.57410072e+14   5.28489209e+14   5.18129496e+14   4.88920863e+14, ...,
       8.68489209e+11   8.68489209e+11   8.68489209e+11] Msun
 
-ytree uses `yt's system for symbolic units
+``ytree`` uses `yt's system for symbolic units
 <http://yt-project.org/docs/dev/analyzing/units/index.html>`__, allowing for simple
 unit conversion.
 
@@ -88,7 +88,7 @@ unit conversion.
 
 When dealing with cosmological simulations, care must be taken to distinguish
 between comoving and proper reference frames.  Please read :ref:`frames` before
-your magical ytree journey begins.
+your magical ``ytree`` journey begins.
 
 Accessing Individual Trees
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
