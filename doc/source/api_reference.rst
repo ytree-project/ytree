@@ -62,10 +62,10 @@ Internal Classes
    ~ytree.arbor.frontends.rockstar.arbor.RockstarArbor
    ~ytree.arbor.frontends.rockstar.fields.RockstarFieldInfo
    ~ytree.arbor.frontends.rockstar.io.RockstarDataFile
-   ~ytree.arbor.frontends.tree_farm.arbor.TreeFarmArbor
-   ~ytree.arbor.frontends.tree_farm.fields.TreeFarmFieldInfo
-   ~ytree.arbor.frontends.tree_farm.io.TreeFarmDataFile
-   ~ytree.arbor.frontends.tree_farm.io.TreeFarmTreeFieldIO
+   ~ytree.arbor.frontends.treefarm.arbor.TreeFarmArbor
+   ~ytree.arbor.frontends.treefarm.fields.TreeFarmFieldInfo
+   ~ytree.arbor.frontends.treefarm.io.TreeFarmDataFile
+   ~ytree.arbor.frontends.treefarm.io.TreeFarmTreeFieldIO
    ~ytree.arbor.frontends.ytree.arbor.YTreeArbor
    ~ytree.arbor.frontends.ytree.io.YTreeDataFile
    ~ytree.arbor.frontends.ytree.io.YTreeTreeFieldIO

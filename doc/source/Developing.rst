@@ -203,7 +203,7 @@ each field.
 Halo Catalog-style Data
 #######################
 
-If this is your case, then the rockstar and tree_farm frontends
+If this is your case, then the rockstar and treefarm frontends
 are the best examples to follow.
 
 For this type of data, you will subclass the
