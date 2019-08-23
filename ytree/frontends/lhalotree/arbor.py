@@ -27,11 +27,12 @@ from ytree.arbor.arbor import \
 from ytree.arbor.tree_node import \
     TreeNode
 
-from ytree.arbor.frontends.lhalotree.fields import \
+from ytree.frontends.lhalotree.fields import \
     LHaloTreeFieldInfo
-from ytree.arbor.frontends.lhalotree.io import \
+from ytree.frontends.lhalotree.io import \
     LHaloTreeTreeFieldIO, LHaloTreeRootFieldIO
-from ytree.arbor.frontends.lhalotree.utils import LHaloTreeReader
+from ytree.frontends.lhalotree.utils import \
+    LHaloTreeReader
 
 
 class LHaloTreeArbor(Arbor):

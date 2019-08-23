@@ -13,5 +13,5 @@ arborarbor frontend
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.arbor.frontends.arborarbor.arbor import \
+from ytree.frontends.arborarbor.arbor import \
     ArborArbor

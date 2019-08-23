@@ -18,7 +18,7 @@ import numpy as np
 import os
 import weakref
 
-from ytree.arbor.frontends.ahf.misc import \
+from ytree.frontends.ahf.misc import \
     parse_AHF_file
 from ytree.arbor.io import \
     CatalogDataFile

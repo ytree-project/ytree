@@ -23,9 +23,9 @@ from yt.units.unit_registry import \
 
 from ytree.arbor.arbor import \
     CatalogArbor
-from ytree.arbor.frontends.treefarm.fields import \
+from ytree.frontends.treefarm.fields import \
     TreeFarmFieldInfo
-from ytree.arbor.frontends.treefarm.io import \
+from ytree.frontends.treefarm.io import \
     TreeFarmDataFile, \
     TreeFarmTreeFieldIO
 from ytree.utilities.io import \

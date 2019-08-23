@@ -13,5 +13,5 @@ ytree frontend
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.arbor.frontends.ytree.arbor import \
+from ytree.frontends.ytree.arbor import \
     YTreeArbor

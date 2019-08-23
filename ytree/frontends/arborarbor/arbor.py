@@ -21,9 +21,9 @@ from yt.units.unit_registry import \
 
 from ytree.arbor.arbor import \
     Arbor
-from ytree.arbor.frontends.arborarbor.fields import \
+from ytree.frontends.arborarbor.fields import \
     ArborArborFieldInfo
-from ytree.arbor.frontends.arborarbor.io import \
+from ytree.frontends.arborarbor.io import \
     ArborArborRootFieldIO, \
     ArborArborTreeFieldIO
 from ytree.arbor.tree_node import \

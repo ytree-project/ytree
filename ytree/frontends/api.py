@@ -28,7 +28,7 @@ _frontends = [
 class _frontend_container:
     def __init__(self):
         for frontend in _frontends:
-            _mod = "ytree.arbor.frontends.%s" % frontend
+            _mod = "ytree.frontends.%s" % frontend
             setattr(self, frontend, importlib.import_module(_mod))
-        setattr(self, 'api', importlib.import_module('ytree.arbor.frontends.api'))
-        setattr(self, '__name__', 'ytree.arbor.frontends.api')
+        setattr(self, 'api', importlib.import_module('ytree.frontends.api'))
+        setattr(self, '__name__', 'ytree.frontends.api')

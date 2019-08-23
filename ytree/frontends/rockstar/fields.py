@@ -15,7 +15,7 @@ RockstarArbor fields
 
 from ytree.arbor.fields import \
     FieldInfoContainer
-from ytree.arbor.frontends.rockstar.misc import \
+from ytree.frontends.rockstar.misc import \
     Group
 
 m_unit = "Msun"

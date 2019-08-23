@@ -22,7 +22,7 @@ from yt.units.unit_registry import \
 
 from ytree.arbor.arbor import \
     Arbor
-from ytree.arbor.frontends.ytree.io import \
+from ytree.frontends.ytree.io import \
     YTreeDataFile, \
     YTreeRootFieldIO, \
     YTreeTreeFieldIO

@@ -20,10 +20,10 @@ from yt.units.yt_array import \
 
 from ytree.arbor.arbor import \
     CatalogArbor
-from ytree.arbor.frontends.rockstar.fields import \
+from ytree.frontends.rockstar.fields import \
     RockstarFieldInfo, \
     setup_field_groups
-from ytree.arbor.frontends.rockstar.io import \
+from ytree.frontends.rockstar.io import \
     RockstarDataFile
 
 class RockstarArbor(CatalogArbor):

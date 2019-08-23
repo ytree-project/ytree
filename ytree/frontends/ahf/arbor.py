@@ -18,9 +18,9 @@ import os
 
 from ytree.arbor.arbor import \
     CatalogArbor
-from ytree.arbor.frontends.ahf.fields import \
+from ytree.frontends.ahf.fields import \
     AHFFieldInfo
-from ytree.arbor.frontends.ahf.io import \
+from ytree.frontends.ahf.io import \
     AHFDataFile
 from yt.units.unit_registry import \
     UnitRegistry

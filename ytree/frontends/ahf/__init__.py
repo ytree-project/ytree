@@ -13,5 +13,5 @@ amiga halo finder frontend
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.arbor.frontends.ahf.arbor import \
+from ytree.frontends.ahf.arbor import \
     AHFArbor

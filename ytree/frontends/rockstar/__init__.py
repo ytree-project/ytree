@@ -13,5 +13,5 @@ rockstar frontend
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.arbor.frontends.rockstar.arbor import \
+from ytree.frontends.rockstar.arbor import \
     RockstarArbor

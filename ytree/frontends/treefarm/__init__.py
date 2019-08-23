@@ -13,5 +13,5 @@ treefarm frontend
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.arbor.frontends.treefarm.arbor import \
+from ytree.frontends.treefarm.arbor import \
     TreeFarmArbor

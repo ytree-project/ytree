@@ -29,7 +29,7 @@ from yt.funcs import \
 
 from ytree.arbor.arbor import \
     load
-from ytree.arbor.frontends.ytree import \
+from ytree.frontends.ytree import \
     YTreeArbor
 from ytree.config import \
     ytreecfg
