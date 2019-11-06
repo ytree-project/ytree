@@ -87,7 +87,7 @@ expensive analysis.
 The ``ytree`` package has been used for semi-analytic galaxy formation models
 [@cote2018]; following halo trajectories in zoom-in simulations
 [@hummels2019]; and for studying simulated galaxy properties
-[@smith2018, @garrisonkimmel2019].
+[@smith2018; @garrisonkimmel2019].
 
 # Acknowledgements
 
