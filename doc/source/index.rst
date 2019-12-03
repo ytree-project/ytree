@@ -14,8 +14,9 @@ merger-tree from the following formats:
   without consistent-trees
 - `treefarm <https://treefarm.readthedocs.io/>`_
 
-All formats can be saved with a universal format that can be reloaded
-with ``ytree``.  Individual trees for single halos can also be saved.
+All formats can be :ref:`resaved with a universal format <saving-trees>` that
+can be reloaded with ``ytree``.  Individual trees for single halos can also be
+saved.
 
 I want to make merger-trees!
 ============================
