@@ -197,6 +197,8 @@ The selection criteria string should be designed to ``eval`` correctly
 with a ``TreeNode`` object named, "tree".  The ``fields`` keyword can
 be used to specify a list of fields to preload for speeding up selection.
 
+.. _saving-trees:
+
 Saving Arbors and Trees
 -----------------------
 
