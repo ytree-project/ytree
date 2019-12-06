@@ -27,19 +27,19 @@ bibliography: paper.bib
 
 The formation of cosmological structure is dominated, especially on
 large scales, by the force of gravity. In the early Universe, matter
-is very evenly distributed, with only small fluxuations about the
+is distributed homogeneously, with only small fluctuations about the
 average density. Overdense regions undergo gravitational collapse to
 form bound structures, called halos, which will host galaxies within
-them. Halos grow via accretion of the surrounding material and mergers
-with other halos. This process of merging to form increasingly massive
-halos is very naturally conceptualized as an inverted tree, where
+them. Halos grow via accretion of the surrounding material and by
+merging with other halos. This process of merging to form increasingly
+massive halos is naturally conceptualized as an inverted tree, where
 small branches connect up to continually larger ones, leading
-eventually to the trunk.
+eventually to a trunk.
 
-One of the main products of a cosmological simulation is a series of
-catalogs of all halos within the simulated volume at a number of
-epochs. Halos within succesive catalogs can be linked together to
-create merger trees that describe a halo's growth history. An example
+One of the main products of cosmological simulations is a series of
+catalogs of halos within the simulated volume at different
+epochs. Halos within successive epochs can be linked together to
+create merger trees that describe a halo’s growth history. An example
 of such a merger tree is shown in Figure 1. A variety of algorithms
 and software packages exist for both halo identification and merger
 tree calculation, resulting in a plethora of different data formats
@@ -49,9 +49,9 @@ comparing methods or scientific results and users being locked into
 less than ideal workflows.
 
 ![A visualization of a merger tree. Each circle represents a halo with
- lines connecting it to its descendents downward and its ancestor
- upward. Red circles denote the line of the most massive ancestors of
- the primary halo. The merger tree was created with the
+ lines connecting it to its descendent upward and its ancestors
+ downward. Red circles denote the line of the most massive ancestors
+ of the primary halo. The merger tree was created with the
  ``consistent-trees`` [@ctrees] merger tree code, loaded by ``ytree``,
  and visualized with ``pydot`` [@pydot] and ``graphviz``
  [@graphviz].](tree.png)
@@ -84,8 +84,8 @@ formats. This also allows a subset of data to be extracted for greater
 portability and for saving newly created fields resulting from
 expensive analysis.
 
-The ``ytree`` package has been used for semi-analytic galaxy formation models
-[@cote2018]; following halo trajectories in zoom-in simulations
+The ``ytree`` package has been used for semi-analytic galaxy formation
+models [@cote2018]; following halo trajectories in zoom-in simulations
 [@hummels2019]; and for studying simulated galaxy properties
 [@smith2018; @garrisonkimmel2019].
 
