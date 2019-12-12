@@ -44,16 +44,17 @@ of such a merger tree is shown in Figure 1. A variety of algorithms
 and software packages exist for both halo identification and merger
 tree calculation, resulting in a plethora of different data formats
 that are non-trivial to load back into memory. A range of negative
-consequences arise from this situation, including difficulty of
+consequences arise from this situation, including the difficulty of
 comparing methods or scientific results and users being locked into
 less than ideal workflows.
 
 ![A visualization of a merger tree. Each circle represents a halo with
  lines connecting it to its descendent upward and its ancestors
- downward. Red circles denote the line of the most massive ancestors
- of the primary halo. The merger tree was created with the
- ``consistent-trees`` [@ctrees] merger tree code, loaded by ``ytree``,
- and visualized with ``pydot`` [@pydot] and ``graphviz``
+ downward, with the size of the circle proportional to the halo's
+ mass. Red circles denote the line of the most massive ancestors
+ of the primary halo at a given epoch. The merger tree was created
+ with the ``consistent-trees`` [@ctrees] merger tree code, loaded by
+ ``ytree``, and visualized with ``pydot`` [@pydot] and ``graphviz``
  [@graphviz].](tree.png)
 
 The ``ytree`` package [@ytree] is an extension of the ``yt`` analysis
@@ -91,7 +92,7 @@ models [@cote2018]; following halo trajectories in zoom-in simulations
 
 # Acknowledgements
 
-Britton acknowledges the amazing yt community for being amazing as
+Britton acknowledges the amazing ``yt`` community for being amazing as
 well as financial support from NSF grant AST-1615848. M. Lang would
 like to acknowledge the Gordon and Betty Moore Foundation’s
 Data-Driven Discovery Initiative for supporting her contributions to
