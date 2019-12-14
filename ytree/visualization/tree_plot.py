@@ -83,6 +83,10 @@ class TreePlot(object):
     _min_mass_ratio = None
 
     def __init__(self, tree, dot_kwargs=None):
+        """
+        Initialize a TreePlot.
+        """
+
         if pydot is None:
             raise RuntimeError(
                 "TreePlot requires the pydot module. " +
@@ -203,6 +207,9 @@ class TreePlot(object):
 
     @property
     def min_mass(self):
+        """
+        The minimum halo mass to be included in the plot.
+        """
         return self._min_mass
 
     @min_mass.setter
@@ -214,6 +221,9 @@ class TreePlot(object):
 
     @property
     def min_mass_ratio(self):
+        """
+        The minimum halo mass to main halo mass.
+        """
         return self._min_mass_ratio
 
     @min_mass_ratio.setter
@@ -223,6 +233,9 @@ class TreePlot(object):
 
     @property
     def size_field(self):
+        """
+        The field to determine the size of each circle.
+        """
         return self._size_field
 
     @size_field.setter
@@ -232,6 +245,9 @@ class TreePlot(object):
 
     @property
     def size_log(self):
+        """
+        Whether to scale circle sizes based on log of size field.
+        """
         return self._size_log
 
     @size_log.setter
