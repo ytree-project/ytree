@@ -13,6 +13,7 @@ visualization imports
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from functools import wraps
 import numpy as np
 
 from yt.units.yt_array import \
@@ -23,30 +24,100 @@ try:
 except ModuleNotFoundError:
     pydot = None
 
-class TreePlot(object):
-    _min_size = 0.2
-    _max_size = 2
-    _min_size_field = None
-    _max_size_field = None
+def clear_graph(f):
+    @wraps(f)
+    def newfunc(*args, **kwargs):
+        rv = f(*args, **kwargs)
+        args[0].graph = None
+        return rv
+    return newfunc
 
-    def __init__(self, tree, size_field='mass', size_log=True,
-                 dot_kwargs=None):
+class TreePlot(object):
+    """
+    Make a simple merger tree plot using pydot and graphviz.
+
+    Parameters
+    ----------
+    tree : merger tree node (`~ytree.data_structures.tree_node.TreeNode`)
+        The merger tree to be plotted.
+    dot_kwargs : optional, dict
+        A dictionary of keyword arguments to be passed to pydot.Dot.
+        Default: None.
+
+    Attributes
+    ----------
+    size_field : str
+        The field to determine the size of each circle.
+        Default: 'mass'.
+    size_log : bool
+        Whether to scale circle sizes based on log of size field.
+        Default: True
+    min_mass : float ot YTQuantity
+        The minimum halo mass to be included in the plot. If given
+        as a float, units are assumed to be Msun.
+        Default: None.
+    min_mass_ratio : float
+        The minimum ratio between a halo's mass and the mass of the
+        main halo to be included in the plot.
+        Default: None.
+
+    Examples
+    --------
+
+    >>> import ytree
+    >>> a = ytree.load("tree_0_0_0.dat")
+    >>> p = ytree.TreePlot(a[0])
+    >>> p.min_mass = 1e6 # Msun
+    >>> p.save()
+
+    """
+
+    _min_dot_size = 0.2
+    _max_dot_size = 2
+    _min_field_size = None
+    _max_field_size = None
+
+    _size_field = 'mass'
+    _size_log = True
+    _min_mass = None
+    _min_mass_ratio = None
+
+    def __init__(self, tree, dot_kwargs=None):
         if pydot is None:
             raise RuntimeError(
                 "TreePlot requires the pydot module. " +
                 "You may also need to install graphviz.")
 
         self.tree = tree
-        self.size_field = size_field
-        self.size_log = size_log
 
         self.dot_kwargs = dict(size='"6,8"', dpi=300)
         if dot_kwargs is None:
             dot_kwargs = {}
         self.dot_kwargs.update(dot_kwargs)
+
         self.graph = None
 
     def save(self, filename=None):
+        """
+        Save the merger tree plot.
+
+        Parameters
+        ----------
+        filename: optional, str
+            The output filename. If none given, the uid of the head
+            node is used.
+            Default: None.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("tree_0_0_0.dat")
+        >>> p = ytree.TreePlot(a[0])
+        >>> p.save('tree.png')
+
+        """
+
         if filename is None:
             filename = 'tree_%06d.pdf' % self.tree.uid
 
@@ -109,15 +180,15 @@ class TreePlot(object):
         return my_node
 
     def _size_norm(self, halo):
-        if self._min_size_field is None:
+        if self._min_field_size is None:
             tdata = self.tree['tree', self.size_field]
-            self._min_size_field = tdata.min()
-        nmin = self._min_size_field
+            self._min_field_size = tdata.min()
+        nmin = self._min_field_size
 
-        if self._max_size_field is None:
+        if self._max_field_size is None:
             tdata = self.tree['tree', self.size_field]
-            self._max_size_field = tdata.max()
-        nmax = self._max_size_field
+            self._max_field_size = tdata.max()
+        nmax = self._max_field_size
 
         fval = halo[self.size_field]
         if self.size_log:
@@ -126,28 +197,44 @@ class TreePlot(object):
             val = (fval - nmin) / (nmax - nmin)
         val = np.clip(val, 0, 1)
 
-        size = val * (self._max_size - self._min_size) + \
-          self._min_size
+        size = val * (self._max_dot_size - self._min_dot_size) + \
+          self._min_dot_size
         return size
 
-    _min_mass = None
     @property
     def min_mass(self):
         return self._min_mass
 
     @min_mass.setter
+    @clear_graph
     def min_mass(self, val):
-        self.graph = None
         if not isinstance(val, YTQuantity):
             val = YTQuantity(val, 'Msun')
         self._min_mass = val
 
-    _min_mass_ratio = None
     @property
     def min_mass_ratio(self):
         return self._min_mass_ratio
 
     @min_mass_ratio.setter
+    @clear_graph
     def min_mass_ratio(self, val):
-        self.graph = None
         self._min_mass_ratio = val
+
+    @property
+    def size_field(self):
+        return self._size_field
+
+    @size_field.setter
+    @clear_graph
+    def size_field(self, val):
+        self._size_field = val
+
+    @property
+    def size_log(self):
+        return self._size_log
+
+    @size_log.setter
+    @clear_graph
+    def size_log(self, val):
+        self._size_log = val

@@ -18,5 +18,7 @@ from ytree.data_structures import \
 from ytree.data_structures.tree_node_selector import \
     TreeNodeSelector, \
     add_tree_node_selector
+from ytree.visualization.tree_plot import \
+    TreePlot
 
 __version__ = '2.3.dev2'
