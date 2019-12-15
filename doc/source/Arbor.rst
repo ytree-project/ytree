@@ -15,8 +15,8 @@ the :func:`~ytree.data_structures.load` command.
 
 .. code-block:: python
 
-   import ytree
-   a = ytree.load("consistent_trees/tree_0_0_0.dat")
+   >>> import ytree
+   >>> a = ytree.load("consistent_trees/tree_0_0_0.dat")
 
 This command will determine the correct format and read in the data
 accordingly.  For examples of loading each format, see below.

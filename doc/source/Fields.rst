@@ -56,7 +56,7 @@ can be found in the ``derived_field_list``.
 
 .. code-block:: python
 
-   print (a.derived_field_list)
+   >>> print (a.derived_field_list)
    ['uid', 'desc_uid', 'scale_factor', 'mass', 'virial_mass', ...]
 
 Additional aliases can be added with

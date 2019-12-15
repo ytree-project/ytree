@@ -28,5 +28,5 @@ To see what version of ``ytree`` you are using, do the following:
 
 .. code-block:: python
 
-   import ytree
-   print (ytree.__version__)
+   >>> import ytree
+   >>> print (ytree.__version__)
