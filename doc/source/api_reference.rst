@@ -34,8 +34,8 @@ Functionality for plotting merger trees.
 .. autosummary::
    :toctree: generated/
 
-   ~ytree.visualization.TreePlot
-   ~ytree.visualization.TreePlot.save
+   ~ytree.visualization.tree_plot.TreePlot
+   ~ytree.visualization.tree_plot.TreePlot.save
 
 Internal Classes
 ----------------
