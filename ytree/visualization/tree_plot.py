@@ -38,7 +38,7 @@ class TreePlot(object):
 
     Parameters
     ----------
-    tree : merger tree node (`~ytree.data_structures.tree_node.TreeNode`)
+    tree : merger tree node :class:`~ytree.data_structures.tree_node.TreeNode`
         The merger tree to be plotted.
     dot_kwargs : optional, dict
         A dictionary of keyword arguments to be passed to pydot.Dot.
@@ -51,7 +51,7 @@ class TreePlot(object):
         Default: 'mass'.
     size_log : bool
         Whether to scale circle sizes based on log of size field.
-        Default: True
+        Default: True.
     min_mass : float ot YTQuantity
         The minimum halo mass to be included in the plot. If given
         as a float, units are assumed to be Msun.
@@ -94,7 +94,7 @@ class TreePlot(object):
 
         self.tree = tree
 
-        self.dot_kwargs = dict(size='"6,8"', dpi=300)
+        self.dot_kwargs = dict()
         if dot_kwargs is None:
             dot_kwargs = {}
         self.dot_kwargs.update(dot_kwargs)
@@ -165,7 +165,7 @@ class TreePlot(object):
         my_node = graph.get_node(node_name)
 
         if halo.root == -1:
-            halo.nodes
+            halo['tree']
 
         if len(my_node) == 0:
             if halo in halo.root['prog']:
@@ -186,7 +186,10 @@ class TreePlot(object):
     def _size_norm(self, halo):
         if self._min_field_size is None:
             tdata = self.tree['tree', self.size_field]
-            self._min_field_size = tdata.min()
+            if self.size_log:
+                self._min_field_size = tdata[tdata > 0].min()
+            else:
+                self._min_field_size = tdata.min()
         nmin = self._min_field_size
 
         if self._max_field_size is None:
