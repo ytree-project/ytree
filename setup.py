@@ -20,8 +20,8 @@ with open('README.md') as f:
     long_description = f.read()
 
 dev_requirements = [
-    'coveralls', 'flake8', 'pytest>=3.6', 'pytest-cov', 'twine', 'wheel',
-    'sphinx', 'sphinx_rtd_theme']
+    'coveralls', 'flake8', 'pydot', 'pytest>=3.6', 'pytest-cov', 'twine',
+    'wheel', 'sphinx', 'sphinx_rtd_theme']
 
 setup(name="ytree",
       version=VERSION,

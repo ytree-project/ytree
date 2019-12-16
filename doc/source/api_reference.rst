@@ -3,11 +3,11 @@
 API Reference
 =============
 
-Working with Merger-Trees
+Working with Merger Trees
 -------------------------
 
 The :func:`~ytree.data_structures.arbor.load` can load all supported
-merger-tree formats.  Once loaded, the
+merger tree formats.  Once loaded, the
 :func:`~ytree.data_structures.arbor.Arbor.save_arbor` and
 :func:`~ytree.data_structures.tree_node.TreeNode.save_tree` functions can be
 used to save the entire arbor or individual trees.
@@ -17,6 +17,9 @@ used to save the entire arbor or individual trees.
 
    ~ytree.data_structures.arbor.load
    ~ytree.data_structures.arbor.Arbor
+   ~ytree.data_structures.arbor.Arbor.add_alias_field
+   ~ytree.data_structures.arbor.Arbor.add_analysis_field
+   ~ytree.data_structures.arbor.Arbor.add_derived_field
    ~ytree.data_structures.arbor.Arbor.save_arbor
    ~ytree.data_structures.arbor.Arbor.select_halos
    ~ytree.data_structures.tree_node.TreeNode.save_tree
@@ -25,6 +28,17 @@ used to save the entire arbor or individual trees.
    ~ytree.data_structures.tree_node_selector.add_tree_node_selector
    ~ytree.data_structures.tree_node_selector.max_field_value
    ~ytree.data_structures.tree_node_selector.min_field_value
+
+Visualizing Merger Trees
+------------------------
+
+Functionality for plotting merger trees.
+
+.. autosummary::
+   :toctree: generated/
+
+   ~ytree.visualization.tree_plot.TreePlot
+   ~ytree.visualization.tree_plot.TreePlot.save
 
 Internal Classes
 ----------------

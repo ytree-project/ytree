@@ -37,6 +37,8 @@ Table of Contents
    Data.rst
    Arbor.rst
    Fields.rst
+   Plotting.rst
+   Examples.rst
    Conduct.rst
    Contributing.rst
    Developing.rst
