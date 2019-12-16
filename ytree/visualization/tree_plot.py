@@ -21,7 +21,7 @@ from yt.units.yt_array import \
 
 try:
     import pydot
-except ModuleNotFoundError:
+except ImportError:
     pydot = None
 
 def clear_graph(f):
