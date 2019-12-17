@@ -22,6 +22,8 @@ This release marks the `acceptance of the ytree paper
 <https://github.com/openjournals/joss-reviews/issues/1881>`__ in
 `JOSS <https://joss.theoj.org/>`__.
 
+This is the last release to support Python 2.
+
 New Features
 ^^^^^^^^^^^^
 
