@@ -42,7 +42,7 @@ setup(name="ytree",
       packages=["ytree"],
       include_package_data=True,
       classifiers=[
-          "Development Status :: 4 - Beta",
+          "Development Status :: 5 - Production/Stable",
           "Environment :: Console",
           "Intended Audience :: Science/Research",
           "Topic :: Scientific/Engineering :: Astronomy",
@@ -51,9 +51,9 @@ setup(name="ytree",
           "Operating System :: POSIX :: Linux",
           "Operating System :: Unix",
           "Natural Language :: English",
-          "Programming Language :: Python :: 2.7",
           "Programming Language :: Python :: 3.5",
           "Programming Language :: Python :: 3.6",
+          "Programming Language :: Python :: 3.7",
       ],
       install_requires=[
           'configparser',
@@ -65,5 +65,5 @@ setup(name="ytree",
           'dev': dev_requirements,
           'rtd': [pkg for pkg in dev_requirements if 'sphinx' not in pkg],
       },
-      python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*'
+      python_requires='>=3.5'
 )
