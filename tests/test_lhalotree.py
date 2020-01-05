@@ -12,8 +12,9 @@ tests for LHaloTree reader.
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from numpy.testing import \
+    assert_equal
 import numpy as np
-import nose.tools as nt
 import os
 import tempfile
 import ytree
@@ -60,11 +61,11 @@ def test_io_header_default():
     header_size0, nhalos_per_tree0 = lhtutils.read_header_default(SMT)
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
         _header_size = lhtutils.save_header_default(tmp, nhalos_per_tree0)
-        nt.assert_equal(_header_size, header_size0)
+        assert_equal(_header_size, header_size0)
         tmp.close()
         header_size1, nhalos_per_tree1 = lhtutils.read_header_default(tmp.name)
         os.remove(tmp.name)
-    nt.assert_equal(header_size1, header_size0)
+    assert_equal(header_size1, header_size0)
     np.testing.assert_array_equal(nhalos_per_tree1, nhalos_per_tree0)
 
 
