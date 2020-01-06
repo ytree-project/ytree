@@ -71,7 +71,7 @@ commands:
       - run: |
           source $BASH_ENV
           source $HOME/venv/bin/activate
-          coverage run `which pytest` tests
+          pytest --cov=ytree tests
           if [ << parameters.coverage >> == 1 ]; then
               # code coverage report
               codecov
