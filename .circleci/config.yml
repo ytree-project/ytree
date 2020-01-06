@@ -211,3 +211,22 @@ workflows:
        - docs-test:
            name: "Test docs build"
            tag: "3.8.1"
+
+   daily:
+     triggers:
+       - schedule:
+           cron: "0 0 * * *"
+           filters:
+            branches:
+              only:
+                - master
+     jobs:
+       - tests:
+           name: "Python 3.8 tests with yt-dev"
+           tag: "3.8.1"
+           coverage: 0
+           ytdev: 1
+
+       - docs-test:
+           name: "Test docs build"
+           tag: "3.8.1"
