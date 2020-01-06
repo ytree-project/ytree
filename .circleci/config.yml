@@ -1,0 +1,232 @@
+version: 2.1
+
+commands:
+  set-env:
+    description: "Set environment variables."
+    steps:
+      - run: |
+          echo 'export YT_DIR=$HOME/yt-git' >> $BASH_ENV
+          echo 'export YTREE_DATA=$HOME/ytree_test' >> $BASH_ENV
+
+  install:
+    description: "Install ytree and dependencies."
+    parameters:
+      ytdev:
+        type: integer
+        default: 0
+    steps:
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+          if [ ! -d $HOME/venv ]; then
+              python3 -m venv $HOME/venv
+          fi
+          source $BASH_ENV
+          source $HOME/venv/bin/activate
+          pip install --upgrade pip
+          pip install --upgrade wheel
+          pip install --upgrade setuptools
+          pip install Cython numpy
+          pip install girder-client
+          if [ << parameters.ytdev >> == 1 ]; then
+              if [ ! -f $YT_DIR/README.md ]; then
+                  git clone --branch=master https://github.com/yt-project/yt $YT_DIR
+              fi
+              pushd $YT_DIR
+              git pull origin master
+              git checkout master
+              pip install -e .
+              popd
+          fi
+          pip install -e .[dev]
+
+  configure-ytree:
+    description: "Configure ytree."
+    steps:
+      - run: |
+          # configure ytree
+          mkdir -p $HOME/.config/ytree
+          echo "[ytree]" > $HOME/.config/ytree/ytreerc
+          echo "test_data_dir = $YTREE_DATA" >> $HOME/.config/ytree/ytreerc
+
+  download-test-data:
+    description: "Download test data."
+    steps:
+      - run: |
+          # download test data
+          if [ ! -d $YTREE_DATA/rockstar ]; then
+              source $BASH_ENV
+              source $HOME/venv/bin/activate
+              girder-cli --api-url https://girder.hub.yt/api/v1 download 59835a1ee2a67400016a2cda $YTREE_DATA
+          fi
+
+  run-tests:
+    description: "Build ytree and run tests."
+    parameters:
+      coverage:
+        type: integer
+        default: 0
+
+    steps:
+      - run: |
+          source $BASH_ENV
+          source $HOME/venv/bin/activate
+          coverage run `which pytest` tests
+          if [ << parameters.coverage >> == 1 ]; then
+              # code coverage report
+              codecov
+          fi
+
+  build-docs:
+    description: "Test the docs build."
+    steps:
+      - run: |
+          source $BASH_ENV
+          source $HOME/venv/bin/activate
+          cd doc/source
+          python -m sphinx -M html "." "_build" -W
+
+executors:
+  python:
+    parameters:
+      tag:
+        type: string
+        default: latest
+    docker:
+      - image: circleci/python:<< parameters.tag >>
+
+jobs:
+  tests:
+    parameters:
+      tag:
+        type: string
+        default: latest
+      ytdev:
+        type: integer
+        default: 0
+      coverage:
+        type: integer
+        default: 0
+    executor:
+      name: python
+      tag: << parameters.tag >>
+
+    working_directory: ~/ytree
+
+    steps:
+      - checkout
+      - set-env
+
+      - restore_cache:
+          name: "Restore dependencies cache."
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-v2
+
+      - install:
+          ytdev: << parameters.ytdev >>
+      - configure-ytree
+
+      - save_cache:
+          name: "Save dependencies cache."
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-v2
+          paths:
+            - ~/.cache/pip
+            - ~/venv
+            - ~/yt-git
+
+      - restore_cache:
+          name: "Restore test data cache."
+          key: test-data-v1
+
+      - download-test-data
+
+      - save_cache:
+          name: "Save test data cache."
+          key: test-data-v1
+          paths:
+            - ~/ytree_test
+
+      - run-tests:
+          coverage: << parameters.coverage >>
+
+  docs-test:
+    parameters:
+      tag:
+        type: string
+        default: latest
+    executor:
+      name: python
+      tag: << parameters.tag >>
+
+    working_directory: ~/ytree
+
+    steps:
+      - checkout
+      - set-env
+
+      - restore_cache:
+          name: "Restore dependencies cache."
+          key: python-<< parameters.tag >>-1-dependencies-v1
+
+      - install:
+          ytdev: 1
+      - configure-ytree
+
+      - save_cache:
+          name: "Save dependencies cache."
+          key: python-<< parameters.tag >>-1-dependencies-v1
+          paths:
+            - ~/.cache/pip
+            - ~/venv
+            - ~/yt-git
+
+      - build-docs
+
+workflows:
+   version: 2
+
+   normal-tests:
+     jobs:
+       - tests:
+           name: "Python 3.5 tests"
+           tag: "3.5.9"
+
+       - tests:
+           name: "Python 3.6 tests"
+           tag: "3.6.9"
+
+       - tests:
+           name: "Python 3.7 tests"
+           tag: "3.7.6"
+
+       - tests:
+           name: "Python 3.8 tests"
+           tag: "3.8.1"
+
+       - tests:
+           name: "Python 3.8 tests with yt-dev"
+           tag: "3.8.1"
+           coverage: 1
+           ytdev: 1
+
+       - docs-test:
+           name: "Test docs build"
+           tag: "3.8.1"
+
+   daily:
+     triggers:
+       - schedule:
+           cron: "0 0 * * *"
+           filters:
+            branches:
+              only:
+                - master
+     jobs:
+       - tests:
+           name: "Python 3.8 tests with yt-dev"
+           tag: "3.8.1"
+           coverage: 0
+           ytdev: 1
+
+       - docs-test:
+           name: "Test docs build"
+           tag: "3.8.1"
