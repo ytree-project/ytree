@@ -1,7 +1,7 @@
 # ytree
 
-[![Build Status](https://travis-ci.org/ytree-project/treefarm.svg?branch=master)](https://travis-ci.org/ytree-project/treefarm)
-[![Coverage Status](https://coveralls.io/repos/github/ytree-project/ytree/badge.svg?branch=master)](https://coveralls.io/github/ytree-project/ytree?branch=master)
+[![CircleCI](https://circleci.com/gh/ytree-project/ytree/tree/master.svg?style=svg)](https://circleci.com/gh/ytree-project/ytree/tree/master)
+[![codecov](https://codecov.io/gh/ytree-project/ytree/branch/master/graph/badge.svg)](https://codecov.io/gh/ytree-project/ytree)
 [![Documentation Status](https://readthedocs.org/projects/ytree/badge/?version=latest)](http://ytree.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/ytree.svg)](https://badge.fury.io/py/ytree)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.01881/status.svg)](https://doi.org/10.21105/joss.01881)
