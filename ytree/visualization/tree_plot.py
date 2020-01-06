@@ -202,7 +202,7 @@ class TreePlot(object):
             val = np.log(fval / nmin) / np.log(nmax / nmin)
         else:
             val = (fval - nmin) / (nmax - nmin)
-        val = np.clip(val, 0, 1)
+        val = np.clip(float(val), 0, 1)
 
         size = val * (self._max_dot_size - self._min_dot_size) + \
           self._min_dot_size
