@@ -14,6 +14,7 @@ RockstarArbor class and member functions
 #-----------------------------------------------------------------------------
 
 import glob
+import re
 
 from yt.units.yt_array import \
     UnitParseError
@@ -32,7 +33,6 @@ class RockstarArbor(CatalogArbor):
     Use only descendent IDs to determine tree relationship.
     """
 
-    _suffix = ".list"
     _field_info_class = RockstarFieldInfo
     _data_file_class = RockstarDataFile
 
@@ -100,9 +100,12 @@ class RockstarArbor(CatalogArbor):
         """
         Get all out_*.list files and sort them in reverse order.
         """
-        prefix = self.filename.rsplit("_", 1)[0]
-        suffix = self._suffix
-        my_files = glob.glob("%s_*%s" % (prefix, suffix))
+        reg = re.search("_\d+[_\.]", self.filename)
+        prefix = self.filename[:reg.start()+1]
+        suffix = self.filename[reg.end()-1:]
+        my_files = glob.glob(
+            "%s%s%s" % (prefix, "[0-9]"*(reg.end()-reg.start()-2), suffix))
+
         # sort by catalog number
         my_files.sort(
             key=lambda x:
@@ -121,5 +124,8 @@ class RockstarArbor(CatalogArbor):
         """
         fn = args[0]
         if not fn.endswith(".list"):
+            return False
+        reg = re.search("_\d+[_\.]", fn)
+        if reg is None:
             return False
         return True
