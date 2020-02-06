@@ -115,7 +115,7 @@ class RockstarArbor(CatalogArbor):
           [self._data_file_class(f, self) for f in my_files]
 
     def _get_file_index(self, f, prefix, suffix):
-        return int(f[f.find(prefix)+len(prefix)+1:f.rfind(suffix)]),
+        return int(f[f.find(prefix)+len(prefix):f.rfind(suffix)]),
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
