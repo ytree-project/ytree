@@ -100,7 +100,7 @@ class RockstarArbor(CatalogArbor):
         """
         Get all out_*.list files and sort them in reverse order.
         """
-        reg = re.search("_\d+[_\.]", self.filename)
+        reg = re.search(r"_\d+[_\.]", self.filename)
         prefix = self.filename[:reg.start()+1]
         suffix = self.filename[reg.end()-1:]
         my_files = glob.glob(
@@ -125,7 +125,7 @@ class RockstarArbor(CatalogArbor):
         fn = args[0]
         if not fn.endswith(".list"):
             return False
-        reg = re.search("_\d+[_\.]", fn)
+        reg = re.search(r"_\d+[_\.]", fn)
         if reg is None:
             return False
         return True
