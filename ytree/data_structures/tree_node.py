@@ -16,9 +16,6 @@ TreeNode class and member functions
 import numpy as np
 import weakref
 
-from yt.extern.six import \
-    string_types
-
 from ytree.data_structures.fields import \
     FieldContainer
 
@@ -206,7 +203,7 @@ class TreeNode(object):
             if ftype not in arr_types:
                 raise SyntaxError(
                     "First argument must be one of %s." % str(arr_types))
-            if not isinstance(field, string_types):
+            if not isinstance(field, str):
                 raise SyntaxError("Second argument must be a string.")
 
             self.arbor._node_io.get_fields(self, fields=[field], root_only=False)
@@ -214,7 +211,7 @@ class TreeNode(object):
             return self.root._field_data[field][indices]
 
         else:
-            if not isinstance(key, string_types):
+            if not isinstance(key, str):
                 raise SyntaxError("Single argument must be a string.")
 
             # return the progenitor list or tree nodes in a list

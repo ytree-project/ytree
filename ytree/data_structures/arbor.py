@@ -20,9 +20,6 @@ import json
 import numpy as np
 import os
 
-from yt.extern.six import \
-    add_metaclass, \
-    string_types
 from yt.frontends.ytdata.utilities import \
     save_as_dataset
 from yt.funcs import \
@@ -71,8 +68,7 @@ class RegisteredArbor(type):
         if arbor_type:
             arbor_registry[arbor_type] = cls
 
-@add_metaclass(RegisteredArbor)
-class Arbor(object):
+class Arbor(object, metaclass=RegisteredArbor):
     """
     Base class for all Arbor classes.
 
@@ -313,7 +309,7 @@ class Arbor(object):
         roots of all trees.
         If given an integer, return a tree from the list of trees.
         """
-        if isinstance(key, string_types):
+        if isinstance(key, str):
             if key in ("tree", "prog"):
                 raise SyntaxError("Argument must be a field or integer.")
             self._root_io.get_fields(self, fields=[key])
