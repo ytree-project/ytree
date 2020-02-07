@@ -14,6 +14,7 @@ RockstarArbor class and member functions
 #-----------------------------------------------------------------------------
 
 import glob
+import os
 import re
 
 from yt.data_objects.data_containers import \
@@ -123,9 +124,11 @@ class RockstarArbor(CatalogArbor):
         File should end in .list.
         """
         fn = args[0]
-        if not fn.endswith(".list"):
+        if not os.path.basename(fn).startswith("out") or \
+          not fn.endswith(".list"):
             return False
-        reg = re.search(r"_\d+[_\.]", fn)
+        # filter out non-integers
+        reg = re.search(r"_\d+[_\.]\D", fn)
         if reg is None:
             return False
         return True
