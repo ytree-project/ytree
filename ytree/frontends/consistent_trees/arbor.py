@@ -83,7 +83,8 @@ class ConsistentTreesArbor(Arbor):
                     "Encountered enexpected EOF reading %s." %
                     self.filename)
             elif not line.startswith("#"):
-                self._ntrees = int(line.strip())
+                if isinstance(self, ConsistentTreesArbor):
+                    self._ntrees = int(line.strip())
                 break
 
             # cosmological parameters

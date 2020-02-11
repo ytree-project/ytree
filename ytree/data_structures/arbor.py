@@ -929,14 +929,16 @@ class CatalogArbor(Arbor):
 
     _prefix = None
     _data_file_class = None
+    _has_uids = False
 
     def __init__(self, filename):
         super(CatalogArbor, self).__init__(filename)
-        if "uid" not in self.field_list:
-            for field in "uid", "desc_uid":
-                self.field_list.append(field)
-                self.field_info[field] = {"units": "",
-                                          "source": "arbor"}
+        if not self._has_uids:
+            if "uid" not in self.field_list:
+                for field in "uid", "desc_uid":
+                    self.field_list.append(field)
+                    self.field_info[field] = {"units": "",
+                                              "source": "arbor"}
 
     def _get_data_files(self):
         raise NotImplementedError
@@ -944,9 +946,13 @@ class CatalogArbor(Arbor):
     def _plant_trees(self):
         # this can be called once with the list, but fields are
         # not guaranteed to be returned in order.
+        if self._has_uids:
+            id_fields = ["uid", "desc_uid"]
+        else:
+            id_fields = ["halo_id", "desc_id"]
         fields = \
           [self.field_info.resolve_field_dependencies([field])[0][0]
-           for field in ["halo_id", "desc_id"]]
+           for field in id_fields]
         halo_id_f, desc_id_f = fields
         dtypes = dict((field, np.int64) for field in fields)
         uid = 0
@@ -969,13 +975,17 @@ class CatalogArbor(Arbor):
 
                 for it in range(nhalos):
                     descid = data[desc_id_f][it]
+                    if self._has_uids:
+                        my_uid = data[halo_id_f][it]
+                    else:
+                        my_uid = uid
                     root = i == 0 or descid == -1
                     # The data says a descendent exists, but it's not there.
                     # This shouldn't happen, but it does sometimes.
                     if not root and descid not in lastids:
                         root = True
                         descid = data[desc_id_f][it] = -1
-                    tree_node = TreeNode(uid, arbor=self, root=root)
+                    tree_node = TreeNode(my_uid, arbor=self, root=root)
                     tree_node._fi = it
                     tree_node.data_file = data_file
                     batch[it] = tree_node
@@ -1030,7 +1040,7 @@ class CatalogArbor(Arbor):
         tree_node._tree_size = tree_node._uids.size
         # This should bypass any attempt to get this field in
         # the conventional way.
-        if self.field_info["uid"]["source"] == "arbor":
+        if self.field_info["uid"].get("source") == "arbor":
             tree_node._field_data["uid"] = tree_node._uids
             tree_node._field_data["desc_uid"] = tree_node._desc_uids
 
