@@ -14,6 +14,7 @@ ConsistentTreesArbor class and member functions
 #-----------------------------------------------------------------------------
 
 import numpy as np
+import re
 
 from yt.funcs import \
     get_pbar
@@ -65,15 +66,13 @@ class ConsistentTreesArbor(Arbor):
         # Read the first line as a list of all fields.
         # Do some footwork to remove awkard characters.
         rfl = f.readline()[1:].strip().split()
+        reg = re.compile(r"\(\d+\)$")
         for pf in rfl:
-            if "(" in pf and ")" in pf:
-                bt = pf[pf.find("(")+1:pf.rfind(")")]
-                if bt.isdigit():
-                    fields.append(pf[:pf.find("(")])
-                else:
-                    fields.append(pf)
-            else:
+            match = reg.search(pf)
+            if match is None:
                 fields.append(pf)
+            else:
+                fields.append(pf[:match.start()])
 
         # Now grab a bunch of things from the header.
         while True:
