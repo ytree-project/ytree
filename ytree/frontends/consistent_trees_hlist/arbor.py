@@ -15,13 +15,7 @@ ConsistentTreesHlistArbor class and member functions
 
 import glob
 import os
-import re
 
-from yt.data_objects.data_containers import \
-    UnitParseError
-
-from ytree.data_structures.arbor import \
-    CatalogArbor
 from ytree.frontends.consistent_trees_hlist.io import \
     ConsistentTreesHlistDataFile
 from ytree.frontends.consistent_trees.fields import \
@@ -34,7 +28,9 @@ from ytree.frontends.rockstar.arbor import \
 class ConsistentTreesHlistArbor(RockstarArbor):
     """
     Class for Arbors created from consistent-trees hlist_*.list files.
-    This is 
+
+    This is a hybrid type with multiple catalog files like the rockstar
+    frontend, but with headers structured like consistent-trees.
     """
 
     _has_uids = True
