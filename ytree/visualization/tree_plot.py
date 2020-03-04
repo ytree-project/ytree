@@ -43,6 +43,17 @@ class TreePlot(object):
     dot_kwargs : optional, dict
         A dictionary of keyword arguments to be passed to pydot.Dot.
         Default: None.
+    label_fields: optional, list
+        A list of fields to use as node labels. If not None, the node shape
+        will be an unfilled square of constant size with the given labels.
+        Default: None.
+    node_callback: optional, function
+        A function accepting a single argument of a
+        :class:`~ytree.data_structures.tree_node.TreeNode` and returning a
+        dictionary of keywords to be given to pydot for creating the node
+        object on the plot. This can be used to customize the appearance of
+        the nodes.
+        Default: None.
 
     Attributes
     ----------
@@ -52,7 +63,7 @@ class TreePlot(object):
     size_log : bool
         Whether to scale circle sizes based on log of size field.
         Default: True.
-    min_mass : float ot YTQuantity
+    min_mass : float or YTQuantity
         The minimum halo mass to be included in the plot. If given
         as a float, units are assumed to be Msun.
         Default: None.
@@ -70,6 +81,21 @@ class TreePlot(object):
     >>> p.min_mass = 1e6 # Msun
     >>> p.save()
 
+    >>> import ytree
+    >>> a = ytree.load("tree_0_0_0.dat")
+    >>> p = ytree.TreePlot(a[0], label_fields=['uid', 'mass'])
+    >>> p.save()
+
+    >>> import ytree
+    >>> def my_function(halo):
+    ...     label = "%d" % halo['uid']
+    ...     my_kwargs = {"label": label, "fontsize": 8}
+    ...     return my_kwargs
+    >>> a = ytree.load("tree_0_0_0.dat")
+    >>> p = ytree.TreePlot(a[0], label_fields=['uid'],
+    ...                    node_callback=my_function)
+    >>> p.save()
+
     """
 
     _min_dot_size = 0.2
@@ -82,7 +108,8 @@ class TreePlot(object):
     _min_mass = None
     _min_mass_ratio = None
 
-    def __init__(self, tree, dot_kwargs=None):
+    def __init__(self, tree, dot_kwargs=None,
+                 label_fields=None, node_callback=None):
         """
         Initialize a TreePlot.
         """
@@ -98,6 +125,9 @@ class TreePlot(object):
         if dot_kwargs is None:
             dot_kwargs = {}
         self.dot_kwargs.update(dot_kwargs)
+
+        self.label_fields = label_fields
+        self.node_callback = node_callback
 
         self.graph = None
 
@@ -173,10 +203,22 @@ class TreePlot(object):
             else:
                 color = 'black'
 
+            if self.label_fields is None:
+                node_kwargs = \
+                  {'style': 'filled', 'label': '', 'fillcolor': color,
+                   'shape': 'circle', 'fixedsized': 'true',
+                   'width': self._size_norm(halo)}
+            else:
+                label = "\n".join([str(halo[f]) for f in self.label_fields])
+                node_kwargs = \
+                  {'label': label, 'shape': 'square', 'fontsize': 4}
+
+            if self.node_callback is not None:
+                extra_kwargs = self.node_callback(halo)
+                node_kwargs.update(extra_kwargs)
+
             my_node = pydot.Node(
-                node_name, style="filled", label="",
-                fillcolor=color, shape="circle",
-                fixedsize="true", width=self._size_norm(halo))
+                node_name, **node_kwargs)
             graph.add_node(my_node)
         else:
             my_node = my_node[0]
