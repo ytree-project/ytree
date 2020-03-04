@@ -126,12 +126,14 @@ class TreePlot(object):
             dot_kwargs = {}
         self.dot_kwargs.update(dot_kwargs)
 
-        if not isinstance(label_fields, list):
+        if label_fields is not None and \
+          not isinstance(label_fields, list):
             raise RuntimeError(
                 "label_fields should be a list.")
         self.label_fields = label_fields
 
-        if not callable(node_callback):
+        if node_callback is not None and \
+          not callable(node_callback):
             raise RuntimeError(
                 "node_callback should be a callable function.")
         self.node_callback = node_callback
