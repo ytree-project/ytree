@@ -78,12 +78,24 @@ class TreePlot(object):
     >>> p.save()
 
     >>> import ytree
-    >>> def my_function(halo):
+    >>> def my_node(halo):
     ...     label = "%d" % halo['uid']
     ...     my_kwargs = {"label": label, "fontsize": 8, "shape": "square"}
     ...     return my_kwargs
     >>> a = ytree.load("tree_0_0_0.dat")
-    >>> p = ytree.TreePlot(a[0], node_function=my_function)
+    >>> p = ytree.TreePlot(a[0], node_function=my_node)
+    >>> p.save()
+
+    >>> import ytree
+    >>> def my_edge(ancestor, descendent):
+    ...     if descendent['mass'] < ancestor['mass']:
+    ...         color = 'blue'
+    ...     else:
+    ...         color = 'black'
+    ...     my_kwargs = {"color": color, "penwidth": 5}
+    ...     return my_kwargs
+    >>> a = ytree.load("tree_0_0_0.dat")
+    >>> p = ytree.TreePlot(a[0], edge_function=my_edge)
     >>> p.save()
 
     """
