@@ -99,7 +99,7 @@ class TreePlot(object):
     _min_mass_ratio = None
 
     def __init__(self, tree, dot_kwargs=None,
-                 node_function=None):
+                 node_function=None, edge_function=None):
         """
         Initialize a TreePlot.
         """
@@ -121,6 +121,12 @@ class TreePlot(object):
             raise RuntimeError(
                 "node_function should be a callable function.")
         self.node_function = node_function
+
+        if edge_function is not None and \
+          not callable(edge_function):
+            raise RuntimeError(
+                "edge_function should be a callable function.")
+        self.edge_function = edge_function
 
         self.graph = None
 
@@ -179,7 +185,13 @@ class TreePlot(object):
                 continue
 
             anc_node = self._plot_node(anc)
-            graph.add_edge(pydot.Edge(my_node, anc_node, penwidth=5))
+
+            if self.edge_function is not None:
+                edge_kwargs = self.edge_function(anc, halo)
+            else:
+                edge_kwargs = {"penwidth": 5}
+
+            graph.add_edge(pydot.Edge(my_node, anc_node, **edge_kwargs))
             self._plot_ancestors(anc)
 
     def _plot_node(self, halo):
