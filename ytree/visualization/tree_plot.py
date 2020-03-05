@@ -80,7 +80,7 @@ class TreePlot(object):
     >>> import ytree
     >>> def my_function(halo):
     ...     label = "%d" % halo['uid']
-    ...     my_kwargs = {"label": label, "fontsize": 8}
+    ...     my_kwargs = {"label": label, "fontsize": 8, "shape": "square"}
     ...     return my_kwargs
     >>> a = ytree.load("tree_0_0_0.dat")
     >>> p = ytree.TreePlot(a[0], node_function=my_function)

@@ -63,6 +63,48 @@ to modify the default plotting behavior. These are:
 
 .. image:: _images/tree_small.png
 
+Customizing Node Appearance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The appearance of the nodes can be customized  through the *node_function*
+keyword. This should be a function that accepts a single argument that is a
+:class:`~ytree.data_structures.tree_node.TreeNode` object and returns a
+dictionary of keywords that will be used to create the ``pydot`` node. For
+example, the following function will add labels of the halo id and mass and
+make the node shape square. It will also color the most massive progenitor
+red.
+
+.. code-block:: python
+
+    def my_node(halo):
+        if halo in halo.root['prog']:
+            color = 'red'
+        else:
+            color = 'black'
+
+        label = \
+        """
+        id: %d
+        mass: %.2e Msun
+        """ % (halo['uid'], halo['mass'].to('Msun'))
+
+        my_kwargs = {"label": label, "fontsize": 8,
+                     "shape": "square", "color": color}
+        return my_kwargs
+
+This function is then provided with the *node_function* keyword.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("ahf_halos/snap_N64L16_000.parameter",
+   ...                hubble_constant=0.7)
+   >>> p = ytree.TreePlot(tree, dot_kwargs={'rankdir': "BT"},
+   ...                    node_function=my_node)
+   >>> p.save('tree_custom_node.png')
+
+.. image:: _images/tree_custom_node.png
+
 Supported Output Formats
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
