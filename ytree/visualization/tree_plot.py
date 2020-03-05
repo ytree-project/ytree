@@ -43,11 +43,7 @@ class TreePlot(object):
     dot_kwargs : optional, dict
         A dictionary of keyword arguments to be passed to pydot.Dot.
         Default: None.
-    label_fields: optional, list
-        A list of fields to use as node labels. If not None, the node shape
-        will be an unfilled square of constant size with the given labels.
-        Default: None.
-    node_callback: optional, function
+    node_function: optional, function
         A function accepting a single argument of a
         :class:`~ytree.data_structures.tree_node.TreeNode` and returning a
         dictionary of keywords to be given to pydot for creating the node
@@ -82,18 +78,12 @@ class TreePlot(object):
     >>> p.save()
 
     >>> import ytree
-    >>> a = ytree.load("tree_0_0_0.dat")
-    >>> p = ytree.TreePlot(a[0], label_fields=['uid', 'mass'])
-    >>> p.save()
-
-    >>> import ytree
     >>> def my_function(halo):
     ...     label = "%d" % halo['uid']
     ...     my_kwargs = {"label": label, "fontsize": 8}
     ...     return my_kwargs
     >>> a = ytree.load("tree_0_0_0.dat")
-    >>> p = ytree.TreePlot(a[0], label_fields=['uid'],
-    ...                    node_callback=my_function)
+    >>> p = ytree.TreePlot(a[0], node_function=my_function)
     >>> p.save()
 
     """
@@ -109,7 +99,7 @@ class TreePlot(object):
     _min_mass_ratio = None
 
     def __init__(self, tree, dot_kwargs=None,
-                 label_fields=None, node_callback=None):
+                 node_function=None):
         """
         Initialize a TreePlot.
         """
@@ -126,17 +116,11 @@ class TreePlot(object):
             dot_kwargs = {}
         self.dot_kwargs.update(dot_kwargs)
 
-        if label_fields is not None and \
-          not isinstance(label_fields, list):
+        if node_function is not None and \
+          not callable(node_function):
             raise RuntimeError(
-                "label_fields should be a list.")
-        self.label_fields = label_fields
-
-        if node_callback is not None and \
-          not callable(node_callback):
-            raise RuntimeError(
-                "node_callback should be a callable function.")
-        self.node_callback = node_callback
+                "node_function should be a callable function.")
+        self.node_function = node_function
 
         self.graph = None
 
@@ -207,24 +191,18 @@ class TreePlot(object):
             halo['tree']
 
         if len(my_node) == 0:
-            if halo in halo.root['prog']:
-                color = 'red'
-            else:
-                color = 'black'
+            if self.node_function is not None:
+                node_kwargs = self.node_function(halo)
 
-            if self.label_fields is None:
+            else:
+                if halo in halo.root['prog']:
+                    color = 'red'
+                else:
+                    color = 'black'
                 node_kwargs = \
                   {'style': 'filled', 'label': '', 'fillcolor': color,
                    'shape': 'circle', 'fixedsized': 'true',
                    'width': self._size_norm(halo)}
-            else:
-                label = "\n".join([str(halo[f]) for f in self.label_fields])
-                node_kwargs = \
-                  {'label': label, 'shape': 'square', 'fontsize': 4}
-
-            if self.node_callback is not None:
-                extra_kwargs = self.node_callback(halo)
-                node_kwargs.update(extra_kwargs)
 
             my_node = pydot.Node(
                 node_name, **node_kwargs)
