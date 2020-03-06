@@ -57,3 +57,32 @@ class TreePlotTest(TempDirTest):
         a = ytree.load(CT)
         p = ytree.TreePlot(a[0], dot_kwargs={'dpi': 200})
         p.save()
+
+    @requires_file(CT)
+    def test_node_function(self):
+        def my_func(halo):
+            label = "%d" % halo['uid']
+            return {"label": label}
+        a = ytree.load(CT)
+        p = ytree.TreePlot(a[0], node_function=my_func)
+        p.save()
+
+    @requires_file(CT)
+    def test_node_function_bad(self):
+        a = ytree.load(CT)
+        with self.assertRaises(RuntimeError):
+            ytree.TreePlot(a[0], node_function='notafunc')
+
+    @requires_file(CT)
+    def test_edge_function(self):
+        def my_func(desc, anc):
+            return {"color": "red"}
+        a = ytree.load(CT)
+        p = ytree.TreePlot(a[0], edge_function=my_func)
+        p.save()
+
+    @requires_file(CT)
+    def test_edge_function_bad(self):
+        a = ytree.load(CT)
+        with self.assertRaises(RuntimeError):
+            ytree.TreePlot(a[0], edge_function='notafunc')
