@@ -48,7 +48,14 @@ class TreePlot(object):
         :class:`~ytree.data_structures.tree_node.TreeNode` and returning a
         dictionary of keywords to be given to pydot for creating the node
         object on the plot. This can be used to customize the appearance of
-        the nodes.
+        the nodes. See examples below.
+        Default: None.
+    edge_function: optional, function
+        A function accepting two
+        :class:`~ytree.data_structures.tree_node.TreeNode` objects and
+        returning a dictionary of keywords to be given to pydot for creating
+        the edge object on the plot (the lines connecting halos). This can
+        be used to customize the appearance of the edges. See examples below.
         Default: None.
 
     Attributes
@@ -77,6 +84,7 @@ class TreePlot(object):
     >>> p.min_mass = 1e6 # Msun
     >>> p.save()
 
+    >>> # customizing nodes
     >>> import ytree
     >>> def my_node(halo):
     ...     label = "%d" % halo['uid']
@@ -86,6 +94,7 @@ class TreePlot(object):
     >>> p = ytree.TreePlot(a[0], node_function=my_node)
     >>> p.save()
 
+    >>> # customizing edges
     >>> import ytree
     >>> def my_edge(ancestor, descendent):
     ...     if descendent['mass'] < ancestor['mass']:
