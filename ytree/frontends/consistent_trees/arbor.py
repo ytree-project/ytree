@@ -152,6 +152,10 @@ class ConsistentTreesArbor(Arbor):
         self.box_size = self.quan(float(box[0]), box[1])
 
     def _plant_trees(self):
+        self._trees = np.empty(self._ntrees, dtype=np.object)
+        if self._ntrees == 0:
+            return
+
         lkey = len("tree ")+1
         block_size = 32768
 
@@ -162,7 +166,6 @@ class ConsistentTreesArbor(Arbor):
         file_size = data_file.fh.tell()
         pbar = get_pbar("Loading tree roots", file_size)
         data_file.fh.seek(self._hoffset)
-        self._trees = np.empty(self._ntrees, dtype=np.object)
 
         offset = self._hoffset
         itree = 0
