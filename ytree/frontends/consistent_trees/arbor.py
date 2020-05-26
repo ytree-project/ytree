@@ -84,6 +84,7 @@ class ConsistentTreesArbor(Arbor):
             elif not line.startswith("#"):
                 if isinstance(self, ConsistentTreesArbor):
                     self._ntrees = int(line.strip())
+                    self._hoffset = f.tell()
                 break
 
             # cosmological parameters
@@ -134,7 +135,6 @@ class ConsistentTreesArbor(Arbor):
                     fdb[tfield.lower()] = {"description": desc.strip(),
                                            "units": punits}
 
-        self._hoffset = f.tell()
         f.close()
 
         # Fill the field info with the units found above.
