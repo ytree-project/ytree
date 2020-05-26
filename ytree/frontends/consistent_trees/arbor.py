@@ -15,6 +15,8 @@ ConsistentTreesArbor class and member functions
 
 import numpy as np
 import re
+import operator
+import os
 
 from yt.funcs import \
     get_pbar
@@ -31,6 +33,75 @@ from ytree.frontends.consistent_trees.fields import \
 from ytree.frontends.consistent_trees.io import \
     ConsistentTreesDataFile, \
     ConsistentTreesTreeFieldIO
+
+from ytree.utilities.io import \
+    f_text_block
+
+class ConsistentTreesGroupArbor(Arbor):
+    _field_info_class = ConsistentTreesFieldInfo
+
+    def _parse_parameter_file(self):
+        f = open(self.filename, 'r')
+        f.readline()
+        self._hoffset = f.tell()
+        line = f.readline()
+        fn = line.split()[-1]
+        ConsistentTreesArbor._parse_parameter_file(self, fn)
+
+    def _plant_trees(self):
+        f = open(self.filename, 'r')
+        f.seek(self._hoffset)
+        ldata = list(map(
+            lambda x: [int(x[0]), int(x[1]), int(x[2]), x[3]],
+            [line.split() for line, _ in f_text_block(f)]
+            ))
+        f.close()
+
+        dfns = np.unique([datum[3] for datum in ldata])
+        dfns.sort()
+        fids = np.unique([datum[1] for datum in ldata])
+        fids.sort()
+
+        # Some data files may be empty and so unlisted.
+        data_files = [None]*(fids.max()+1)
+        for i,fid in enumerate(fids):
+            data_files[fid] = dfns[i]
+        self._node_io.data_files = \
+          [ConsistentTreesDataFile(fn) for fn in data_files
+           if fn is not None]
+
+        ldata.sort(key=operator.itemgetter(1, 2))
+        ntrees = len(ldata)
+        pbar = get_pbar("Loading tree roots", ntrees)
+        self._trees = np.empty(ntrees, dtype=np.object)
+        for i, tdata in enumerate(ldata):
+            my_node        = TreeNode(tdata[0], arbor=self, root=True)
+            my_node._si    = tdata[2]
+            my_node._fi    = tdata[1]
+            self._trees[i] = my_node
+            pbar.update(i)
+        pbar.finish()
+
+    @classmethod
+    def _is_valid(self, *args, **kwargs):
+        """
+        File should end in .dat and have a line in the header
+        with the string, "Consistent Trees".
+        """
+        fn = args[0]
+        if not os.path.basename(fn) == 'locations.dat':
+            return False
+        with open(fn, "r") as f:
+            valid = False
+            while True:
+                line = f.readline()
+                if line is None or not line.startswith("#"):
+                    break
+                if "TreeRootID FileID Offset Filename" in line:
+                    valid = True
+            if not valid:
+                return False
+        return True
 
 class ConsistentTreesArbor(Arbor):
     """
@@ -53,7 +124,7 @@ class ConsistentTreesArbor(Arbor):
         self._node_io.data_file = \
           ConsistentTreesDataFile(self.filename)
 
-    def _parse_parameter_file(self):
+    def _parse_parameter_file(self, filename=None):
         fields = []
         fi = {}
         fdb = {}
@@ -62,7 +133,10 @@ class ConsistentTreesArbor(Arbor):
                 for t in ["physical, peculiar",
                           "comoving", "physical"]]
 
-        f = open(self.filename, "r")
+        if filename is None:
+            filename = self.filename
+
+        f = open(filename, "r")
         # Read the first line as a list of all fields.
         # Do some footwork to remove awkard characters.
         rfl = f.readline()[1:].strip().split()
