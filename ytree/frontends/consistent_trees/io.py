@@ -29,7 +29,8 @@ class ConsistentTreesTreeFieldIO(TreeFieldIO):
         """
         Read fields from disk for a single tree.
         """
-        data_file = self.data_file
+
+        data_file = self.data_files[root_node._fi]
 
         if dtypes is None:
             dtypes = {}

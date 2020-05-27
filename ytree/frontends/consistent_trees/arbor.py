@@ -39,6 +39,14 @@ from ytree.utilities.io import \
 
 class ConsistentTreesGroupArbor(Arbor):
     _field_info_class = ConsistentTreesFieldInfo
+    _tree_field_io_class = ConsistentTreesTreeFieldIO
+
+    def _node_io_loop_prepare(self, root_nodes):
+        fi = np.array([node._fi for node in root_nodes])
+        ufi = np.unique(fi)
+        data_files = [self._node_io.data_files[i] for i in ufi]
+        node_list = [root_nodes[fi == i] for i in ufi]
+        return data_files, node_list
 
     def _parse_parameter_file(self):
         f = open(self.filename, 'r')
@@ -63,6 +71,7 @@ class ConsistentTreesGroupArbor(Arbor):
         fids.sort()
 
         # Some data files may be empty and so unlisted.
+        # Make sure file ids and names line up.
         data_files = [None]*(fids.max()+1)
         for i,fid in enumerate(fids):
             data_files[fid] = dfns[i]
@@ -121,8 +130,8 @@ class ConsistentTreesArbor(Arbor):
         data_file.close()
 
     def _get_data_files(self):
-        self._node_io.data_file = \
-          ConsistentTreesDataFile(self.filename)
+        self._node_io.data_files = \
+          [ConsistentTreesDataFile(self.filename)]
 
     def _parse_parameter_file(self, filename=None):
         fields = []
@@ -260,6 +269,7 @@ class ConsistentTreesArbor(Arbor):
                 lihash = ihash
                 my_node = TreeNode(uid, arbor=self, root=True)
                 my_node._si = offset + inl + 1
+                my_node._fi = 0
                 self._trees[itree] = my_node
                 if itree > 0:
                     self._trees[itree-1]._ei = offset + ihash - 1
