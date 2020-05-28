@@ -14,6 +14,7 @@ arbor tests
 #-----------------------------------------------------------------------------
 
 from ytree.frontends.consistent_trees import \
+    ConsistentTreesGroupArbor, \
     ConsistentTreesArbor
 from ytree.frontends.ahf import \
     AHFArbor
@@ -30,6 +31,10 @@ from ytree.utilities.testing import \
 class AHFArborTest(TempDirTest, ArborTest):
     arbor_type = AHFArbor
     test_filename = "ahf_halos/snap_N64L16_000.parameter"
+
+class ConsistentTreesGroupArborTest(TempDirTest, ArborTest):
+    arbor_type = ConsistentTreesGroupArbor
+    test_filename = "tiny_ctrees/locations.dat"
 
 class ConsistentTreesArborTest(TempDirTest, ArborTest):
     arbor_type = ConsistentTreesArbor

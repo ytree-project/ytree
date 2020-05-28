@@ -66,6 +66,7 @@ Internal Classes
    ~ytree.frontends.arborarbor.io.ArborArborTreeFieldIO
    ~ytree.frontends.arborarbor.io.ArborArborRootFieldIO
    ~ytree.frontends.consistent_trees.arbor.ConsistentTreesArbor
+   ~ytree.frontends.consistent_trees.arbor.ConsistentTreesGroupArbor
    ~ytree.frontends.consistent_trees.fields.ConsistentTreesFieldInfo
    ~ytree.frontends.consistent_trees.io.ConsistentTreesDataFile
    ~ytree.frontends.consistent_trees.io.ConsistentTreesTreeFieldIO
