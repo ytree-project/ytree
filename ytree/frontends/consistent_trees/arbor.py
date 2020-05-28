@@ -267,7 +267,6 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
 
         # It's faster to create and sort arrays and then sort ldata
         # for some reason.
-        luids = np.array([datum[4] for datum in ldata])
         dfns = np.unique([datum[3] for datum in ldata])
         dfns.sort()
         fids = np.array([datum[1] for datum in ldata])
