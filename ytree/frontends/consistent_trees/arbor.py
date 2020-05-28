@@ -34,6 +34,8 @@ from ytree.frontends.consistent_trees.io import \
     ConsistentTreesDataFile, \
     ConsistentTreesTreeFieldIO
 
+from ytree.utilities.exceptions import \
+    ArborParameterFileEmpty
 from ytree.utilities.io import \
     f_text_block
 
@@ -248,8 +250,10 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         f.readline()
         self._hoffset = f.tell()
         line = f.readline()
-        fn = line.split()[-1]
+        if not line:
+            raise ArborParameterFileEmpty(self.filename)
 
+        fn = line.split()[-1]
         super(ConsistentTreesGroupArbor, self)._parse_parameter_file(filename=fn)
 
     def _plant_trees(self):
