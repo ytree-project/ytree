@@ -14,10 +14,13 @@ ConsistentTreesArbor io classes and member functions
 #-----------------------------------------------------------------------------
 
 import numpy as np
+import os
 
 from ytree.data_structures.io import \
     DataFile, \
     TreeFieldIO
+from ytree.frontends.rockstar.io import \
+    RockstarDataFile
 
 class ConsistentTreesDataFile(DataFile):
     def open(self):
@@ -73,3 +76,12 @@ class ConsistentTreesTreeFieldIO(TreeFieldIO):
                   self.arbor.arr(field_data[field], units)
 
         return field_data
+
+class ConsistentTreesHlistDataFile(RockstarDataFile):
+    def _parse_header(self):
+        super(ConsistentTreesHlistDataFile, self)._parse_header()
+
+        prefix = os.path.join(os.path.dirname(self.filename), "hlist_")
+        suffix = ".list"
+        self.scale_factor = self.arbor._get_file_index(
+            self.filename, prefix, suffix)
