@@ -37,114 +37,12 @@ from ytree.frontends.consistent_trees.io import \
 from ytree.utilities.io import \
     f_text_block
 
-class ConsistentTreesGroupArbor(Arbor):
-    _field_info_class = ConsistentTreesFieldInfo
-    _tree_field_io_class = ConsistentTreesTreeFieldIO
-
-    def _node_io_loop_prepare(self, root_nodes):
-        fi = np.array([node._fi for node in root_nodes])
-        ufi = np.unique(fi)
-        data_files = [self._node_io.data_files[i] for i in ufi]
-        node_list = [root_nodes[fi == i] for i in ufi]
-        return data_files, node_list
-
-    def _node_io_loop_start(self, data_file):
-        data_file.open()
-
-    def _node_io_loop_finish(self, data_file):
-        data_file.close()
-
-    def _parse_parameter_file(self):
-        f = open(self.filename, 'r')
-        f.readline()
-        self._hoffset = f.tell()
-        line = f.readline()
-        fn = line.split()[-1]
-        ConsistentTreesArbor._parse_parameter_file(self, fn)
-
-    def _plant_trees(self):
-        f = open(self.filename, 'r')
-        f.seek(self._hoffset)
-        ldata = list(map(
-            lambda x: [int(x[0]), int(x[1]), int(x[2]), x[3], len(x[0])],
-            [line.split() for line, _ in f_text_block(f)]
-            ))
-        f.close()
-
-        # It's faster to create and sort arrays and then sort ldata
-        # for some reason.
-        luids = np.array([datum[4] for datum in ldata])
-        dfns = np.unique([datum[3] for datum in ldata])
-        dfns.sort()
-        fids = np.array([datum[1] for datum in ldata])
-        fids.sort()
-        ufids = np.unique(fids)
-        ufids.sort()
-
-        # Some data files may be empty and so unlisted.
-        # Make sure file ids and names line up.
-        data_files = [None]*(ufids.max()+1)
-        for i,fid in enumerate(ufids):
-            data_files[fid] = dfns[i]
-        self._node_io.data_files = \
-          [ConsistentTreesDataFile(fn) for fn in data_files
-           if fn is not None]
-
-        ldata.sort(key=operator.itemgetter(1, 2))
-        ntrees = len(ldata)
-        pbar = get_pbar("Loading tree roots", ntrees)
-        self._trees = np.empty(ntrees, dtype=np.object)
-
-        # Set end offsets for each tree.
-        # We don't get them from the location file.
-        lkey = len("tree ")+3 # length of the separation line between trees
-        same_file = np.diff(fids, append=fids[-1]+1) == 0
-
-        for i, tdata in enumerate(ldata):
-            my_node        = TreeNode(tdata[0], arbor=self, root=True)
-            my_node._si    = tdata[2]
-            my_node._fi    = tdata[1]
-            # Get end index from next tree.
-            if same_file[i]:
-                my_node._ei = ldata[i+1][2] - lkey - tdata[4]
-            self._trees[i] = my_node
-            pbar.update(i)
-        pbar.finish()
-
-        # Get end index for last trees in files.
-        for i in np.where(~same_file)[0]:
-            data_file = self._node_io.data_files[fids[i]]
-            data_file.open()
-            data_file.fh.seek(0, 2)
-            self._trees[i]._ei = data_file.fh.tell()
-            data_file.close()
-
-    @classmethod
-    def _is_valid(self, *args, **kwargs):
-        """
-        File should end in .dat and have a line in the header
-        with the string, "Consistent Trees".
-        """
-        fn = args[0]
-        if not os.path.basename(fn) == 'locations.dat':
-            return False
-        with open(fn, "r") as f:
-            valid = False
-            while True:
-                line = f.readline()
-                if line is None or not line.startswith("#"):
-                    break
-                if "TreeRootID FileID Offset Filename" in line:
-                    valid = True
-            if not valid:
-                return False
-        return True
-
 class ConsistentTreesArbor(Arbor):
     """
-    Arbors from consistent-trees output files.
+    Arbors loaded from consistent-trees tree_*.dat files.
     """
 
+    _parameter_file_is_data_file = True
     _field_info_class = ConsistentTreesFieldInfo
     _tree_field_io_class = ConsistentTreesTreeFieldIO
 
@@ -193,7 +91,7 @@ class ConsistentTreesArbor(Arbor):
                     "Encountered enexpected EOF reading %s." %
                     self.filename)
             elif not line.startswith("#"):
-                if isinstance(self, ConsistentTreesArbor):
+                if getattr(self, '_parameter_file_is_data_file', False):
                     self._ntrees = int(line.strip())
                     self._hoffset = f.tell()
                 break
@@ -326,4 +224,108 @@ class ConsistentTreesArbor(Arbor):
                     valid = True
                     break
             if not valid: return False
+        return True
+
+class ConsistentTreesGroupArbor(ConsistentTreesArbor):
+    """
+    Arbors loaded from consistent-trees locations.dat files.
+    """
+
+    _parameter_file_is_data_file = False
+
+    def _node_io_loop_prepare(self, root_nodes):
+        fi = np.array([node._fi for node in root_nodes])
+        ufi = np.unique(fi)
+        data_files = [self._node_io.data_files[i] for i in ufi]
+        node_list = [root_nodes[fi == i] for i in ufi]
+        return data_files, node_list
+
+    def _get_data_files(self):
+        pass
+
+    def _parse_parameter_file(self):
+        f = open(self.filename, 'r')
+        f.readline()
+        self._hoffset = f.tell()
+        line = f.readline()
+        fn = line.split()[-1]
+
+        super(ConsistentTreesGroupArbor, self)._parse_parameter_file(filename=fn)
+
+    def _plant_trees(self):
+        f = open(self.filename, 'r')
+        f.seek(self._hoffset)
+        ldata = list(map(
+            lambda x: [int(x[0]), int(x[1]), int(x[2]), x[3], len(x[0])],
+            [line.split() for line, _ in f_text_block(f)]
+            ))
+        f.close()
+
+        # It's faster to create and sort arrays and then sort ldata
+        # for some reason.
+        luids = np.array([datum[4] for datum in ldata])
+        dfns = np.unique([datum[3] for datum in ldata])
+        dfns.sort()
+        fids = np.array([datum[1] for datum in ldata])
+        fids.sort()
+        ufids = np.unique(fids)
+        ufids.sort()
+
+        # Some data files may be empty and so unlisted.
+        # Make sure file ids and names line up.
+        data_files = [None]*(ufids.max()+1)
+        for i,fid in enumerate(ufids):
+            data_files[fid] = dfns[i]
+        self._node_io.data_files = \
+          [ConsistentTreesDataFile(fn) for fn in data_files
+           if fn is not None]
+
+        ldata.sort(key=operator.itemgetter(1, 2))
+        ntrees = len(ldata)
+        pbar = get_pbar("Loading tree roots", ntrees)
+        self._trees = np.empty(ntrees, dtype=np.object)
+
+        # Set end offsets for each tree.
+        # We don't get them from the location file.
+        lkey = len("tree ")+3 # length of the separation line between trees
+        same_file = np.diff(fids, append=fids[-1]+1) == 0
+
+        for i, tdata in enumerate(ldata):
+            my_node        = TreeNode(tdata[0], arbor=self, root=True)
+            my_node._si    = tdata[2]
+            my_node._fi    = tdata[1]
+            # Get end index from next tree.
+            if same_file[i]:
+                my_node._ei = ldata[i+1][2] - lkey - tdata[4]
+            self._trees[i] = my_node
+            pbar.update(i)
+        pbar.finish()
+
+        # Get end index for last trees in files.
+        for i in np.where(~same_file)[0]:
+            data_file = self._node_io.data_files[fids[i]]
+            data_file.open()
+            data_file.fh.seek(0, 2)
+            self._trees[i]._ei = data_file.fh.tell()
+            data_file.close()
+
+    @classmethod
+    def _is_valid(self, *args, **kwargs):
+        """
+        File should end in .dat and have a line in the header
+        with the string, "Consistent Trees".
+        """
+        fn = args[0]
+        if not os.path.basename(fn) == 'locations.dat':
+            return False
+        with open(fn, "r") as f:
+            valid = False
+            while True:
+                line = f.readline()
+                if line is None or not line.startswith("#"):
+                    break
+                if "TreeRootID FileID Offset Filename" in line:
+                    valid = True
+            if not valid:
+                return False
         return True
