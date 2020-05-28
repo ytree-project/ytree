@@ -92,6 +92,7 @@ class Arbor(object, metaclass=RegisteredArbor):
 
         self.filename = filename
         self.basename = os.path.basename(filename)
+        self.directory = os.path.dirname(filename)
         self._parse_parameter_file()
         self._set_units()
         self._field_data = FieldContainer(self)

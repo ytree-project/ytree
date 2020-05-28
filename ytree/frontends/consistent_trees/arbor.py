@@ -253,7 +253,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         if not line:
             raise ArborParameterFileEmpty(self.filename)
 
-        fn = line.split()[-1]
+        fn = os.path.join(self.directory, line.split()[-1])
         super(ConsistentTreesGroupArbor, self)._parse_parameter_file(filename=fn)
 
     def _plant_trees(self):
@@ -280,7 +280,8 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         for i,fid in enumerate(ufids):
             data_files[fid] = dfns[i]
         self._node_io.data_files = \
-          [ConsistentTreesDataFile(fn) for fn in data_files
+          [ConsistentTreesDataFile(os.path.join(self.directory, fn))
+           for fn in data_files
            if fn is not None]
 
         ldata.sort(key=operator.itemgetter(1, 2))
