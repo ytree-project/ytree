@@ -30,6 +30,8 @@ class FieldIO(object):
     This object is resposible for field i/o for an Arbor.
     """
 
+    _default_dtype = np.float32
+
     def __init__(self, arbor):
         self.arbor = weakref.proxy(arbor)
 
@@ -39,6 +41,19 @@ class FieldIO(object):
         Create a zero array of appropriate size to be filled in later.
         """
         raise NotImplementedError
+
+    def _determine_dtypes(self, fields, override_dict=None):
+        """
+        Figure out dtype for field.
+        """
+        if override_dict is None:
+            override_dict = {}
+        dtypes = override_dict.copy()
+
+        fid = self.arbor.field_info._data_types
+        for field in fields:
+            dtypes[field] = dtypes.get(field, fid.get(field, self._default_dtype))
+        return dtypes
 
     def _determine_field_storage(self, data_object):
         """
@@ -142,8 +157,6 @@ class TreeFieldIO(FieldIO):
     IO class for getting fields for a tree.
     """
 
-    _default_dtype = np.float32
-
     def _initialize_analysis_field(self, storage_object,
                                    name, units, **kwargs):
         if name in storage_object._field_data:
@@ -165,6 +178,8 @@ class TreeFieldIO(FieldIO):
 
         if dtypes is None:
             dtypes = {}
+        my_dtypes = self._determine_dtypes(
+            fields, override_dict=dtypes)
 
         if root_only:
             fsize = 1
@@ -174,7 +189,7 @@ class TreeFieldIO(FieldIO):
         field_data = {}
         for field in fields:
             field_data[field] = \
-              np.empty(fsize, dtype=dtypes.get(field, self._default_dtype))
+              np.empty(fsize, dtype=my_dtypes[field])
 
         if root_only:
             my_nodes = [root_node]
@@ -187,7 +202,7 @@ class TreeFieldIO(FieldIO):
 
         for data_file, nodes in data_files.items():
             my_data = data_file._read_fields(fields, tree_nodes=nodes,
-                                             dtypes=dtypes)
+                                             dtypes=my_dtypes)
             for field in fields:
                 for i, node in enumerate(nodes):
                     field_data[field][node.treeid] = my_data[field][i]
@@ -225,6 +240,8 @@ class DefaultRootFieldIO(FieldIO):
 
         if dtypes is None:
             dtypes = {}
+        my_dtypes = self._determine_dtypes(
+            fields, override_dict=dtypes)
 
         store = "field_store"
 
@@ -236,7 +253,7 @@ class DefaultRootFieldIO(FieldIO):
         fsize = self.arbor.size
         field_data = {}
         for field in fields:
-            data = np.empty(fsize, dtype=dtypes.get(field, float))
+            data = np.empty(fsize, dtype=my_dtypes[field])
             units = fi[field].get("units", "")
             if units:
                 data = self.arbor.arr(data, units)
@@ -287,8 +304,6 @@ class CatalogDataFile(DataFile):
     Base class for halo catalog files.
     """
 
-    _default_dtype = np.float32
-
     def __init__(self, filename, arbor):
         super(CatalogDataFile, self).__init__(filename)
         self.arbor = weakref.proxy(arbor)
@@ -327,9 +342,8 @@ class CatalogDataFile(DataFile):
 
         else:
             field_data = \
-              dict((field, np.empty(
-                  size, dtype=dtypes.get(field, self._default_dtype)))
-                  for field in fields)
+              dict((field, np.empty(size, dtype=dtypes[field]))
+                   for field in fields)
 
         return field_data
 
@@ -365,7 +379,7 @@ class CatalogDataFile(DataFile):
         nt = len(tree_nodes)
         for field in hfields:
             field_data[field] = hfield_values[field] * \
-              np.ones(nt, dtypes.get(field, self._default_dtype))
+              np.ones(nt, dtypes[field])
 
         return field_data
 

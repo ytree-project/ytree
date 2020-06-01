@@ -13,12 +13,16 @@ AHFArbor fields
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import numpy as np
+
 from ytree.data_structures.fields import \
     FieldInfoContainer
 
 m_unit = "Msun/h"
 p_unit = "kpc/h"
 v_unit = "km/s"
+
+id_type = np.int64
 
 class AHFFieldInfo(FieldInfoContainer):
     known_fields = (
@@ -58,4 +62,11 @@ class AHFFieldInfo(FieldInfoContainer):
         ("spin_parameter", "lambda", None),
         ("kinetic_energy", "Ekin", "Msun/h * (km/s)**2"),
         ("potential_energy", "Epot", "Msun/h * (km/s)**2"),
+    )
+
+    data_types = (
+        ('ID', id_type),
+        ('desc_id', id_type),
+        ('uid', id_type),
+        ('desc_uid', id_type)
     )

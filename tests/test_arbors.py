@@ -15,7 +15,8 @@ arbor tests
 
 from ytree.frontends.consistent_trees import \
     ConsistentTreesGroupArbor, \
-    ConsistentTreesArbor
+    ConsistentTreesArbor, \
+    ConsistentTreesHlistArbor
 from ytree.frontends.ahf import \
     AHFArbor
 from ytree.frontends.rockstar import \
@@ -32,13 +33,18 @@ class AHFArborTest(TempDirTest, ArborTest):
     arbor_type = AHFArbor
     test_filename = "ahf_halos/snap_N64L16_000.parameter"
 
+class ConsistentTreesArborTest(TempDirTest, ArborTest):
+    arbor_type = ConsistentTreesArbor
+    test_filename = "consistent_trees/tree_0_0_0.dat"
+
 class ConsistentTreesGroupArborTest(TempDirTest, ArborTest):
     arbor_type = ConsistentTreesGroupArbor
     test_filename = "tiny_ctrees/locations.dat"
 
-class ConsistentTreesArborTest(TempDirTest, ArborTest):
-    arbor_type = ConsistentTreesArbor
-    test_filename = "consistent_trees/tree_0_0_0.dat"
+class ConsistentTreesHlistArborTest(TempDirTest, ArborTest):
+    arbor_type = ConsistentTreesHlistArbor
+    test_filename = "ctrees_hlists/hlists/hlist_0.12521.list"
+    tree_skip = 100
 
 class RockstarArborTest(TempDirTest, ArborTest):
     arbor_type = RockstarArbor

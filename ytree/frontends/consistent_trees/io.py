@@ -37,6 +37,8 @@ class ConsistentTreesTreeFieldIO(TreeFieldIO):
 
         if dtypes is None:
             dtypes = {}
+        my_dtypes = self._determine_dtypes(
+            fields, override_dict=dtypes)
 
         close = False
         if data_file.fh is None:
@@ -59,14 +61,13 @@ class ConsistentTreesTreeFieldIO(TreeFieldIO):
         field_data = {}
         fi = self.arbor.field_info
         for field in fields:
-            field_data[field] = \
-              np.empty(nhalos, dtype=dtypes.get(field, float))
+            field_data[field] = np.empty(nhalos, dtype=my_dtypes[field])
 
         for i, datum in enumerate(data):
             ldata = datum.strip().split()
             if len(ldata) == 0: continue
             for field in fields:
-                dtype = dtypes.get(field, float)
+                dtype = my_dtypes[field]
                 field_data[field][i] = dtype(ldata[fi[field]["column"]])
 
         for field in fields:

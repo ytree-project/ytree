@@ -13,6 +13,8 @@ ConsistentTreesArbor fields
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import numpy as np
+
 from ytree.data_structures.fields import \
     FieldInfoContainer
 
@@ -20,6 +22,8 @@ m_unit = "Msun"
 p_unit = "unitary"
 r_unit = "kpc"
 v_unit = "km/s"
+
+id_type = np.int64
 
 class ConsistentTreesFieldInfo(FieldInfoContainer):
     alias_fields = (
@@ -42,4 +46,22 @@ class ConsistentTreesFieldInfo(FieldInfoContainer):
         ("angular_momentum_y", "Jy", None),
         ("angular_momentum_z", "Jz", None),
         ("spin_parameter", "Spin", None),
+    )
+
+    data_types = (
+        ("id", id_type),
+        ("desc_id", id_type),
+        ("num_prog", np.int32),
+        ("pid", id_type),
+        ("upid", id_type),
+        ("desc_pid", id_type),
+        ("Breadth_first_ID", id_type),
+        ("Depth_first_ID", id_type),
+        ("Tree_root_ID", id_type),
+        ("Orig_halo_ID", id_type),
+        ("Snap_idx", id_type),
+        ("Next_coprogenitor_depthfirst_ID", id_type),
+        ("Last_progenitor_depthfirst_ID", id_type),
+        ("Last_mainleaf_depthfirst_ID", id_type),
+        ("Tidal_ID", id_type),
     )

@@ -67,9 +67,8 @@ class RockstarDataFile(CatalogDataFile):
         self.close()
 
         for field in rfields:
-            dtype = dtypes.get(field, self._default_dtype)
             field_data[field] = \
-              np.array(field_data[field], dtype=dtype)
+              np.array(field_data[field], dtype=dtypes[field])
 
         if self.offsets is None:
             self.offsets = np.array(offsets)
@@ -92,7 +91,7 @@ class RockstarDataFile(CatalogDataFile):
             line = f.readline()
             sline = line.split()
             for field in rfields:
-                dtype = dtypes.get(field, self._default_dtype)
+                dtype = dtypes[field]
                 field_data[field][i] = dtype(sline[fi[field]["column"]])
         self.close()
 

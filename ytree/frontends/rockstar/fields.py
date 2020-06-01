@@ -13,6 +13,8 @@ RockstarArbor fields
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import numpy as np
+
 from ytree.data_structures.fields import \
     FieldInfoContainer
 from ytree.frontends.rockstar.misc import \
@@ -22,6 +24,8 @@ m_unit = "Msun"
 p_unit = "unitary"
 r_unit = "kpc"
 v_unit = "km/s"
+
+id_type = np.int64
 
 class RockstarFieldInfo(FieldInfoContainer):
     alias_fields = (
@@ -42,6 +46,13 @@ class RockstarFieldInfo(FieldInfoContainer):
         ("angular_momentum_y", "JY", None),
         ("angular_momentum_z", "JZ", None),
         ("spin_parameter", "Spin", None),
+    )
+
+    data_types = (
+        ('ID', id_type),
+        ('DescID', id_type),
+        ('uid', id_type),
+        ('desc_uid', id_type),
     )
 
 def setup_field_groups():
