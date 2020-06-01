@@ -26,8 +26,7 @@ from ytree.data_structures.arbor import \
 from ytree.frontends.treefarm.fields import \
     TreeFarmFieldInfo
 from ytree.frontends.treefarm.io import \
-    TreeFarmDataFile, \
-    TreeFarmTreeFieldIO
+    TreeFarmDataFile
 from ytree.utilities.io import \
     _hdf5_yt_attr, \
     parse_h5_attr
@@ -39,7 +38,6 @@ class TreeFarmArbor(CatalogArbor):
 
     _suffix = ".h5"
     _field_info_class = TreeFarmFieldInfo
-    _tree_field_io_class = TreeFarmTreeFieldIO
     _data_file_class = TreeFarmDataFile
 
     def _parse_parameter_file(self):

@@ -21,9 +21,6 @@ from ytree.data_structures.io import \
     TreeFieldIO
 
 class TreeFarmDataFile(CatalogDataFile):
-
-    _default_dtype = np.float64
-
     def open(self):
         self.fh = h5py.File(self.filename, "r")
 
@@ -88,7 +85,3 @@ class TreeFarmDataFile(CatalogDataFile):
             dtype = dtypes[field]
             field_data[field] = field_data[field].astype(dtype)
         return field_data
-
-class TreeFarmTreeFieldIO(TreeFieldIO):
-
-    _default_dtype = np.float64
