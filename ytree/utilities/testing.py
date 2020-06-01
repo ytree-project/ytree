@@ -125,12 +125,17 @@ def save_and_compare(arbor, skip=1):
     Check that arbor saves correctly.
     """
 
-    fn = arbor.save_arbor()
+    if skip > 1:
+        trees = arbor[::skip]
+    else:
+        trees = None
+
+    fn = arbor.save_arbor(trees=trees)
     save_arbor = load(fn)
     assert isinstance(save_arbor, YTreeArbor)
-    compare_arbors(save_arbor, arbor, skip=skip)
+    compare_arbors(save_arbor, arbor, skip2=skip)
 
-def compare_arbors(a1, a2, groups=None, fields=None, skip=1):
+def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
     """
     Compare all fields for all trees in two arbors.
     """
@@ -142,13 +147,16 @@ def compare_arbors(a1, a2, groups=None, fields=None, skip=1):
         fields = a1.field_list
 
     for field in fields:
-        assert (a1[field] == a2[field]).all()
+        assert (a1[field][::skip1] == a2[field][::skip2]).all()
 
-    ntot = a1.size
+    trees1 = a1[::skip1]
+    trees2 = a2[::skip2]
+
+    ntot = trees1.size
     pbar = get_pbar("Comparing trees", ntot)
-    for i in range(0, ntot, skip):
-        compare_trees(a1[i], a2[i], groups=groups, fields=fields)
-        pbar.update(i)
+    for t1, t2 in zip(trees1, trees2):
+        compare_trees(t1, t2, groups=groups, fields=fields)
+        pbar.update(1)
     pbar.finish()
 
 def compare_trees(t1, t2, groups=None, fields=None):
