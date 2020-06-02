@@ -36,10 +36,10 @@ class TreeNode(object):
         """
         self.uid = uid
         self.arbor = weakref.proxy(arbor)
+        self.descendent = None
         if root:
             self.root = -1
             self.treeid = 0
-            self.descendent = None
             self._field_data = FieldContainer(arbor)
         else:
             self.root = None
@@ -52,9 +52,24 @@ class TreeNode(object):
         """
         Find the root node.
         """
+
+        if self.is_root:
+            return self
+
+        root = self.root
+        if root is not None:
+            return root
+
+        return self.walk_to_root()
+
+    def walk_to_root(self):
+        """
+        Walk descendents until root.
+        """
+
         my_node = self
         while not my_node.is_root:
-            if my_node.descendent == -1:
+            if my_node.descendent in (-1, None):
                 break
             my_node = my_node.descendent
         return my_node
