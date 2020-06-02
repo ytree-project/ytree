@@ -30,6 +30,8 @@ v_unit = "km/s"
 # Syntax is: (<universal field name>, <field name on disk>, <units>)
 # TODO: Use units from parameter file
 
+id_type = np.int64
+
 class LHaloTreeFieldInfo(FieldInfoContainer):
     alias_fields = (
         # ("uid", "uid", None),
@@ -52,5 +54,8 @@ class LHaloTreeFieldInfo(FieldInfoContainer):
         # ("spin_parameter", "Spin", None),
     )
 
-    data_types = tuple((item[0], np.dtype(item[1]))
-                       for item in dtype_header_default)
+    data_types = tuple(
+        [("uid", id_type),
+         ("desc_uid", id_type)] +
+        [(item[0], np.dtype(item[1]))
+         for item in dtype_header_default])
