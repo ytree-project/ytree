@@ -125,15 +125,16 @@ class LHaloTreeRootFieldIO(FieldIO):
         r"""Add root fields in bulk to same time."""
         if dtypes is None:
             dtypes = {}
+        my_dtypes = self._determine_dtypes(fields, override_dict=dtypes)
 
         fi = self.arbor.field_info
 
         # Consolidate root field data
         field_data = {}
         for field in fields:
-            dtype = dtypes.get(field, None)
             units = fi[field].get("units", "")
-            field_data[field] = np.empty(self.arbor.trees.size, dtype=dtype)
+            field_data[field] = np.empty(self.arbor.trees.size,
+                                         dtype=my_dtypes[field])
             if units:
                 field_data[field] = self.arbor.arr(field_data[field], units)
 

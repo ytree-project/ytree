@@ -13,8 +13,12 @@ LHaloTreeArbor fields
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import numpy as np
+
 from ytree.data_structures.fields import \
     FieldInfoContainer
+from ytree.frontends.lhalotree.utils import \
+    dtype_header_default
 
 m_unit = "Msun"
 p_unit = "unitary"
@@ -47,3 +51,6 @@ class LHaloTreeFieldInfo(FieldInfoContainer):
         ("angular_momentum_z", "Jz", None),
         # ("spin_parameter", "Spin", None),
     )
+
+    data_types = tuple((item[0], np.dtype(item[1]))
+                       for item in dtype_header_default)
