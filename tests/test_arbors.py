@@ -44,19 +44,23 @@ class ConsistentTreesGroupArborTest(TempDirTest, ArborTest):
 class ConsistentTreesHlistArborTest(TempDirTest, ArborTest):
     arbor_type = ConsistentTreesHlistArbor
     test_filename = "ctrees_hlists/hlists/hlist_0.12521.list"
+    num_data_files = 10
     tree_skip = 100
 
 class RockstarArborTest(TempDirTest, ArborTest):
     arbor_type = RockstarArbor
     test_filename = "rockstar/rockstar_halos/out_0.list"
+    num_data_files = 65
 
 class TreeFarmArborDescendentsTest(TempDirTest, ArborTest):
     arbor_type = TreeFarmArbor
     test_filename = "tree_farm/tree_farm_descendents/fof_subhalo_tab_000.0.h5"
+    num_data_files = 51
 
 class TreeFarmArborAncestorsTest(TempDirTest, ArborTest):
     arbor_type = TreeFarmArbor
     test_filename = "tree_farm/tree_farm_ancestors/fof_subhalo_tab_017.0.h5"
+    num_data_files = 34
 
 class LHaloTreeArborTest(TempDirTest, ArborTest):
     arbor_type = LHaloTreeArbor

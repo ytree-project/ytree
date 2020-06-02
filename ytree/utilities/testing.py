@@ -16,6 +16,7 @@ testing utilities
 import h5py
 import numpy as np
 from numpy.testing import \
+    assert_equal, \
     assert_array_equal
 import os
 import shutil
@@ -94,6 +95,13 @@ class ArborTest(object):
 
     def test_arbor_type(self):
         assert isinstance(self.arbor, self.arbor_type)
+
+    def test_data_files(self):
+        if self.num_data_files is None:
+            return
+        assert_equal(
+            len(self.arbor.data_files), self.num_data_files,
+            err_msg='Incorrect number of data files for %s.' % self.arbor)
 
     def test_save_and_reload(self):
         save_and_compare(self.arbor, skip=self.tree_skip)
