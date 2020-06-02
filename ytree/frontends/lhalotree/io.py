@@ -102,10 +102,8 @@ class LHaloTreeTreeFieldIO(TreeFieldIO):
                 break
         if data is None:
             data = dict()
-            if root_only:
-                halonum = 0
-            else:
-                halonum = None
+            # always get all ids, even if root_only, since it's fast.
+            halonum = None
             tot_idx = lht.get_total_index(root_node._index_in_lht, halonum)
             data['uid'] = lht.all_uids[tot_idx]
             data['desc_uid'] = lht.all_desc_uids[tot_idx]
