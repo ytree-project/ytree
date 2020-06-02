@@ -135,13 +135,13 @@ jobs:
 
       - restore_cache:
           name: "Restore test data cache."
-          key: test-data-v1
+          key: test-data-v2
 
       - download-test-data
 
       - save_cache:
           name: "Save test data cache."
-          key: test-data-v1
+          key: test-data-v2
           paths:
             - ~/ytree_test
 
