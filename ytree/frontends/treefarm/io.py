@@ -17,8 +17,7 @@ import h5py
 import numpy as np
 
 from ytree.data_structures.io import \
-    CatalogDataFile, \
-    TreeFieldIO
+    CatalogDataFile
 
 class TreeFarmDataFile(CatalogDataFile):
     def open(self):
