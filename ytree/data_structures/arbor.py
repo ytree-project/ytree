@@ -769,6 +769,14 @@ Check the TypeError exception above for more details.
         fields : optional, list of strings
             The fields to be saved.  If not given, all
             fields will be saved.
+        trees : optional, list or array of TreeNodes
+            If given, only save trees stemming from these nodes.
+            If not provide, all trees will be saved.
+        max_file_size : optional, float
+            The maximum number of nodes saved to a single file.
+            Smaller numbers will result in more files. Performance
+            may change somewhat with different values.
+            Default: 524288 (2^19).
 
         Returns
         -------
@@ -1092,10 +1100,12 @@ def load(filename, method=None, **kwargs):
     >>> # saved Arbor
     >>> a = ytree.load("arbor/arbor.h5")
     >>> # consistent-trees output
+    >>> a = ytree.load("tiny_ctrees/locations.dat")
     >>> a = ytree.load("rockstar_halos/trees/tree_0_0_0.dat")
+    >>> a = ytree.load("ctrees_hlists/hlists/hlist_0.12521.list")
     >>> # Rockstar catalogs
     >>> a = ytree.load("rockstar_halos/out_0.list")
-    >>> # TreeFarm catalogs
+    >>> # treefarm catalogs
     >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.h5")
     >>> # LHaloTree catalogs
     >>> a = ytree.load("my_halos/trees_063.0")
