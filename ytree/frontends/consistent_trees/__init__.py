@@ -14,4 +14,6 @@ consistent_trees frontend
 #-----------------------------------------------------------------------------
 
 from ytree.frontends.consistent_trees.arbor import \
-    ConsistentTreesArbor
+    ConsistentTreesArbor, \
+    ConsistentTreesGroupArbor, \
+    ConsistentTreesHlistArbor

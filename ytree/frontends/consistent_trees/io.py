@@ -14,10 +14,13 @@ ConsistentTreesArbor io classes and member functions
 #-----------------------------------------------------------------------------
 
 import numpy as np
+import os
 
 from ytree.data_structures.io import \
     DataFile, \
     TreeFieldIO
+from ytree.frontends.rockstar.io import \
+    RockstarDataFile
 
 class ConsistentTreesDataFile(DataFile):
     def open(self):
@@ -29,10 +32,13 @@ class ConsistentTreesTreeFieldIO(TreeFieldIO):
         """
         Read fields from disk for a single tree.
         """
-        data_file = self.data_file
+
+        data_file = self.arbor.data_files[root_node._fi]
 
         if dtypes is None:
             dtypes = {}
+        my_dtypes = self._determine_dtypes(
+            fields, override_dict=dtypes)
 
         close = False
         if data_file.fh is None:
@@ -55,14 +61,13 @@ class ConsistentTreesTreeFieldIO(TreeFieldIO):
         field_data = {}
         fi = self.arbor.field_info
         for field in fields:
-            field_data[field] = \
-              np.empty(nhalos, dtype=dtypes.get(field, float))
+            field_data[field] = np.empty(nhalos, dtype=my_dtypes[field])
 
         for i, datum in enumerate(data):
             ldata = datum.strip().split()
             if len(ldata) == 0: continue
             for field in fields:
-                dtype = dtypes.get(field, float)
+                dtype = my_dtypes[field]
                 field_data[field][i] = dtype(ldata[fi[field]["column"]])
 
         for field in fields:
@@ -72,3 +77,12 @@ class ConsistentTreesTreeFieldIO(TreeFieldIO):
                   self.arbor.arr(field_data[field], units)
 
         return field_data
+
+class ConsistentTreesHlistDataFile(RockstarDataFile):
+    def _parse_header(self):
+        super(ConsistentTreesHlistDataFile, self)._parse_header()
+
+        prefix = os.path.join(os.path.dirname(self.filename), "hlist_")
+        suffix = ".list"
+        self.scale_factor = self.arbor._get_file_index(
+            self.filename, prefix, suffix)

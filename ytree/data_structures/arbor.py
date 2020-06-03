@@ -84,6 +84,7 @@ class Arbor(object, metaclass=RegisteredArbor):
     _field_info_class = FieldInfoContainer
     _root_field_io_class = DefaultRootFieldIO
     _tree_field_io_class = TreeFieldIO
+    _default_dtype = np.float64
 
     def __init__(self, filename):
         """
@@ -92,14 +93,47 @@ class Arbor(object, metaclass=RegisteredArbor):
 
         self.filename = filename
         self.basename = os.path.basename(filename)
+        self.directory = os.path.dirname(filename)
         self._parse_parameter_file()
         self._set_units()
-        self._field_data = FieldContainer(self)
-        self._node_io = self._tree_field_io_class(self)
-        self._root_io = self._root_field_io_class(self)
+        self._setup_io()
         self._get_data_files()
         self._setup_fields()
         self._set_default_selector()
+
+    def _parse_parameter_file(self):
+        """
+        Read relevant parameters from parameter file or file header
+        and detect fields.
+        """
+        raise NotImplementedError
+
+    def _set_units(self):
+        """
+        Set "cm" units for explicitly comoving.
+        Note, we are using comoving units all the time since
+        we are dealing with data at multiple redshifts.
+        """
+        for my_unit in ["m", "pc", "AU", "au"]:
+            new_unit = "%scm" % my_unit
+            self._unit_registry.add(
+                new_unit, self._unit_registry.lut[my_unit][0],
+                length, self._unit_registry.lut[my_unit][3])
+
+        self.cosmology = Cosmology(
+            hubble_constant=self.hubble_constant,
+            omega_matter=self.omega_matter,
+            omega_lambda=self.omega_lambda,
+            unit_registry=self.unit_registry)
+
+    def _setup_io(self):
+        """
+        Create field io objects.
+        """
+        self._node_io = self._tree_field_io_class(
+            self, default_dtype=self._default_dtype)
+        self._root_io = self._root_field_io_class(
+            self, default_dtype=self._default_dtype)
 
     def _get_data_files(self):
         """
@@ -108,12 +142,23 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
         pass
 
-    def _parse_parameter_file(self):
+    def _setup_fields(self):
         """
-        Read relevant parameters from parameter file or file header
-        and detect fields.
+        Setup field containers and definitions.
         """
-        raise NotImplementedError
+        self._field_data = FieldContainer(self)
+        self.derived_field_list = []
+        self.analysis_field_list = []
+        self.field_info.setup_known_fields()
+        self.field_info.setup_aliases()
+        self.field_info.setup_derived_fields()
+        self.field_info.setup_vector_fields()
+
+    def _set_default_selector(self):
+        """
+        Set the default tree node selector as maximum mass.
+        """
+        self.set_selector("max_field_value", "mass")
 
     def _plant_trees(self):
         """
@@ -389,32 +434,6 @@ class Arbor(object, metaclass=RegisteredArbor):
         self.unit_registry.add(
             "unitary", float(self.box_size.in_base()), length)
 
-    def _setup_fields(self):
-        self.derived_field_list = []
-        self.analysis_field_list = []
-        self.field_info.setup_known_fields()
-        self.field_info.setup_aliases()
-        self.field_info.setup_derived_fields()
-        self.field_info.setup_vector_fields()
-
-    def _set_units(self):
-        """
-        Set "cm" units for explicitly comoving.
-        Note, we are using comoving units all the time since
-        we are dealing with data at multiple redshifts.
-        """
-        for my_unit in ["m", "pc", "AU", "au"]:
-            new_unit = "%scm" % my_unit
-            self._unit_registry.add(
-                new_unit, self._unit_registry.lut[my_unit][0],
-                length, self._unit_registry.lut[my_unit][3])
-
-        self.cosmology = Cosmology(
-            hubble_constant=self.hubble_constant,
-            omega_matter=self.omega_matter,
-            omega_lambda=self.omega_lambda,
-            unit_registry=self.unit_registry)
-
     def set_selector(self, selector, *args, **kwargs):
         r"""
         Sets the tree node selector to be used.
@@ -465,12 +484,6 @@ class Arbor(object, metaclass=RegisteredArbor):
         self._quan = functools.partial(YTQuantity,
                                        registry=self.unit_registry)
         return self._quan
-
-    def _set_default_selector(self):
-        """
-        Set the default tree node selector as maximum mass.
-        """
-        self.set_selector("max_field_value", "mass")
 
     def select_halos(self, criteria, trees=None, select_from="tree",
                      fields=None):
@@ -756,6 +769,14 @@ Check the TypeError exception above for more details.
         fields : optional, list of strings
             The fields to be saved.  If not given, all
             fields will be saved.
+        trees : optional, list or array of TreeNodes
+            If given, only save trees stemming from these nodes.
+            If not provide, all trees will be saved.
+        max_file_size : optional, float
+            The maximum number of nodes saved to a single file.
+            Smaller numbers will result in more files. Performance
+            may change somewhat with different values.
+            Default: 524288 (2^19).
 
         Returns
         -------
@@ -929,14 +950,16 @@ class CatalogArbor(Arbor):
 
     _prefix = None
     _data_file_class = None
+    _has_uids = False
 
     def __init__(self, filename):
         super(CatalogArbor, self).__init__(filename)
-        if "uid" not in self.field_list:
-            for field in "uid", "desc_uid":
-                self.field_list.append(field)
-                self.field_info[field] = {"units": "",
-                                          "source": "arbor"}
+        if not self._has_uids:
+            if "uid" not in self.field_list:
+                for field in "uid", "desc_uid":
+                    self.field_list.append(field)
+                    self.field_info[field] = {"units": "",
+                                              "source": "arbor"}
 
     def _get_data_files(self):
         raise NotImplementedError
@@ -944,9 +967,13 @@ class CatalogArbor(Arbor):
     def _plant_trees(self):
         # this can be called once with the list, but fields are
         # not guaranteed to be returned in order.
+        if self._has_uids:
+            id_fields = ["uid", "desc_uid"]
+        else:
+            id_fields = ["halo_id", "desc_id"]
         fields = \
           [self.field_info.resolve_field_dependencies([field])[0][0]
-           for field in ["halo_id", "desc_id"]]
+           for field in id_fields]
         halo_id_f, desc_id_f = fields
         dtypes = dict((field, np.int64) for field in fields)
         uid = 0
@@ -969,13 +996,17 @@ class CatalogArbor(Arbor):
 
                 for it in range(nhalos):
                     descid = data[desc_id_f][it]
+                    if self._has_uids:
+                        my_uid = data[halo_id_f][it]
+                    else:
+                        my_uid = uid
                     root = i == 0 or descid == -1
                     # The data says a descendent exists, but it's not there.
                     # This shouldn't happen, but it does sometimes.
                     if not root and descid not in lastids:
                         root = True
                         descid = data[desc_id_f][it] = -1
-                    tree_node = TreeNode(uid, arbor=self, root=root)
+                    tree_node = TreeNode(my_uid, arbor=self, root=root)
                     tree_node._fi = it
                     tree_node.data_file = data_file
                     batch[it] = tree_node
@@ -1030,7 +1061,7 @@ class CatalogArbor(Arbor):
         tree_node._tree_size = tree_node._uids.size
         # This should bypass any attempt to get this field in
         # the conventional way.
-        if self.field_info["uid"]["source"] == "arbor":
+        if self.field_info["uid"].get("source") == "arbor":
             tree_node._field_data["uid"] = tree_node._uids
             tree_node._field_data["desc_uid"] = tree_node._desc_uids
 
@@ -1069,10 +1100,12 @@ def load(filename, method=None, **kwargs):
     >>> # saved Arbor
     >>> a = ytree.load("arbor/arbor.h5")
     >>> # consistent-trees output
+    >>> a = ytree.load("tiny_ctrees/locations.dat")
     >>> a = ytree.load("rockstar_halos/trees/tree_0_0_0.dat")
+    >>> a = ytree.load("ctrees_hlists/hlists/hlist_0.12521.list")
     >>> # Rockstar catalogs
     >>> a = ytree.load("rockstar_halos/out_0.list")
-    >>> # TreeFarm catalogs
+    >>> # treefarm catalogs
     >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.h5")
     >>> # LHaloTree catalogs
     >>> a = ytree.load("my_halos/trees_063.0")

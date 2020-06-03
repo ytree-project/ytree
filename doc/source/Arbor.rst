@@ -11,7 +11,7 @@ Loading Merger-Tree Data
 ------------------------
 
 ``ytree`` can load merger-tree data from multiple sources using
-the :func:`~ytree.data_structures.load` command.
+the :func:`~ytree.data_structures.arbor.load` command.
 
 .. code-block:: python
 

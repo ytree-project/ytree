@@ -3,7 +3,8 @@
 Loading Data
 ============
 
-Below are instructions for loading all supported datasets.
+Below are instructions for loading all supported datasets. All examples
+use the freely available :ref:`sample-data`.
 
 Amiga Halo Finder
 -----------------
@@ -41,13 +42,45 @@ Consistent-Trees
 ----------------
 
 The `consistent-trees <https://bitbucket.org/pbehroozi/consistent-trees>`_
-format is typically one or a few files with a naming convention like
-"tree_0_0_0.dat".  To load these files, just give the filename
+format consists of a set of files called "locations.dat", "forests.list",
+at least one file named something like "tree_0_0_0.dat". For large
+simulations, there may be a number of these "tree_*.dat" files. After
+running Rockstar and consistent-trees, these will most likely be located in
+the "rockstar_halos/trees" directory. The full data set can be loaded by
+providing the path to the *locations.dat* file.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("tiny_ctrees/locations.dat")
+
+Alternatively, data from a single tree file can be loaded by providing the
+path to that file.
 
 .. code-block:: python
 
    >>> import ytree
    >>> a = ytree.load("consistent_trees/tree_0_0_0.dat")
+
+Consistent-Trees hlist Files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+While running consistent-trees, a series of files will be created in the
+"rockstar_halos/hlists" directory with the naming convention,
+"hlist_<scale-factor>.list". These are the catalogs that will be combined
+to make the final output files. However, these files contain roughly 30
+additional fields that are not included in the final output. Merger trees
+can be loaded by providing the path to the first of these files.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("ctrees_hlists/hlists/hlist_0.12521.list")
+
+.. note:: Note, loading trees with this method will be slower than using
+   the standard consistent-trees output file as ``ytree`` will have to
+   assemble each tree across multiple files. This method is not
+   recommended unless the additional fields are necessary.
 
 Rockstar Catalogs
 -----------------

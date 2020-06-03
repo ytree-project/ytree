@@ -13,7 +13,8 @@ RockstarArbor class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import glob
+import numpy as np
+import os
 import re
 
 from yt.data_objects.data_containers import \
@@ -35,6 +36,7 @@ class RockstarArbor(CatalogArbor):
 
     _field_info_class = RockstarFieldInfo
     _data_file_class = RockstarDataFile
+    _default_dtype = np.float32
 
     def _parse_parameter_file(self):
         fgroups = setup_field_groups()
@@ -100,11 +102,14 @@ class RockstarArbor(CatalogArbor):
         """
         Get all out_*.list files and sort them in reverse order.
         """
-        reg = re.search(r"_\d+[_\.]", self.filename)
-        prefix = self.filename[:reg.start()+1]
-        suffix = self.filename[reg.end()-1:]
-        my_files = glob.glob(
-            "%s%s%s" % (prefix, "[0-9]"*(reg.end()-reg.start()-2), suffix))
+        reg = re.search(r"_\d+[_\.]", self.basename)
+        prefix = self.basename[:reg.start()+1]
+        suffix = self.basename[reg.end()-1:]
+
+        freg = re.compile(r"%s\d+%s" % (prefix, suffix))
+        my_files = [os.path.join(self.directory, f)
+                    for f in os.listdir(self.directory)
+                    if freg.match(f)]
 
         # sort by catalog number
         my_files.sort(
@@ -115,7 +120,7 @@ class RockstarArbor(CatalogArbor):
           [self._data_file_class(f, self) for f in my_files]
 
     def _get_file_index(self, f, prefix, suffix):
-        return int(f[f.find(prefix)+len(prefix):f.rfind(suffix)]),
+        return int(f[f.find(prefix)+len(prefix):f.rfind(suffix)])
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
@@ -123,9 +128,11 @@ class RockstarArbor(CatalogArbor):
         File should end in .list.
         """
         fn = args[0]
-        if not fn.endswith(".list"):
+        if not os.path.basename(fn).startswith("out") or \
+          not fn.endswith(".list"):
             return False
-        reg = re.search(r"_\d+[_\.]", fn)
+        # filter out non-integers
+        reg = re.search(r"_\d+[_\.]\D", fn)
         if reg is None:
             return False
         return True

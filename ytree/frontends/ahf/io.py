@@ -172,7 +172,7 @@ class AHFDataFile(CatalogDataFile):
             offsets.append(offset)
             sline = line.split()
             for field in rfields:
-                dtype = dtypes.get(field, self._default_dtype)
+                dtype = dtypes[field]
                 field_data[field].append(dtype(sline[fi[field]["column"]]))
         self.close()
 
@@ -198,7 +198,7 @@ class AHFDataFile(CatalogDataFile):
             line = f.readline()
             sline = line.split()
             for field in rfields:
-                dtype = dtypes.get(field, self._default_dtype)
+                dtype = dtypes[field]
                 field_data[field][i] = dtype(sline[fi[field]["column"]])
         self.close()
 
@@ -215,7 +215,7 @@ class AHFDataFile(CatalogDataFile):
         links = self.links
         descids = np.empty(
             len(field_data["ID"]),
-            dtype=dtypes.get('desc_id', self._default_dtype))
+            dtype=dtypes['desc_id'])
 
         if self.links == -1:
             descids[:] = -1
@@ -255,6 +255,7 @@ class AHFDataFile(CatalogDataFile):
         if tfields:
             if "ID" not in rfields:
                 rfields.append("ID")
+                dtypes.update(self.arbor._node_io._determine_dtypes(["ID"]))
 
         field_data = {}
         if tree_nodes is None:

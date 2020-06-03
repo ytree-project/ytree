@@ -31,9 +31,11 @@ class FieldInfoContainer(dict):
     alias_fields = ()
     known_fields = ()
     vector_fields = ("position", "velocity", "angular_momentum")
+    data_types = ()
 
     def __init__(self, arbor):
         self.arbor = weakref.proxy(arbor)
+        self._data_types = dict(self.data_types)
 
     def setup_known_fields(self):
         """

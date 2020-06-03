@@ -43,6 +43,7 @@ class LHaloTreeArbor(Arbor):
     _field_info_class = LHaloTreeFieldInfo
     _tree_field_io_class = LHaloTreeTreeFieldIO
     _root_field_io_class = LHaloTreeRootFieldIO
+    _default_dtype = np.float32
 
     def __init__(self, *args, **kwargs):
         r"""Added reader class to allow fast access of header info."""

@@ -102,10 +102,8 @@ class LHaloTreeTreeFieldIO(TreeFieldIO):
                 break
         if data is None:
             data = dict()
-            if root_only:
-                halonum = 0
-            else:
-                halonum = None
+            # always get all ids, even if root_only, since it's fast.
+            halonum = None
             tot_idx = lht.get_total_index(root_node._index_in_lht, halonum)
             data['uid'] = lht.all_uids[tot_idx]
             data['desc_uid'] = lht.all_desc_uids[tot_idx]
@@ -127,15 +125,16 @@ class LHaloTreeRootFieldIO(FieldIO):
         r"""Add root fields in bulk to same time."""
         if dtypes is None:
             dtypes = {}
+        my_dtypes = self._determine_dtypes(fields, override_dict=dtypes)
 
         fi = self.arbor.field_info
 
         # Consolidate root field data
         field_data = {}
         for field in fields:
-            dtype = dtypes.get(field, None)
             units = fi[field].get("units", "")
-            field_data[field] = np.empty(self.arbor.trees.size, dtype=dtype)
+            field_data[field] = np.empty(self.arbor.trees.size,
+                                         dtype=my_dtypes[field])
             if units:
                 field_data[field] = self.arbor.arr(field_data[field], units)
 
