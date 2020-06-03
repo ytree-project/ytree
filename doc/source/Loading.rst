@@ -65,7 +65,22 @@ path to that file.
 Consistent-Trees hlist Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Stuff!
+While running consistent-trees, a series of files will be created in the
+"rockstar_halos/hlists" directory with the naming convention,
+"hlist_<scale-factor>.list". These are the catalogs that will be combined
+to make the final output files. However, these files contain roughly 30
+additional fields that are not included in the final output. Merger trees
+can be loaded by providing the path to the first of these files.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("ctrees_hlists/hlists/hlist_0.12521.list")
+
+.. note:: Note, loading trees with this method will be slower than using
+   the standard consistent-trees output file as ``ytree`` will have to
+   assemble each tree across multiple files. This method is not
+   recommended unless the additional fields are necessary.
 
 Rockstar Catalogs
 -----------------
