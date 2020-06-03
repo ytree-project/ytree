@@ -36,10 +36,16 @@ class AHFArborTest(TempDirTest, ArborTest):
 class ConsistentTreesArborTest(TempDirTest, ArborTest):
     arbor_type = ConsistentTreesArbor
     test_filename = "consistent_trees/tree_0_0_0.dat"
+    num_data_files = 1
 
 class ConsistentTreesGroupArborTest(TempDirTest, ArborTest):
     arbor_type = ConsistentTreesGroupArbor
     test_filename = "tiny_ctrees/locations.dat"
+    num_data_files = 8
+
+    def test_data_files(self):
+        self.arbor._plant_trees()
+        ArborTest.test_data_files(self)
 
 class ConsistentTreesHlistArborTest(TempDirTest, ArborTest):
     arbor_type = ConsistentTreesHlistArbor

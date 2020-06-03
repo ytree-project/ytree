@@ -53,7 +53,7 @@ class ConsistentTreesArbor(Arbor):
     _tree_field_io_class = ConsistentTreesTreeFieldIO
 
     def _node_io_loop_prepare(self, root_nodes):
-        return self._node_io.data_files, [root_nodes]
+        return self.data_files, [root_nodes]
 
     def _node_io_loop_start(self, data_file):
         data_file.open()
@@ -62,8 +62,7 @@ class ConsistentTreesArbor(Arbor):
         data_file.close()
 
     def _get_data_files(self):
-        self._node_io.data_files = \
-          [ConsistentTreesDataFile(self.filename)]
+        self.data_files = [ConsistentTreesDataFile(self.filename)]
 
     def _parse_parameter_file(self, filename=None):
         fields = []
@@ -174,7 +173,7 @@ class ConsistentTreesArbor(Arbor):
         lkey = len("tree ")+1
         block_size = 32768
 
-        data_file = self._node_io.data_files[0]
+        data_file = self.data_files[0]
 
         data_file.open()
         data_file.fh.seek(0, 2)
@@ -242,7 +241,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
     def _node_io_loop_prepare(self, root_nodes):
         fi = np.array([node._fi for node in root_nodes])
         ufi = np.unique(fi)
-        data_files = [self._node_io.data_files[i] for i in ufi]
+        data_files = [self.data_files[i] for i in ufi]
         node_list = [root_nodes[fi == i] for i in ufi]
         return data_files, node_list
 
@@ -283,7 +282,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         data_files = [None]*(ufids.max()+1)
         for i,fid in enumerate(ufids):
             data_files[fid] = dfns[i]
-        self._node_io.data_files = \
+        self.data_files = \
           [ConsistentTreesDataFile(os.path.join(self.directory, fn))
            for fn in data_files
            if fn is not None]
@@ -311,7 +310,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
 
         # Get end index for last trees in files.
         for i in np.where(~same_file)[0]:
-            data_file = self._node_io.data_files[fids[i]]
+            data_file = self.data_files[fids[i]]
             data_file.open()
             data_file.fh.seek(0, 2)
             self._trees[i]._ei = data_file.fh.tell()
