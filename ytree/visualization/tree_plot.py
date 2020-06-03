@@ -43,6 +43,20 @@ class TreePlot(object):
     dot_kwargs : optional, dict
         A dictionary of keyword arguments to be passed to pydot.Dot.
         Default: None.
+    node_function: optional, function
+        A function accepting a single argument of a
+        :class:`~ytree.data_structures.tree_node.TreeNode` and returning a
+        dictionary of keywords to be given to pydot for creating the node
+        object on the plot. This can be used to customize the appearance of
+        the nodes. See examples below.
+        Default: None.
+    edge_function: optional, function
+        A function accepting two
+        :class:`~ytree.data_structures.tree_node.TreeNode` objects and
+        returning a dictionary of keywords to be given to pydot for creating
+        the edge object on the plot (the lines connecting halos). This can
+        be used to customize the appearance of the edges. See examples below.
+        Default: None.
 
     Attributes
     ----------
@@ -52,7 +66,7 @@ class TreePlot(object):
     size_log : bool
         Whether to scale circle sizes based on log of size field.
         Default: True.
-    min_mass : float ot YTQuantity
+    min_mass : float or YTQuantity
         The minimum halo mass to be included in the plot. If given
         as a float, units are assumed to be Msun.
         Default: None.
@@ -70,6 +84,29 @@ class TreePlot(object):
     >>> p.min_mass = 1e6 # Msun
     >>> p.save()
 
+    >>> # customizing nodes
+    >>> import ytree
+    >>> def my_node(halo):
+    ...     label = "%d" % halo['uid']
+    ...     my_kwargs = {"label": label, "fontsize": 8, "shape": "square"}
+    ...     return my_kwargs
+    >>> a = ytree.load("tree_0_0_0.dat")
+    >>> p = ytree.TreePlot(a[0], node_function=my_node)
+    >>> p.save()
+
+    >>> # customizing edges
+    >>> import ytree
+    >>> def my_edge(ancestor, descendent):
+    ...     if descendent['mass'] < ancestor['mass']:
+    ...         color = 'blue'
+    ...     else:
+    ...         color = 'black'
+    ...     my_kwargs = {"color": color, "penwidth": 5}
+    ...     return my_kwargs
+    >>> a = ytree.load("tree_0_0_0.dat")
+    >>> p = ytree.TreePlot(a[0], edge_function=my_edge)
+    >>> p.save()
+
     """
 
     _min_dot_size = 0.2
@@ -82,7 +119,8 @@ class TreePlot(object):
     _min_mass = None
     _min_mass_ratio = None
 
-    def __init__(self, tree, dot_kwargs=None):
+    def __init__(self, tree, dot_kwargs=None,
+                 node_function=None, edge_function=None):
         """
         Initialize a TreePlot.
         """
@@ -98,6 +136,18 @@ class TreePlot(object):
         if dot_kwargs is None:
             dot_kwargs = {}
         self.dot_kwargs.update(dot_kwargs)
+
+        if node_function is not None and \
+          not callable(node_function):
+            raise RuntimeError(
+                "node_function should be a callable function.")
+        self.node_function = node_function
+
+        if edge_function is not None and \
+          not callable(edge_function):
+            raise RuntimeError(
+                "edge_function should be a callable function.")
+        self.edge_function = edge_function
 
         self.graph = None
 
@@ -156,7 +206,13 @@ class TreePlot(object):
                 continue
 
             anc_node = self._plot_node(anc)
-            graph.add_edge(pydot.Edge(my_node, anc_node, penwidth=5))
+
+            if self.edge_function is not None:
+                edge_kwargs = self.edge_function(anc, halo)
+            else:
+                edge_kwargs = {"penwidth": 5}
+
+            graph.add_edge(pydot.Edge(my_node, anc_node, **edge_kwargs))
             self._plot_ancestors(anc)
 
     def _plot_node(self, halo):
@@ -168,15 +224,21 @@ class TreePlot(object):
             halo['tree']
 
         if len(my_node) == 0:
-            if halo in halo.root['prog']:
-                color = 'red'
+            if self.node_function is not None:
+                node_kwargs = self.node_function(halo)
+
             else:
-                color = 'black'
+                if halo in halo.root['prog']:
+                    color = 'red'
+                else:
+                    color = 'black'
+                node_kwargs = \
+                  {'style': 'filled', 'label': '', 'fillcolor': color,
+                   'shape': 'circle', 'fixedsized': 'true',
+                   'width': self._size_norm(halo)}
 
             my_node = pydot.Node(
-                node_name, style="filled", label="",
-                fillcolor=color, shape="circle",
-                fixedsize="true", width=self._size_norm(halo))
+                node_name, **node_kwargs)
             graph.add_node(my_node)
         else:
             my_node = my_node[0]
