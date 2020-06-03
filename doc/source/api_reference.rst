@@ -67,9 +67,11 @@ Internal Classes
    ~ytree.frontends.arborarbor.io.ArborArborRootFieldIO
    ~ytree.frontends.consistent_trees.arbor.ConsistentTreesArbor
    ~ytree.frontends.consistent_trees.arbor.ConsistentTreesGroupArbor
+   ~ytree.frontends.consistent_trees.arbor.ConsistentTreesHlistArbor
    ~ytree.frontends.consistent_trees.fields.ConsistentTreesFieldInfo
    ~ytree.frontends.consistent_trees.io.ConsistentTreesDataFile
    ~ytree.frontends.consistent_trees.io.ConsistentTreesTreeFieldIO
+   ~ytree.frontends.consistent_trees.io.ConsistentTreesHlistDataFile
    ~ytree.frontends.lhalotree.arbor.LHaloTreeArbor
    ~ytree.frontends.lhalotree.fields.LHaloTreeFieldInfo
    ~ytree.frontends.lhalotree.io.LHaloTreeTreeFieldIO
@@ -80,7 +82,6 @@ Internal Classes
    ~ytree.frontends.treefarm.arbor.TreeFarmArbor
    ~ytree.frontends.treefarm.fields.TreeFarmFieldInfo
    ~ytree.frontends.treefarm.io.TreeFarmDataFile
-   ~ytree.frontends.treefarm.io.TreeFarmTreeFieldIO
    ~ytree.frontends.ytree.arbor.YTreeArbor
    ~ytree.frontends.ytree.io.YTreeDataFile
    ~ytree.frontends.ytree.io.YTreeTreeFieldIO
