@@ -95,12 +95,42 @@ class Arbor(object, metaclass=RegisteredArbor):
         self.directory = os.path.dirname(filename)
         self._parse_parameter_file()
         self._set_units()
-        self._field_data = FieldContainer(self)
-        self._node_io = self._tree_field_io_class(self)
-        self._root_io = self._root_field_io_class(self)
+        self._setup_io()
         self._get_data_files()
         self._setup_fields()
         self._set_default_selector()
+
+    def _parse_parameter_file(self):
+        """
+        Read relevant parameters from parameter file or file header
+        and detect fields.
+        """
+        raise NotImplementedError
+
+    def _set_units(self):
+        """
+        Set "cm" units for explicitly comoving.
+        Note, we are using comoving units all the time since
+        we are dealing with data at multiple redshifts.
+        """
+        for my_unit in ["m", "pc", "AU", "au"]:
+            new_unit = "%scm" % my_unit
+            self._unit_registry.add(
+                new_unit, self._unit_registry.lut[my_unit][0],
+                length, self._unit_registry.lut[my_unit][3])
+
+        self.cosmology = Cosmology(
+            hubble_constant=self.hubble_constant,
+            omega_matter=self.omega_matter,
+            omega_lambda=self.omega_lambda,
+            unit_registry=self.unit_registry)
+
+    def _setup_io(self):
+        """
+        Create field io objects.
+        """
+        self._node_io = self._tree_field_io_class(self)
+        self._root_io = self._root_field_io_class(self)
 
     def _get_data_files(self):
         """
@@ -109,12 +139,23 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
         pass
 
-    def _parse_parameter_file(self):
+    def _setup_fields(self):
         """
-        Read relevant parameters from parameter file or file header
-        and detect fields.
+        Setup field containers and definitions.
         """
-        raise NotImplementedError
+        self._field_data = FieldContainer(self)
+        self.derived_field_list = []
+        self.analysis_field_list = []
+        self.field_info.setup_known_fields()
+        self.field_info.setup_aliases()
+        self.field_info.setup_derived_fields()
+        self.field_info.setup_vector_fields()
+
+    def _set_default_selector(self):
+        """
+        Set the default tree node selector as maximum mass.
+        """
+        self.set_selector("max_field_value", "mass")
 
     def _plant_trees(self):
         """
@@ -390,32 +431,6 @@ class Arbor(object, metaclass=RegisteredArbor):
         self.unit_registry.add(
             "unitary", float(self.box_size.in_base()), length)
 
-    def _setup_fields(self):
-        self.derived_field_list = []
-        self.analysis_field_list = []
-        self.field_info.setup_known_fields()
-        self.field_info.setup_aliases()
-        self.field_info.setup_derived_fields()
-        self.field_info.setup_vector_fields()
-
-    def _set_units(self):
-        """
-        Set "cm" units for explicitly comoving.
-        Note, we are using comoving units all the time since
-        we are dealing with data at multiple redshifts.
-        """
-        for my_unit in ["m", "pc", "AU", "au"]:
-            new_unit = "%scm" % my_unit
-            self._unit_registry.add(
-                new_unit, self._unit_registry.lut[my_unit][0],
-                length, self._unit_registry.lut[my_unit][3])
-
-        self.cosmology = Cosmology(
-            hubble_constant=self.hubble_constant,
-            omega_matter=self.omega_matter,
-            omega_lambda=self.omega_lambda,
-            unit_registry=self.unit_registry)
-
     def set_selector(self, selector, *args, **kwargs):
         r"""
         Sets the tree node selector to be used.
@@ -466,12 +481,6 @@ class Arbor(object, metaclass=RegisteredArbor):
         self._quan = functools.partial(YTQuantity,
                                        registry=self.unit_registry)
         return self._quan
-
-    def _set_default_selector(self):
-        """
-        Set the default tree node selector as maximum mass.
-        """
-        self.set_selector("max_field_value", "mass")
 
     def select_halos(self, criteria, trees=None, select_from="tree",
                      fields=None):
