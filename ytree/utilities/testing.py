@@ -77,6 +77,7 @@ class ArborTest(object):
 
     arbor_type = None
     test_filename = None
+    num_data_files = None
     tree_skip = 1
 
     _arbor = None
