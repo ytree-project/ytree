@@ -84,6 +84,7 @@ class Arbor(object, metaclass=RegisteredArbor):
     _field_info_class = FieldInfoContainer
     _root_field_io_class = DefaultRootFieldIO
     _tree_field_io_class = TreeFieldIO
+    _default_dtype = np.float64
 
     def __init__(self, filename):
         """
@@ -129,8 +130,10 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
         Create field io objects.
         """
-        self._node_io = self._tree_field_io_class(self)
-        self._root_io = self._root_field_io_class(self)
+        self._node_io = self._tree_field_io_class(
+            self, default_dtype=self._default_dtype)
+        self._root_io = self._root_field_io_class(
+            self, default_dtype=self._default_dtype)
 
     def _get_data_files(self):
         """

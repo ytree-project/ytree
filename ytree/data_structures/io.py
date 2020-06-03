@@ -30,10 +30,9 @@ class FieldIO(object):
     This object is resposible for field i/o for an Arbor.
     """
 
-    _default_dtype = np.float32
-
-    def __init__(self, arbor):
+    def __init__(self, arbor, default_dtype=np.float64):
         self.arbor = weakref.proxy(arbor)
+        self.default_dtype = default_dtype
 
     def _initialize_analysis_field(self, storage_object,
                                    name, units, **kwargs):
@@ -52,7 +51,7 @@ class FieldIO(object):
 
         fid = self.arbor.field_info._data_types
         for field in fields:
-            dtypes[field] = dtypes.get(field, fid.get(field, self._default_dtype))
+            dtypes[field] = dtypes.get(field, fid.get(field, self.default_dtype))
         return dtypes
 
     def _determine_field_storage(self, data_object):

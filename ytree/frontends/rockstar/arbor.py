@@ -13,6 +13,7 @@ RockstarArbor class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import numpy as np
 import os
 import re
 
@@ -35,6 +36,7 @@ class RockstarArbor(CatalogArbor):
 
     _field_info_class = RockstarFieldInfo
     _data_file_class = RockstarDataFile
+    _default_dtype = np.float32
 
     def _parse_parameter_file(self):
         fgroups = setup_field_groups()

@@ -51,6 +51,7 @@ class ConsistentTreesArbor(Arbor):
     _parameter_file_is_data_file = True
     _field_info_class = ConsistentTreesFieldInfo
     _tree_field_io_class = ConsistentTreesTreeFieldIO
+    _default_dtype = np.float32
 
     def _node_io_loop_prepare(self, root_nodes):
         return self.data_files, [root_nodes]
