@@ -265,7 +265,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         f.seek(self._hoffset)
         ldata = list(map(
             lambda x: [int(x[0]), int(x[1]), int(x[2]), x[3], len(x[0])],
-            [line.split() for line, _ in f_text_block(f)]
+            [line.split() for line, _ in f_text_block(f, pbar_string='Reading locations')]
             ))
         f.close()
 
@@ -284,9 +284,9 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         for i,fid in enumerate(ufids):
             data_files[fid] = dfns[i]
         self.data_files = \
-          [ConsistentTreesDataFile(os.path.join(self.directory, fn))
-           for fn in data_files
-           if fn is not None]
+          [None if fn is None
+           else ConsistentTreesDataFile(os.path.join(self.directory, fn))
+           for fn in data_files]
 
         ldata.sort(key=operator.itemgetter(1, 2))
         ntrees = len(ldata)
