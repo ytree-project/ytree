@@ -46,41 +46,22 @@ class ConsistentTreesHDF5TreeFieldIO(TreeFieldIO):
 
         data_file = self.arbor.data_files[root_node._fi]
 
-        if dtypes is None:
-            dtypes = {}
-        my_dtypes = self._determine_dtypes(
-            fields, override_dict=dtypes)
-
         close = False
         if data_file.fh is None:
             close = True
             data_file.open()
-        fh = data_file.fh
-        fh.seek(root_node._si)
+        fh = data_file.fh['Forests']
+
         if root_only:
-            data = [fh.readline()]
+            index = slice(root_node._si, root_node._si+1)
         else:
-            data = fh.read(
-                root_node._ei -
-                root_node._si).split("\n")
-            if len(data[-1]) == 0:
-                data.pop()
+            index = slice(root_node._si, root_node._ei)
+        field_data = dict((field, fh[field][index])
+                          for field in fields)
         if close:
             data_file.close()
 
-        nhalos = len(data)
-        field_data = {}
         fi = self.arbor.field_info
-        for field in fields:
-            field_data[field] = np.empty(nhalos, dtype=my_dtypes[field])
-
-        for i, datum in enumerate(data):
-            ldata = datum.strip().split()
-            if len(ldata) == 0: continue
-            for field in fields:
-                dtype = my_dtypes[field]
-                field_data[field][i] = dtype(ldata[fi[field]["column"]])
-
         for field in fields:
             units = fi[field].get("units", "")
             if units != "":
