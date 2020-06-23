@@ -28,6 +28,7 @@ class ConsistentTreesHDF5DataFile(DataFile):
         super(ConsistentTreesHDF5DataFile, self).__init__(filename)
         self.linkname = linkname
         self.real_fh = None
+        self._field_cache = None
 
     def open(self):
         self.real_fh = h5py.File(self.filename, mode="r")
@@ -46,20 +47,29 @@ class ConsistentTreesHDF5TreeFieldIO(TreeFieldIO):
 
         data_file = self.arbor.data_files[root_node._fi]
 
+        if data_file._field_cache is None:
+            data_file._field_cache = {}
+
         close = False
         if data_file.fh is None:
             close = True
             data_file.open()
         fh = data_file.fh['Forests']
 
+        field_cache = data_file._field_cache
+        field_cache.update(
+            dict((field, fh[field][()])
+                 for field in fields
+                 if field not in field_cache))
+        if close:
+            data_file.close()
+
         if root_only:
             index = slice(root_node._si, root_node._si+1)
         else:
             index = slice(root_node._si, root_node._ei)
-        field_data = dict((field, fh[field][index])
+        field_data = dict((field, field_cache[field][index])
                           for field in fields)
-        if close:
-            data_file.close()
 
         fi = self.arbor.field_info
         for field in fields:
