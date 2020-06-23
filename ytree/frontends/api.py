@@ -19,6 +19,7 @@ _frontends = [
     "ahf",
     "arborarbor",
     "consistent_trees",
+    "consistent_trees_hdf5",
     "lhalotree",
     "rockstar",
     "treefarm",
