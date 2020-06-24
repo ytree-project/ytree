@@ -115,7 +115,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         Note, we are using comoving units all the time since
         we are dealing with data at multiple redshifts.
         """
-        for my_unit in ["m", "pc", "AU", "au"]:
+        for my_unit in ["m", "pc", "AU"]:
             new_unit = "%scm" % my_unit
             self._unit_registry.add(
                 new_unit, self._unit_registry.lut[my_unit][0],
