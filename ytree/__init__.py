@@ -13,10 +13,12 @@ ytree imports
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.arbor import \
+from ytree.data_structures import \
     load
-from ytree.arbor.tree_node_selector import \
+from ytree.data_structures.tree_node_selector import \
     TreeNodeSelector, \
     add_tree_node_selector
+from ytree.visualization.tree_plot import \
+    TreePlot
 
-__version__ = '2.2.1'
+__version__ = '2.4.dev1'

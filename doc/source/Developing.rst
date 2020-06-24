@@ -3,21 +3,21 @@
 Developer Guide
 ===============
 
-ytree is developed using the same conventions as yt.  The `yt
+``ytree`` is developed using the same conventions as yt.  The `yt
 Developer Guide <http://yt-project.org/docs/dev/developing/index.html>`_
 is a good reference for code style, communication with other developers,
 working with git, and issuing pull requests.  Below is a brief guide of
-aspects that are specific to ytree.
+aspects that are specific to ``ytree``.
 
 Contributing in a Nutshell
 --------------------------
 
 Step zero, get out of that nutshell!
 
-After that, the process for making contributions to ytree is roughly as
+After that, the process for making contributions to ``ytree`` is roughly as
 follows:
 
-1. Fork the `main ytree repository <https://github.com/brittonsmith/ytree>`__.
+1. Fork the `main ytree repository <https://github.com/ytree-project/ytree>`__.
 
 2. Create a new branch.
 
@@ -33,17 +33,17 @@ will help with the mechanics of git and pull requests.
 Testing
 -------
 
-The ytree source comes with a series of tests that can be run to
+The ``ytree`` source comes with a series of tests that can be run to
 ensure nothing unexpected happens after changes have been made.  These
 tests will automatically run when a pull request is issued or updated,
 but they can also be run locally very easily.  At present, the suite
-of tests for ytree takes about three minutes to run.
+of tests for ``ytree`` takes about three minutes to run.
 
 Testing Data
 ^^^^^^^^^^^^
 
 The first order of business is to obtain the sample datasets.  See
-:ref:`sample-data` for how to do so.  Next, ytree must be configure to
+:ref:`sample-data` for how to do so.  Next, ``ytree`` must be configure to
 know the location of this data.  This is done by creating a configuration
 file in your home directory at the location ``~/.config/ytree/ytreerc``.
 
@@ -75,7 +75,7 @@ To see how these dependencies are defined, have a look at the
 Run the Tests
 ^^^^^^^^^^^^^
 
-The tests are run from the top level of the ytree source.
+The tests are run from the top level of the ``ytree`` source.
 
 .. code-block:: bash
 
@@ -96,7 +96,7 @@ The tests are run from the top level of the ytree source.
 Adding Support for a New Format
 -------------------------------
 
-The :class:`~ytree.arbor.arbor.Arbor` class is reasonably
+The :class:`~ytree.data_structures.arbor.Arbor` class is reasonably
 generalized such that adding support for a new file format
 should be relatively straightforward.  The existing frontends
 also provide guidance for what must be done.  Below is a brief
@@ -107,7 +107,7 @@ Where do the files go?
 ^^^^^^^^^^^^^^^^^^^^^^
 
 As in yt, the code specific to one file format is referred to as a
-"frontend".  Within the ytree source, each frontend is located in
+"frontend".  Within the ``ytree`` source, each frontend is located in
 its own directory within ``ytree/arbor/frontends``.  Name your
 directory using lowercase and underscores and put it in there.
 
@@ -120,7 +120,7 @@ Building Your Frontend
 To build a new frontend, you will need to make frontend-specific
 subclasses for a few components.  The easiest way to do this is
 to start with a blank ``Arbor`` subclass first.  Create a sample
-script that loads your data with :func:`~ytree.arbor.load`, prints
+script that loads your data with :func:`~ytree.data_structures.load`, prints
 the number of trees, and queries some fields.  Within the base classes,
 the necessary functions will raise a ``NotImplementedError`` if you
 have not added them yet.  Keep running your script and implementing
@@ -142,13 +142,13 @@ consistent-trees ``__init__.py`` looks like this:
 
 .. code-block:: python
 
-   from ytree.arbor.frontends.consistent_trees.arbor import \
+   from ytree.frontends.consistent_trees.arbor import \
        ConsistentTreesArbor
 
 Two Types of Arbors
 ^^^^^^^^^^^^^^^^^^^
 
-There are generally two types of merger-tree data that ytree
+There are generally two types of merger-tree data that ``ytree``
 ingests:
 
 1. all merger-tree data (full trees, halos, etc.) contained within
@@ -167,7 +167,7 @@ The ``_is_valid`` Function
 ##########################
 
 Within every ``Arbor`` subclass should appear a function called
-``_is_valid``.  This function is used by :func:`~ytree.arbor.load`
+``_is_valid``.  This function is used by :func:`~ytree.data_structures.load`
 to determine if the provide file is the correct type.  This function
 can examine the file's naming convention and/or open it and inspect
 its contents, whatever is required to uniquely identify your frontend.
@@ -189,12 +189,12 @@ box size, cosmological parameters, and the list of fields.
 ``_plant_trees``: This function is responsible for constructing the
 array containing the roots of all trees in the ``Arbor``.  This
 should not fully build the trees, but just create
-:class:`~ytree.arbor.tree_node.TreeNode` instances for each root
+:class:`~ytree.data_structures.tree_node.TreeNode` instances for each root
 and put them in the array.
 
 In ``io.py``, you will implement the machinery responsible for
 reading field data from disk.  You must create a subclass of
-the :class:`~ytree.arbor.io.TreeFieldIO` class and implement
+the :class:`~ytree.data_structures.io.TreeFieldIO` class and implement
 the ``_read_fields`` function.  This function accepts a single
 root node (a ``TreeNode`` that is the root of a tree) and a list
 of fields and should return a dictionary with NumPy arrays for
@@ -203,12 +203,12 @@ each field.
 Halo Catalog-style Data
 #######################
 
-If this is your case, then the rockstar and tree_farm frontends
+If this is your case, then the rockstar and treefarm frontends
 are the best examples to follow.
 
 For this type of data, you will subclass the
-:class:`~ytree.arbor.arbor.CatalogArbor` class, which is itself a
-subclass of :class:`~ytree.arbor.arbor.Arbor` designed for this
+:class:`~ytree.data_structures.arbor.CatalogArbor` class, which is itself a
+subclass of :class:`~ytree.data_structures.arbor.Arbor` designed for this
 type of data.
 
 In ``arbor.py``, your subclass should implement two functions,
@@ -221,7 +221,7 @@ out how many other files there are and their names and construct a
 list to be saved.
 
 In ``io.py``, you will create a subclass of
-:class:`~ytree.arbor.io.CatalogDataFile` and implement two functions:
+:class:`~ytree.data_structures.io.CatalogDataFile` and implement two functions:
 ``_parse_header`` and ``_read_fields``.
 
 ``_parse_header``: This function reads any metadata specific to this
@@ -231,12 +231,12 @@ halo catalog.  For exmaple, you might get the current redshift here.
 data from disk.  This should minimally take a list of fields and
 return a dictionary with NumPy arrays for each field for all halos
 contained in the file.  It should also, optionally, take a list of
-:class:`~ytree.arbor.tree_node.TreeNode` instances and return fields
+:class:`~ytree.data_structures.tree_node.TreeNode` instances and return fields
 only for them.
 
 Field Units and Aliases (``fields.py``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The :class:`~ytree.arbor.fields.FieldInfoContainer` class holds
+The :class:`~ytree.data_structures.fields.FieldInfoContainer` class holds
 information about field names and units.  Your subclass can define
 two tuples, ``known_fields`` and ``alias_fields``.  The
 ``known_fields`` tuple is used to set units for fields on disk.
@@ -251,7 +251,7 @@ field units).
 
 .. code-block:: python
 
-   from ytree.arbor.fields import \
+   from ytree.data_structures.fields import \
         FieldInfoContainer
 
    class NewCodeFieldInfo(FieldInfoContainer):

@@ -21,4 +21,4 @@ the `ytree Developer Guide
 If you'd like to know more, contact Britton Smith (brittonsmith@gmail.com).
 
 You can also find help on the `yt developers list
-<http://lists.spacepope.org/listinfo.cgi/yt-dev-spacepope.org>`__.
+<http://lists.spacepope.org/listinfo.cgi/yt-users-spacepope.org>`_.

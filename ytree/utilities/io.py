@@ -20,8 +20,10 @@ from unyt import \
 
 from yt.convenience import \
     load as _yt_load
-from yt.utilities.logger import \
-    ytLogger
+from yt.funcs import \
+    get_pbar
+from ytree.utilities.logger import \
+    fake_pbar
 
 def parse_h5_attr(f, attr):
     """A Python3-safe function for getting hdf5 attributes.
@@ -69,7 +71,8 @@ def _hdf5_yt_array_lite(fh, field):
     if units == "dimensionless": units = ""
     return (fh[field][()], units)
 
-def f_text_block(f, block_size=32768, file_size=None, sep="\n"):
+def f_text_block(f, block_size=32768, file_size=None, sep="\n",
+                 pbar_string=None):
     """
     Read lines from a file faster than f.readlines().
     """
@@ -83,6 +86,10 @@ def f_text_block(f, block_size=32768, file_size=None, sep="\n"):
                       block_size).astype(np.int64)
     read_size = file_size + start
     lbuff = ""
+    if pbar_string is None:
+        pbar = fake_pbar()
+    else:
+        pbar = get_pbar(pbar_string, file_size)
     for ib in range(nblocks):
         offset = f.tell()
         my_block = min(block_size, read_size-offset)
@@ -99,21 +106,11 @@ def f_text_block(f, block_size=32768, file_size=None, sep="\n"):
                 loc = offset - len(lbuff) + linl + 1
                 lbuff = ""
                 linl = inl
+                pbar.update(loc+len(line)-start)
                 yield line, loc
         lbuff += buff[linl+1:]
     if lbuff:
         loc = f.tell() - len(lbuff)
+        pbar.update(loc+len(lbuff)-start)
         yield lbuff, loc
-
-def yt_load(filename, **kwargs):
-    """
-    Suppress logging for yt.load, but return to original setting.
-
-    This allows yt.load to show logs in scripts, but not in ytree.
-    """
-    level = ytLogger.level
-    if level > 10 and level < 40:
-        ytLogger.setLevel(40)
-    ds = _yt_load(filename, **kwargs)
-    ytLogger.setLevel(level)
-    return ds
+    pbar.finish()

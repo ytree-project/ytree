@@ -3,23 +3,41 @@ Citing ytree
 
 If you use ytree in your work, please cite the following:
 
-Britton Smith, & Meagan Lang. (2018, February 16). 
-ytree: merger-tree toolkit. Zenodo.
-http://doi.org/10.5281/zenodo.1174374
+Smith et al., (2019). ytree: A Python package for analyzing merger
+trees. Journal of Open Source Software, 4(44), 1881,
+https://doi.org/10.21105/joss.01881
 
 For BibTeX users:
 
 ::
 
-  @misc{britton_smith_2018_1174374,
-    author       = {Britton Smith and
-                    Meagan Lang},
-    title        = {ytree: merger-tree toolkit},
-    month        = feb,
-    year         = 2018,
-    doi          = {10.5281/zenodo.1174374},
-    url          = {https://doi.org/10.5281/zenodo.1174374}
+  @article{ytree,
+    doi = {10.21105/joss.01881},
+    url = {https://doi.org/10.21105/joss.01881},
+    year  = {2019},
+    month = {dec},
+    publisher = {The Open Journal},
+    volume = {4},
+    number = {44},
+    pages = {1881},
+    author = {Britton D. Smith and Meagan Lang},
+    title = {ytree: A Python package for analyzing merger trees},
+    journal = {Journal of Open Source Software}
   }
 
-If possible, please also add a footnote pointing to
-http://ytree.readthedocs.io.
+If you would like to also cite the specific version of ``ytree`` used in
+your work, include the following reference:
+
+::
+
+  @software{ytree_2_3,
+    author       = {Britton Smith and
+                    Meagan Lang},
+    title        = {ytree: A Python package for analyzing merger trees},
+    month        = dec,
+    year         = 2019,
+    publisher    = {Zenodo},
+    version      = {ytree-2.3.0},
+    doi          = {10.5281/zenodo.3580978},
+    url          = {https://doi.org/10.5281/zenodo.3580978}
+  }

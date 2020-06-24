@@ -3,39 +3,64 @@
 ChangeLog
 =========
 
-This is a log of changes to ytree over its release history.
+This is a log of changes to ``ytree`` over its release history.
 
 Contributors
 ------------
 
 The `CREDITS file
-<https://github.com/brittonsmith/ytree/blob/master/CREDITS>`__
+<https://github.com/ytree-project/ytree/blob/master/CREDITS>`__
 contains the most up-to-date list of everyone who has contributed to the
-ytree source code.
+``ytree`` source code.
+
+Version 2.3
+-----------
+
+Release date: *December 17, 2019*
+
+This release marks the `acceptance of the ytree paper
+<https://github.com/openjournals/joss-reviews/issues/1881>`__ in
+`JOSS <https://joss.theoj.org/>`__.
+
+This is the last release to support Python 2.
+
+New Features
+^^^^^^^^^^^^
+
+ * Add TreePlot for plotting and examples docs
+   (`PR #39 <https://github.com/ytree-project/ytree/pull/39>`__)
+
+Enhancements
+^^^^^^^^^^^^
+
+ * Add time field
+   (`PR #25 <https://github.com/ytree-project/ytree/pull/25>`__)
+ * Move treefarm module to separate package
+   (`PR #28 <https://github.com/ytree-project/ytree/pull/28>`__)
 
 Version 2.2.1
 -------------
 
-Release data: *October 24, 2018*
+Release date: *October 24, 2018*
 
 Enhancements
 ^^^^^^^^^^^^
 
  * Refactor of CatalogDataFile class
-   (`PR #21 <https://github.com/brittonsmith/ytree/pull/21>`__)
+   (`PR #21 <https://github.com/ytree-project/ytree/pull/21>`__)
  * Simplify requirements file for docs build on readthedocs.io
-   (`PR #22 <https://github.com/brittonsmith/ytree/pull/22>`__)
+   (`PR #22 <https://github.com/ytree-project/ytree/pull/22>`__)
 
 Bugfixes
 ^^^^^^^^
 
  * Restore access to analysis fields for tree roots
-   (`PR #23 <https://github.com/brittonsmith/ytree/pull/23>`__)
+   (`PR #23 <https://github.com/ytree-project/ytree/pull/23>`__)
  * fix field access on non-root nodes when tree is not setup
-   (`PR #20 <https://github.com/brittonsmith/ytree/pull/20>`__)
+   (`PR #20 <https://github.com/ytree-project/ytree/pull/20>`__)
  * fix issue of uid and desc_uid fields being clobbered during
    initial field access
-   (`PR #19 <https://github.com/brittonsmith/ytree/pull/19>`__)
+   (`PR #19 <https://github.com/ytree-project/ytree/pull/19>`__)
 
 Version 2.2
 -----------

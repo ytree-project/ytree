@@ -14,7 +14,7 @@ miscellaneous utility tests
 #-----------------------------------------------------------------------------
 
 import os
-from ytree.arbor.arbor import \
+from ytree.data_structures.arbor import \
     load as ytree_load
 from ytree.utilities.io import \
     f_text_block
@@ -55,7 +55,7 @@ class MiscTest(TempDirTest):
         """
         Test for an issue where the uid and desc_uid fields would be
         deleted if the tree was setup in the middle of getting fields.
-        Fixed in PR #19: https://github.com/brittonsmith/ytree/pull/19
+        Fixed in PR #19: https://github.com/ytree-project/ytree/pull/19
         """
         a = ytree_load(R0)
         t = a[a['mass'].argmax()]
@@ -67,7 +67,7 @@ def test_field_access_without_tree_setup():
     """
     Test field access on non-root nodes of catalog arbors where
     setup_tree has not been called.
-    Fixed in PR #20: https://github.com/brittonsmith/ytree/pull/20
+    Fixed in PR #20: https://github.com/ytree-project/ytree/pull/20
     """
     a = ytree_load(R0)
     t = a[a['mass'].argmax()]

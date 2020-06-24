@@ -3,20 +3,20 @@
 Working with Merger-Trees
 =========================
 
-The :class:`~ytree.arbor.arbor.Arbor` class is responsible for loading
+The :class:`~ytree.data_structures.arbor.Arbor` class is responsible for loading
 and providing access to merger-tree data.  Below, we demonstrate how
 to load data and what can be done with it.
 
 Loading Merger-Tree Data
 ------------------------
 
-ytree can load merger-tree data from multiple sources using
-the :func:`~ytree.arbor.load` command.
+``ytree`` can load merger-tree data from multiple sources using
+the :func:`~ytree.data_structures.arbor.load` command.
 
 .. code-block:: python
 
-   import ytree
-   a = ytree.load("consistent_trees/tree_0_0_0.dat")
+   >>> import ytree
+   >>> a = ytree.load("consistent_trees/tree_0_0_0.dat")
 
 This command will determine the correct format and read in the data
 accordingly.  For examples of loading each format, see below.
@@ -44,8 +44,8 @@ the available fields can be accessed.
    ['scale', 'id', 'desc_scale', 'desc_id', 'num_prog', ...]
 
 Similar to `yt <http://yt-project.org/docs/dev/analyzing/fields.html>`__,
-ytree supports accessing fields by their native names as well as generalized
-aliases.  For more information on fields in ytree, see :ref:`fields`.
+``ytree`` supports accessing fields by their native names as well as generalized
+aliases.  For more information on fields in ``ytree``, see :ref:`fields`.
 
 How many trees are there?
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -76,7 +76,7 @@ dictionary-like manner.
    [  6.57410072e+14   5.28489209e+14   5.18129496e+14   4.88920863e+14, ...,
       8.68489209e+11   8.68489209e+11   8.68489209e+11] Msun
 
-ytree uses `yt's system for symbolic units
+``ytree`` uses `yt's system for symbolic units
 <http://yt-project.org/docs/dev/analyzing/units/index.html>`__, allowing for simple
 unit conversion.
 
@@ -88,7 +88,7 @@ unit conversion.
 
 When dealing with cosmological simulations, care must be taken to distinguish
 between comoving and proper reference frames.  Please read :ref:`frames` before
-your magical ytree journey begins.
+your magical ``ytree`` journey begins.
 
 Accessing Individual Trees
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -100,7 +100,7 @@ Individual trees can be accessed by indexing the ``Arbor`` object.
    >>> print (a[0])
    TreeNode[12900]
 
-A :class:`~ytree.arbor.tree_node.TreeNode` is one halo in a merger-tree.
+A :class:`~ytree.data_structures.tree_node.TreeNode` is one halo in a merger-tree.
 The number is the universal identifier associated with halo.  It is unique
 to the whole arbor.  Fields can be accessed for any given ``TreeNode`` in
 the same dictionary-like fashion.
@@ -158,7 +158,7 @@ Customizing the Progenitor Line
 
 By default, the progenitor line is defined as the line of the most
 massive ancestors.  This can be changed by  calling the
-:func:`~ytree.arbor.arbor.Arbor.set_selector`.
+:func:`~ytree.data_structures.arbor.Arbor.set_selector`.
 
 .. code-block:: python
 
@@ -181,7 +181,7 @@ minimally accept a list of ancestors and return a single ``TreeNode``.
 Searching for Halos
 -------------------
 
-The :func:`~ytree.arbor.arbor.Arbor.select_halos` function can be used to
+The :func:`~ytree.data_structures.arbor.Arbor.select_halos` function can be used to
 search the ``Arbor`` for halos matching a specific set of criteria.
 This is similar to the type of selection done with a relational database.
 
@@ -197,12 +197,14 @@ The selection criteria string should be designed to ``eval`` correctly
 with a ``TreeNode`` object named, "tree".  The ``fields`` keyword can
 be used to specify a list of fields to preload for speeding up selection.
 
+.. _saving-trees:
+
 Saving Arbors and Trees
 -----------------------
 
 ``Arbors`` of any type can be saved to a universal file format with the
-:func:`~ytree.arbor.arbor.Arbor.save_arbor` function.  These can be
-reloaded with the :func:`~ytree.arbor.arbor.load` command.  This
+:func:`~ytree.data_structures.arbor.Arbor.save_arbor` function.  These can be
+reloaded with the :func:`~ytree.data_structures.arbor.load` command.  This
 format is optimized for fast tree-building and field-access and so is
 recommended for most situations.
 
@@ -218,7 +220,7 @@ By default, all trees and all fields will be saved, but this can be
 customized with the ``trees`` and ``fields`` keywords.
 
 For convenience, individual trees can also be saved by calling
-:func:`~ytree.arbor.tree_node.TreeNode.save_tree`.
+:func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.
 
 .. code-block:: python
 

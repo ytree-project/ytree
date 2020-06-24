@@ -13,6 +13,13 @@ ytree exceptions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+class ArborParameterFileEmpty(Exception):
+    def __init__(self, filename):
+        self.filename = filename
+
+    def __str__(self):
+        return ("Parameter file is empty: %s." % self.filename)
+
 class ArborFieldException(Exception):
     def __init__(self, field, arbor=None):
         self.field = field

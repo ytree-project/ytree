@@ -16,6 +16,7 @@ testing utilities
 import h5py
 import numpy as np
 from numpy.testing import \
+    assert_equal, \
     assert_array_equal
 import os
 import shutil
@@ -27,9 +28,9 @@ from yt.testing import \
 from yt.funcs import \
     get_pbar
 
-from ytree.arbor.arbor import \
+from ytree.data_structures.arbor import \
     load
-from ytree.arbor.frontends.ytree import \
+from ytree.frontends.ytree import \
     YTreeArbor
 from ytree.config import \
     ytreecfg
@@ -76,6 +77,7 @@ class ArborTest(object):
 
     arbor_type = None
     test_filename = None
+    num_data_files = None
     tree_skip = 1
 
     _arbor = None
@@ -94,6 +96,13 @@ class ArborTest(object):
 
     def test_arbor_type(self):
         assert isinstance(self.arbor, self.arbor_type)
+
+    def test_data_files(self):
+        if self.num_data_files is None:
+            return
+        assert_equal(
+            len(self.arbor.data_files), self.num_data_files,
+            err_msg='Incorrect number of data files for %s.' % self.arbor)
 
     def test_save_and_reload(self):
         save_and_compare(self.arbor, skip=self.tree_skip)
@@ -125,12 +134,17 @@ def save_and_compare(arbor, skip=1):
     Check that arbor saves correctly.
     """
 
-    fn = arbor.save_arbor()
+    if skip > 1:
+        trees = arbor[::skip]
+    else:
+        trees = None
+
+    fn = arbor.save_arbor(trees=trees)
     save_arbor = load(fn)
     assert isinstance(save_arbor, YTreeArbor)
-    compare_arbors(save_arbor, arbor, skip=skip)
+    compare_arbors(save_arbor, arbor, skip2=skip)
 
-def compare_arbors(a1, a2, groups=None, fields=None, skip=1):
+def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
     """
     Compare all fields for all trees in two arbors.
     """
@@ -142,13 +156,16 @@ def compare_arbors(a1, a2, groups=None, fields=None, skip=1):
         fields = a1.field_list
 
     for field in fields:
-        assert (a1[field] == a2[field]).all()
+        assert (a1[field][::skip1] == a2[field][::skip2]).all()
 
-    ntot = a1.size
+    trees1 = a1[::skip1]
+    trees2 = a2[::skip2]
+
+    ntot = trees1.size
     pbar = get_pbar("Comparing trees", ntot)
-    for i in range(0, ntot, skip):
-        compare_trees(a1[i], a2[i], groups=groups, fields=fields)
-        pbar.update(i)
+    for t1, t2 in zip(trees1, trees2):
+        compare_trees(t1, t2, groups=groups, fields=fields)
+        pbar.update(1)
     pbar.finish()
 
 def compare_trees(t1, t2, groups=None, fields=None):
