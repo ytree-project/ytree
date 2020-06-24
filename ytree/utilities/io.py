@@ -18,8 +18,6 @@ from unyt import \
     unyt_array, \
     unyt_quantity
 
-from yt.convenience import \
-    load as _yt_load
 from yt.funcs import \
     get_pbar
 from ytree.utilities.logger import \
