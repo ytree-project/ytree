@@ -16,7 +16,7 @@ ArborArbor class and member functions
 import h5py
 import numpy as np
 
-from yt.units.unit_registry import \
+from unyt.unit_registry import \
     UnitRegistry
 
 from ytree.data_structures.arbor import \

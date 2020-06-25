@@ -19,7 +19,7 @@ import glob
 
 from yt.funcs import \
     get_pbar
-from yt.data_objects.data_containers import \
+from unyt.exceptions import \
     UnitParseError
 
 from ytree.data_structures.arbor import \
