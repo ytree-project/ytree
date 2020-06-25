@@ -17,7 +17,7 @@ import h5py
 import json
 import numpy as np
 
-from yt.units.unit_registry import \
+from unyt.unit_registry import \
     UnitRegistry
 
 from ytree.data_structures.arbor import \
@@ -108,7 +108,10 @@ class YTreeArbor(Arbor):
             with h5py.File(fn, "r") as f:
                 if "arbor_type" not in f.attrs:
                     return False
-                if f.attrs["arbor_type"].astype(str) != "YTreeArbor":
+                atype = f.attrs["arbor_type"]
+                if hasattr(atype, "astype"):
+                    atype = atype.astype(str)
+                if atype != "YTreeArbor":
                     return False
         except BaseException:
             return False

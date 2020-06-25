@@ -14,13 +14,12 @@ io utilities
 #-----------------------------------------------------------------------------
 
 import numpy as np
+from unyt import \
+    unyt_array, \
+    unyt_quantity
 
 from yt.funcs import \
     get_pbar
-from yt.units.yt_array import \
-    YTArray, \
-    YTQuantity
-
 from ytree.utilities.logger import \
     fake_pbar
 
@@ -41,7 +40,7 @@ def _hdf5_yt_attr(fh, attr, unit_registry=None):
     """
     Read an hdf5 attribute.  If there exists another attribute
     named <attr>_units, use that to assign units and return
-    as either a YTArray or YTQuantity.
+    as either a unyt_array or unyt_quantity.
     """
     val = fh.attrs[attr]
     units = ""
@@ -54,15 +53,15 @@ def _hdf5_yt_attr(fh, attr, unit_registry=None):
         units = ""
     if units != "":
         if isinstance(val, np.ndarray):
-            val = YTArray(val, units, registry=unit_registry)
+            val = unyt_array(val, units, registry=unit_registry)
         else:
-            val = YTQuantity(val, units, registry=unit_registry)
+            val = unyt_quantity(val, units, registry=unit_registry)
     return val
 
 def _hdf5_yt_array_lite(fh, field):
     """
     Read an hdf5 dataset.  If that dataset has a "units" attribute,
-    return that as well, but do not cast as a YTArray.
+    return that as well, but do not cast as a unyt_array.
     """
     units = ""
     if "units" in fh[field].attrs:

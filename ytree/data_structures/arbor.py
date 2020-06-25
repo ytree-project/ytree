@@ -19,19 +19,20 @@ import functools
 import json
 import numpy as np
 import os
+from unyt import \
+    unyt_array, \
+    unyt_quantity
 
 from yt.frontends.ytdata.utilities import \
     save_as_dataset
 from yt.funcs import \
     get_pbar, \
     TqdmProgressBar
-from yt.units.dimensions import \
+from unyt.dimensions import \
+    dimensionless, \
     length
-from yt.units.unit_registry import \
+from unyt.unit_registry import \
     UnitRegistry
-from yt.units.yt_array import \
-    YTArray, \
-    YTQuantity
 from yt.utilities.cosmology import \
     Cosmology
 
@@ -76,8 +77,8 @@ class Arbor(object, metaclass=RegisteredArbor):
     and create trees, stored in an array in
     :func:`~ytree.data_structures.arbor.Arbor.trees`.
     Arbors can be saved in a universal format with
-    :func:`~ytree.data_structures.arbor.Arbor.save_arbor`.  Also, provide some
-    convenience functions for creating YTArrays and YTQuantities and
+    :func:`~ytree.data_structures.arbor.Arbor.save_arbor`. Also, provide some
+    convenience functions for creating unyt_arrays and unyt_quantities and
     a cosmology calculator.
     """
 
@@ -114,7 +115,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         Note, we are using comoving units all the time since
         we are dealing with data at multiple redshifts.
         """
-        for my_unit in ["m", "pc", "AU", "au"]:
+        for my_unit in ["m", "pc", "AU"]:
             new_unit = "%scm" % my_unit
             self._unit_registry.add(
                 new_unit, self._unit_registry.lut[my_unit][0],
@@ -417,7 +418,11 @@ class Arbor(object, metaclass=RegisteredArbor):
         # reset the unit registry lut while preserving other changes
         self.unit_registry = UnitRegistry.from_json(
             self.unit_registry.to_json())
-        self.unit_registry.modify("h", self.hubble_constant)
+        if 'h' in self.unit_registry:
+            self.unit_registry.modify("h", self.hubble_constant)
+        else:
+            self.unit_registry.add(
+                'h', self.hubble_constant, dimensionless)
 
     _box_size = None
     @property
@@ -465,11 +470,11 @@ class Arbor(object, metaclass=RegisteredArbor):
     @property
     def arr(self):
         """
-        Create a YTArray using the Arbor's unit registry.
+        Create a unyt_array using the Arbor's unit registry.
         """
         if self._arr is not None:
             return self._arr
-        self._arr = functools.partial(YTArray,
+        self._arr = functools.partial(unyt_array,
                                       registry=self.unit_registry)
         return self._arr
 
@@ -477,11 +482,11 @@ class Arbor(object, metaclass=RegisteredArbor):
     @property
     def quan(self):
         """
-        Create a YTQuantity using the Arbor's unit registry.
+        Create a unyt_quantity using the Arbor's unit registry.
         """
         if self._quan is not None:
             return self._quan
-        self._quan = functools.partial(YTQuantity,
+        self._quan = functools.partial(unyt_quantity,
                                        registry=self.unit_registry)
         return self._quan
 

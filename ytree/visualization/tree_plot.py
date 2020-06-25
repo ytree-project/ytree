@@ -16,8 +16,8 @@ visualization imports
 from functools import wraps
 import numpy as np
 
-from yt.units.yt_array import \
-    YTQuantity
+from unyt import \
+    unyt_quantity
 
 try:
     import pydot
@@ -66,7 +66,7 @@ class TreePlot(object):
     size_log : bool
         Whether to scale circle sizes based on log of size field.
         Default: True.
-    min_mass : float or YTQuantity
+    min_mass : float or unyt_quantity
         The minimum halo mass to be included in the plot. If given
         as a float, units are assumed to be Msun.
         Default: None.
@@ -280,8 +280,8 @@ class TreePlot(object):
     @min_mass.setter
     @clear_graph
     def min_mass(self, val):
-        if not isinstance(val, YTQuantity):
-            val = YTQuantity(val, 'Msun')
+        if not isinstance(val, unyt_quantity):
+            val = unyt_quantity(val, 'Msun')
         self._min_mass = val
 
     @property

@@ -22,7 +22,7 @@ from ytree.frontends.ahf.fields import \
     AHFFieldInfo
 from ytree.frontends.ahf.io import \
     AHFDataFile
-from yt.units.unit_registry import \
+from unyt.unit_registry import \
     UnitRegistry
 
 class AHFArbor(CatalogArbor):

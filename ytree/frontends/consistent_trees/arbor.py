@@ -21,7 +21,7 @@ import os
 
 from yt.funcs import \
     get_pbar
-from yt.data_objects.data_containers import \
+from unyt.exceptions import \
     UnitParseError
 
 from ytree.data_structures.arbor import \
@@ -94,8 +94,7 @@ class ConsistentTreesArbor(Arbor):
             line = f.readline()
             if line is None:
                 raise IOError(
-                    "Encountered enexpected EOF reading %s." %
-                    self.filename)
+                    "Encountered enexpected EOF reading %s." % filename)
             elif not line.startswith("#"):
                 if getattr(self, '_parameter_file_is_data_file', False):
                     self._ntrees = int(line.strip())
