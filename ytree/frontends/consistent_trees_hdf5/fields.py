@@ -13,8 +13,6 @@ ConsistentTreesHDF5Arbor fields
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import numpy as np
-
 from ytree.data_structures.fields import \
     FieldInfoContainer
 

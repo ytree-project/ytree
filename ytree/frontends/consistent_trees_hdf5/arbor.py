@@ -13,17 +13,11 @@ ConsistentTreesHDF5Arbor class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import glob
 import h5py
 import numpy as np
-import re
-import operator
-import os
 
 from yt.funcs import \
     get_pbar
-from yt.data_objects.data_containers import \
-    UnitParseError
 
 from ytree.data_structures.arbor import \
     Arbor
@@ -35,13 +29,6 @@ from ytree.frontends.consistent_trees_hdf5.fields import \
 from ytree.frontends.consistent_trees_hdf5.io import \
     ConsistentTreesHDF5DataFile, \
     ConsistentTreesHDF5TreeFieldIO
-from ytree.frontends.rockstar.arbor import \
-    RockstarArbor
-
-from ytree.utilities.exceptions import \
-    ArborParameterFileEmpty
-from ytree.utilities.io import \
-    f_text_block
 
 class ConsistentTreesHDF5Arbor(Arbor):
     """
@@ -78,7 +65,6 @@ class ConsistentTreesHDF5Arbor(Arbor):
         self.box_size = self.quan(100, 'Mpc/h')
 
         f = h5py.File(self.filename, mode='r')
-        files = list(f.keys())
         fgroup = f['File0'] # or this: f[files[0]]['Forests']
         fi = dict((field, {'dtype': data.dtype})
                   for field, data in fgroup['Forests'].items())

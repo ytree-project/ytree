@@ -14,14 +14,10 @@ ConsistentTreesHDF5Arbor io classes and member functions
 #-----------------------------------------------------------------------------
 
 import h5py
-import numpy as np
-import os
 
 from ytree.data_structures.io import \
     DataFile, \
     TreeFieldIO
-from ytree.frontends.rockstar.io import \
-    RockstarDataFile
 
 class ConsistentTreesHDF5DataFile(DataFile):
     def __init__(self, filename, linkname):
