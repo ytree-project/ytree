@@ -33,6 +33,7 @@ commands:
             pip install --upgrade setuptools
             pip install Cython numpy
             pip install girder-client
+            export MAX_BUILD_CORES=2
             if [ << parameters.ytdev >> == 1 ]; then
                 if [ ! -f $YT_DIR/README.md ]; then
                     git clone --branch=master https://github.com/yt-project/yt $YT_DIR
