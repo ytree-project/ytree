@@ -84,9 +84,10 @@ class TreeFarmArbor(CatalogArbor):
             return False
         try:
             with h5py.File(fn, "r") as f:
-                if "data_type" not in f.attrs:
-                    return False
-                if f.attrs["data_type"].astype(str) != "halo_catalog":
+                dtype = f.attrs.get("data_type")
+                if isinstance(dtype, bytes):
+                    dtype = dtype.astype(str)
+                if dtype != "halo_catalog":
                     return False
         except BaseException:
             return False
