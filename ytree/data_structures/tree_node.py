@@ -209,7 +209,7 @@ class TreeNode(object):
         float, ndarray/unyt_array, TreeNode
 
         """
-        arr_types = ("prog", "tree")
+        arr_types = ("forest", "prog", "tree")
         if isinstance(key, tuple):
             if len(key) != 2:
                 raise SyntaxError(
@@ -245,6 +245,25 @@ class TreeNode(object):
 
     def __repr__(self):
         return "TreeNode[%d]" % self.uid
+
+    _ffi = slice(None)
+    @property
+    def _forest_field_indices(self):
+        """
+        Return default slice to select the whole forest.
+        """
+        self.arbor._grow_tree(self)
+        return self._ffi
+
+    _fn = None
+    @property
+    def _forest_nodes(self):
+        """
+        Return a list of all TreeNodes in the forest.
+        """
+        if self._fn is None:
+            self._fn = self.nodes
+        return self._fn
 
     _tfi = None
     @property
