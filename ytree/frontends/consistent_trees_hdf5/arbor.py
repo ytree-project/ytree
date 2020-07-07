@@ -30,6 +30,21 @@ from ytree.frontends.consistent_trees_hdf5.io import \
     ConsistentTreesHDF5DataFile, \
     ConsistentTreesHDF5TreeFieldIO
 
+_access_names = {
+    'tree':   {'group'     : 'TreeInfo',
+               'parent_id' : 'TreeRootID',
+               'offset'    : 'TreeHalosOffset',
+               'size'      : 'TreeNhalos',
+               'total'     : 'TotNtrees',
+               'file_size' : 'Ntrees'},
+    'forest': {'group'     : 'ForestInfo',
+               'parent_id' : 'ForestID',
+               'offset'    : 'ForestHalosOffset',
+               'size'      : 'ForestNhalos',
+               'total'     : 'TotNforests',
+               'file_size' : 'Nforests'}
+}
+
 class ConsistentTreesHDF5Arbor(Arbor):
     """
     Arbors loaded from consistent-trees tree_*.dat files.
@@ -39,6 +54,14 @@ class ConsistentTreesHDF5Arbor(Arbor):
     _field_info_class = ConsistentTreesHDF5FieldInfo
     _tree_field_io_class = ConsistentTreesHDF5TreeFieldIO
     _default_dtype = np.float32
+
+    def __init__(self, filename, access='tree'):
+        if access not in _access_names:
+            raise ValueError(
+                ('Invalid access value: %s. '
+                 'Valid options are: %s.') % (access, _access_names))
+        self.access = access
+        super(ConsistentTreesHDF5Arbor, self).__init__(filename)
 
     def _node_io_loop_prepare(self, root_nodes):
         return self.data_files, [root_nodes]
@@ -50,12 +73,13 @@ class ConsistentTreesHDF5Arbor(Arbor):
         data_file.close()
 
     def _get_data_files(self):
+        aname = _access_names[self.access]['file_size']
         with h5py.File(self.filename, mode='r') as f:
             self.data_files = \
               [ConsistentTreesHDF5DataFile(self.filename, lname)
                for lname in f]
             self._file_count = \
-              np.array([f[lname].attrs['Ntrees'] for lname in f])
+              np.array([f[lname].attrs[aname] for lname in f])
 
     def _parse_parameter_file(self):
         ### TODO: can these attributes be saved?
@@ -68,7 +92,8 @@ class ConsistentTreesHDF5Arbor(Arbor):
         fgroup = f['File0'] # or this: f[files[0]]['Forests']
         fi = dict((field, {'dtype': data.dtype})
                   for field, data in fgroup['Forests'].items())
-        self._ntrees = f.attrs['TotNtrees']
+        aname = _access_names[self.access]['total']
+        self._ntrees = f.attrs[aname]
         f.close()
 
         self.field_list = list(fi.keys())
@@ -79,13 +104,19 @@ class ConsistentTreesHDF5Arbor(Arbor):
         if self._ntrees == 0:
             return
 
+        my_access = _access_names[self.access]
+        groupname  = my_access['group']
+        uidname    = my_access['parent_id']
+        offsetname = my_access['offset']
+        sizename   = my_access['size']
+
         file_offsets = self._file_count.cumsum() - self._file_count
         pbar = get_pbar('Planting trees', self._ntrees)
         for idf, data_file in enumerate(self.data_files):
             data_file.open()
-            uids = data_file.fh['TreeInfo']['TreeRootID'][()]
-            offsets = data_file.fh['TreeInfo']['TreeHalosOffset'][()]
-            tree_sizes = data_file.fh['TreeInfo']['TreeNhalos'][()]
+            uids = data_file.fh[groupname][uidname][()]
+            offsets = data_file.fh[groupname][offsetname][()]
+            tree_sizes = data_file.fh[groupname][sizename][()]
             data_file.close()
 
             ifile = file_offsets[idf]
@@ -107,7 +138,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
         if not h5py.is_hdf5(fn):
             return False
         with h5py.File(fn, mode='r') as f:
-            for attr in ['Nfiles', 'TotNhalos', 'TotNtrees']:
+            for attr in ['Nfiles', 'TotNforests', 'TotNhalos', 'TotNtrees']:
                 if attr not in f.attrs:
                     return False
         return True
