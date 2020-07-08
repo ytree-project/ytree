@@ -90,7 +90,7 @@ class TreeNode(object):
         """
 
         self.clear_fields()
-        attrs = ["_tfi", "_tn", "_pfi", "_pn"]
+        attrs = ["_tfi", "_tn", "_pfi", "_pn", "_fn"]
         if self.is_root:
             self.root = -1
             attrs.extend(["_nodes", "_desc_uids", "_uids"])
