@@ -39,7 +39,7 @@ from ytree.frontends.rockstar.arbor import \
     RockstarArbor
 
 from ytree.utilities.exceptions import \
-    ArborParameterFileEmpty
+    ArborDataFileEmpty
 from ytree.utilities.io import \
     f_text_block
 
@@ -254,7 +254,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         self._hoffset = f.tell()
         line = f.readline()
         if not line:
-            raise ArborParameterFileEmpty(self.filename)
+            raise ArborDataFileEmpty(self.filename)
 
         fn = os.path.join(self.directory, line.split()[-1])
         super(ConsistentTreesGroupArbor, self)._parse_parameter_file(filename=fn)

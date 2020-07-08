@@ -24,11 +24,15 @@ from ytree.data_structures.arbor import \
 from ytree.data_structures.tree_node import \
     TreeNode
 
+from ytree.frontends.consistent_trees.utilities import \
+    parse_ctrees_header
 from ytree.frontends.consistent_trees_hdf5.fields import \
     ConsistentTreesHDF5FieldInfo
 from ytree.frontends.consistent_trees_hdf5.io import \
     ConsistentTreesHDF5DataFile, \
     ConsistentTreesHDF5TreeFieldIO
+from ytree.utilities.exceptions import \
+    ArborDataFileEmpty
 
 _access_names = {
     'tree':   {'group'     : 'TreeInfo',
@@ -44,6 +48,15 @@ _access_names = {
                'total'     : 'TotNforests',
                'file_size' : 'Nforests'}
 }
+
+_field_char_map = (
+    ('[', '_'),
+    (']', '_'),
+    ('/', '_'),
+    ('?', '' ),
+    ('(', '_'),
+    (')', '_'),
+    ('|', '' ))
 
 class ConsistentTreesHDF5Arbor(Arbor):
     """
@@ -82,22 +95,38 @@ class ConsistentTreesHDF5Arbor(Arbor):
               np.array([f[lname].attrs[aname] for lname in f])
 
     def _parse_parameter_file(self):
-        ### TODO: can these attributes be saved?
-        self.omega_matter = 0.3
-        self.omega_lambda = 0.7
-        self.hubble_constant = 0.7
-        self.box_size = self.quan(100, 'Mpc/h')
-
         f = h5py.File(self.filename, mode='r')
-        fgroup = f['File0'] # or this: f[files[0]]['Forests']
-        fi = dict((field, {'dtype': data.dtype})
-                  for field, data in fgroup['Forests'].items())
+        fgroup = f.get('File0')
+        if fgroup is None:
+            raise ArborDataFileEmpty(self.filename)
+        my_fi = dict((field, {'dtype': data.dtype})
+                    for field, data in fgroup['Forests'].items())
         aname = _access_names[self.access]['total']
         self._ntrees = f.attrs[aname]
+        header = fgroup.attrs['Consistent Trees_metadata'].astype(str)
+        header = header.tolist()
         f.close()
 
-        self.field_list = list(fi.keys())
-        self.field_info.update(fi)
+        header_fi = parse_ctrees_header(
+            self, header, lines_after_header=False)
+        # Do some string manipulation to match the header with
+        # altered names in the hdf5 file.
+        new_fi = {}
+        for field in header_fi:
+            new_field = field
+            for old, new in _field_char_map:
+                new_field = new_field.replace(old, new)
+            new_field = new_field.strip('_')
+            new_field = new_field.replace('__', '_')
+            new_fi[new_field] = header_fi[field].copy()
+            if 'column' in new_fi[new_field]:
+                del new_fi[new_field]['column']
+
+        for field in my_fi:
+            my_fi[field].update(new_fi.get(field, {}))
+
+        self.field_list = list(my_fi.keys())
+        self.field_info.update(my_fi)
 
     def _plant_trees(self):
         self._trees = np.empty(self._ntrees, dtype=np.object)
