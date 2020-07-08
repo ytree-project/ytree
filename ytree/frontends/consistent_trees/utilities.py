@@ -69,7 +69,7 @@ def parse_ctrees_header(arbor, input_stream,
         if line is None:
             if lines_after_header:
                 raise IOError(
-                    "Encountered enexpected EOF reading %s." % filename)
+                    "Encountered enexpected EOF reading %s." % input_stream)
             else:
                 break
         elif not line.startswith("#"):

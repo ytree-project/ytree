@@ -15,14 +15,11 @@ ConsistentTreesArbor class and member functions
 
 import glob
 import numpy as np
-import re
 import operator
 import os
 
 from yt.funcs import \
     get_pbar
-from unyt.exceptions import \
-    UnitParseError
 
 from ytree.data_structures.arbor import \
     Arbor
