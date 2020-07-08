@@ -32,13 +32,13 @@ from ytree.frontends.consistent_trees_hdf5.io import \
 
 _access_names = {
     'tree':   {'group'     : 'TreeInfo',
-               'parent_id' : 'TreeRootID',
+               'unique_id' : 'TreeRootID',
                'offset'    : 'TreeHalosOffset',
                'size'      : 'TreeNhalos',
                'total'     : 'TotNtrees',
                'file_size' : 'Ntrees'},
     'forest': {'group'     : 'ForestInfo',
-               'parent_id' : 'ForestID',
+               'unique_id' : 'ForestID',
                'offset'    : 'ForestHalosOffset',
                'size'      : 'ForestNhalos',
                'total'     : 'TotNforests',
@@ -106,7 +106,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
 
         my_access = _access_names[self.access]
         groupname  = my_access['group']
-        uidname    = my_access['parent_id']
+        uidname    = my_access['unique_id']
         offsetname = my_access['offset']
         sizename   = my_access['size']
 
