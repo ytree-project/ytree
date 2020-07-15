@@ -895,6 +895,7 @@ Check the TypeError exception above for more details.
                  "tree_end_index"  : tree_end_index,
                  "tree_size"       : ntrees}
         hdata.update(rdata)
+        del rdata
         htypes = dict((f, "index") for f in hdata)
         htypes.update(rtypes)
 
@@ -903,6 +904,7 @@ Check the TypeError exception above for more details.
         save_as_dataset(ds, header_filename, hdata,
                         field_types=htypes,
                         extra_attrs=extra_attrs)
+        del hdata
 
         # write data files
         ftypes = dict((f, "data") for f in fieldnames)
@@ -912,7 +914,8 @@ Check the TypeError exception above for more details.
                 self._node_io.get_fields,
                 pbar="Getting fields [%d/%d]" % (i+1, nfiles),
                 root_nodes=my_nodes, fields=fields, root_only=False)
-            fdata = dict((field, np.empty(nnodes[i])) for field in fieldnames)
+            # fdata = dict((field, np.empty(nnodes[i])) for field in fieldnames)
+            fdata = {}
             my_tree_size  = tree_size[tree_start_index[i]:tree_end_index[i]]
             my_tree_end   = my_tree_size.cumsum()
             my_tree_start = my_tree_end - my_tree_size
@@ -920,18 +923,32 @@ Check the TypeError exception above for more details.
                             (i+1, nfiles), len(fields)*nnodes[i])
             c = 0
             for field, fieldname in zip(fields, fieldnames):
-                for di, node in enumerate(my_nodes):
-                    if node.is_root:
-                        ndata = node._field_data[field]
-                    else:
-                        ndata = node["tree", field]
-                        if field == "desc_uid":
-                            # make sure it's a root when loaded
-                            ndata[0] = -1
-                    fdata[fieldname][
-                        my_tree_start[di]:my_tree_end[di]] = ndata
-                    c += my_tree_size[di]
-                    pbar.update(c)
+                fdata[fieldname] = np.concatenate(
+                    [node._field_data[field] if node.is_root else node["tree", field]
+                     for node in my_nodes])
+                c += nnodes[i]
+                pbar.update(c)
+                # for di, node in enumerate(my_nodes):
+                #     if node.is_root:
+                #         ndata = node._field_data[field]
+                #     else:
+                #         ndata = node["tree", field]
+                #         if field == "desc_uid":
+                #             # make sure it's a root when loaded
+                #             ndata[0] = -1
+                #     fdata[fieldname][
+                #         my_tree_start[di]:my_tree_end[di]] = ndata
+                #     c += my_tree_size[di]
+                #     pbar.update(c)
+            pbar.finish()
+            # In case we have saved any non-root trees,
+            # mark them as having no descendents.
+            fdata['desc_uid'][my_tree_start] = -1
+
+            pbar = get_pbar("Resetting trees", my_nodes.size)
+            for node in my_nodes:
+                node.reset()
+                pbar.update(1)
             pbar.finish()
             fdata["tree_start_index"] = my_tree_start
             fdata["tree_end_index"]   = my_tree_end

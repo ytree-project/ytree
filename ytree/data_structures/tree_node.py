@@ -90,10 +90,14 @@ class TreeNode(object):
         """
 
         self.clear_fields()
-        attrs = ["_tfi", "_tn", "_pfi", "_pn"]
+        attrs = ["_tfi", "_tn", "_pfi", "_pn",
+                 "_ancestors", "descendent"]
         if self.is_root:
             self.root = -1
             attrs.extend(["_nodes", "_desc_uids", "_uids"])
+            for i in range(1, self.tree_size):
+                self.nodes[i].reset()
+                self.nodes[i] = None
         else:
             self.root = None
         for attr in attrs:
