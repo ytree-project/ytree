@@ -100,7 +100,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
         f.close()
 
         header_fi = parse_ctrees_header(
-            self, header, lines_after_header=False)
+            self, header, ntrees_in_file=False)
         # Do some string manipulation to match the header with
         # altered names in the hdf5 file.
         new_fi = {}

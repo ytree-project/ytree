@@ -19,7 +19,7 @@ from unyt.exceptions import \
     UnitParseError
 
 def parse_ctrees_header(arbor, input_stream,
-                        lines_after_header=True):
+                        ntrees_in_file=True):
     """
     Parse consistent-trees header information.
 
@@ -67,13 +67,13 @@ def parse_ctrees_header(arbor, input_stream,
     while True:
         line = next_line()
         if line is None:
-            if lines_after_header:
+            if ntrees_in_file:
                 raise IOError(
                     "Encountered enexpected EOF reading %s." % input_stream)
             else:
                 break
         elif not line.startswith("#"):
-            if lines_after_header:
+            if ntrees_in_file:
                 arbor._ntrees = int(line.strip())
                 arbor._hoffset = f.tell()
             break

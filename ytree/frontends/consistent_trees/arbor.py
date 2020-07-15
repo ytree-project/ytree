@@ -64,12 +64,12 @@ class ConsistentTreesArbor(Arbor):
         self.data_files = [ConsistentTreesDataFile(self.filename)]
 
     def _parse_parameter_file(self, filename=None,
-                              lines_after_header=True):
+                              ntrees_in_file=True):
         if filename is None:
             filename = self.filename
         fi = parse_ctrees_header(
             self, filename,
-            lines_after_header=lines_after_header)
+            ntrees_in_file=ntrees_in_file)
         self.field_list = list(fi.keys())
         self.field_info.update(fi)
 
@@ -164,7 +164,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
 
         fn = os.path.join(self.directory, line.split()[-1])
         super(ConsistentTreesGroupArbor, self)._parse_parameter_file(
-            filename=fn, lines_after_header=False)
+            filename=fn, ntrees_in_file=False)
 
     def _plant_trees(self):
         f = open(self.filename, 'r')
@@ -258,7 +258,7 @@ class ConsistentTreesHlistArbor(RockstarArbor):
 
     def _parse_parameter_file(self):
         ConsistentTreesArbor._parse_parameter_file(
-            self, lines_after_header=False)
+            self, ntrees_in_file=False)
 
     def _get_data_files(self):
         """
