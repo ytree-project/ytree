@@ -15,6 +15,7 @@ ConsistentTreesHDF5Arbor class and member functions
 
 import h5py
 import numpy as np
+import re
 
 from yt.funcs import \
     get_pbar
@@ -48,15 +49,6 @@ _access_names = {
                'total'     : 'TotNforests',
                'file_size' : 'Nforests'}
 }
-
-_field_char_map = (
-    ('[', '_'),
-    (']', '_'),
-    ('/', '_'),
-    ('?', '' ),
-    ('(', '_'),
-    (')', '_'),
-    ('|', '' ))
 
 class ConsistentTreesHDF5Arbor(Arbor):
     """
@@ -114,10 +106,15 @@ class ConsistentTreesHDF5Arbor(Arbor):
         new_fi = {}
         for field in header_fi:
             new_field = field
-            for old, new in _field_char_map:
-                new_field = new_field.replace(old, new)
+            # remove ?| characters
+            new_field = re.sub(r'[?|]', '', new_field)
+            # replace []/() characters with _
+            new_field = re.sub(r'[\[\]\/\(\)]', '_', new_field)
+            # remove leading/trailing underscores
             new_field = new_field.strip('_')
+            # replace double underscore with single underscore
             new_field = new_field.replace('__', '_')
+
             new_fi[new_field] = header_fi[field].copy()
             if 'column' in new_fi[new_field]:
                 del new_fi[new_field]['column']
