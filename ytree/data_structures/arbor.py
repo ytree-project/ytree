@@ -356,6 +356,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         roots of all trees.
         If given an integer, return a tree from the list of trees.
         """
+
         if isinstance(key, str):
             if key in ("tree", "prog"):
                 raise SyntaxError("Argument must be a field or integer.")
@@ -363,7 +364,21 @@ class Arbor(object, metaclass=RegisteredArbor):
             if self.field_info[key].get("type") == "analysis":
                 return self._field_data.pop(key)
             return self._field_data[key]
-        return self._generate_root_node(key)
+        return self._generate_root_nodes(key)
+
+    def _generate_root_nodes(self, key):
+        """
+        Create root nodes given an index or slice from uid array.
+        """
+
+        if isinstance(key, int):
+            return self._generate_root_node(key)
+        elif isinstance(key, slice) or isinstance(key, np.ndarray):
+            indices = np.arange(self.size)[key]
+            return np.array(
+                [self._generate_root_node(index) for index in indices])
+        else:
+            raise ValueError('Cannot generate nodes from argument: ', key)
 
     def _generate_root_node(self, index):
         """
