@@ -164,7 +164,7 @@ class Arbor(object, metaclass=RegisteredArbor):
 
     def _plant_trees(self):
         """
-        Create the list of root tree nodes.
+        Create arrays to construct root nodes.
         """
         raise NotImplementedError
 
@@ -326,7 +326,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         things up.
         """
 
-        data_files, node_list = self._node_io_loop_prepare(self.trees)
+        data_files, node_list = self._node_io_loop_prepare(self[:])
 
         for data_file, nodes in zip(data_files, node_list):
             self._node_io_loop_start(data_file)
