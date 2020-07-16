@@ -86,6 +86,7 @@ class Arbor(object, metaclass=RegisteredArbor):
     _root_field_io_class = DefaultRootFieldIO
     _tree_field_io_class = TreeFieldIO
     _default_dtype = np.float64
+    _io_attrs = ()
 
     def __init__(self, filename):
         """
@@ -333,15 +334,15 @@ class Arbor(object, metaclass=RegisteredArbor):
                 yield node
             self._node_io_loop_finish(data_file)
 
-    _trees = None
+    _uids = None
     @property
-    def trees(self):
+    def uids(self):
         """
-        Array containing all trees in the arbor.
+        Array containing all root uids in the arbor.
         """
-        if self._trees is None:
+        if self._uids is None:
             self._plant_trees()
-        return self._trees
+        return self._uids
 
     def __repr__(self):
         return self.basename
@@ -362,13 +363,23 @@ class Arbor(object, metaclass=RegisteredArbor):
             if self.field_info[key].get("type") == "analysis":
                 return self._field_data.pop(key)
             return self._field_data[key]
-        return self.trees[key]
+        return self._generate_root_node(key)
+
+    def _generate_root_node(self, index):
+        """
+        Create a root node given its index in the array of uids.
+        """
+
+        my_node = TreeNode(self.uids[index], arbor=self, root=True)
+        for attr in self._io_attrs:
+            setattr(my_node, attr, self._io_info[attr][index])
+        return my_node
 
     def __len__(self):
         """
         Return length of tree list.
         """
-        return self.trees.size
+        return self.uids.size
 
     _field_info = None
     @property
@@ -386,7 +397,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
         Return length of tree list.
         """
-        return self.trees.size
+        return self.uids.size
 
     _unit_registry = None
     @property

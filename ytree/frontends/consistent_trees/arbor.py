@@ -52,6 +52,7 @@ class ConsistentTreesArbor(Arbor):
     _field_info_class = ConsistentTreesFieldInfo
     _tree_field_io_class = ConsistentTreesTreeFieldIO
     _default_dtype = np.float32
+    _io_attrs = ('_fi', '_si', '_ei')
 
     def _node_io_loop_prepare(self, root_nodes):
         return self.data_files, [root_nodes]
@@ -166,7 +167,10 @@ class ConsistentTreesArbor(Arbor):
         self.box_size = self.quan(float(box[0]), box[1])
 
     def _plant_trees(self):
-        self._trees = np.empty(self._ntrees, dtype=np.object)
+        self._io_info = \
+          dict((attr, np.empty(self._ntrees, dtype=np.int64))
+               for attr in self._io_attrs)
+        self._uids = np.empty(self._ntrees, dtype=np.int64)
         if self._ntrees == 0:
             return
 
@@ -197,17 +201,16 @@ class ConsistentTreesArbor(Arbor):
                     buff += data_file.fh.readline()
                     inl = len(buff)
                 uid = int(buff[ihash+lkey:inl])
+                self._uids[itree] = uid
                 lihash = ihash
-                my_node = TreeNode(uid, arbor=self, root=True)
-                my_node._si = offset + inl + 1
-                my_node._fi = 0
-                self._trees[itree] = my_node
+                self._io_info['_si'][itree] = offset + inl + 1
+                self._io_info['_fi'][itree] = 0
                 if itree > 0:
-                    self._trees[itree-1]._ei = offset + ihash - 1
+                    self._io_info['_ei'][itree-1] = offset + ihash - 1
                 itree += 1
             offset = data_file.fh.tell()
             pbar.update(offset)
-        self._trees[-1]._ei = offset
+        self._io_info['_ei'][-1] = offset
         data_file.close()
         pbar.finish()
 
@@ -268,6 +271,12 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
             ))
         f.close()
 
+        self._ntrees = len(ldata)
+        self._io_info = \
+          dict((attr, np.empty(self._ntrees, dtype=np.int64))
+               for attr in self._io_attrs)
+        self._uids = np.empty(self._ntrees, dtype=np.int64)
+
         # It's faster to create and sort arrays and then sort ldata
         # for some reason.
         dfns = np.unique([datum[3] for datum in ldata])
@@ -288,9 +297,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
            for fn in data_files]
 
         ldata.sort(key=operator.itemgetter(1, 2))
-        ntrees = len(ldata)
-        pbar = get_pbar("Loading tree roots", ntrees)
-        self._trees = np.empty(ntrees, dtype=np.object)
+        pbar = get_pbar("Loading tree roots", self._ntrees)
 
         # Set end offsets for each tree.
         # We don't get them from the location file.
@@ -298,13 +305,12 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         same_file = np.diff(fids, append=fids[-1]+1) == 0
 
         for i, tdata in enumerate(ldata):
-            my_node        = TreeNode(tdata[0], arbor=self, root=True)
-            my_node._si    = tdata[2]
-            my_node._fi    = tdata[1]
+            self._uids[i] = tdata[0]
+            self._io_info['_fi'][i] = tdata[1]
+            self._io_info['_si'][i] = tdata[2]
             # Get end index from next tree.
             if same_file[i]:
-                my_node._ei = ldata[i+1][2] - lkey - tdata[4]
-            self._trees[i] = my_node
+                self._io_info['_ei'][i] = ldata[i+1][2] - lkey - tdata[4]
             pbar.update(i)
         pbar.finish()
 
@@ -313,7 +319,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
             data_file = self.data_files[fids[i]]
             data_file.open()
             data_file.fh.seek(0, 2)
-            self._trees[i]._ei = data_file.fh.tell()
+            self._io_info['_ei'][i] = data_file.fh.tell()
             data_file.close()
 
     @classmethod
