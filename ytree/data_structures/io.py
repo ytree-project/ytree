@@ -244,9 +244,12 @@ class DefaultRootFieldIO(FieldIO):
 
         store = "field_store"
 
-        self.arbor._node_io_loop(
+        node_list, rvals = self.arbor._node_io_loop(
             self.arbor._node_io._read_fields, pbar="Reading root fields",
             store=store, fields=fields, dtypes=dtypes, root_only=True)
+
+        ### TODO: is it faster to sort node_list and rvals
+        ###       rvals as an array?
 
         fi = self.arbor.field_info
         fsize = self.arbor.size
@@ -256,12 +259,9 @@ class DefaultRootFieldIO(FieldIO):
             units = fi[field].get("units", "")
             if units:
                 data = self.arbor.arr(data, units)
-            for i, tree in enumerate(self.arbor.trees):
-                data[i] = getattr(tree, store)[field][0]
+            for i, fvals in zip(node_list, rvals):
+                data[i] = fvals[field]
             field_data[field] = data
-
-        for tree in self.arbor.trees:
-            delattr(tree, store)
 
         return field_data
 

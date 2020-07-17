@@ -271,7 +271,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         pbar = kwargs.pop("pbar", None)
         root_nodes = kwargs.pop("root_nodes", None)
         if root_nodes is None:
-            root_nodes = self.trees
+            root_nodes = np.arange(self.size)
         store = kwargs.pop("store", None)
         data_files, node_list = self._node_io_loop_prepare(root_nodes)
         nnodes = sum([nodes.size for nodes in node_list])
@@ -284,17 +284,19 @@ class Arbor(object, metaclass=RegisteredArbor):
         else:
             finish = False
 
+        rvals = []
         for data_file, nodes in zip(data_files, node_list):
             self._node_io_loop_start(data_file)
-            for node in nodes:
+            for node in self._yield_root_nodes(nodes):
                 rval = func(node, *args, **kwargs)
-                if store is not None:
-                    setattr(node, store, rval)
+                rvals.append(rval)
                 pbar.update(1)
             self._node_io_loop_finish(data_file)
 
         if finish:
             pbar.finish()
+
+        return np.concatenate(node_list), rvals
 
     def _node_io_loop_start(self, data_file):
         pass
@@ -326,7 +328,8 @@ class Arbor(object, metaclass=RegisteredArbor):
         things up.
         """
 
-        data_files, node_list = self._node_io_loop_prepare(self[:])
+        data_files, node_list = \
+          self._node_io_loop_prepare(self._yield_root_nodes(slice(None)))
 
         for data_file, nodes in zip(data_files, node_list):
             self._node_io_loop_start(data_file)
@@ -376,9 +379,17 @@ class Arbor(object, metaclass=RegisteredArbor):
         elif isinstance(key, slice) or isinstance(key, np.ndarray):
             indices = np.arange(self.size)[key]
             return np.array(
-                [self._generate_root_node(index) for index in indices])
+                [node for node in self._yield_root_nodes(indices)])
         else:
             raise ValueError('Cannot generate nodes from argument: ', key)
+
+    def _yield_root_nodes(self, indices):
+        """
+        Root node generator.
+        """
+
+        for index in indices:
+            yield self._generate_root_node(index)
 
     def _generate_root_node(self, index):
         """

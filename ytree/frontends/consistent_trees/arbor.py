@@ -242,7 +242,8 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
     _parameter_file_is_data_file = False
 
     def _node_io_loop_prepare(self, root_nodes):
-        fi = np.array([node._fi for node in root_nodes])
+        fi = np.array(
+            [node._fi for node in self._yield_root_nodes(root_nodes)])
         ufi = np.unique(fi)
         data_files = [self.data_files[i] for i in ufi]
         node_list = [root_nodes[fi == i] for i in ufi]
