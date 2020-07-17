@@ -242,14 +242,10 @@ class DefaultRootFieldIO(FieldIO):
         my_dtypes = self._determine_dtypes(
             fields, override_dict=dtypes)
 
-        store = "field_store"
-
         node_list, rvals = self.arbor._node_io_loop(
-            self.arbor._node_io._read_fields, pbar="Reading root fields",
-            store=store, fields=fields, dtypes=dtypes, root_only=True)
-
-        ### TODO: is it faster to sort node_list and rvals
-        ###       rvals as an array?
+            self.arbor._node_io._read_fields,
+            pbar="Reading root fields",
+            fields=fields, dtypes=dtypes, root_only=True)
 
         fi = self.arbor.field_info
         fsize = self.arbor.size

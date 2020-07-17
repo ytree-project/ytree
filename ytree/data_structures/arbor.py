@@ -261,18 +261,12 @@ class Arbor(object, metaclass=RegisteredArbor):
             If None, the list will be self.trees (i.e., all
             root_nodes).
             Default: None.
-        store : optional, string
-            If not None, any return value captured from the function
-            will be stored in an attribute with this name associated
-            with the TreeNode.
-            Default: None.
         """
 
         pbar = kwargs.pop("pbar", None)
         root_nodes = kwargs.pop("root_nodes", None)
         if root_nodes is None:
             root_nodes = np.arange(self.size)
-        store = kwargs.pop("store", None)
         data_files, node_list = self._node_io_loop_prepare(root_nodes)
         nnodes = sum([nodes.size for nodes in node_list])
 
