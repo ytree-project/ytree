@@ -242,8 +242,16 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
     _parameter_file_is_data_file = False
 
     def _node_io_loop_prepare(self, root_nodes):
-        fi = np.array(
-            [node._fi for node in self._yield_root_nodes(root_nodes)])
+        self._plant_trees()
+
+        if root_nodes is None:
+            root_nodes = np.arange(self._ntrees)
+            fi = self._io_info['_fi']
+        elif root_nodes.dtype == np.object:
+            fi = np.array([node._fi for node in root_nodes])
+        else: # assume an array of indices
+            fi = self._io_info['_fi'][root_nodes]
+
         ufi = np.unique(fi)
         data_files = [self.data_files[i] for i in ufi]
         node_list = [root_nodes[fi == i] for i in ufi]
@@ -264,6 +272,9 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         super(ConsistentTreesGroupArbor, self)._parse_parameter_file(filename=fn)
 
     def _plant_trees(self):
+        if self.is_planted:
+            return
+
         f = open(self.filename, 'r')
         f.seek(self._hoffset)
         ldata = list(map(

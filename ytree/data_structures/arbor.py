@@ -186,6 +186,8 @@ class Arbor(object, metaclass=RegisteredArbor):
         if self.is_setup(tree_node):
             return
 
+        mylog.debug(f"Setting up tree {str(tree_node)}.")
+
         idtype      = np.int64
         fields, _ = \
           self.field_info.resolve_field_dependencies(["uid", "desc_uid"])
@@ -238,13 +240,55 @@ class Arbor(object, metaclass=RegisteredArbor):
                 desc.add_ancestor(node)
                 node.descendent = desc
 
+    def _node_io_iter(self, pbar=None, root_nodes=None):
+        """
+        Yield nodes in a file i/o optimized way.
+
+        Group nodes by data file and open/close files as needed.
+        Call the provided function over a list of nodes.
+
+        Parameters
+        ----------
+        pbar : optional, string or yt.funcs.TqdmProgressBar
+            A progress bar to be updated with each iteration.
+            If a string, a progress bar will be created and the
+            finish function will be called. If a progress bar is
+            provided, the finish function will not be called.
+            Default: None (no progress bar).
+        root_nodes : optional, array of root TreeNodes
+            Array of nodes over which the function will be called.
+            If None, the list will be self.trees (i.e., all
+            root_nodes).
+            Default: None.
+        """
+
+        data_files, node_list = self._node_io_loop_prepare(root_nodes)
+        nnodes = sum([nodes.size for nodes in node_list])
+
+        finish = True
+        if pbar is None:
+            pbar = fake_pbar("", nnodes)
+        elif not isinstance(pbar, TqdmProgressBar):
+            pbar = get_pbar(pbar, nnodes)
+        else:
+            finish = False
+
+        for data_file, nodes in zip(data_files, node_list):
+            self._node_io_loop_start(data_file)
+            for node in self._yield_root_nodes(nodes):
+                yield node
+                pbar.update(1)
+            self._node_io_loop_finish(data_file)
+
+        if finish:
+            pbar.finish()
+
     def _node_io_loop(self, func, *args, **kwargs):
         """
         Call the provided function over a list of nodes.
 
         If possible, group nodes by common data files to speed
-        things up.  This should work like __iter__, except we call
-        a function instead of yielding.
+        things up.
 
         Parameters
         ----------
@@ -265,32 +309,16 @@ class Arbor(object, metaclass=RegisteredArbor):
 
         pbar = kwargs.pop("pbar", None)
         root_nodes = kwargs.pop("root_nodes", None)
-        if root_nodes is None:
-            root_nodes = np.arange(self.size)
-        data_files, node_list = self._node_io_loop_prepare(root_nodes)
-        nnodes = sum([nodes.size for nodes in node_list])
-
-        finish = True
-        if pbar is None:
-            pbar = fake_pbar("", nnodes)
-        elif not isinstance(pbar, TqdmProgressBar):
-            pbar = get_pbar(pbar, nnodes)
-        else:
-            finish = False
 
         rvals = []
-        for data_file, nodes in zip(data_files, node_list):
-            self._node_io_loop_start(data_file)
-            for node in self._yield_root_nodes(nodes):
-                rval = func(node, *args, **kwargs)
-                rvals.append(rval)
-                pbar.update(1)
-            self._node_io_loop_finish(data_file)
+        indices = []
+        for node in self._node_io_iter(
+                pbar=pbar, root_nodes=root_nodes):
+            rval = func(node, *args, **kwargs)
+            rvals.append(rval)
+            indices.append(node._index)
 
-        if finish:
-            pbar.finish()
-
-        return np.concatenate(node_list), rvals
+        return np.array(indices), rvals
 
     def _node_io_loop_start(self, data_file):
         pass
@@ -322,14 +350,14 @@ class Arbor(object, metaclass=RegisteredArbor):
         things up.
         """
 
-        data_files, node_list = \
-          self._node_io_loop_prepare(self._yield_root_nodes(slice(None)))
+        return self._node_io_iter(None)
 
-        for data_file, nodes in zip(data_files, node_list):
-            self._node_io_loop_start(data_file)
-            for node in nodes:
-                yield node
-            self._node_io_loop_finish(data_file)
+    @property
+    def is_planted(self):
+        """
+        Determine if trees have been planted.
+        """
+        return self._uids is not None
 
     _uids = None
     @property
@@ -337,8 +365,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
         Array containing all root uids in the arbor.
         """
-        if self._uids is None:
-            self._plant_trees()
+        self._plant_trees()
         return self._uids
 
     def __repr__(self):
@@ -363,6 +390,28 @@ class Arbor(object, metaclass=RegisteredArbor):
             return self._field_data[key]
         return self._generate_root_nodes(key)
 
+    def _strip_nodes(self, nodes):
+        """
+        Convert an array of nodes into a dict of essential metadata arrays.
+        """
+
+        my_nodes = np.atleast_1d(nodes)
+        attrs = list(self._io_attrs) + ['uid']
+        data = dict((attr, np.empty(my_nodes.size, dtype=np.int64))
+                    for attr in attrs + ['root_uid'])
+        data['_field_data'] = np.empty(my_nodes.size, dtype=np.object)
+        for i, node in enumerate(my_nodes):
+            for attr in attrs:
+                data[attr][i] = getattr(node, attr)
+                if node.is_root:
+                    data['root_uid'][i] = node.uid
+                    data['_field_data'][i] = node._field_data
+                else:
+                    data['root_uid'][i] = node.root.uid
+                    data['_field_data'][i] = node.root._field_data
+
+        return data
+
     def _generate_root_nodes(self, key):
         """
         Create root nodes given an index or slice from uid array.
@@ -383,7 +432,9 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
 
         for index in indices:
-            yield self._generate_root_node(index)
+            node = self._generate_root_node(index)
+            node._index = index
+            yield node
 
     def _generate_root_node(self, index):
         """
@@ -832,16 +883,15 @@ Check the TypeError exception above for more details.
 
         if trees is None:
             all_trees = True
-            trees = self.trees
-            roots = trees
-        else:
+            trees = self
+        else: # TODO
             all_trees = False
             # assemble unique tree roots for getting fields
             trees = np.asarray(trees)
             roots = []
             root_uids = []
             for tree in trees:
-                if tree.root == -1:
+                if tree.id_root:
                     my_root = tree
                 else:
                     my_root = tree.root
@@ -871,11 +921,6 @@ Check the TypeError exception above for more details.
                        "arbor_type": "YTreeArbor",
                        "unit_registry_json": self.unit_registry.to_json()}
 
-        self._node_io_loop(self._setup_tree, root_nodes=roots,
-                           pbar="Setting up trees")
-        if all_trees:
-            self._root_io.get_fields(self, fields=fields)
-
         # determine file layout
         nn = 0 # node count
         nt = 0 # tree count
@@ -898,6 +943,9 @@ Check the TypeError exception above for more details.
         ntrees = np.array(ntrees)
         tree_end_index   = ntrees.cumsum()
         tree_start_index = tree_end_index - ntrees
+
+        if all_trees:
+            self._root_io.get_fields(self, fields=fields)
 
         # write header file
         fieldnames = [field.replace("/", "_") for field in fields]
@@ -935,11 +983,14 @@ Check the TypeError exception above for more details.
                         field_types=htypes,
                         extra_attrs=extra_attrs)
 
+        if all_trees:
+            my_trees = np.arange(self.size)
+
         # write data files
         ftypes = dict((f, "data") for f in fieldnames)
         for i in range(nfiles):
-            my_nodes = trees[tree_start_index[i]:tree_end_index[i]]
-            self._node_io_loop(
+            my_nodes = my_trees[tree_start_index[i]:tree_end_index[i]]
+            node_list, rvals = self._node_io_loop(
                 self._node_io.get_fields,
                 pbar="Getting fields [%d/%d]" % (i+1, nfiles),
                 root_nodes=my_nodes, fields=fields, root_only=False)
@@ -947,23 +998,35 @@ Check the TypeError exception above for more details.
             my_tree_size  = tree_size[tree_start_index[i]:tree_end_index[i]]
             my_tree_end   = my_tree_size.cumsum()
             my_tree_start = my_tree_end - my_tree_size
+
+
             pbar = get_pbar("Creating field arrays [%d/%d]" %
                             (i+1, nfiles), len(fields)*nnodes[i])
+
             c = 0
-            for field, fieldname in zip(fields, fieldnames):
-                for di, node in enumerate(my_nodes):
-                    if node.is_root:
-                        ndata = node._field_data[field]
-                    else:
-                        ndata = node["tree", field]
-                        if field == "desc_uid":
-                            # make sure it's a root when loaded
-                            ndata[0] = -1
-                    fdata[fieldname][
-                        my_tree_start[di]:my_tree_end[di]] = ndata
-                    c += my_tree_size[di]
+            if all_trees:
+                for field, fieldname in zip(fields, fieldnames):
+                    fdata[fieldname] = np.concatenate(
+                        [rval[field] for rval in rvals])
+                    c += nnodes[i]
                     pbar.update(c)
-            pbar.finish()
+                pbar.finish()
+
+            # for field, fieldname in zip(fields, fieldnames):
+            #     for di, node in enumerate(my_nodes):
+            #         if node.is_root:
+            #             ndata = node._field_data[field]
+            #         else:
+            #             ndata = node["tree", field]
+            #             if field == "desc_uid":
+            #                 # make sure it's a root when loaded
+            #                 ndata[0] = -1
+            #         fdata[fieldname][
+            #             my_tree_start[di]:my_tree_end[di]] = ndata
+            #         c += my_tree_size[di]
+            #         pbar.update(c)
+            # pbar.finish()
+
             fdata["tree_start_index"] = my_tree_start
             fdata["tree_end_index"]   = my_tree_end
             fdata["tree_size"]        = my_tree_size

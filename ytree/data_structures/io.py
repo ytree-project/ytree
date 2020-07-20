@@ -150,6 +150,7 @@ class FieldIO(object):
                 fcache[field] = data
 
         self._store_fields(storage_object, set(old_fields).union(fields))
+        return storage_object._field_data
 
 class TreeFieldIO(FieldIO):
     """
