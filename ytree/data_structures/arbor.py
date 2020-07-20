@@ -350,7 +350,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         things up.
         """
 
-        return self._node_io_iter(None)
+        return self._node_io_iter(pbar='Iterating', root_nodes=None)
 
     @property
     def is_planted(self):
