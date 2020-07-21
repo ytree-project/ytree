@@ -8,6 +8,7 @@ save_arbor supporting functions
 import json
 import numpy as np
 import os
+from unyt import uconcatenate
 
 from yt.funcs import \
     ensure_dir, \
@@ -35,44 +36,14 @@ def save_arbor(arbor, filename="arbor", fields=None, trees=None,
     fields = determine_field_list(arbor, fields)
     trees = determine_tree_list(arbor, trees)
 
-    group_nnodes = []
-    group_ntrees = []
-    current_group = []
-    cg_nnodes = 0
-    cg_ntrees = 0
-
-    root_field_data = dict((field, []) for field in fields)
-
-    i = 1
-    for tree in trees:
-        current_group.append(tree)
-        cg_nnodes += tree.tree_size
-        cg_ntrees += 1
-        if cg_nnodes > max_file_size:
-            group_nnodes.append(cg_nnodes)
-            group_ntrees.append(cg_ntrees)
-
-            total_guess = int(np.round(arbor.size * i / sum(group_ntrees)))
-            save_data_file(
-                arbor, filename, fields,
-                np.array(current_group), root_field_data,
-                i, total_guess)
-
-            current_group = []
-            cg_nnodes = 0
-            cg_ntrees = 0
-            i += 1
-
-    if cg_nnodes > 0:
-        group_nnodes.append(cg_nnodes)
-        group_ntrees.append(cg_ntrees)
-
-    group_nnodes     = np.array(group_nnodes)
-    group_ntrees     = np.array(group_ntrees)
+    group_nnodes, group_ntrees, root_field_data = \
+      save_data_files(arbor, filename, fields, trees,
+                      max_file_size)
 
     header_filename = save_header_file(
         arbor, filename, fields, root_field_data,
         group_nnodes, group_ntrees)
+
     return header_filename
 
 def determine_tree_list(arbor, trees):
@@ -140,6 +111,52 @@ def get_output_fieldnames(fields):
 
     return [field.replace("/", "_") for field in fields]
 
+def save_data_files(arbor, filename, fields, trees,
+                    max_file_size):
+    """
+    Write all data files by grouping trees together.
+
+    Return arrays of number of nodes and trees written to each file
+    as well as a dictionary of root fields.
+    """
+
+    root_field_data = dict((field, []) for field in fields)
+
+    group_nnodes = []
+    group_ntrees = []
+    current_group = []
+    cg_nnodes = 0
+    cg_ntrees = 0
+
+    i = 1
+    for tree in trees:
+        current_group.append(tree)
+        cg_nnodes += tree.tree_size
+        cg_ntrees += 1
+        if cg_nnodes > max_file_size:
+            group_nnodes.append(cg_nnodes)
+            group_ntrees.append(cg_ntrees)
+
+            total_guess = int(np.round(arbor.size * i / sum(group_ntrees)))
+            save_data_file(
+                arbor, filename, fields,
+                np.array(current_group), root_field_data,
+                i, total_guess)
+
+            current_group = []
+            cg_nnodes = 0
+            cg_ntrees = 0
+            i += 1
+
+    if cg_nnodes > 0:
+        group_nnodes.append(cg_nnodes)
+        group_ntrees.append(cg_ntrees)
+
+    group_nnodes = np.array(group_nnodes)
+    group_ntrees = np.array(group_ntrees)
+
+    return group_nnodes, group_ntrees, root_field_data
+
 def save_data_file(arbor, filename, fields, tree_group,
                    root_field_data,
                    current_iteration, total_guess):
@@ -165,7 +182,7 @@ def save_data_file(arbor, filename, fields, tree_group,
                     len(fields)*ntrees)
     c = 0
     for field, fieldname in zip(fields, fieldnames):
-        fdata[fieldname] = np.concatenate(
+        fdata[fieldname] = uconcatenate(
             [node._field_data[field] if node.is_root else node["tree", field]
              for node in tree_group])
         root_field_data[field].append(fdata[fieldname][my_tree_start])
@@ -221,7 +238,7 @@ def save_header_file(arbor, filename, fields, root_field_data,
           dict((key, fi[key])
                for key in ["units", "description"]
                if key in fi)
-        rdata[fieldname] = np.concatenate(root_field_data[field])
+        rdata[fieldname] = uconcatenate(root_field_data[field])
         rtypes[fieldname] = "data"
     # all saved trees will be roots
     rdata["desc_uid"][:] = -1
