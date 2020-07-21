@@ -16,7 +16,6 @@ Arbor class and member functions
 from collections import \
     defaultdict
 import functools
-import json
 import numpy as np
 import os
 from unyt import \
