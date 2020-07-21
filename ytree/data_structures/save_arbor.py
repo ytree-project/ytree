@@ -176,7 +176,6 @@ def save_data_file(arbor, filename, fields, tree_group,
     my_tree_size  = np.array([tree.tree_size for tree in tree_group])
     my_tree_end   = my_tree_size.cumsum()
     my_tree_start = my_tree_end - my_tree_size
-    ntrees = my_tree_size.sum()
     for field, fieldname in zip(fields, fieldnames):
         fdata[fieldname] = uconcatenate(
             [node._field_data[field] if node.is_root else node["tree", field]
