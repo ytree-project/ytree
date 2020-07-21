@@ -177,18 +177,11 @@ def save_data_file(arbor, filename, fields, tree_group,
     my_tree_end   = my_tree_size.cumsum()
     my_tree_start = my_tree_end - my_tree_size
     ntrees = my_tree_size.sum()
-    pbar = get_pbar("Creating field arrays [%d / ~%d]" %
-                    (current_iteration, total_guess),
-                    len(fields)*ntrees)
-    c = 0
     for field, fieldname in zip(fields, fieldnames):
         fdata[fieldname] = uconcatenate(
             [node._field_data[field] if node.is_root else node["tree", field]
              for node in tree_group])
         root_field_data[field].append(fdata[fieldname][my_tree_start])
-        c += ntrees
-        pbar.update(c)
-    pbar.finish()
 
     # In case we have saved any non-root trees,
     # mark them as having no descendents.
