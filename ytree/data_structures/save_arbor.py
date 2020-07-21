@@ -28,7 +28,7 @@ def save_arbor(arbor, filename="arbor", fields=None, trees=None,
 
     filename = determine_output_filename(filename, ".h5")
     fields = determine_field_list(arbor, fields)
-    trees, all_trees = determine_tree_list(arbor, trees)
+    trees = determine_tree_list(arbor, trees)
 
     group_nnodes = []
     group_ntrees = []
@@ -62,9 +62,19 @@ def save_arbor(arbor, filename="arbor", fields=None, trees=None,
         group_nnodes.append(cg_nnodes)
         group_ntrees.append(cg_ntrees)
 
+    group_nnodes     = np.array(group_nnodes)
     group_ntrees     = np.array(group_ntrees)
-    tree_end_index   = group_ntrees.cumsum()
-    tree_start_index = tree_end_index - group_ntrees
+
+    header_filename = save_header_file(
+        arbor, filename, fields, root_field_data,
+        group_nnodes, group_ntrees)
+    return header_filename
+
+def save_header_file(arbor, filename, fields, root_field_data,
+                     group_nnodes, group_ntrees):
+    """
+    Write the header file.
+    """
 
     ds = {}
     for attr in ["hubble_constant",
@@ -90,13 +100,15 @@ def save_arbor(arbor, filename="arbor", fields=None, trees=None,
         rdata[fieldname] = np.concatenate(root_field_data[field])
         rtypes[fieldname] = "data"
     # all saved trees will be roots
-    if not all_trees:
-        rdata["desc_uid"][:] = -1
+    rdata["desc_uid"][:] = -1
+
+    tree_end_index   = group_ntrees.cumsum()
+    tree_start_index = tree_end_index - group_ntrees
 
     extra_attrs["field_info"] = json.dumps(myfi)
-    extra_attrs["total_files"] = len(group_nnodes)
-    extra_attrs["total_trees"] = trees.size
-    extra_attrs["total_nodes"] = sum(group_nnodes)
+    extra_attrs["total_files"] = group_nnodes.size
+    extra_attrs["total_trees"] = group_ntrees.sum()
+    extra_attrs["total_nodes"] = group_nnodes.sum()
     hdata = {"tree_start_index": tree_start_index,
              "tree_end_index"  : tree_end_index,
              "tree_size"       : group_ntrees}
@@ -119,10 +131,8 @@ def determine_tree_list(arbor, trees):
     """
 
     if trees is None:
-        all_trees = True
         trees = arbor.trees
     else:
-        all_trees = False
         # assemble unique tree roots for getting fields
         trees = np.asarray(trees)
         roots = []
@@ -138,7 +148,7 @@ def determine_tree_list(arbor, trees):
         roots = np.array(roots)
         del root_uids
 
-    return trees, all_trees
+    return trees
 
 def determine_output_filename(path, suffix):
     if path.endswith(suffix):
