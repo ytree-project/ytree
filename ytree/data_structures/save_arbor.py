@@ -25,6 +25,11 @@ from yt.frontends.ytdata.utilities import \
 
 def save_arbor(arbor, filename="arbor", fields=None, trees=None,
                max_file_size=524288):
+    """
+    Save the arbor to a file.
+
+    This is the internal function called by Arbor.save_arbor.
+    """
 
     filename = determine_output_filename(filename, ".h5")
     fields = determine_field_list(arbor, fields)
@@ -69,6 +74,125 @@ def save_arbor(arbor, filename="arbor", fields=None, trees=None,
         arbor, filename, fields, root_field_data,
         group_nnodes, group_ntrees)
     return header_filename
+
+def determine_tree_list(arbor, trees):
+    """
+    Determine what trees are being saved.
+    """
+
+    if trees is None:
+        trees = arbor.trees
+    else:
+        # assemble unique tree roots for getting fields
+        trees = np.asarray(trees)
+        roots = []
+        root_uids = []
+        for tree in trees:
+            if tree.root == -1:
+                my_root = tree
+            else:
+                my_root = tree.root
+            if my_root.uid not in root_uids:
+                roots.append(my_root)
+                root_uids.append(my_root.uid)
+        roots = np.array(roots)
+        del root_uids
+
+    return trees
+
+def determine_output_filename(path, suffix):
+    """
+    Figure out the output filename.
+    """
+
+    if path.endswith(suffix):
+        dirname = os.path.dirname(path)
+        filename = path[:-len(suffix)]
+    else:
+        dirname = path
+        filename = os.path.join(
+            dirname, os.path.basename(path))
+    ensure_dir(dirname)
+    return filename
+
+def determine_field_list(arbor, fields):
+    """
+    Get the list of fields to be saved.
+    """
+
+    if fields in [None, "all"]:
+        # If a field has an alias, get that instead.
+        fields = []
+        for field in arbor.field_list + arbor.analysis_field_list:
+            fields.extend(
+                arbor.field_info[field].get("aliases", [field]))
+    else:
+        fields.extend([f for f in ["uid", "desc_uid"]
+                       if f not in fields])
+
+    return fields
+
+
+def get_output_fieldnames(fields):
+    """
+    Get filenames as they will be written to disk.
+    """
+
+    return [field.replace("/", "_") for field in fields]
+
+def save_data_file(arbor, filename, fields, tree_group,
+                   root_field_data,
+                   current_iteration, total_guess):
+    """
+    Write data file for a single group of trees.
+    """
+
+    fieldnames = get_output_fieldnames(fields)
+    ftypes = dict((f, "data") for f in fieldnames)
+
+    arbor._node_io_loop(
+        arbor._node_io.get_fields,
+        pbar="Getting fields [%d / ~%d]" % (current_iteration, total_guess),
+        root_nodes=tree_group, fields=fields, root_only=False)
+
+    fdata = {}
+    my_tree_size  = np.array([tree.tree_size for tree in tree_group])
+    my_tree_end   = my_tree_size.cumsum()
+    my_tree_start = my_tree_end - my_tree_size
+    ntrees = my_tree_size.sum()
+    pbar = get_pbar("Creating field arrays [%d / ~%d]" %
+                    (current_iteration, total_guess),
+                    len(fields)*ntrees)
+    c = 0
+    for field, fieldname in zip(fields, fieldnames):
+        fdata[fieldname] = np.concatenate(
+            [node._field_data[field] if node.is_root else node["tree", field]
+             for node in tree_group])
+        root_field_data[field].append(fdata[fieldname][my_tree_start])
+        c += ntrees
+        pbar.update(c)
+    pbar.finish()
+
+    # In case we have saved any non-root trees,
+    # mark them as having no descendents.
+    fdata['desc_uid'][my_tree_start] = -1
+
+    pbar = get_pbar("Resetting trees", len(tree_group))
+    for node in tree_group:
+        node.reset()
+        pbar.update(1)
+    pbar.finish()
+
+    fdata["tree_start_index"] = my_tree_start
+    fdata["tree_end_index"]   = my_tree_end
+    fdata["tree_size"]        = my_tree_size
+    for ft in ["tree_start_index",
+               "tree_end_index",
+               "tree_size"]:
+        ftypes[ft] = "index"
+    my_filename = "%s_%04d.h5" % (filename, current_iteration-1)
+    save_as_dataset({}, my_filename, fdata,
+                    field_types=ftypes)
 
 def save_header_file(arbor, filename, fields, root_field_data,
                      group_nnodes, group_ntrees):
@@ -124,107 +248,3 @@ def save_header_file(arbor, filename, fields, root_field_data,
     del hdata
 
     return header_filename
-
-def determine_tree_list(arbor, trees):
-    """
-    Determine what trees are being saved.
-    """
-
-    if trees is None:
-        trees = arbor.trees
-    else:
-        # assemble unique tree roots for getting fields
-        trees = np.asarray(trees)
-        roots = []
-        root_uids = []
-        for tree in trees:
-            if tree.root == -1:
-                my_root = tree
-            else:
-                my_root = tree.root
-            if my_root.uid not in root_uids:
-                roots.append(my_root)
-                root_uids.append(my_root.uid)
-        roots = np.array(roots)
-        del root_uids
-
-    return trees
-
-def determine_output_filename(path, suffix):
-    if path.endswith(suffix):
-        dirname = os.path.dirname(path)
-        filename = path[:-len(suffix)]
-    else:
-        dirname = path
-        filename = os.path.join(
-            dirname, os.path.basename(path))
-    ensure_dir(dirname)
-    return filename
-
-def determine_field_list(arbor, fields):
-    if fields in [None, "all"]:
-        # If a field has an alias, get that instead.
-        fields = []
-        for field in arbor.field_list + arbor.analysis_field_list:
-            fields.extend(
-                arbor.field_info[field].get("aliases", [field]))
-    else:
-        fields.extend([f for f in ["uid", "desc_uid"]
-                       if f not in fields])
-
-    return fields
-
-
-def get_output_fieldnames(fields):
-    return [field.replace("/", "_") for field in fields]
-
-def save_data_file(arbor, filename, fields, tree_group,
-                   root_field_data,
-                   current_iteration, total_guess):
-
-    fieldnames = get_output_fieldnames(fields)
-    ftypes = dict((f, "data") for f in fieldnames)
-
-    arbor._node_io_loop(
-        arbor._node_io.get_fields,
-        pbar="Getting fields [%d / ~%d]" % (current_iteration, total_guess),
-        root_nodes=tree_group, fields=fields, root_only=False)
-
-    fdata = {}
-    my_tree_size  = np.array([tree.tree_size for tree in tree_group])
-    my_tree_end   = my_tree_size.cumsum()
-    my_tree_start = my_tree_end - my_tree_size
-    ntrees = my_tree_size.sum()
-    pbar = get_pbar("Creating field arrays [%d / ~%d]" %
-                    (current_iteration, total_guess),
-                    len(fields)*ntrees)
-    c = 0
-    for field, fieldname in zip(fields, fieldnames):
-        fdata[fieldname] = np.concatenate(
-            [node._field_data[field] if node.is_root else node["tree", field]
-             for node in tree_group])
-        root_field_data[field].append(fdata[fieldname][my_tree_start])
-        c += ntrees
-        pbar.update(c)
-    pbar.finish()
-
-    # In case we have saved any non-root trees,
-    # mark them as having no descendents.
-    fdata['desc_uid'][my_tree_start] = -1
-
-    pbar = get_pbar("Resetting trees", len(tree_group))
-    for node in tree_group:
-        node.reset()
-        pbar.update(1)
-    pbar.finish()
-
-    fdata["tree_start_index"] = my_tree_start
-    fdata["tree_end_index"]   = my_tree_end
-    fdata["tree_size"]        = my_tree_size
-    for ft in ["tree_start_index",
-               "tree_end_index",
-               "tree_size"]:
-        ftypes[ft] = "index"
-    my_filename = "%s_%04d.h5" % (filename, current_iteration-1)
-    save_as_dataset({}, my_filename, fdata,
-                    field_types=ftypes)
