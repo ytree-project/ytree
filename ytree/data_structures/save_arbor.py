@@ -34,7 +34,6 @@ def save_arbor(arbor, filename="arbor", fields=None, trees=None,
 
     filename = determine_output_filename(filename, ".h5")
     fields = determine_field_list(arbor, fields)
-    trees = determine_tree_list(arbor, trees)
 
     group_nnodes, group_ntrees, root_field_data = \
       save_data_files(arbor, filename, fields, trees,
@@ -56,18 +55,18 @@ def determine_tree_list(arbor, trees):
     else:
         # assemble unique tree roots for getting fields
         trees = np.asarray(trees)
-        roots = []
-        root_uids = []
-        for tree in trees:
-            if tree.root == -1:
-                my_root = tree
-            else:
-                my_root = tree.root
-            if my_root.uid not in root_uids:
-                roots.append(my_root)
-                root_uids.append(my_root.uid)
-        roots = np.array(roots)
-        del root_uids
+        # roots = []
+        # root_uids = []
+        # for tree in trees:
+        #     if tree.root == -1:
+        #         my_root = tree
+        #     else:
+        #         my_root = tree.root
+        #     if my_root.uid not in root_uids:
+        #         roots.append(my_root)
+        #         root_uids.append(my_root.uid)
+        # roots = np.array(roots)
+        # del root_uids
 
     return trees
 
@@ -120,6 +119,9 @@ def save_data_files(arbor, filename, fields, trees,
     as well as a dictionary of root fields.
     """
 
+    # only reset trees if we're definitely doing all of them
+    reset = trees is None
+    trees = determine_tree_list(arbor, trees)
     root_field_data = dict((field, []) for field in fields)
 
     group_nnodes = []
@@ -141,16 +143,22 @@ def save_data_files(arbor, filename, fields, trees,
             save_data_file(
                 arbor, filename, fields,
                 np.array(current_group), root_field_data,
-                i, total_guess)
+                i, total_guess, reset)
 
             current_group = []
             cg_nnodes = 0
             cg_ntrees = 0
             i += 1
 
-    if cg_nnodes > 0:
+    if current_group:
         group_nnodes.append(cg_nnodes)
         group_ntrees.append(cg_ntrees)
+
+        total_guess = int(np.round(arbor.size * i / sum(group_ntrees)))
+        save_data_file(
+            arbor, filename, fields,
+            np.array(current_group), root_field_data,
+            i, total_guess, reset)
 
     group_nnodes = np.array(group_nnodes)
     group_ntrees = np.array(group_ntrees)
@@ -159,7 +167,7 @@ def save_data_files(arbor, filename, fields, trees,
 
 def save_data_file(arbor, filename, fields, tree_group,
                    root_field_data,
-                   current_iteration, total_guess):
+                   current_iteration, total_guess, reset):
     """
     Write data file for a single group of trees.
     """
@@ -186,11 +194,12 @@ def save_data_file(arbor, filename, fields, tree_group,
     # mark them as having no descendents.
     fdata['desc_uid'][my_tree_start] = -1
 
-    pbar = get_pbar("Resetting trees", len(tree_group))
-    for node in tree_group:
-        node.reset()
-        pbar.update(1)
-    pbar.finish()
+    if reset:
+        pbar = get_pbar("Resetting trees", len(tree_group))
+        for node in tree_group:
+            node.reset()
+            pbar.update(1)
+        pbar.finish()
 
     fdata["tree_start_index"] = my_tree_start
     fdata["tree_end_index"]   = my_tree_end

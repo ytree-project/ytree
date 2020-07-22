@@ -796,9 +796,10 @@ Check the TypeError exception above for more details.
 
         """
 
-        save_arbor(self, filename=filename,
-                   fields=fields, trees=trees,
-                   max_file_size=max_file_size)
+        fn = save_arbor(self, filename=filename,
+                        fields=fields, trees=trees,
+                        max_file_size=max_file_size)
+        return fn
 
 class CatalogArbor(Arbor):
     """
