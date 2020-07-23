@@ -83,6 +83,9 @@ class Arbor(object, metaclass=RegisteredArbor):
     _root_field_io_class = DefaultRootFieldIO
     _tree_field_io_class = TreeFieldIO
     _default_dtype = np.float64
+    _reset_attrs = \
+      ("_tfi", "_tn", "_pfi", "_pn",
+       "_ancestors", "descendent")
 
     def __init__(self, filename):
         """
@@ -242,17 +245,16 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
 
         tree_node.clear_fields()
-        attrs = ["_tfi", "_tn", "_pfi", "_pn",
-                 "_ancestors", "descendent"]
+        attrs = self._reset_attrs
         if tree_node.is_root:
             if self.is_grown(tree_node):
-                attrs.extend(["_nodes"])
+                attrs += ("_nodes",)
                 for i in range(1, tree_node.tree_size):
                     self.reset_node(tree_node.nodes[i])
                     tree_node.nodes[i] = None
                 tree_node.root = -1
             if self.is_setup(tree_node):
-                attrs.extend(["_desc_uids", "_uids"])
+                attrs += ("_desc_uids", "_uids")
         else:
             tree_node.root = None
         for attr in attrs:
@@ -835,6 +837,9 @@ class CatalogArbor(Arbor):
     _prefix = None
     _data_file_class = None
     _has_uids = False
+    # Don't reset _ancestors or descendents because we won't be able to
+    # rebuild trees without calling _plant_trees again.
+    _reset_attrs = ("_tfi", "_tn", "_pfi", "_pn")
 
     def __init__(self, filename):
         super(CatalogArbor, self).__init__(filename)
