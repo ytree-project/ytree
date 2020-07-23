@@ -185,8 +185,8 @@ def compare_trees(t1, t2, groups=None, fields=None):
                 t1[group, field], t2[group, field],
                 err_msg="Tree comparison failed for %s field: %s." %
                 (group, field))
-    t1.reset()
-    t2.reset()
+    t1.arbor.reset_node(t1)
+    t2.arbor.reset_node(t2)
 
 def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
                  **kwargs):

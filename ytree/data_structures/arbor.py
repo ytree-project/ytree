@@ -234,6 +234,30 @@ class Arbor(object, metaclass=RegisteredArbor):
                 desc.add_ancestor(node)
                 node.descendent = desc
 
+    def reset_node(self, tree_node):
+        """
+        Reset all data structures for a single node.
+
+        If a root node, reset all child nodes as well.
+        """
+
+        tree_node.clear_fields()
+        attrs = ["_tfi", "_tn", "_pfi", "_pn",
+                 "_ancestors", "descendent"]
+        if tree_node.is_root:
+            if self.is_grown(tree_node):
+                attrs.extend(["_nodes"])
+                for i in range(1, tree_node.tree_size):
+                    self.reset_node(tree_node.nodes[i])
+                    tree_node.nodes[i] = None
+                tree_node.root = -1
+            if self.is_setup(tree_node):
+                attrs.extend(["_desc_uids", "_uids"])
+        else:
+            tree_node.root = None
+        for attr in attrs:
+            setattr(tree_node, attr, None)
+
     def _node_io_loop(self, func, *args, **kwargs):
         """
         Call the provided function over a list of nodes.

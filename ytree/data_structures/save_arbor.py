@@ -197,7 +197,7 @@ def save_data_file(arbor, filename, fields, tree_group,
     if reset:
         pbar = get_pbar("Resetting trees", len(tree_group))
         for node in tree_group:
-            node.reset()
+            arbor.reset_node(node)
             pbar.update(1)
         pbar.finish()
 

@@ -84,28 +84,6 @@ class TreeNode(object):
             return
         self._field_data.clear()
 
-    def reset(self):
-        """
-        Reset all data structures.
-        """
-
-        self.clear_fields()
-        attrs = ["_tfi", "_tn", "_pfi", "_pn",
-                 "_ancestors", "descendent"]
-        if self.is_root:
-            if self.arbor.is_grown(self):
-                attrs.extend(["_nodes"])
-                for i in range(1, self.tree_size):
-                    self.nodes[i].reset()
-                    self.nodes[i] = None
-                self.root = -1
-            if self.arbor.is_setup(self):
-                attrs.extend(["_desc_uids", "_uids"])
-        else:
-            self.root = None
-        for attr in attrs:
-            setattr(self, attr, None)
-
     def add_ancestor(self, ancestor):
         """
         Add another TreeNode to the list of ancestors.
