@@ -86,6 +86,8 @@ class Arbor(object, metaclass=RegisteredArbor):
     _reset_attrs = \
       ("_tfi", "_tn", "_pfi", "_pn",
        "_ancestors", "descendent")
+    _setup_attrs = ("_desc_uids", "_uids")
+    _grow_attrs = ("_nodes",)
 
     def __init__(self, filename):
         """
@@ -237,6 +239,21 @@ class Arbor(object, metaclass=RegisteredArbor):
                 desc.add_ancestor(node)
                 node.descendent = desc
 
+    _attr_map = None
+    def _build_attr(self, attr, tree_node):
+        """
+        Call the correct function for building a given attribute.
+        """
+
+        if self._attr_map is None:
+            self._attr_map = \
+              dict([(attr, self._setup_tree)
+                    for attr in self._setup_attrs] +
+                   [(attr, self._grow_tree)
+                    for attr in self._grow_attrs])
+
+        self._attr_map[attr](tree_node)
+
     def reset_node(self, tree_node):
         """
         Reset all data structures for a single node.
@@ -248,13 +265,13 @@ class Arbor(object, metaclass=RegisteredArbor):
         attrs = self._reset_attrs
         if tree_node.is_root:
             if self.is_grown(tree_node):
-                attrs += ("_nodes",)
+                attrs += self._grow_attrs
                 for i in range(1, tree_node.tree_size):
                     self.reset_node(tree_node.nodes[i])
                     tree_node.nodes[i] = None
                 tree_node.root = -1
             if self.is_setup(tree_node):
-                attrs += ("_desc_uids", "_uids")
+                attrs += self._setup_attrs
         else:
             tree_node.root = None
         for attr in attrs:
@@ -840,6 +857,8 @@ class CatalogArbor(Arbor):
     # Don't reset _ancestors or descendents because we won't be able to
     # rebuild trees without calling _plant_trees again.
     _reset_attrs = ("_tfi", "_tn", "_pfi", "_pn")
+    _setup_attrs = ("_desc_uids", "_uids", "_nodes")
+    _grow_attrs = ()
 
     def __init__(self, filename):
         super(CatalogArbor, self).__init__(filename)

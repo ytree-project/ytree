@@ -110,7 +110,7 @@ class TreeNode(object):
         if not self.is_root:
             return None
         if self._uids is None:
-            self.arbor._setup_tree(self)
+            self.arbor._build_attrs("_uids", self)
         return self._uids
 
     _desc_uids = None
@@ -119,7 +119,7 @@ class TreeNode(object):
         if not self.is_root:
             return None
         if self._desc_uids is None:
-            self.arbor._setup_tree(self)
+            self.arbor._build_attrs("_desc_uids", self)
         return self._desc_uids
 
     _tree_size = None
@@ -136,7 +136,7 @@ class TreeNode(object):
     def nodes(self):
         if not self.is_root:
             return None
-        self.arbor._grow_tree(self)
+        self.arbor._build_attr("_nodes", self)
         return self._nodes
 
     def __setitem__(self, key, value):
