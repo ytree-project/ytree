@@ -55,18 +55,6 @@ def determine_tree_list(arbor, trees):
     else:
         # assemble unique tree roots for getting fields
         trees = np.asarray(trees)
-        # roots = []
-        # root_uids = []
-        # for tree in trees:
-        #     if tree.root == -1:
-        #         my_root = tree
-        #     else:
-        #         my_root = tree.root
-        #     if my_root.uid not in root_uids:
-        #         roots.append(my_root)
-        #         root_uids.append(my_root.uid)
-        # roots = np.array(roots)
-        # del root_uids
 
     return trees
 
