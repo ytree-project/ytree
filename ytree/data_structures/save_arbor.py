@@ -11,8 +11,7 @@ import os
 from unyt import uconcatenate
 
 from yt.funcs import \
-    ensure_dir, \
-    get_pbar
+    ensure_dir
 from yt.frontends.ytdata.utilities import \
     save_as_dataset
 
