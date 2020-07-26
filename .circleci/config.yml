@@ -143,7 +143,7 @@ jobs:
 
       - restore_cache:
           name: "Restore dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-v3
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-v4
 
       - install:
           ytdev: << parameters.ytdev >>
@@ -151,7 +151,7 @@ jobs:
 
       - save_cache:
           name: "Save dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-v3
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-v4
           paths:
             - ~/.cache/pip
             - ~/venv

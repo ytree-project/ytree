@@ -11,8 +11,7 @@ import os
 from unyt import uconcatenate
 
 from yt.funcs import \
-    ensure_dir, \
-    get_pbar
+    ensure_dir
 from yt.frontends.ytdata.utilities import \
     save_as_dataset
 
@@ -183,11 +182,8 @@ def save_data_file(arbor, filename, fields, tree_group,
     fdata['desc_uid'][my_tree_start] = -1
 
     if reset:
-        pbar = get_pbar("Resetting trees", len(tree_group))
         for node in tree_group:
             arbor.reset_node(node)
-            pbar.update(1)
-        pbar.finish()
 
     fdata["tree_start_index"] = my_tree_start
     fdata["tree_end_index"]   = my_tree_end
