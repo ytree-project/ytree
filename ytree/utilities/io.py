@@ -69,7 +69,7 @@ def _hdf5_yt_array_lite(fh, field):
     if units == "dimensionless": units = ""
     return (fh[field][()], units)
 
-def f_text_block(f, block_size=32768, file_size=None, sep="\n",
+def f_text_block(f, block_size=4096, file_size=None, sep="\n",
                  pbar_string=None):
     """
     Read lines from a file faster than f.readlines().

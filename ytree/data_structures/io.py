@@ -293,7 +293,8 @@ class DataFile(object):
 arbor_fields = {}
 arbor_fields['uid'] = lambda t: t.uid
 # This will only be called for a root.
-arbor_fields['desc_uid'] = lambda t: -1
+arbor_fields['desc_uid'] = lambda t: -1 if t.descendent is None \
+  else t.descendent.uid
 
 class CatalogDataFile(DataFile):
     """

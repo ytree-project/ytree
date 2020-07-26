@@ -16,15 +16,12 @@ Arbor class and member functions
 from collections import \
     defaultdict
 import functools
-import json
 import numpy as np
 import os
 from unyt import \
     unyt_array, \
     unyt_quantity
 
-from yt.frontends.ytdata.utilities import \
-    save_as_dataset
 from yt.funcs import \
     get_pbar, \
     TqdmProgressBar
@@ -40,11 +37,11 @@ from ytree.data_structures.fields import \
     FakeFieldContainer, \
     FieldContainer, \
     FieldInfoContainer
-from ytree.data_structures.misc import \
-    _determine_output_filename
 from ytree.data_structures.io import \
     DefaultRootFieldIO, \
     TreeFieldIO
+from ytree.data_structures.save_arbor import \
+    save_arbor
 from ytree.data_structures.tree_node import \
     TreeNode
 from ytree.data_structures.tree_node_selector import \
@@ -87,6 +84,10 @@ class Arbor(object, metaclass=RegisteredArbor):
     _tree_field_io_class = TreeFieldIO
     _default_dtype = np.float64
     _io_attrs = ()
+    _reset_attrs = ("_tfi", "_tn", "_pfi", "_pn")
+    _extra_reset_attrs = ("_ancestors", "descendent")
+    _setup_attrs = ("_desc_uids", "_uids")
+    _grow_attrs = ("_nodes",)
 
     def __init__(self, filename):
         """
@@ -239,6 +240,58 @@ class Arbor(object, metaclass=RegisteredArbor):
                 desc = nodes[uidmap[descid]]
                 desc.add_ancestor(node)
                 node.descendent = desc
+
+    _attr_map = None
+    def _build_attr(self, attr, tree_node):
+        """
+        Call the correct function for building a given attribute.
+        """
+
+        if self._attr_map is None:
+            self._attr_map = \
+              dict([(attr, self._setup_tree)
+                    for attr in self._setup_attrs] +
+                   [(attr, self._grow_tree)
+                    for attr in self._grow_attrs])
+
+        self._attr_map[attr](tree_node)
+
+    def reset_node(self, tree_node, reset_nonroot=False):
+        """
+        Reset all data structures for a single node.
+
+        The goal is to clear as many data structures as
+        possible without rendering the node object useless,
+        if they are intended to be kept around. In some
+        cases, we may only want to keep the root node and
+        allow the rest to be deleted.
+
+        If a root node, reset all child nodes as well.
+        If reset_nonroot is False, do not detach the
+        pointer to the root node. This will render the
+        node unable to get fields. However, if we are
+        trying to wipe out an entire tree, this is
+        what we want to do.
+        """
+
+        tree_node.clear_fields()
+        attrs = self._reset_attrs
+        if tree_node.is_root:
+            attrs += self._extra_reset_attrs
+            if self.is_grown(tree_node):
+                attrs += self._grow_attrs
+                for i in range(1, tree_node.tree_size):
+                    self.reset_node(tree_node.nodes[i],
+                                    reset_nonroot=True)
+                    tree_node.nodes[i] = None
+                tree_node.root = -1
+            if self.is_setup(tree_node):
+                attrs += self._setup_attrs
+        elif reset_nonroot:
+            attrs += self._extra_reset_attrs
+            tree_node.root = None
+        for attr in attrs:
+            setattr(tree_node, attr, None)
 
     def _node_io_iter(self, pbar=None, root_nodes=None):
         """
@@ -881,164 +934,10 @@ Check the TypeError exception above for more details.
 
         """
 
-        if trees is None:
-            all_trees = True
-            trees = self
-        else: # TODO
-            all_trees = False
-            # assemble unique tree roots for getting fields
-            trees = np.asarray(trees)
-            roots = []
-            root_uids = []
-            for tree in trees:
-                if tree.id_root:
-                    my_root = tree
-                else:
-                    my_root = tree.root
-                if my_root.uid not in root_uids:
-                    roots.append(my_root)
-                    root_uids.append(my_root.uid)
-            roots = np.array(roots)
-            del root_uids
-
-        if fields in [None, "all"]:
-            # If a field has an alias, get that instead.
-            fields = []
-            for field in self.field_list + self.analysis_field_list:
-                fields.extend(
-                    self.field_info[field].get("aliases", [field]))
-        else:
-            fields.extend([f for f in ["uid", "desc_uid"]
-                           if f not in fields])
-
-        ds = {}
-        for attr in ["hubble_constant",
-                     "omega_matter",
-                     "omega_lambda"]:
-            if hasattr(self, attr):
-                ds[attr] = getattr(self, attr)
-        extra_attrs = {"box_size": self.box_size,
-                       "arbor_type": "YTreeArbor",
-                       "unit_registry_json": self.unit_registry.to_json()}
-
-        # determine file layout
-        nn = 0 # node count
-        nt = 0 # tree count
-        nnodes = []
-        ntrees = []
-        tree_size = np.array([tree.tree_size for tree in trees])
-        for ts in tree_size:
-            nn += ts
-            nt += 1
-            if nn > max_file_size:
-                nnodes.append(nn-ts)
-                ntrees.append(nt-1)
-                nn = ts
-                nt = 1
-        if nn > 0:
-            nnodes.append(nn)
-            ntrees.append(nt)
-        nfiles = len(nnodes)
-        nnodes = np.array(nnodes)
-        ntrees = np.array(ntrees)
-        tree_end_index   = ntrees.cumsum()
-        tree_start_index = tree_end_index - ntrees
-
-        if all_trees:
-            self._root_io.get_fields(self, fields=fields)
-
-        # write header file
-        fieldnames = [field.replace("/", "_") for field in fields]
-        myfi = {}
-        rdata = {}
-        rtypes = {}
-        for field, fieldname in zip(fields, fieldnames):
-            fi = self.field_info[field]
-            myfi[fieldname] = \
-              dict((key, fi[key])
-                   for key in ["units", "description"]
-                   if key in fi)
-            if all_trees:
-                rdata[fieldname] = self._field_data[field]
-            else:
-                rdata[fieldname] = self.arr([t[field] for t in trees])
-            rtypes[fieldname] = "data"
-        # all saved trees will be roots
-        if not all_trees:
-            rdata["desc_uid"][:] = -1
-        extra_attrs["field_info"] = json.dumps(myfi)
-        extra_attrs["total_files"] = nfiles
-        extra_attrs["total_trees"] = trees.size
-        extra_attrs["total_nodes"] = tree_size.sum()
-        hdata = {"tree_start_index": tree_start_index,
-                 "tree_end_index"  : tree_end_index,
-                 "tree_size"       : ntrees}
-        hdata.update(rdata)
-        htypes = dict((f, "index") for f in hdata)
-        htypes.update(rtypes)
-
-        filename = _determine_output_filename(filename, ".h5")
-        header_filename = "%s.h5" % filename
-        save_as_dataset(ds, header_filename, hdata,
-                        field_types=htypes,
-                        extra_attrs=extra_attrs)
-
-        if all_trees:
-            my_trees = np.arange(self.size)
-
-        # write data files
-        ftypes = dict((f, "data") for f in fieldnames)
-        for i in range(nfiles):
-            my_nodes = my_trees[tree_start_index[i]:tree_end_index[i]]
-            node_list, rvals = self._node_io_loop(
-                self._node_io.get_fields,
-                pbar="Getting fields [%d/%d]" % (i+1, nfiles),
-                root_nodes=my_nodes, fields=fields, root_only=False)
-            fdata = dict((field, np.empty(nnodes[i])) for field in fieldnames)
-            my_tree_size  = tree_size[tree_start_index[i]:tree_end_index[i]]
-            my_tree_end   = my_tree_size.cumsum()
-            my_tree_start = my_tree_end - my_tree_size
-
-
-            pbar = get_pbar("Creating field arrays [%d/%d]" %
-                            (i+1, nfiles), len(fields)*nnodes[i])
-
-            c = 0
-            if all_trees:
-                for field, fieldname in zip(fields, fieldnames):
-                    fdata[fieldname] = np.concatenate(
-                        [rval[field] for rval in rvals])
-                    c += nnodes[i]
-                    pbar.update(c)
-                pbar.finish()
-
-            # for field, fieldname in zip(fields, fieldnames):
-            #     for di, node in enumerate(my_nodes):
-            #         if node.is_root:
-            #             ndata = node._field_data[field]
-            #         else:
-            #             ndata = node["tree", field]
-            #             if field == "desc_uid":
-            #                 # make sure it's a root when loaded
-            #                 ndata[0] = -1
-            #         fdata[fieldname][
-            #             my_tree_start[di]:my_tree_end[di]] = ndata
-            #         c += my_tree_size[di]
-            #         pbar.update(c)
-            # pbar.finish()
-
-            fdata["tree_start_index"] = my_tree_start
-            fdata["tree_end_index"]   = my_tree_end
-            fdata["tree_size"]        = my_tree_size
-            for ft in ["tree_start_index",
-                      "tree_end_index",
-                      "tree_size"]:
-                ftypes[ft] = "index"
-            my_filename = "%s_%04d.h5" % (filename, i)
-            save_as_dataset({}, my_filename, fdata,
-                            field_types=ftypes)
-
-        return header_filename
+        fn = save_arbor(self, filename=filename,
+                        fields=fields, trees=trees,
+                        max_file_size=max_file_size)
+        return fn
 
 class CatalogArbor(Arbor):
     """
@@ -1050,6 +949,11 @@ class CatalogArbor(Arbor):
     _prefix = None
     _data_file_class = None
     _has_uids = False
+    # Don't reset _ancestors or descendents because we won't be able to
+    # rebuild trees without calling _plant_trees again.
+    _extra_reset_attrs = ()
+    _setup_attrs = ("_desc_uids", "_uids", "_nodes")
+    _grow_attrs = ()
 
     def __init__(self, filename):
         super(CatalogArbor, self).__init__(filename)
