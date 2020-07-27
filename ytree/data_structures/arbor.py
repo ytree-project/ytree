@@ -500,7 +500,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
 
         self._plant_trees()
-        if isinstance(key, int):
+        if isinstance(key, (int, np.integer)):
             return self._generate_root_node(key)
         elif isinstance(key, slice) or isinstance(key, np.ndarray):
             indices = np.arange(self.size)[key]
