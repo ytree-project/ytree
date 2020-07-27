@@ -950,7 +950,7 @@ Check the TypeError exception above for more details.
         return False
 
     def save_arbor(self, filename="arbor", fields=None, trees=None,
-                   max_file_size=524288):
+                   reset_trees=True, max_file_size=524288):
         r"""
         Save the arbor to a file.
 
