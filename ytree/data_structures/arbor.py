@@ -83,7 +83,22 @@ class Arbor(object, metaclass=RegisteredArbor):
     _root_field_io_class = DefaultRootFieldIO
     _tree_field_io_class = TreeFieldIO
     _default_dtype = np.float64
-    _io_attrs = ()
+
+    ### attributes required for generating a TreeNode object
+    ### for a given Arbor class.
+    ### We store these in arrays and use them to generate TreeNodes
+    ### when they are needed.
+    ## attributes required for constructing TreeNodes
+    _node_con_attrs = ('uid',)
+    ## attributes we may not have, but would be nice if we did
+    _node_too_attrs = ('_tree_size',)
+    ## attributes specific to an Arbor class for facilitating io
+    _node_io_attrs = ()
+
+    ### tree node attributes for all Arbor types.
+    ### These facilitate walking the tree, getting fields, etc.
+    ### We keep track of these for resetting TreeNodes and
+    ### deciding when they are setup or grown.
     _reset_attrs = ("_tfi", "_tn", "_pfi", "_pn")
     _extra_reset_attrs = ("_ancestors", "descendent")
     _setup_attrs = ("_desc_uids", "_uids")
@@ -168,6 +183,29 @@ class Arbor(object, metaclass=RegisteredArbor):
         Create arrays to construct root nodes.
         """
         raise NotImplementedError
+
+    _node_info_storage = None
+    @property
+    def _node_info(self):
+        """
+        The dict of arrays for storing node information.
+        """
+
+        if self._node_info_storage is not None:
+            return self._node_info_storage
+
+        attrs = self._node_con_attrs + \
+          self._node_io_attrs
+
+        self._node_info_storage = \
+          dict((attr, np.empty(self._size, dtype=np.int64))
+               for attr in attrs)
+        # initialize the target of opportunity attributes
+        self._node_info_storage.update(
+            dict((attr, -np.ones(self._size, dtype=np.int64))
+                for attr in self._node_too_attrs))
+
+        return self._node_info_storage
 
     def is_setup(self, tree_node):
         """
@@ -410,16 +448,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
         Determine if trees have been planted.
         """
-        return self._uids is not None
-
-    _uids = None
-    @property
-    def uids(self):
-        """
-        Array containing all root uids in the arbor.
-        """
-        self._plant_trees()
-        return self._uids
+        return self._node_info_storage is not None
 
     def __repr__(self):
         return self.basename
@@ -449,7 +478,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
 
         my_nodes = np.atleast_1d(nodes)
-        attrs = list(self._io_attrs) + ['uid']
+        attrs = list(self._node_io_attrs) + ['uid']
         data = dict((attr, np.empty(my_nodes.size, dtype=np.int64))
                     for attr in attrs + ['root_uid'])
         data['_field_data'] = np.empty(my_nodes.size, dtype=np.object)
@@ -470,6 +499,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         Create root nodes given an index or slice from uid array.
         """
 
+        self._plant_trees()
         if isinstance(key, int):
             return self._generate_root_node(key)
         elif isinstance(key, slice) or isinstance(key, np.ndarray):
@@ -494,16 +524,16 @@ class Arbor(object, metaclass=RegisteredArbor):
         Create a root node given its index in the array of uids.
         """
 
-        my_node = TreeNode(self.uids[index], arbor=self, root=True)
-        for attr in self._io_attrs:
-            setattr(my_node, attr, self._io_info[attr][index])
+        args = tuple(self._node_info[attr][index]
+                      for attr in self._node_con_attrs)
+        my_node = TreeNode(*args, arbor=self, root=True)
+        for attr in self._node_io_attrs:
+            setattr(my_node, attr, self._node_info[attr][index])
+        for attr in self._node_too_attrs:
+            val = self._node_info[attr][index]
+            if val != -1:
+                setattr(my_node, attr, self._node_info[attr][index])
         return my_node
-
-    def __len__(self):
-        """
-        Return length of tree list.
-        """
-        return self.uids.size
 
     _field_info = None
     @property
@@ -516,12 +546,21 @@ class Arbor(object, metaclass=RegisteredArbor):
             self._field_info = self._field_info_class(self)
         return self._field_info
 
+    _size = None
     @property
     def size(self):
         """
-        Return length of tree list.
+        Return total number of trees.
         """
-        return self.uids.size
+        if self._size is None:
+            self._plant_trees()
+        return self._size
+
+    def __len__(self):
+        """
+        Return total number of trees.
+        """
+        return self.size
 
     _unit_registry = None
     @property
