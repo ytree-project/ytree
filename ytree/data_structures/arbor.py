@@ -407,7 +407,7 @@ class Arbor(object, metaclass=RegisteredArbor):
                 pbar=pbar, root_nodes=root_nodes):
             rval = func(node, *args, **kwargs)
             rvals.append(rval)
-            indices.append(node._index)
+            indices.append(node._arbor_index)
 
         return np.array(indices), rvals
 
@@ -514,9 +514,15 @@ class Arbor(object, metaclass=RegisteredArbor):
         Root node generator.
         """
 
+        # If we've been given an array of TreeNodes,
+        # just yield them back.
+        if getattr(indices, 'dtype', None) == np.object:
+            for index in indices:
+                yield index
+            return
+
         for index in indices:
             node = self._generate_root_node(index)
-            node._index = index
             yield node
 
     def _generate_root_node(self, index):

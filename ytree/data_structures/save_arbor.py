@@ -50,9 +50,8 @@ def determine_tree_list(arbor, trees):
     """
 
     if trees is None:
-        trees = arbor.trees
+        trees = arbor._yield_root_nodes(range(arbor.size))
     else:
-        # assemble unique tree roots for getting fields
         trees = np.asarray(trees)
 
     return trees
