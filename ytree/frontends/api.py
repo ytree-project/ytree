@@ -17,7 +17,6 @@ import importlib
 
 _frontends = [
     "ahf",
-    "arborarbor",
     "consistent_trees",
     "lhalotree",
     "rockstar",
