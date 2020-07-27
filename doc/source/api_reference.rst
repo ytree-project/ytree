@@ -61,10 +61,6 @@ Internal Classes
    ~ytree.frontends.ahf.arbor.AHFArbor
    ~ytree.frontends.ahf.fields.AHFFieldInfo
    ~ytree.frontends.ahf.io.AHFDataFile
-   ~ytree.frontends.arborarbor.arbor.ArborArbor
-   ~ytree.frontends.arborarbor.fields.ArborArborFieldInfo
-   ~ytree.frontends.arborarbor.io.ArborArborTreeFieldIO
-   ~ytree.frontends.arborarbor.io.ArborArborRootFieldIO
    ~ytree.frontends.consistent_trees.arbor.ConsistentTreesArbor
    ~ytree.frontends.consistent_trees.arbor.ConsistentTreesGroupArbor
    ~ytree.frontends.consistent_trees.arbor.ConsistentTreesHlistArbor
