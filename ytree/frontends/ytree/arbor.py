@@ -26,8 +26,6 @@ from ytree.frontends.ytree.io import \
     YTreeDataFile, \
     YTreeRootFieldIO, \
     YTreeTreeFieldIO
-from ytree.data_structures.tree_node import \
-    TreeNode
 from ytree.utilities.io import \
     _hdf5_yt_attr, \
     parse_h5_attr
