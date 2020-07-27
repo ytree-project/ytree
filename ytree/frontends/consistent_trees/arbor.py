@@ -55,6 +55,11 @@ class ConsistentTreesArbor(Arbor):
     _node_io_attrs = ('_fi', '_si', '_ei')
 
     def _node_io_loop_prepare(self, root_nodes):
+        # We get self._size from _parse_parameter file,
+        # so self.size will not trigger self._plant_trees().
+        self._plant_trees()
+        if root_nodes is None:
+            root_nodes = np.arange(self.size)
         return self.data_files, [root_nodes]
 
     def _node_io_loop_start(self, data_file):
@@ -167,7 +172,7 @@ class ConsistentTreesArbor(Arbor):
         self.box_size = self.quan(float(box[0]), box[1])
 
     def _plant_trees(self):
-        if self._ntrees == 0:
+        if self.is_planted or self._size == 0:
             return
 
         lkey = len("tree ")+1
@@ -197,7 +202,7 @@ class ConsistentTreesArbor(Arbor):
                     buff += data_file.fh.readline()
                     inl = len(buff)
                 uid = int(buff[ihash+lkey:inl])
-                self._uids[itree] = uid
+                self._node_info['uid'][itree] = uid
                 lihash = ihash
                 self._node_info['_si'][itree] = offset + inl + 1
                 self._node_info['_fi'][itree] = 0
@@ -238,8 +243,6 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
     _parameter_file_is_data_file = False
 
     def _node_io_loop_prepare(self, root_nodes):
-        self._plant_trees()
-
         if root_nodes is None:
             root_nodes = np.arange(self.size)
             fi = self._node_info['_fi']

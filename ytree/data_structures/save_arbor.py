@@ -31,6 +31,7 @@ def save_arbor(arbor, filename="arbor", fields=None, trees=None,
     This is the internal function called by Arbor.save_arbor.
     """
 
+    arbor._plant_trees()
     filename = determine_output_filename(filename, ".h5")
     fields = determine_field_list(arbor, fields)
 
