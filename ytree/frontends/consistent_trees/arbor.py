@@ -26,8 +26,6 @@ from unyt.exceptions import \
 
 from ytree.data_structures.arbor import \
     Arbor
-from ytree.data_structures.tree_node import \
-    TreeNode
 
 from ytree.frontends.consistent_trees.fields import \
     ConsistentTreesFieldInfo
