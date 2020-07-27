@@ -527,13 +527,25 @@ class Arbor(object, metaclass=RegisteredArbor):
         args = tuple(self._node_info[attr][index]
                       for attr in self._node_con_attrs)
         my_node = TreeNode(*args, arbor=self, root=True)
+        my_node._arbor_index = index
+
         for attr in self._node_io_attrs:
             setattr(my_node, attr, self._node_info[attr][index])
+
         for attr in self._node_too_attrs:
             val = self._node_info[attr][index]
             if val != -1:
                 setattr(my_node, attr, self._node_info[attr][index])
+
         return my_node
+
+    def _store_node_info(self, tree_node, attr):
+        """
+        Store a TreeNode attribute an array for retrieval later.
+        """
+
+        self._node_info[attr][tree_node._arbor_index] = \
+          getattr(tree_node, attr)
 
     _field_info = None
     @property
