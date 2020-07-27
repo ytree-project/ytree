@@ -199,14 +199,14 @@ class ConsistentTreesArbor(Arbor):
                 uid = int(buff[ihash+lkey:inl])
                 self._uids[itree] = uid
                 lihash = ihash
-                self._io_info['_si'][itree] = offset + inl + 1
-                self._io_info['_fi'][itree] = 0
+                self._node_info['_si'][itree] = offset + inl + 1
+                self._node_info['_fi'][itree] = 0
                 if itree > 0:
-                    self._io_info['_ei'][itree-1] = offset + ihash - 1
+                    self._node_info['_ei'][itree-1] = offset + ihash - 1
                 itree += 1
             offset = data_file.fh.tell()
             pbar.update(offset)
-        self._io_info['_ei'][-1] = offset
+        self._node_info['_ei'][-1] = offset
         data_file.close()
         pbar.finish()
 
@@ -241,12 +241,12 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         self._plant_trees()
 
         if root_nodes is None:
-            root_nodes = np.arange(self._ntrees)
-            fi = self._io_info['_fi']
+            root_nodes = np.arange(self.size)
+            fi = self._node_info['_fi']
         elif root_nodes.dtype == np.object:
             fi = np.array([node._fi for node in root_nodes])
         else: # assume an array of indices
-            fi = self._io_info['_fi'][root_nodes]
+            fi = self._node_info['_fi'][root_nodes]
 
         ufi = np.unique(fi)
         data_files = [self.data_files[i] for i in ufi]
