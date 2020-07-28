@@ -1172,6 +1172,7 @@ class CatalogArbor(Arbor):
     def _grow_tree(self, tree_node):
         pass
 
+
 global load_warn
 load_warn = True
 

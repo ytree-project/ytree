@@ -24,8 +24,6 @@ from unyt.exceptions import \
 
 from ytree.data_structures.arbor import \
     Arbor
-from ytree.data_structures.tree_node import \
-    TreeNode
 
 from ytree.frontends.lhalotree.fields import \
     LHaloTreeFieldInfo
@@ -193,10 +191,6 @@ class LHaloTreeArbor(Arbor):
             ntrees = lht.ntrees
             root_uids = lht.all_uids[lht.nhalos_before_tree]
             for i in range(ntrees):
-                # get a uid (unique id) from file or assign one
-                my_node = TreeNode(root_uids[i], arbor=self, root=True)
-                # assign any helpful attributes, such as start
-                # index in field arrays, etc.
                 self._node_info['uid'][itot] = root_uids[i]
                 self._node_info['_lht'][itot] = lht
                 self._node_info['_index_in_lht'][itot] = i
