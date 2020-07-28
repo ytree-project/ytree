@@ -19,7 +19,8 @@ import os
 import weakref
 
 from ytree.utilities.exceptions import \
-    ArborAnalysisFieldNotGenerated
+    ArborAnalysisFieldNotGenerated, \
+    ArborAnalysisFieldNotFound
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
@@ -224,14 +225,7 @@ class DefaultRootFieldIO(FieldIO):
 
     def _initialize_analysis_field(self, storage_object,
                                    name, units, **kwargs):
-        data = np.zeros(storage_object.size)
-        if units != "":
-            data = self.arbor.arr(data, units)
-        for i, t in enumerate(storage_object):
-            if name not in t._field_data:
-                continue
-            data[i] = t[name]
-        storage_object._field_data[name] = data
+        raise ArborAnalysisFieldNotFound(name, arbor=self.arbor)
 
     def _read_fields(self, storage_object, fields, dtypes=None,
                      root_only=True):

@@ -38,18 +38,21 @@ class AnalysisFieldTest(TempDirTest):
         fake_bears = np.zeros(a.size)
         assert_array_equal(fake_bears, a['bears'])
 
-        a[0]['bears'] = 9
+        all_trees = a[:]
+        my_tree = all_trees[0]
+        my_tree['bears'] = 9
         fake_bears[0] = 9
         assert_array_equal(fake_bears, a['bears'])
 
-        fake_tree_bears = np.zeros(a[1].tree_size)
+        my_tree = all_trees[1]
+        fake_tree_bears = np.zeros(my_tree.tree_size)
         assert_array_equal(
-            fake_tree_bears, a[1]['tree', 'bears'])
+            fake_tree_bears, my_tree['tree', 'bears'])
         fake_tree_bears[72] = 99
-        a[1]['tree'][72]['bears'] = 99
-        assert_array_equal(fake_tree_bears, a[1]['tree', 'bears'])
+        my_tree['tree'][72]['bears'] = 99
+        assert_array_equal(fake_tree_bears, my_tree['tree', 'bears'])
 
-        fn = a.save_arbor()
+        fn = a.save_arbor(trees=all_trees)
         a2 = ytree.load(fn)
 
         assert_array_equal(fake_bears, a2['bears'])

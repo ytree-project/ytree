@@ -478,8 +478,6 @@ class Arbor(object, metaclass=RegisteredArbor):
             if key in ("tree", "prog"):
                 raise SyntaxError("Argument must be a field or integer.")
             self._root_io.get_fields(self, fields=[key])
-            if self.field_info[key].get("type") == "analysis":
-                return self._field_data.pop(key)
             return self._field_data[key]
         return self._generate_root_nodes(key)
 
@@ -774,7 +772,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         pbar.finish()
         return np.array(halos)
 
-    def add_analysis_field(self, name, units):
+    def add_analysis_field(self, name, units, dtype=None):
         r"""
         Add an empty field to be filled by analysis operations.
 
@@ -784,6 +782,10 @@ class Arbor(object, metaclass=RegisteredArbor):
             Field name.
         units : string
             Field units.
+        dtype : optional, type
+            Data type for field values. If None, the default data type
+            of the arbor is used.
+            Default: None.
 
         Examples
         --------
@@ -798,9 +800,14 @@ class Arbor(object, metaclass=RegisteredArbor):
         if name in self.field_info:
             raise ArborFieldAlreadyExists(name, arbor=self)
 
+        if dtype is None:
+            dtype = self._default_dtype
+
         self.analysis_field_list.append(name)
         self.field_info[name] = {"type": "analysis",
                                  "units": units}
+        self._field_data[name] = \
+          self.arr(np.zeros(self.size, dtype=dtype), units)
 
     def add_alias_field(self, alias, field, units=None,
                         force_add=True):
