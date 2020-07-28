@@ -178,6 +178,13 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
         self.set_selector("max_field_value", "mass")
 
+    @property
+    def is_planted(self):
+        """
+        Determine if trees have been planted.
+        """
+        return self._node_info_storage is not None
+
     def _plant_trees(self):
         """
         Create arrays to construct root nodes.
@@ -422,15 +429,26 @@ class Arbor(object, metaclass=RegisteredArbor):
         This is called at the beginning of _node_io_loop.
 
         In different frontends, this can be used to group nodes by
-        common data files.
+        common data files. If root_nodes is None, we want all root
+        nodes in the Arbor.
+
+        Below is the default behavior, which does the bare minimum
+        of returning a list of [None], meaning all nodes come in a
+        single group associated with no particular data file.
+
+        See the implementation in individual frontends for a
+        more informative example.
 
         Return
         ------
         list of data files and a list of node arrays
 
-        Each data file corresponds to an array of nodes.
+        Each data file corresponds to an array of nodes whose data
+        are contained within it.
         """
 
+        if root_nodes is None:
+            root_nodes = np.arange(self.size)
         return [None], [root_nodes]
 
     def __iter__(self):
@@ -442,13 +460,6 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
 
         return self._node_io_iter(pbar='Iterating', root_nodes=None)
-
-    @property
-    def is_planted(self):
-        """
-        Determine if trees have been planted.
-        """
-        return self._node_info_storage is not None
 
     def __repr__(self):
         return self.basename
@@ -1001,11 +1012,21 @@ class CatalogArbor(Arbor):
     Base class for Arbors created from a series of halo catalog
     files where the descendent ID for each halo has been
     pre-determined.
+
+    Unlike formats where tree information is stored in single file,
+    halos are scattered about multiple catalog files. This requires
+    us to store the root TreeNode objects and their full assemblies.
     """
 
     _prefix = None
     _data_file_class = None
+    # does the dataset define unique ids?
     _has_uids = False
+
+    # We will store root TreeNodes instead of generate them,
+    # so we don't need to store anything here.
+    _node_con_attrs = ()
+
     # Don't reset _ancestors or descendents because we won't be able to
     # rebuild trees without calling _plant_trees again.
     _extra_reset_attrs = ()
@@ -1024,7 +1045,29 @@ class CatalogArbor(Arbor):
     def _get_data_files(self):
         raise NotImplementedError
 
+    def _generate_root_node(self, index):
+        """
+        Return a node self._trees.
+
+        These cannot be generated easily, so we keep them.
+        """
+        node = self._trees[index]
+        if not hasattr(node, '_arbor_index'):
+            node._arbor_index = index
+        return node
+
+    _trees = None
+    @property
+    def is_planted(self):
+        """
+        Determine if trees have been planted.
+        """
+        return self._trees is not None
+
     def _plant_trees(self):
+        if self.is_planted:
+            return
+
         # this can be called once with the list, but fields are
         # not guaranteed to be returned in order.
         if self._has_uids:
@@ -1100,6 +1143,7 @@ class CatalogArbor(Arbor):
         pbar.finish()
 
         self._trees = np.array(trees)
+        self._size = self._trees.size
 
     def _setup_tree(self, tree_node):
         if self.is_setup(tree_node):
@@ -1127,7 +1171,6 @@ class CatalogArbor(Arbor):
 
     def _grow_tree(self, tree_node):
         pass
-
 
 global load_warn
 load_warn = True
