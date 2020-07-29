@@ -72,9 +72,11 @@ class ConsistentTreesHDF5Arbor(Arbor):
         return self.data_files, [root_nodes]
 
     def _node_io_loop_start(self, data_file):
+        data_file._field_cache = {}
         data_file.open()
 
     def _node_io_loop_finish(self, data_file):
+        data_file._field_cache = {}
         data_file.close()
 
     def _get_data_files(self):
