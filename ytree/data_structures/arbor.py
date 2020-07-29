@@ -805,6 +805,7 @@ class Arbor(object, metaclass=RegisteredArbor):
 
         self.analysis_field_list.append(name)
         self.field_info[name] = {"type": "analysis",
+                                 "dtype": dtype,
                                  "units": units}
         self._field_data[name] = \
           self.arr(np.zeros(self.size, dtype=dtype), units)

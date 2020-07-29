@@ -17,8 +17,8 @@ import h5py
 import numpy as np
 
 from ytree.data_structures.io import \
+    DefaultRootFieldIO, \
     DataFile, \
-    FieldIO, \
     TreeFieldIO
 
 class YTreeDataFile(DataFile):
@@ -76,7 +76,7 @@ class YTreeTreeFieldIO(TreeFieldIO):
 
         return field_data
 
-class YTreeRootFieldIO(FieldIO):
+class YTreeRootFieldIO(DefaultRootFieldIO):
     def _read_fields(self, storage_object, fields, dtypes=None):
         if dtypes is None:
             dtypes = {}
@@ -96,17 +96,3 @@ class YTreeRootFieldIO(FieldIO):
         fh.close()
 
         return field_data
-
-    def _initialize_analysis_field(self, storage_object,
-                                   name, units, **kwargs):
-        # Always refresh this because it may have changed.
-        if name in storage_object._field_data:
-            data = storage_object._field_data[name]
-        else:
-            data = np.zeros(storage_object.size)
-            if units != "":
-                data = self.arbor.arr(data, units)
-            storage_object._field_data[name] = data
-
-        for i, halo in enumerate(storage_object):
-            data[i] = halo[name]
