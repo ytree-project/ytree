@@ -872,7 +872,7 @@ class Arbor(object, metaclass=RegisteredArbor):
             self.field_info[field]["aliases"].append(alias)
 
     def add_derived_field(self, name, function,
-                          units=None, description=None,
+                          units=None, dtype=None, description=None,
                           vector_field=False, force_add=True):
         r"""
         Add a field that is a function of other fields.
@@ -888,6 +888,9 @@ class Arbor(object, metaclass=RegisteredArbor):
             dependent fields.  See below for an example.
         units : optional, string
             The units in which the field will be returned.
+        dtype : optional, type
+            The data type of the field array. If none, use the
+            default type set by Arbor._default_dtype.
         description : optional, string
             A short description of the field.
         vector_field: optional, bool
@@ -928,8 +931,14 @@ class Arbor(object, metaclass=RegisteredArbor):
 
         if units is None:
             units = ""
-        info = {"name": name, "type": "derived", "function": function,
-                "units": units, "vector_field": vector_field,
+        if dtype is None:
+            dtype = self._default_dtype
+        info = {"name": name,
+                "type": "derived",
+                "function": function,
+                "units": units,
+                "dtype": dtype,
+                "vector_field": vector_field,
                 "description": description}
 
         fc = FakeFieldContainer(self, name=name)

@@ -16,9 +16,12 @@ tests for analysis fields
 import numpy as np
 from numpy.testing import \
     assert_array_equal, \
-    assert_equal
+    assert_equal, \
+    assert_raises
 import os
 
+from ytree.utilities.exceptions import \
+    ArborFieldAlreadyExists
 from ytree.utilities.testing import \
     requires_file, \
     test_data_dir, \
@@ -96,3 +99,10 @@ class AnalysisFieldTest(TempDirTest):
         assert_array_equal(fake_tree_bears, a2[1]['tree', 'bears'])
         assert_equal(a2['bears'].dtype, my_dtype)
         assert_equal(a2[1]['tree', 'bears'].dtype, my_dtype)
+
+    @requires_file(CT)
+    def test_analysis_field_already_exists(self):
+        a = ytree.load(CT)
+
+        with assert_raises(ArborFieldAlreadyExists):
+            a.add_analysis_field('mass', units='g')
