@@ -104,6 +104,54 @@ class ArborTest(object):
             len(self.arbor.data_files), self.num_data_files,
             err_msg='Incorrect number of data files for %s.' % self.arbor)
 
+    def test_reset_node(self):
+        t = self.arbor[0]
+        ts0 = t['tree'].size
+        f0 = dict((field, t['tree', field])
+                  for field in ['uid', 'desc_uid'])
+
+        assert self.arbor.is_setup(t)
+        assert self.arbor.is_grown(t)
+
+        self.arbor.reset_node(t)
+
+        for attr in self.arbor._reset_attrs:
+            assert getattr(t, attr) is None
+        assert_equal(len(t._field_data), 0)
+        assert not self.arbor.is_setup(t)
+        assert not self.arbor.is_grown(t)
+
+        assert_equal(
+            t['tree'].size, ts0,
+            err_msg='Trees are not the same size after resetting for %s.' %
+            self.arbor)
+
+        for field in f0:
+            assert_array_equal(
+                t['tree', field], f0[field],
+                err_msg='Tree field %s not the same after resetting for %s.' %
+                (field, self.arbor))
+
+    def test_reset_nonroot(self):
+        t = self.arbor[0]
+        node = t['tree'][1]
+        ts0 = node['tree'].size
+        f0 = dict((field, node['tree', field])
+                  for field in ['uid', 'desc_uid'])
+
+        self.arbor.reset_node(node)
+
+        assert_equal(
+            node['tree'].size, ts0,
+            err_msg='Trees are not the same size after resetting for %s.' %
+            self.arbor)
+
+        for field in f0:
+            assert_array_equal(
+                node['tree', field], f0[field],
+                err_msg='Tree field %s not the same after resetting for %s.' %
+                (field, self.arbor))
+
     def test_save_and_reload(self):
         save_and_compare(self.arbor, skip=self.tree_skip)
 
@@ -185,8 +233,8 @@ def compare_trees(t1, t2, groups=None, fields=None):
                 t1[group, field], t2[group, field],
                 err_msg="Tree comparison failed for %s field: %s." %
                 (group, field))
-    t1.reset()
-    t2.reset()
+    t1.arbor.reset_node(t1)
+    t2.arbor.reset_node(t2)
 
 def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
                  **kwargs):

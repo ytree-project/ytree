@@ -189,18 +189,3 @@ providing the path to the primary hdf5 file.
 
    >>> import ytree
    >>> a = ytree.load("arbor/arbor.h5")
-
-.. _load-old-arbor:
-
-Saved Arbors from ytree 1.1
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Arbors created with version 1.1 of ``ytree`` and earlier can be reloaded by
-providing the single file created.  It is recommended that arbors be
-re-saved into the newer format as this will significantly improve
-performance.
-
-.. code-block:: python
-
-   >>> import ytree
-   >>> a = ytree.load("arbor.h5")

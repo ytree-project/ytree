@@ -63,10 +63,22 @@ class SaveArborTest(TempDirTest):
     def test_save_tree(self):
         a = ytree.load(CT)
 
-        for t in [a[0], a[0]["tree"][1]]:
-            fn = t.save_tree()
-            a2 = ytree.load(fn)
-        
-            fields = a2.field_list[:]
-            fields.remove("desc_uid")
-            compare_trees(t, a2[0], fields=fields)
+        t = a[0]
+        fn = t.save_tree()
+        a2 = ytree.load(fn)
+
+        fields = a2.field_list[:]
+        fields.remove("desc_uid")
+        compare_trees(t, a2[0], fields=fields)
+
+    @requires_file(CT)
+    def test_save_tree_nonroot(self):
+        a = ytree.load(CT)
+
+        t = a[0]["tree"][1]
+        fn = t.save_tree()
+        a2 = ytree.load(fn)
+
+        fields = a2.field_list[:]
+        fields.remove("desc_uid")
+        compare_trees(t, a2[0], fields=fields)

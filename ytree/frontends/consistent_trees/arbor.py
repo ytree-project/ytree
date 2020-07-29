@@ -79,7 +79,7 @@ class ConsistentTreesArbor(Arbor):
             return
 
         lkey = len("tree ")+1
-        block_size = 32768
+        block_size = 4096
 
         data_file = self.data_files[0]
 
