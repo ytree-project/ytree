@@ -355,7 +355,7 @@ class Arbor(object, metaclass=RegisteredArbor):
             Default: None (no progress bar).
         root_nodes : optional, array of root TreeNodes
             Array of nodes over which the function will be called.
-            If None, the list will be self.trees (i.e., all
+            If None, the list will be self[:] (i.e., all
             root_nodes).
             Default: None.
         """
@@ -400,7 +400,7 @@ class Arbor(object, metaclass=RegisteredArbor):
             Default: None (no progress bar).
         root_nodes : optional, array of root TreeNodes
             Array of nodes over which the function will be called.
-            If None, the list will be self.trees (i.e., all
+            If None, the list will be self[:] (i.e., all
             root_nodes).
             Default: None.
         """
@@ -744,7 +744,7 @@ class Arbor(object, metaclass=RegisteredArbor):
                 "Keyword \"select_from\" must be either \"tree\" or \"prog\".")
 
         if trees is None:
-            trees = self.trees
+            trees = self[:]
 
         if fields is None:
             fields = []
@@ -759,7 +759,7 @@ class Arbor(object, metaclass=RegisteredArbor):
 
 
         halos = []
-        pbar = get_pbar("Selecting halos", self.trees.size)
+        pbar = get_pbar("Selecting halos", trees.size)
         for tree in trees:
             my_filter = np.asarray(eval(criteria))
             if my_filter.size != tree[select_from].size:
