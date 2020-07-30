@@ -485,28 +485,6 @@ class Arbor(object, metaclass=RegisteredArbor):
             return self._field_data[key]
         return self._generate_nodes(key)
 
-    def _strip_nodes(self, nodes):
-        """
-        Convert an array of nodes into a dict of essential metadata arrays.
-        """
-
-        my_nodes = np.atleast_1d(nodes)
-        attrs = list(self._node_io_attrs) + ['uid']
-        data = dict((attr, np.empty(my_nodes.size, dtype=np.int64))
-                    for attr in attrs + ['root_uid'])
-        data['_field_data'] = np.empty(my_nodes.size, dtype=np.object)
-        for i, node in enumerate(my_nodes):
-            for attr in attrs:
-                data[attr][i] = getattr(node, attr)
-                if node.is_root:
-                    data['root_uid'][i] = node.uid
-                    data['_field_data'][i] = node._field_data
-                else:
-                    data['root_uid'][i] = node.root.uid
-                    data['_field_data'][i] = node.root._field_data
-
-        return data
-
     def _generate_nodes(self, key):
         """
         Create root nodes given an index or slice from uid array.
