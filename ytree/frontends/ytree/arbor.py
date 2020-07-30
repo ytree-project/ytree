@@ -46,15 +46,25 @@ class YTreeArbor(Arbor):
             root_nodes = np.arange(self.size)
             ai = self._node_info['_ai']
         elif root_nodes.dtype == np.object:
-            ai = np.array([node._ai for node in root_nodes])
+            ai = np.array(
+                [node._ai if node.is_root else node.root._ai
+                 for node in root_nodes])
         else: # assume an array of indices
-            ai = self._node_info['_fa'][root_nodes]
+            ai = self._node_info['_ai'][root_nodes]
+
+        # the order they will be processed
+        io_order = np.argsort(ai)
+        ai = ai[io_order]
+        # array to return them to original order
+        return_order = np.empty_like(io_order)
+        return_order[io_order] = np.arange(io_order.size)
 
         dfi = np.digitize(ai, self._node_io._ei)
         udfi = np.unique(dfi)
         data_files = [self._node_io.data_files[i] for i in udfi]
-        node_list = [root_nodes[dfi == i] for i in udfi]
-        return data_files, node_list
+        index_list = [io_order[dfi == i] for i in udfi]
+
+        return data_files, index_list, return_order
 
     def _node_io_loop_start(self, data_file):
         data_file._field_cache = {}
