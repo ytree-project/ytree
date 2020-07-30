@@ -391,10 +391,7 @@ class Arbor(object, metaclass=RegisteredArbor):
             if root_nodes is None:
                 my_nodes = nodes
             else:
-                try:
-                    my_nodes = root_nodes[nodes]
-                except:
-                    breakpoint()
+                my_nodes = root_nodes[nodes]
 
             for node in self._yield_nodes(my_nodes):
                 rval = func(node, *args, **kwargs)
