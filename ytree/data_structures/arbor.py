@@ -338,49 +338,6 @@ class Arbor(object, metaclass=RegisteredArbor):
         for attr in attrs:
             setattr(tree_node, attr, None)
 
-    def _node_io_iter(self, pbar=None, root_nodes=None):
-        """
-        Yield nodes in a file i/o optimized way.
-
-        Group nodes by data file and open/close files as needed.
-        Call the provided function over a list of nodes.
-
-        Parameters
-        ----------
-        pbar : optional, string or yt.funcs.TqdmProgressBar
-            A progress bar to be updated with each iteration.
-            If a string, a progress bar will be created and the
-            finish function will be called. If a progress bar is
-            provided, the finish function will not be called.
-            Default: None (no progress bar).
-        root_nodes : optional, array of root TreeNodes
-            Array of nodes over which the function will be called.
-            If None, the list will be self[:] (i.e., all
-            root_nodes).
-            Default: None.
-        """
-
-        data_files, node_list = self._node_io_loop_prepare(root_nodes)
-        nnodes = sum([nodes.size for nodes in node_list])
-
-        finish = True
-        if pbar is None:
-            pbar = fake_pbar("", nnodes)
-        elif not isinstance(pbar, TqdmProgressBar):
-            pbar = get_pbar(pbar, nnodes)
-        else:
-            finish = False
-
-        for data_file, nodes in zip(data_files, node_list):
-            self._node_io_loop_start(data_file)
-            for node in self._yield_root_nodes(nodes):
-                yield node
-                pbar.update(1)
-            self._node_io_loop_finish(data_file)
-
-        if finish:
-            pbar.finish()
-
     def _node_io_loop(self, func, *args, **kwargs):
         """
         Call the provided function over a list of nodes.
@@ -403,20 +360,47 @@ class Arbor(object, metaclass=RegisteredArbor):
             If None, the list will be self[:] (i.e., all
             root_nodes).
             Default: None.
+
+        Returns
+        -------
+        rvals : list
+            return values from calling func on each node.
+            These will have the same order as the original node list.
         """
 
         pbar = kwargs.pop("pbar", None)
         root_nodes = kwargs.pop("root_nodes", None)
 
-        rvals = []
-        indices = []
-        for node in self._node_io_iter(
-                pbar=pbar, root_nodes=root_nodes):
-            rval = func(node, *args, **kwargs)
-            rvals.append(rval)
-            indices.append(node._arbor_index)
+        data_files, node_list, return_order = \
+          self._node_io_loop_prepare(root_nodes)
+        nnodes = sum([nodes.size for nodes in node_list])
 
-        return np.array(indices), rvals
+        finish = True
+        if pbar is None:
+            pbar = fake_pbar("", nnodes)
+        elif not isinstance(pbar, TqdmProgressBar):
+            pbar = get_pbar(pbar, nnodes)
+        else:
+            finish = False
+
+        rvals = []
+        for data_file, nodes in zip(data_files, node_list):
+            self._node_io_loop_start(data_file)
+
+            for node in self._yield_nodes(root_nodes[nodes]):
+                rval = func(node, *args, **kwargs)
+                rvals.append(rval)
+                pbar.update(1)
+
+            self._node_io_loop_finish(data_file)
+
+        if finish:
+            pbar.finish()
+
+        if return_order is not None:
+            rvals = [rvals[i] for i in return_order]
+
+        return rvals
 
     def _node_io_loop_start(self, data_file):
         pass
@@ -424,42 +408,49 @@ class Arbor(object, metaclass=RegisteredArbor):
     def _node_io_loop_finish(self, data_file):
         pass
 
-    def _node_io_loop_prepare(self, root_nodes):
+    def _node_io_loop_prepare(self, nodes):
         """
         This is called at the beginning of _node_io_loop.
 
         In different frontends, this can be used to group nodes by
-        common data files. If root_nodes is None, we want all root
+        common data files. If nodes is None, we want all root
         nodes in the Arbor.
 
         Below is the default behavior, which does the bare minimum
-        of returning a list of [None], meaning all nodes come in a
-        single group associated with no particular data file.
+        of returning:
+        list of [None] : meaning all nodes come in a single group
+            associated with no particular data file.
+        list containing array of all provided nodes: meaning there
+            is no specific grouping to be done
+        None : meaning the nodes do not have to be reordered after
+            being processed.
 
-        See the implementation in individual frontends for a
-        more informative example.
+        See the implementation in individual frontends for
+        more informative examples.
 
-        Return
-        ------
-        list of data files and a list of node arrays
-
-        Each data file corresponds to an array of nodes whose data
-        are contained within it.
+        Returns
+        -------
+        data_files : list
+            list of data files that will be used
+        index_list : list of arrays
+            indices of the provided array of nodes associated
+            with each of the data files
+        return_order : int array
+            array of indices used to reorder the return values
+            to the order of the provided nodes
         """
 
-        if root_nodes is None:
-            root_nodes = np.arange(self.size)
-        return [None], [root_nodes]
+        if nodes is None:
+            nodes = np.arange(self.size)
+        return [None], [nodes], None
 
     def __iter__(self):
         """
-        Iterate over all items in the tree list.
-
-        If possible, group nodes by common data files to speed
-        things up.
+        Iterate over all trees in the arbor.
         """
 
-        return self._node_io_iter(pbar='Iterating', root_nodes=None)
+        for node in self._yield_nodes(range(self.size)):
+            yield node
 
     def __repr__(self):
         return self.basename
@@ -479,7 +470,7 @@ class Arbor(object, metaclass=RegisteredArbor):
                 raise SyntaxError("Argument must be a field or integer.")
             self._root_io.get_fields(self, fields=[key])
             return self._field_data[key]
-        return self._generate_root_nodes(key)
+        return self._generate_nodes(key)
 
     def _strip_nodes(self, nodes):
         """
@@ -503,22 +494,22 @@ class Arbor(object, metaclass=RegisteredArbor):
 
         return data
 
-    def _generate_root_nodes(self, key):
+    def _generate_nodes(self, key):
         """
         Create root nodes given an index or slice from uid array.
         """
 
         self._plant_trees()
         if isinstance(key, (int, np.integer)):
-            return self._generate_root_node(key)
+            return self._generate_node(key)
         elif isinstance(key, slice) or isinstance(key, np.ndarray):
             indices = np.arange(self.size)[key]
             return np.array(
-                [node for node in self._yield_root_nodes(indices)])
+                [node for node in self._yield_nodes(indices)])
         else:
             raise ValueError('Cannot generate nodes from argument: ', key)
 
-    def _yield_root_nodes(self, indices):
+    def _yield_nodes(self, indices):
         """
         Root node generator.
         """
@@ -531,10 +522,10 @@ class Arbor(object, metaclass=RegisteredArbor):
             return
 
         for index in indices:
-            node = self._generate_root_node(index)
+            node = self._generate_node(index)
             yield node
 
-    def _generate_root_node(self, index):
+    def _generate_node(self, index):
         """
         Create a root node given its index in the array of uids.
         """
@@ -1062,7 +1053,7 @@ class CatalogArbor(Arbor):
     def _get_data_files(self):
         raise NotImplementedError
 
-    def _generate_root_node(self, index):
+    def _generate_node(self, index):
         """
         Return a node self._trees.
 

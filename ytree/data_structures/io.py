@@ -16,6 +16,7 @@ FieldIO class and member functions
 from collections import defaultdict
 import numpy as np
 import os
+from unyt import uconcatenate
 import weakref
 
 from ytree.utilities.exceptions import \
@@ -244,22 +245,14 @@ class DefaultRootFieldIO(FieldIO):
         my_dtypes = self._determine_dtypes(
             fields, override_dict=dtypes)
 
-        node_list, rvals = self.arbor._node_io_loop(
+        rvals = self.arbor._node_io_loop(
             self.arbor._node_io._read_fields,
             pbar="Reading root fields",
-            fields=fields, dtypes=dtypes, root_only=True)
+            fields=fields, dtypes=my_dtypes, root_only=True)
 
-        fi = self.arbor.field_info
-        fsize = self.arbor.size
-        field_data = {}
-        for field in fields:
-            data = np.empty(fsize, dtype=my_dtypes[field])
-            units = fi[field].get("units", "")
-            if units:
-                data = self.arbor.arr(data, units)
-            for i, fvals in zip(node_list, rvals):
-                data[i] = fvals[field]
-            field_data[field] = data
+        field_data = \
+          dict((field, uconcatenate([fvals[field] for fvals in rvals]))
+               for field in fields)
 
         return field_data
 

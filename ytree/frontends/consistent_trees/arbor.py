@@ -245,14 +245,24 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
             root_nodes = np.arange(self.size)
             fi = self._node_info['_fi']
         elif root_nodes.dtype == np.object:
-            fi = np.array([node._fi for node in root_nodes])
+            fi = np.array(
+                [node._fi if node.is_root else node.root._fi
+                 for node in root_nodes])
         else: # assume an array of indices
             fi = self._node_info['_fi'][root_nodes]
 
+        # the order they will be processed
+        io_order = np.argsort(fi)
+        fi = fi[io_order]
+        # array to return them to original order
+        return_order = np.empty_like(io_order)
+        return_order[io_order] = np.arange(io_order.size)
+
         ufi = np.unique(fi)
         data_files = [self.data_files[i] for i in ufi]
-        node_list = [root_nodes[fi == i] for i in ufi]
-        return data_files, node_list
+        index_list = [io_order[fi == i] for i in ufi]
+
+        return data_files, index_list, return_order
 
     def _get_data_files(self):
         pass
