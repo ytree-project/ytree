@@ -56,9 +56,19 @@ class ConsistentTreesArbor(Arbor):
         # We get self._size from _parse_parameter file,
         # so self.size will not trigger self._plant_trees().
         self._plant_trees()
+
+        indices = None
         if root_nodes is None:
-            root_nodes = np.arange(self.size)
-        return self.data_files, [root_nodes]
+            my_size = self.size
+        elif root_nodes.dtype == np.object:
+            my_size = root_nodes.size
+        else: # assume an array of indices
+            indices = root_nodes
+
+        if indices is None:
+            indices = np.arange(my_size)
+
+        return self.data_files, [indices], None
 
     def _node_io_loop_start(self, data_file):
         data_file.open()
