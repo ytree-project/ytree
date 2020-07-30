@@ -449,6 +449,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         Iterate over all trees in the arbor.
         """
 
+        self._plant_trees()
         for node in self._yield_nodes(range(self.size)):
             yield node
 
