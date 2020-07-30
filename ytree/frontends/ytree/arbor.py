@@ -41,16 +41,16 @@ class YTreeArbor(Arbor):
     _suffix = ".h5"
     _node_io_attrs = ('_ai',)
 
-    def _node_io_loop_prepare(self, root_nodes):
-        if root_nodes is None:
-            root_nodes = np.arange(self.size)
+    def _node_io_loop_prepare(self, nodes):
+        if nodes is None:
+            nodes = np.arange(self.size)
             ai = self._node_info['_ai']
-        elif root_nodes.dtype == np.object:
+        elif nodes.dtype == np.object:
             ai = np.array(
                 [node._ai if node.is_root else node.root._ai
-                 for node in root_nodes])
+                 for node in nodes])
         else: # assume an array of indices
-            ai = self._node_info['_ai'][root_nodes]
+            ai = self._node_info['_ai'][nodes]
 
         # the order they will be processed
         io_order = np.argsort(ai)

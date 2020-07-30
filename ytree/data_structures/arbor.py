@@ -387,7 +387,16 @@ class Arbor(object, metaclass=RegisteredArbor):
         for data_file, nodes in zip(data_files, node_list):
             self._node_io_loop_start(data_file)
 
-            for node in self._yield_nodes(root_nodes[nodes]):
+            # if we're doing all of them, just give the indices
+            if root_nodes is None:
+                my_nodes = nodes
+            else:
+                try:
+                    my_nodes = root_nodes[nodes]
+                except:
+                    breakpoint()
+
+            for node in self._yield_nodes(my_nodes):
                 rval = func(node, *args, **kwargs)
                 rvals.append(rval)
                 pbar.update(1)
@@ -440,9 +449,15 @@ class Arbor(object, metaclass=RegisteredArbor):
             to the order of the provided nodes
         """
 
+        self._plant_trees()
+
         if nodes is None:
-            nodes = np.arange(self.size)
-        return [None], [nodes], None
+            my_size = self.size
+        else:
+            my_size = nodes.size
+        indices = np.arange(my_size)
+
+        return [None], [indices], None
 
     def __iter__(self):
         """
