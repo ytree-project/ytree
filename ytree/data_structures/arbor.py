@@ -83,6 +83,22 @@ class Arbor(object, metaclass=RegisteredArbor):
     _root_field_io_class = DefaultRootFieldIO
     _tree_field_io_class = TreeFieldIO
     _default_dtype = np.float64
+
+    ### attributes required for generating a TreeNode object
+    ### for a given Arbor class.
+    ### We store these in arrays and use them to generate TreeNodes
+    ### when they are needed.
+    ## attributes required for constructing TreeNodes
+    _node_con_attrs = ('uid',)
+    ## attributes we may not have, but would be nice if we did
+    _node_too_attrs = ('_tree_size',)
+    ## attributes specific to an Arbor class for facilitating io
+    _node_io_attrs = ()
+
+    ### tree node attributes for all Arbor types.
+    ### These facilitate walking the tree, getting fields, etc.
+    ### We keep track of these for resetting TreeNodes and
+    ### deciding when they are setup or grown.
     _reset_attrs = ("_tfi", "_tn", "_pfi", "_pn")
     _extra_reset_attrs = ("_ancestors", "descendent")
     _setup_attrs = ("_desc_uids", "_uids")
@@ -162,11 +178,41 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
         self.set_selector("max_field_value", "mass")
 
+    @property
+    def is_planted(self):
+        """
+        Determine if trees have been planted.
+        """
+        return self._node_info_storage is not None
+
     def _plant_trees(self):
         """
-        Create the list of root tree nodes.
+        Create arrays to construct root nodes.
         """
         raise NotImplementedError
+
+    _node_info_storage = None
+    @property
+    def _node_info(self):
+        """
+        The dict of arrays for storing node information.
+        """
+
+        if self._node_info_storage is not None:
+            return self._node_info_storage
+
+        attrs = self._node_con_attrs + \
+          self._node_io_attrs
+
+        self._node_info_storage = \
+          dict((attr, np.empty(self._size, dtype=np.int64))
+               for attr in attrs)
+        # initialize the target of opportunity attributes
+        self._node_info_storage.update(
+            dict((attr, -np.ones(self._size, dtype=np.int64))
+                for attr in self._node_too_attrs))
+
+        return self._node_info_storage
 
     def is_setup(self, tree_node):
         """
@@ -185,6 +231,8 @@ class Arbor(object, metaclass=RegisteredArbor):
         # skip if this is not a root or if already setup
         if self.is_setup(tree_node):
             return
+
+        mylog.debug(f"Setting up tree {str(tree_node)}.")
 
         idtype      = np.int64
         fields, _ = \
@@ -295,8 +343,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         Call the provided function over a list of nodes.
 
         If possible, group nodes by common data files to speed
-        things up.  This should work like __iter__, except we call
-        a function instead of yielding.
+        things up.
 
         Parameters
         ----------
@@ -310,22 +357,22 @@ class Arbor(object, metaclass=RegisteredArbor):
             Default: None (no progress bar).
         root_nodes : optional, array of root TreeNodes
             Array of nodes over which the function will be called.
-            If None, the list will be self.trees (i.e., all
+            If None, the list will be self[:] (i.e., all
             root_nodes).
             Default: None.
-        store : optional, string
-            If not None, any return value captured from the function
-            will be stored in an attribute with this name associated
-            with the TreeNode.
-            Default: None.
+
+        Returns
+        -------
+        rvals : list
+            return values from calling func on each node.
+            These will have the same order as the original node list.
         """
 
         pbar = kwargs.pop("pbar", None)
         root_nodes = kwargs.pop("root_nodes", None)
-        if root_nodes is None:
-            root_nodes = self.trees
-        store = kwargs.pop("store", None)
-        data_files, node_list = self._node_io_loop_prepare(root_nodes)
+
+        data_files, node_list, return_order = \
+          self._node_io_loop_prepare(root_nodes)
         nnodes = sum([nodes.size for nodes in node_list])
 
         finish = True
@@ -336,17 +383,30 @@ class Arbor(object, metaclass=RegisteredArbor):
         else:
             finish = False
 
+        rvals = []
         for data_file, nodes in zip(data_files, node_list):
             self._node_io_loop_start(data_file)
-            for node in nodes:
+
+            # if we're doing all of them, just give the indices
+            if root_nodes is None:
+                my_nodes = nodes
+            else:
+                my_nodes = root_nodes[nodes]
+
+            for node in self._yield_nodes(my_nodes):
                 rval = func(node, *args, **kwargs)
-                if store is not None:
-                    setattr(node, store, rval)
+                rvals.append(rval)
                 pbar.update(1)
+
             self._node_io_loop_finish(data_file)
 
         if finish:
             pbar.finish()
+
+        if return_order is not None:
+            rvals = [rvals[i] for i in return_order]
+
+        return rvals
 
     def _node_io_loop_start(self, data_file):
         pass
@@ -354,47 +414,56 @@ class Arbor(object, metaclass=RegisteredArbor):
     def _node_io_loop_finish(self, data_file):
         pass
 
-    def _node_io_loop_prepare(self, root_nodes):
+    def _node_io_loop_prepare(self, nodes):
         """
         This is called at the beginning of _node_io_loop.
 
         In different frontends, this can be used to group nodes by
-        common data files.
+        common data files. If nodes is None, we want all root
+        nodes in the Arbor.
 
-        Return
-        ------
-        list of data files and a list of node arrays
+        Below is the default behavior, which does the bare minimum
+        of returning:
+        list of [None] : meaning all nodes come in a single group
+            associated with no particular data file.
+        list containing array of all provided nodes: meaning there
+            is no specific grouping to be done
+        None : meaning the nodes do not have to be reordered after
+            being processed.
 
-        Each data file corresponds to an array of nodes.
+        See the implementation in individual frontends for
+        more informative examples.
+
+        Returns
+        -------
+        data_files : list
+            list of data files that will be used
+        index_list : list of arrays
+            indices of the provided array of nodes associated
+            with each of the data files
+        return_order : int array
+            array of indices used to reorder the return values
+            to the order of the provided nodes
         """
 
-        return [None], [root_nodes]
+        self._plant_trees()
+
+        if nodes is None:
+            my_size = self.size
+        else:
+            my_size = nodes.size
+        indices = np.arange(my_size)
+
+        return [None], [indices], None
 
     def __iter__(self):
         """
-        Iterate over all items in the tree list.
-
-        If possible, group nodes by common data files to speed
-        things up.
+        Iterate over all trees in the arbor.
         """
 
-        data_files, node_list = self._node_io_loop_prepare(self.trees)
-
-        for data_file, nodes in zip(data_files, node_list):
-            self._node_io_loop_start(data_file)
-            for node in nodes:
-                yield node
-            self._node_io_loop_finish(data_file)
-
-    _trees = None
-    @property
-    def trees(self):
-        """
-        Array containing all trees in the arbor.
-        """
-        if self._trees is None:
-            self._plant_trees()
-        return self._trees
+        self._plant_trees()
+        for node in self._yield_nodes(range(self.size)):
+            yield node
 
     def __repr__(self):
         return self.basename
@@ -408,20 +477,72 @@ class Arbor(object, metaclass=RegisteredArbor):
         roots of all trees.
         If given an integer, return a tree from the list of trees.
         """
+
         if isinstance(key, str):
             if key in ("tree", "prog"):
                 raise SyntaxError("Argument must be a field or integer.")
             self._root_io.get_fields(self, fields=[key])
-            if self.field_info[key].get("type") == "analysis":
-                return self._field_data.pop(key)
             return self._field_data[key]
-        return self.trees[key]
+        return self._generate_nodes(key)
 
-    def __len__(self):
+    def _generate_nodes(self, key):
         """
-        Return length of tree list.
+        Create root nodes given an index or slice from uid array.
         """
-        return self.trees.size
+
+        self._plant_trees()
+        if isinstance(key, (int, np.integer)):
+            return self._generate_node(key)
+        elif isinstance(key, slice) or isinstance(key, np.ndarray):
+            indices = np.arange(self.size)[key]
+            return np.array(
+                [node for node in self._yield_nodes(indices)])
+        else:
+            raise ValueError('Cannot generate nodes from argument: ', key)
+
+    def _yield_nodes(self, indices):
+        """
+        Root node generator.
+        """
+
+        # If we've been given an array of TreeNodes,
+        # just yield them back.
+        if getattr(indices, 'dtype', None) == np.object:
+            for index in indices:
+                yield index
+            return
+
+        for index in indices:
+            node = self._generate_node(index)
+            yield node
+
+    def _generate_node(self, index):
+        """
+        Create a root node given its index in the array of uids.
+        """
+
+        args = tuple(self._node_info[attr][index]
+                      for attr in self._node_con_attrs)
+        my_node = TreeNode(*args, arbor=self, root=True)
+        my_node._arbor_index = index
+
+        for attr in self._node_io_attrs:
+            setattr(my_node, attr, self._node_info[attr][index])
+
+        for attr in self._node_too_attrs:
+            val = self._node_info[attr][index]
+            if val != -1:
+                setattr(my_node, attr, self._node_info[attr][index])
+
+        return my_node
+
+    def _store_node_info(self, tree_node, attr):
+        """
+        Store a TreeNode attribute an array for retrieval later.
+        """
+
+        self._node_info[attr][tree_node._arbor_index] = \
+          getattr(tree_node, attr)
 
     _field_info = None
     @property
@@ -434,12 +555,21 @@ class Arbor(object, metaclass=RegisteredArbor):
             self._field_info = self._field_info_class(self)
         return self._field_info
 
+    _size = None
     @property
     def size(self):
         """
-        Return length of tree list.
+        Return total number of trees.
         """
-        return self.trees.size
+        if self._size is None:
+            self._plant_trees()
+        return self._size
+
+    def __len__(self):
+        """
+        Return total number of trees.
+        """
+        return self.size
 
     _unit_registry = None
     @property
@@ -596,7 +726,7 @@ class Arbor(object, metaclass=RegisteredArbor):
                 "Keyword \"select_from\" must be either \"tree\" or \"prog\".")
 
         if trees is None:
-            trees = self.trees
+            trees = self[:]
 
         if fields is None:
             fields = []
@@ -611,7 +741,7 @@ class Arbor(object, metaclass=RegisteredArbor):
 
 
         halos = []
-        pbar = get_pbar("Selecting halos", self.trees.size)
+        pbar = get_pbar("Selecting halos", trees.size)
         for tree in trees:
             my_filter = np.asarray(eval(criteria))
             if my_filter.size != tree[select_from].size:
@@ -624,7 +754,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         pbar.finish()
         return np.array(halos)
 
-    def add_analysis_field(self, name, units):
+    def add_analysis_field(self, name, units, dtype=None):
         r"""
         Add an empty field to be filled by analysis operations.
 
@@ -634,6 +764,10 @@ class Arbor(object, metaclass=RegisteredArbor):
             Field name.
         units : string
             Field units.
+        dtype : optional, type
+            Data type for field values. If None, the default data type
+            of the arbor is used.
+            Default: None.
 
         Examples
         --------
@@ -648,9 +782,15 @@ class Arbor(object, metaclass=RegisteredArbor):
         if name in self.field_info:
             raise ArborFieldAlreadyExists(name, arbor=self)
 
+        if dtype is None:
+            dtype = self._default_dtype
+
         self.analysis_field_list.append(name)
         self.field_info[name] = {"type": "analysis",
+                                 "dtype": dtype,
                                  "units": units}
+        self._field_data[name] = \
+          self.arr(np.zeros(self.size, dtype=dtype), units)
 
     def add_alias_field(self, alias, field, units=None,
                         force_add=True):
@@ -714,7 +854,7 @@ class Arbor(object, metaclass=RegisteredArbor):
             self.field_info[field]["aliases"].append(alias)
 
     def add_derived_field(self, name, function,
-                          units=None, description=None,
+                          units=None, dtype=None, description=None,
                           vector_field=False, force_add=True):
         r"""
         Add a field that is a function of other fields.
@@ -730,6 +870,9 @@ class Arbor(object, metaclass=RegisteredArbor):
             dependent fields.  See below for an example.
         units : optional, string
             The units in which the field will be returned.
+        dtype : optional, type
+            The data type of the field array. If none, use the
+            default type set by Arbor._default_dtype.
         description : optional, string
             A short description of the field.
         vector_field: optional, bool
@@ -770,8 +913,14 @@ class Arbor(object, metaclass=RegisteredArbor):
 
         if units is None:
             units = ""
-        info = {"name": name, "type": "derived", "function": function,
-                "units": units, "vector_field": vector_field,
+        if dtype is None:
+            dtype = self._default_dtype
+        info = {"name": name,
+                "type": "derived",
+                "function": function,
+                "units": units,
+                "dtype": dtype,
+                "vector_field": vector_field,
                 "description": description}
 
         fc = FakeFieldContainer(self, name=name)
@@ -862,11 +1011,21 @@ class CatalogArbor(Arbor):
     Base class for Arbors created from a series of halo catalog
     files where the descendent ID for each halo has been
     pre-determined.
+
+    Unlike formats where tree information is stored in single file,
+    halos are scattered about multiple catalog files. This requires
+    us to store the root TreeNode objects and their full assemblies.
     """
 
     _prefix = None
     _data_file_class = None
+    # does the dataset define unique ids?
     _has_uids = False
+
+    # We will store root TreeNodes instead of generate them,
+    # so we don't need to store anything here.
+    _node_con_attrs = ()
+
     # Don't reset _ancestors or descendents because we won't be able to
     # rebuild trees without calling _plant_trees again.
     _extra_reset_attrs = ()
@@ -885,7 +1044,29 @@ class CatalogArbor(Arbor):
     def _get_data_files(self):
         raise NotImplementedError
 
+    def _generate_node(self, index):
+        """
+        Return a node self._trees.
+
+        These cannot be generated easily, so we keep them.
+        """
+        node = self._trees[index]
+        if not hasattr(node, '_arbor_index'):
+            node._arbor_index = index
+        return node
+
+    _trees = None
+    @property
+    def is_planted(self):
+        """
+        Determine if trees have been planted.
+        """
+        return self._trees is not None
+
     def _plant_trees(self):
+        if self.is_planted:
+            return
+
         # this can be called once with the list, but fields are
         # not guaranteed to be returned in order.
         if self._has_uids:
@@ -961,6 +1142,7 @@ class CatalogArbor(Arbor):
         pbar.finish()
 
         self._trees = np.array(trees)
+        self._size = self._trees.size
 
     def _setup_tree(self, tree_node):
         if self.is_setup(tree_node):

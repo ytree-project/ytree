@@ -56,3 +56,9 @@ class ArborAnalysisFieldNotGenerated(ArborFieldException):
         return ("Analysis field \"%s\" needed but "
                 "not yet generated in %s.") % \
           (self.field, self.arbor)
+
+class ArborAnalysisFieldNotFound(ArborFieldException):
+    def __str__(self):
+        return ("Analysis field \"%s\" has been removed "
+                "from arbor field storage in %s.") % \
+          (self.field, self.arbor)
