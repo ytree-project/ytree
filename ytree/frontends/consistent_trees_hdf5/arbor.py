@@ -33,6 +33,7 @@ from ytree.frontends.consistent_trees_hdf5.fields import \
     ConsistentTreesHDF5FieldInfo
 from ytree.frontends.consistent_trees_hdf5.io import \
     ConsistentTreesHDF5DataFile, \
+    ConsistentTreesHDF5RootFieldIO, \
     ConsistentTreesHDF5TreeFieldIO
 from ytree.utilities.exceptions import \
     ArborDataFileEmpty
@@ -59,6 +60,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
 
     _parameter_file_is_data_file = True
     _field_info_class = ConsistentTreesHDF5FieldInfo
+    _root_field_io_class = ConsistentTreesHDF5RootFieldIO
     _tree_field_io_class = ConsistentTreesHDF5TreeFieldIO
     _default_dtype = np.float32
     _node_io_attrs = ('_fi', '_si', '_ei')
