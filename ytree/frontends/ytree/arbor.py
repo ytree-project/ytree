@@ -26,8 +26,6 @@ from ytree.frontends.ytree.io import \
     YTreeDataFile, \
     YTreeRootFieldIO, \
     YTreeTreeFieldIO
-from ytree.data_structures.tree_node import \
-    TreeNode
 from ytree.utilities.io import \
     _hdf5_yt_attr, \
     parse_h5_attr
@@ -41,14 +39,32 @@ class YTreeArbor(Arbor):
     _root_field_io_class = YTreeRootFieldIO
     _tree_field_io_class = YTreeTreeFieldIO
     _suffix = ".h5"
+    _node_io_attrs = ('_ai',)
 
-    def _node_io_loop_prepare(self, root_nodes):
-        ai = np.array([node._ai for node in root_nodes])
+    def _node_io_loop_prepare(self, nodes):
+        if nodes is None:
+            nodes = np.arange(self.size)
+            ai = self._node_info['_ai']
+        elif nodes.dtype == np.object:
+            ai = np.array(
+                [node._ai if node.is_root else node.root._ai
+                 for node in nodes])
+        else: # assume an array of indices
+            ai = self._node_info['_ai'][nodes]
+
+        # the order they will be processed
+        io_order = np.argsort(ai)
+        ai = ai[io_order]
+        # array to return them to original order
+        return_order = np.empty_like(io_order)
+        return_order[io_order] = np.arange(io_order.size)
+
         dfi = np.digitize(ai, self._node_io._ei)
         udfi = np.unique(dfi)
         data_files = [self._node_io.data_files[i] for i in udfi]
-        node_list = [root_nodes[dfi == i] for i in udfi]
-        return data_files, node_list
+        index_list = [io_order[dfi == i] for i in udfi]
+
+        return data_files, index_list, return_order
 
     def _node_io_loop_start(self, data_file):
         data_file._field_cache = {}
@@ -75,25 +91,23 @@ class YTreeArbor(Arbor):
         self.field_info.update(
             json.loads(parse_h5_attr(fh, "field_info")))
         self.field_list = list(self.field_info.keys())
+        self._size = fh.attrs["total_trees"]
         fh.close()
 
     def _plant_trees(self):
+        if self.is_planted:
+            return
+
         fh = h5py.File(self.filename, "r")
-        ntrees   = fh.attrs["total_trees"]
-        uids     = fh["data"]["uid"][()].astype(np.int64)
+        self._node_info['uid'][:] = fh["data"]["uid"][()].astype(np.int64)
         self._node_io._si = fh["index"]["tree_start_index"][()]
         self._node_io._ei = fh["index"]["tree_end_index"][()]
         fh.close()
 
+        self._node_info['_ai'][:] = np.arange(self.size)
         self._node_io.data_files = \
           [YTreeDataFile("%s_%04d%s" % (self._prefix, i, self._suffix))
            for i in range(self._node_io._si.size)]
-
-        self._trees = np.empty(ntrees, dtype=np.object)
-        for i in range(ntrees):
-            my_node        = TreeNode(uids[i], arbor=self, root=True)
-            my_node._ai    = i
-            self._trees[i] = my_node
 
     @classmethod
     def _is_valid(self, *args, **kwargs):

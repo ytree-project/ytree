@@ -125,10 +125,14 @@ class TreeNode(object):
     _tree_size = None
     @property
     def tree_size(self):
-        if not self.is_root:
-            return self["tree"].size
-        if self._tree_size is None:
+        if self._tree_size is not None:
+            return self._tree_size
+        if self.is_root:
             self.arbor._setup_tree(self)
+            # pass back to the arbor to avoid calculating again
+            self.arbor._store_node_info(self, '_tree_size')
+        else:
+            self._tree_size = self["tree"].size
         return self._tree_size
 
     _nodes = None
@@ -140,9 +144,11 @@ class TreeNode(object):
         return self._nodes
 
     def __setitem__(self, key, value):
-        if self.root == -1:
+        if self.is_root:
             root = self
             treeid = 0
+            # if root, set the value in the arbor field storage
+            self.arbor._field_data[key][self._arbor_index] = value
         else:
             root = self.root
             treeid = self.treeid

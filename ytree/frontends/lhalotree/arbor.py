@@ -24,8 +24,6 @@ from unyt.exceptions import \
 
 from ytree.data_structures.arbor import \
     Arbor
-from ytree.data_structures.tree_node import \
-    TreeNode
 
 from ytree.frontends.lhalotree.fields import \
     LHaloTreeFieldInfo
@@ -44,6 +42,7 @@ class LHaloTreeArbor(Arbor):
     _tree_field_io_class = LHaloTreeTreeFieldIO
     _root_field_io_class = LHaloTreeRootFieldIO
     _default_dtype = np.float32
+    _node_io_attrs = ('_lht', '_index_in_lht')
 
     def __init__(self, *args, **kwargs):
         r"""Added reader class to allow fast access of header info."""
@@ -175,26 +174,26 @@ class LHaloTreeArbor(Arbor):
         tree_node for each tree.
         """
 
+        if self.is_planted:
+            return
+
         # open file, count trees
         ntrees_tot = 0
         for lht in self._lhtfiles:
             ntrees_tot += lht.ntrees
-        self._trees = np.empty(ntrees_tot, dtype=object)
+        self._size = ntrees_tot
 
         pbar = get_pbar("Loading tree roots", ntrees_tot)
+        self._node_info['_lht'] = np.empty(ntrees_tot, dtype=np.object)
 
         itot = 0
         for ifile, lht in enumerate(self._lhtfiles):
             ntrees = lht.ntrees
             root_uids = lht.all_uids[lht.nhalos_before_tree]
             for i in range(ntrees):
-                # get a uid (unique id) from file or assign one
-                my_node = TreeNode(root_uids[i], arbor=self, root=True)
-                # assign any helpful attributes, such as start
-                # index in field arrays, etc.
-                my_node._lht = lht
-                my_node._index_in_lht = i
-                self._trees[itot] = my_node
+                self._node_info['uid'][itot] = root_uids[i]
+                self._node_info['_lht'][itot] = lht
+                self._node_info['_index_in_lht'][itot] = i
                 itot += 1
                 pbar.update(itot)
 

@@ -133,7 +133,7 @@ class LHaloTreeRootFieldIO(FieldIO):
         field_data = {}
         for field in fields:
             units = fi[field].get("units", "")
-            field_data[field] = np.empty(self.arbor.trees.size,
+            field_data[field] = np.empty(self.arbor.size,
                                          dtype=my_dtypes[field])
             if units:
                 field_data[field] = self.arbor.arr(field_data[field], units)

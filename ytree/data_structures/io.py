@@ -16,10 +16,12 @@ FieldIO class and member functions
 from collections import defaultdict
 import numpy as np
 import os
+from unyt import uconcatenate
 import weakref
 
 from ytree.utilities.exceptions import \
-    ArborAnalysisFieldNotGenerated
+    ArborAnalysisFieldNotGenerated, \
+    ArborAnalysisFieldNotFound
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
@@ -34,24 +36,32 @@ class FieldIO(object):
         self.arbor = weakref.proxy(arbor)
         self.default_dtype = default_dtype
 
-    def _initialize_analysis_field(self, storage_object,
-                                   name, units, **kwargs):
+    def _initialize_analysis_field(self, storage_object, name):
         """
-        Create a zero array of appropriate size to be filled in later.
+        Initialize an empty field array to be filled in later.
         """
         raise NotImplementedError
 
     def _determine_dtypes(self, fields, override_dict=None):
         """
         Figure out dtype for field.
+
+        Priority is:
+        1. override_dict
+        2. self.arbor.field_info
+        3. self.arbor.field_info._data_types
+        4. self.default_dtype
         """
         if override_dict is None:
             override_dict = {}
         dtypes = override_dict.copy()
 
-        fid = self.arbor.field_info._data_types
+        fi = self.arbor.field_info
+        fid = fi._data_types
         for field in fields:
-            dtypes[field] = dtypes.get(field, fid.get(field, self.default_dtype))
+            dtypes[field] = \
+              dtypes.get(field, fi[field].get('dtype',
+                fid.get(field, self.default_dtype)))
         return dtypes
 
     def _determine_field_storage(self, data_object):
@@ -129,8 +139,7 @@ class FieldIO(object):
             if fi[field].get("type") == "analysis":
                 if field not in fields:
                     raise ArborAnalysisFieldNotGenerated(field, self.arbor)
-                self._initialize_analysis_field(
-                    storage_object, field, fi[field]["units"])
+                self._initialize_analysis_field(storage_object, field)
                 continue
             deps = set(fi[field]["dependencies"])
             need = deps.difference(fcache)
@@ -150,19 +159,21 @@ class FieldIO(object):
                 fcache[field] = data
 
         self._store_fields(storage_object, set(old_fields).union(fields))
+        return storage_object._field_data
 
 class TreeFieldIO(FieldIO):
     """
     IO class for getting fields for a tree.
     """
 
-    def _initialize_analysis_field(self, storage_object,
-                                   name, units, **kwargs):
+    def _initialize_analysis_field(self, storage_object, name):
         if name in storage_object._field_data:
             return
-        storage_object.arbor._setup_tree(storage_object)
-        data = np.zeros(storage_object.uids.size)
-        if units != "":
+        fi = self.arbor.field_info[name]
+        units = fi.get('units', '')
+        dtype = fi.get('dtype', self.default_dtype)
+        data = np.zeros(storage_object.tree_size, dtype=dtype)
+        if units:
             data = self.arbor.arr(data, units)
         storage_object._field_data[name] = data
 
@@ -221,16 +232,8 @@ class DefaultRootFieldIO(FieldIO):
     specialized storage for root fields.
     """
 
-    def _initialize_analysis_field(self, storage_object,
-                                   name, units, **kwargs):
-        data = np.zeros(storage_object.size)
-        if units != "":
-            data = self.arbor.arr(data, units)
-        for i, t in enumerate(storage_object):
-            if name not in t._field_data:
-                continue
-            data[i] = t[name]
-        storage_object._field_data[name] = data
+    def _initialize_analysis_field(self, storage_object, name):
+        raise ArborAnalysisFieldNotFound(name, arbor=self.arbor)
 
     def _read_fields(self, storage_object, fields, dtypes=None,
                      root_only=True):
@@ -242,26 +245,14 @@ class DefaultRootFieldIO(FieldIO):
         my_dtypes = self._determine_dtypes(
             fields, override_dict=dtypes)
 
-        store = "field_store"
+        rvals = self.arbor._node_io_loop(
+            self.arbor._node_io._read_fields,
+            pbar="Reading root fields",
+            fields=fields, dtypes=my_dtypes, root_only=True)
 
-        self.arbor._node_io_loop(
-            self.arbor._node_io._read_fields, pbar="Reading root fields",
-            store=store, fields=fields, dtypes=dtypes, root_only=True)
-
-        fi = self.arbor.field_info
-        fsize = self.arbor.size
-        field_data = {}
-        for field in fields:
-            data = np.empty(fsize, dtype=my_dtypes[field])
-            units = fi[field].get("units", "")
-            if units:
-                data = self.arbor.arr(data, units)
-            for i, tree in enumerate(self.arbor.trees):
-                data[i] = getattr(tree, store)[field][0]
-            field_data[field] = data
-
-        for tree in self.arbor.trees:
-            delattr(tree, store)
+        field_data = \
+          dict((field, uconcatenate([fvals[field] for fvals in rvals]))
+               for field in fields)
 
         return field_data
 

@@ -74,7 +74,7 @@ def parse_ctrees_header(arbor, input_stream,
                 break
         elif not line.startswith("#"):
             if ntrees_in_file:
-                arbor._ntrees = int(line.strip())
+                arbor._size = int(line.strip())
                 arbor._hoffset = f.tell()
             break
 
