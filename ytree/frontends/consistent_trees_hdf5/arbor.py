@@ -59,6 +59,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
     _field_info_class = ConsistentTreesHDF5FieldInfo
     _tree_field_io_class = ConsistentTreesHDF5TreeFieldIO
     _default_dtype = np.float32
+    _node_io_attrs = ('_fi', '_si', '_ei')
 
     def __init__(self, filename, access='tree'):
         if access not in _access_names:
@@ -68,8 +69,8 @@ class ConsistentTreesHDF5Arbor(Arbor):
         self.access = access
         super(ConsistentTreesHDF5Arbor, self).__init__(filename)
 
-    def _node_io_loop_prepare(self, root_nodes):
-        return self.data_files, [root_nodes]
+    # def _node_io_loop_prepare(self, root_nodes):
+    #     return self.data_files, [root_nodes]
 
     def _node_io_loop_start(self, data_file):
         data_file._field_cache = {}
@@ -96,7 +97,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
         my_fi = dict((field, {'dtype': data.dtype})
                     for field, data in fgroup['Forests'].items())
         aname = _access_names[self.access]['total']
-        self._ntrees = f.attrs[aname]
+        self._size = f.attrs[aname]
         header = fgroup.attrs['Consistent Trees_metadata'].astype(str)
         header = header.tolist()
         f.close()
@@ -128,8 +129,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
         self.field_info.update(my_fi)
 
     def _plant_trees(self):
-        self._trees = np.empty(self._ntrees, dtype=np.object)
-        if self._ntrees == 0:
+        if self.is_planted or self._size == 0:
             return
 
         my_access = _access_names[self.access]
@@ -139,7 +139,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
         sizename   = my_access['size']
 
         file_offsets = self._file_count.cumsum() - self._file_count
-        pbar = get_pbar('Planting %ss' % self.access, self._ntrees)
+        pbar = get_pbar('Planting %ss' % self.access, self._size)
         for idf, data_file in enumerate(self.data_files):
             data_file.open()
             uids = data_file.fh[groupname][uidname][()]
@@ -149,13 +149,14 @@ class ConsistentTreesHDF5Arbor(Arbor):
 
             ifile = file_offsets[idf]
             for ih in range(uids.size):
-                my_node = TreeNode(uids[ih], arbor=self, root=True)
-                my_node._fi = idf
-                my_node._si = offsets[ih]
-                my_node._ei = my_node._si + tree_sizes[ih]
-                self._trees[ih+ifile] = my_node
+                index = ih+ifile
+                self._node_info['uid'][index] = uids[ih]
+                self._node_info['_fi'][index] = idf
+                self._node_info['_si'][index] = offsets[ih]
+                self._node_info['_ei'][index] = offsets[ih] + tree_sizes[ih]
                 pbar.update(1)
         pbar.finish()
+
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
