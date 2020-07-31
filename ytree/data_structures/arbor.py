@@ -368,6 +368,8 @@ class Arbor(object, metaclass=RegisteredArbor):
             These will have the same order as the original node list.
         """
 
+        self._plant_trees()
+
         pbar = kwargs.pop("pbar", None)
         root_nodes = kwargs.pop("root_nodes", None)
 

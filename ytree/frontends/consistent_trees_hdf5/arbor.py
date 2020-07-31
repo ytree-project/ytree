@@ -25,6 +25,8 @@ from ytree.data_structures.arbor import \
 from ytree.data_structures.tree_node import \
     TreeNode
 
+from ytree.frontends.consistent_trees.arbor import \
+    ConsistentTreesGroupArbor
 from ytree.frontends.consistent_trees.utilities import \
     parse_ctrees_header
 from ytree.frontends.consistent_trees_hdf5.fields import \
@@ -69,8 +71,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
         self.access = access
         super(ConsistentTreesHDF5Arbor, self).__init__(filename)
 
-    # def _node_io_loop_prepare(self, root_nodes):
-    #     return self.data_files, [root_nodes]
+    _node_io_loop_prepare = ConsistentTreesGroupArbor._node_io_loop_prepare
 
     def _node_io_loop_start(self, data_file):
         data_file._field_cache = {}
