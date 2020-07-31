@@ -138,6 +138,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
         offsetname = my_access['offset']
         sizename   = my_access['size']
 
+        c = 0
         file_offsets = self._file_count.cumsum() - self._file_count
         pbar = get_pbar('Planting %ss' % self.access, self._size)
         for idf, data_file in enumerate(self.data_files):
@@ -147,16 +148,15 @@ class ConsistentTreesHDF5Arbor(Arbor):
             tree_sizes = data_file.fh[groupname][sizename][()]
             data_file.close()
 
-            ifile = file_offsets[idf]
-            for ih in range(uids.size):
-                index = ih+ifile
-                self._node_info['uid'][index] = uids[ih]
-                self._node_info['_fi'][index] = idf
-                self._node_info['_si'][index] = offsets[ih]
-                self._node_info['_ei'][index] = offsets[ih] + tree_sizes[ih]
-                pbar.update(1)
+            istart = file_offsets[idf]
+            iend = istart + uids.size
+            self._node_info['uid'][istart:iend] = uids
+            self._node_info['_fi'][istart:iend] = idf
+            self._node_info['_si'][istart:iend] = offsets
+            self._node_info['_ei'][istart:iend] = offsets + tree_sizes
+            c += uids.size
+            pbar.update(c)
         pbar.finish()
-
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
