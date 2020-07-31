@@ -85,9 +85,10 @@ significance field.
    >>> import ytree
    >>> a = ytree.load('consistent_trees/tree_0_0_0.dat')
    >>> a.add_analysis_field('significance', 'Msun*Myr')
-   >>> for tree in a:
+   >>> my_trees = a[:]
+   >>> for tree in my_trees:
            get_significance(tree)
-   >>> a.save_arbor('sig_tree')
+   >>> a.save_arbor('sig_tree', trees=my_trees)
 
 Finally, we can load the new data set and use the significance
 field to select the main progenitors.
