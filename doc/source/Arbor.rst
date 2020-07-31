@@ -102,20 +102,64 @@ Individual trees can be accessed by indexing the ``Arbor`` object.
 
 A :class:`~ytree.data_structures.tree_node.TreeNode` is one halo in a merger-tree.
 The number is the universal identifier associated with halo.  It is unique
-to the whole arbor.  Fields can be accessed for any given ``TreeNode`` in
-the same dictionary-like fashion.
-
-.. code-block:: python
-
-   >>> print (a[0]["mass"])
-   657410071942446.1 Msun
-
-The full lineage of the tree can be accessed by querying any ``TreeNode``
-with the `tree` keyword.
+to the whole arbor.  Fields can be accessed for any given
+:class:`~ytree.data_structures.tree_node.TreeNode` in the same dictionary-like
+fashion.
 
 .. code-block:: python
 
    >>> my_tree = a[0]
+   >>> print (my_tree["mass"])
+   657410071942446.1 Msun
+
+Array slicing can also be used to select multiple
+:class:`~ytree.data_structures.tree_node.TreeNode` objects.
+
+.. code-block:: python
+
+   >>> all_trees = a[:]
+   >>> print (all_trees[0]["mass"])
+   657410071942446.1 Msun
+
+Note, the :class:`~ytree.data_structures.arbor.Arbor` object does not
+store individual :class:`~ytree.data_structures.tree_node.TreeNode` objects, it
+only generates them. Thus, one must explicitly keep around any
+:class:`~ytree.data_structures.tree_node.TreeNode` object for changes to persist.
+This is illustrated below:
+
+.. code-block:: python
+
+   >>> # this will not work
+   >>> a[0].thing = 5
+   >>> print (a[0].thing)
+   Traceback (most recent call last):
+     File "<stdin>", line 1, in <module>
+   AttributeError: 'TreeNode' object has no attribute 'thing'
+   >>> # this will work
+   >>> my_tree = a[0]
+   >>> my_tree.thing = 5
+   >>> print (my_tree.thing)
+   5
+
+The only exception to this is computing the number of nodes in a tree. This
+information will be propagated back to the
+:class:`~ytree.data_structures.arbor.Arbor` as it can be expensive to compute
+for large trees.
+
+.. code-block:: python
+
+   >>> my_tree = a[0]
+   print (my_tree.tree_size) # call function to calculate tree size
+   691
+   >>> new_tree = a[0]
+   print (new_tree.tree_size) # retrieved from a cache
+   691
+
+The full lineage of the tree can be accessed by querying any
+:class:`~ytree.data_structures.tree_node.TreeNode` with the `tree` keyword.
+
+.. code-block:: python
+
    >>> print (my_tree["tree"])
    [TreeNode[12900] TreeNode[12539] TreeNode[12166] TreeNode[11796] ...
     TreeNode[591]]
@@ -165,7 +209,8 @@ massive ancestors.  This can be changed by  calling the
    >>> a.set_selector("max_field_value", "virial_radius")
 
 New selector functions can also be supplied.  These functions should
-minimally accept a list of ancestors and return a single ``TreeNode``.
+minimally accept a list of ancestors and return a single
+:class:`~ytree.data_structures.tree_node.TreeNode`.
 
 .. code-block:: python
 
@@ -176,7 +221,8 @@ minimally accept a list of ancestors and return a single ``TreeNode``.
    >>> ytree.add_tree_node_selector("max_field_value", max_value)
    >>>
    >>> a.set_selector("max_field_value", "mass")
-   >>> print (a[0]["prog"])
+   >>> my_tree = a[0]
+   >>> print (my_tree["prog"])
 
 Searching for Halos
 -------------------
@@ -194,7 +240,8 @@ This is similar to the type of selection done with a relational database.
     TreeNode[9683], TreeNode[8316], TreeNode[10788]]
 
 The selection criteria string should be designed to ``eval`` correctly
-with a ``TreeNode`` object named, "tree".  The ``fields`` keyword can
+with a :class:`~ytree.data_structures.tree_node.TreeNode` object named,
+"tree".  The ``fields`` keyword can
 be used to specify a list of fields to preload for speeding up selection.
 
 .. _saving-trees:
@@ -224,7 +271,8 @@ For convenience, individual trees can also be saved by calling
 
 .. code-block:: python
 
-   >>> fn = a[0].save_tree()
+   >>> my_tree = a[0]
+   >>> fn = my_tree.save_tree()
    Creating field arrays [1/1]: 100%|████| 4897/4897 [00:00<00:00, 13711286.17it/s]
    >>> a2 = ytree.load(fn)
 

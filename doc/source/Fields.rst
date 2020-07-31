@@ -146,16 +146,25 @@ initialized to zero.
 .. code-block:: python
 
    >>> a.add_analysis_field("saucer_sections", units="m**2")
-   >>> print (a[0]["tree", "saucer_sections"])
+   >>> my_tree = a[0]
+   >>> print (my_tree["tree", "saucer_sections"])
    [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
      0.,  0.,] m**2
    >>> import numpy as np
-   >>> for t in a[0]["tree"]:
-   ...     t["saucer_sections"] = np.random.random() # complicated analysis
+   >>> for halo in my_tree["tree"]:
+   ...     halo["saucer_sections"] = np.random.random() # complicated analysis
    ...
-   >>> print (a[0]["tree", "saucer_sections"])
+   >>> print (my_tree["tree", "saucer_sections"])
    [ 0.33919263  0.79557815  0.38264336  0.53073945  0.09634924  0.6035886, ...
      0.9506636   0.9094426   0.85436984  0.66779632  0.58816873] m**2
 
-Analysis fields will be automatically saved when the ``Arbor`` is saved
-with :func:`~ytree.data_structures.arbor.Arbor.save_arbor`.
+Analysis fields will be automatically saved when the
+:class:`~ytree.data_structures.tree_node.TreeNode` objects that have been
+analyzed are saved with :func:`~ytree.data_structures.arbor.Arbor.save_arbor`
+or :func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.
+
+.. code-block:: python
+
+   >>> my_trees = a[:] # all trees
+   >>> # do analysis...
+   >>> a.save_arbor(trees=my_trees)
