@@ -43,7 +43,7 @@ from ytree.data_structures.io import \
 from ytree.data_structures.save_arbor import \
     save_arbor
 from ytree.data_structures.tree_node import \
-    TreeNode
+    TreeNode, NodeLink
 from ytree.data_structures.tree_node_selector import \
     tree_node_selector_registry
 from ytree.utilities.exceptions import \
@@ -262,29 +262,33 @@ class Arbor(object, metaclass=RegisteredArbor):
             return
 
         self._setup_tree(tree_node, **kwargs)
-        nhalos   = tree_node.uids.size
-        nodes    = np.empty(nhalos, dtype=np.object)
-        nodes[0] = tree_node
-        for i in range(1, nhalos):
-            nodes[i] = TreeNode(tree_node.uids[i], arbor=self)
-        tree_node._nodes = nodes
+        size      = tree_node.tree_size
+        uids      = tree_node.uids
+        desc_uids = tree_node.desc_uids
+        nodes     = np.empty(size, dtype=np.object)
 
-        # Add tree information to nodes
         uidmap = {}
-        for i, node in enumerate(nodes):
-            node.treeid = i
-            node.root   = tree_node
-            uidmap[tree_node.uids[i]] = i
-
-        # Link ancestor/descendents
-        # Separate loop for trees like lhalotree where descendent
-        # can follow in order
-        for i, node in enumerate(nodes):
-            descid      = tree_node.desc_uids[i]
-            if descid != -1:
-                desc = nodes[uidmap[descid]]
+        not_found = []
+        for i, (uid, desc_uid) in enumerate(zip(uids, desc_uids)):
+            node = NodeLink(i)
+            uidmap[uid] = i
+            desc_index = uidmap.get(desc_uid)
+            if desc_index is None:
+                not_found.append((node, desc_uid))
+            else:
+                desc = nodes[desc_index]
                 desc.add_ancestor(node)
                 node.descendent = desc
+            nodes[i] = node
+
+        for node, desc_uid in not_found:
+            if desc_uid == -1:
+                continue
+            desc = nodes[uidmap[desc_uid]]
+            desc.add_ancestor(node)
+            node.descendent = desc
+
+        tree_node._nodes = nodes
 
     _attr_map = None
     def _build_attr(self, attr, tree_node):
