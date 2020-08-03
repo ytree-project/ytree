@@ -19,19 +19,6 @@ import weakref
 from ytree.data_structures.fields import \
     FieldContainer
 
-class NodeLink:
-    __slots__ = ('tree_id', 'descendent', 'ancestors')
-
-    def __init__(self, tree_id):
-        self.tree_id = tree_id
-        self.descendent = None
-        self.ancestors = None
-
-    def add_ancestor(self, node):
-        if self.ancestors is None:
-            self.ancestors = []
-        self.ancestors.append(node)
-
 class TreeNode(object):
     """
     Class for objects stored in Arbors.

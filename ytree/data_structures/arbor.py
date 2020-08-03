@@ -40,10 +40,12 @@ from ytree.data_structures.fields import \
 from ytree.data_structures.io import \
     DefaultRootFieldIO, \
     TreeFieldIO
+from ytree.data_structures.node_link import \
+    NodeLink
 from ytree.data_structures.save_arbor import \
     save_arbor
 from ytree.data_structures.tree_node import \
-    TreeNode, NodeLink
+    TreeNode
 from ytree.data_structures.tree_node_selector import \
     tree_node_selector_registry
 from ytree.utilities.exceptions import \
@@ -267,6 +269,9 @@ class Arbor(object, metaclass=RegisteredArbor):
         desc_uids = tree_node.desc_uids
         nodes     = np.empty(size, dtype=np.object)
 
+        # Make a dict mapping uids to index of storage array.
+        # First, try to get indices out as the dict is constructed
+        # since the dict will be smaller at first.
         uidmap = {}
         not_found = []
         for i, (uid, desc_uid) in enumerate(zip(uids, desc_uids)):
@@ -278,17 +283,17 @@ class Arbor(object, metaclass=RegisteredArbor):
             else:
                 desc = nodes[desc_index]
                 desc.add_ancestor(node)
-                node.descendent = desc
             nodes[i] = node
 
+        # Make any additional links missed on the first pass.
         for node, desc_uid in not_found:
             if desc_uid == -1:
                 continue
             desc = nodes[uidmap[desc_uid]]
             desc.add_ancestor(node)
-            node.descendent = desc
 
         tree_node._nodes = nodes
+        tree_node.root = tree_node
 
     _attr_map = None
     def _build_attr(self, attr, tree_node):
