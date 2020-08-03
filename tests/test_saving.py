@@ -31,7 +31,7 @@ class SaveArborTest(TempDirTest):
     def test_save_non_roots(self):
         a = ytree.load(CT)
 
-        my_trees = [a[0]["tree"][1], a[1]["tree"][1]]
+        my_trees = [list(a[0]["tree"])[1], list(a[1]["tree"])[1]]
         fn = a.save_arbor(trees=my_trees)
         a2 = ytree.load(fn)
 
@@ -45,7 +45,7 @@ class SaveArborTest(TempDirTest):
     def test_save_field_list(self):
         a = ytree.load(CT)
 
-        my_trees = [a[0]["tree"][1], a[1]["tree"][1]]
+        my_trees = [list(a[0]["tree"])[1], list(a[1]["tree"])[1]]
         fn = a.save_arbor(trees=my_trees, fields=["mass", "redshift"])
         a2 = ytree.load(fn)
 
@@ -75,7 +75,7 @@ class SaveArborTest(TempDirTest):
     def test_save_tree_nonroot(self):
         a = ytree.load(CT)
 
-        t = a[0]["tree"][1]
+        t = list(a[0]["tree"])[1]
         fn = t.save_tree()
         a2 = ytree.load(fn)
 
