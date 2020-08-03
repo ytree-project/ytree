@@ -215,7 +215,7 @@ class TreeFieldIO(FieldIO):
                                              dtypes=my_dtypes)
             for field in fields:
                 for i, node in enumerate(nodes):
-                    field_data[field][node.treeid] = my_data[field][i]
+                    field_data[field][node.tree_id] = my_data[field][i]
 
         fi = self.arbor.field_info
         for field in fields:

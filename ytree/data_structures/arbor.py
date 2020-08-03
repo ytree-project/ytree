@@ -68,7 +68,7 @@ class RegisteredArbor(type):
         if arbor_type:
             arbor_registry[arbor_type] = cls
 
-class Arbor(object, metaclass=RegisteredArbor):
+class Arbor(metaclass=RegisteredArbor):
     """
     Base class for all Arbor classes.
 
@@ -101,10 +101,10 @@ class Arbor(object, metaclass=RegisteredArbor):
     ### These facilitate walking the tree, getting fields, etc.
     ### We keep track of these for resetting TreeNodes and
     ### deciding when they are setup or grown.
-    _reset_attrs = ("_tfi", "_tn", "_pfi", "_pn")
+    _reset_attrs = ("_tfi", "_pfi")
     _extra_reset_attrs = ("_ancestors", "descendent")
     _setup_attrs = ("_desc_uids", "_uids")
-    _grow_attrs = ("_nodes",)
+    _grow_attrs = ("_link_storage",)
 
     def __init__(self, filename):
         """
@@ -256,8 +256,8 @@ class Arbor(object, metaclass=RegisteredArbor):
 
     def _grow_tree(self, tree_node, **kwargs):
         """
-        Create an array of TreeNodes hanging off the root node
-        and assemble the tree structure.
+        Construct the hierarchy of ancestors and descendents
+        for all nodes in the tree.
         """
         # skip this if not a root or if already grown
         if self.is_grown(tree_node):
@@ -267,7 +267,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         size      = tree_node.tree_size
         uids      = tree_node.uids
         desc_uids = tree_node.desc_uids
-        nodes     = np.empty(size, dtype=np.object)
+        links     = np.empty(size, dtype=np.object)
 
         # Make a dict mapping uids to index of storage array.
         # First, try to get indices out as the dict is constructed
@@ -281,19 +281,20 @@ class Arbor(object, metaclass=RegisteredArbor):
             if desc_index is None:
                 not_found.append((node, desc_uid))
             else:
-                desc = nodes[desc_index]
+                desc = links[desc_index]
                 desc.add_ancestor(node)
-            nodes[i] = node
+            links[i] = node
 
         # Make any additional links missed on the first pass.
         for node, desc_uid in not_found:
             if desc_uid == -1:
                 continue
-            desc = nodes[uidmap[desc_uid]]
+            desc = links[uidmap[desc_uid]]
             desc.add_ancestor(node)
 
-        tree_node._nodes = nodes
         tree_node.root = tree_node
+        tree_node._link = links[0]
+        tree_node._link_storage = links
 
     _attr_map = None
     def _build_attr(self, attr, tree_node):
@@ -402,7 +403,7 @@ class Arbor(object, metaclass=RegisteredArbor):
             else:
                 my_nodes = root_nodes[nodes]
 
-            for node in self._yield_nodes(my_nodes):
+            for node in self._yield_root_nodes(my_nodes):
                 rval = func(node, *args, **kwargs)
                 rvals.append(rval)
                 pbar.update(1)
@@ -471,7 +472,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
 
         self._plant_trees()
-        for node in self._yield_nodes(range(self.size)):
+        for node in self._yield_root_nodes(range(self.size)):
             yield node
 
     def __repr__(self):
@@ -492,24 +493,24 @@ class Arbor(object, metaclass=RegisteredArbor):
                 raise SyntaxError("Argument must be a field or integer.")
             self._root_io.get_fields(self, fields=[key])
             return self._field_data[key]
-        return self._generate_nodes(key)
+        return self._generate_root_nodes(key)
 
-    def _generate_nodes(self, key):
+    def _generate_root_nodes(self, key):
         """
         Create root nodes given an index or slice from uid array.
         """
 
         self._plant_trees()
         if isinstance(key, (int, np.integer)):
-            return self._generate_node(key)
+            return self._generate_root_node(key)
         elif isinstance(key, slice) or isinstance(key, np.ndarray):
             indices = np.arange(self.size)[key]
             return np.array(
-                [node for node in self._yield_nodes(indices)])
+                [node for node in self._yield_root_nodes(indices)])
         else:
             raise ValueError('Cannot generate nodes from argument: ', key)
 
-    def _yield_nodes(self, indices):
+    def _yield_root_nodes(self, indices):
         """
         Root node generator.
         """
@@ -522,10 +523,10 @@ class Arbor(object, metaclass=RegisteredArbor):
             return
 
         for index in indices:
-            node = self._generate_node(index)
+            node = self._generate_root_node(index)
             yield node
 
-    def _generate_node(self, index):
+    def _generate_root_node(self, index):
         """
         Create a root node given its index in the array of uids.
         """
@@ -544,6 +545,20 @@ class Arbor(object, metaclass=RegisteredArbor):
                 setattr(my_node, attr, self._node_info[attr][index])
 
         return my_node
+
+    def _generate_tree_node(self, root_node, node_link):
+        """
+        Create a non-root node in a tree.
+        """
+
+        tree_id = node_link.tree_id
+        if tree_id == 0:
+            return root_node
+        uid        = root_node.uids[tree_id]
+        node       = TreeNode(uid, arbor=self, root=False)
+        node.root  = root_node
+        node._link = node_link
+        return node
 
     def _store_node_info(self, tree_node, attr):
         """
@@ -1053,7 +1068,7 @@ class CatalogArbor(Arbor):
     def _get_data_files(self):
         raise NotImplementedError
 
-    def _generate_node(self, index):
+    def _generate_root_node(self, index):
         """
         Return a node self._trees.
 
@@ -1161,8 +1176,8 @@ class CatalogArbor(Arbor):
         uids      = []
         desc_uids = [-1]
         for i, node in enumerate(tree_node.twalk()):
-            node.treeid = i
-            node.root   = tree_node
+            node.tree_id = i
+            node.root    = tree_node
             nodes.append(node)
             uids.append(node.uid)
             if i > 0:
