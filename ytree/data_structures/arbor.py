@@ -768,12 +768,13 @@ class Arbor(metaclass=RegisteredArbor):
         pbar = get_pbar("Selecting halos", trees.size)
         for tree in trees:
             my_filter = np.asarray(eval(criteria))
-            if my_filter.size != tree[select_from].size:
+            select_group = np.asarray(list(tree[select_from]))
+            if my_filter.size != select_group.size:
                 raise RuntimeError(
                     ("Filter array and tree array sizes do not match. " +
                      "Make sure select_from (\"%s\") matches criteria (\"%s\").") %
                     (select_from, criteria))
-            halos.extend(tree[select_from][my_filter])
+            halos.extend(select_group[my_filter])
             pbar.update(1)
         pbar.finish()
         return np.array(halos)
