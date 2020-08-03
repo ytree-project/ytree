@@ -102,9 +102,8 @@ class Arbor(metaclass=RegisteredArbor):
     ### We keep track of these for resetting TreeNodes and
     ### deciding when they are setup or grown.
     _reset_attrs = ("_tfi", "_pfi")
-    _extra_reset_attrs = ("_ancestors", "descendent")
     _setup_attrs = ("_desc_uids", "_uids")
-    _grow_attrs = ("_link_storage",)
+    _grow_attrs = ("_link_storage", "_link")
 
     def __init__(self, filename):
         """
@@ -311,40 +310,31 @@ class Arbor(metaclass=RegisteredArbor):
 
         self._attr_map[attr](tree_node)
 
-    def reset_node(self, tree_node, reset_nonroot=False):
+    def reset_node(self, tree_node):
         """
         Reset all data structures for a single node.
 
         The goal is to clear as many data structures as
         possible without rendering the node object useless,
-        if they are intended to be kept around. In some
-        cases, we may only want to keep the root node and
-        allow the rest to be deleted.
+        if they are intended to be kept around.
 
-        If a root node, reset all child nodes as well.
-        If reset_nonroot is False, do not detach the
-        pointer to the root node. This will render the
-        node unable to get fields. However, if we are
-        trying to wipe out an entire tree, this is
-        what we want to do.
+        Calling reset_node on a non-root node should not make
+        the non-root node useless.
+
+        Calling reset_node on a root node will render any
+        generated non-root nodes useless.
         """
 
         tree_node.clear_fields()
         attrs = self._reset_attrs
+
         if tree_node.is_root:
-            attrs += self._extra_reset_attrs
             if self.is_grown(tree_node):
                 attrs += self._grow_attrs
-                for i in range(1, tree_node.tree_size):
-                    self.reset_node(tree_node.nodes[i],
-                                    reset_nonroot=True)
-                    tree_node.nodes[i] = None
                 tree_node.root = -1
             if self.is_setup(tree_node):
                 attrs += self._setup_attrs
-        elif reset_nonroot:
-            attrs += self._extra_reset_attrs
-            tree_node.root = None
+
         for attr in attrs:
             setattr(tree_node, attr, None)
 
@@ -1053,7 +1043,6 @@ class CatalogArbor(Arbor):
 
     # Don't reset _ancestors or descendents because we won't be able to
     # rebuild trees without calling _plant_trees again.
-    _extra_reset_attrs = ()
     _setup_attrs = ("_desc_uids", "_uids", "_nodes")
     _grow_attrs = ()
 

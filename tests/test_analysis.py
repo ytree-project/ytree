@@ -55,7 +55,8 @@ class AnalysisFieldTest(TempDirTest):
         assert_array_equal(
             fake_tree_bears, my_tree['tree', 'bears'])
         fake_tree_bears[72] = 99
-        my_tree['tree'][72]['bears'] = 99
+        my_halos = list(my_tree['tree'])
+        my_halos[72]['bears'] = 99
         assert_array_equal(fake_tree_bears, my_tree['tree', 'bears'])
 
         fn = a.save_arbor(trees=all_trees)
@@ -89,7 +90,8 @@ class AnalysisFieldTest(TempDirTest):
         assert_array_equal(
             fake_tree_bears, my_tree['tree', 'bears'])
         fake_tree_bears[72] = 99
-        my_tree['tree'][72]['bears'] = 99
+        my_halos = list(my_tree['tree'])
+        my_halos[72]['bears'] = 99
         assert_array_equal(fake_tree_bears, my_tree['tree', 'bears'])
 
         fn = a.save_arbor(trees=all_trees)
