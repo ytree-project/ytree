@@ -71,4 +71,4 @@ def test_field_access_without_tree_setup():
     """
     a = ytree_load(R0)
     t = a[a['mass'].argmax()]
-    t.ancestors[0]['desc_uid']
+    list(t.ancestors)[0]['desc_uid']

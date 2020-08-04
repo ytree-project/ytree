@@ -45,6 +45,7 @@ class TreeNode:
         else:
             self.root = None
 
+    _tree_id = None # used by CatalogArbor
     @property
     def tree_id(self):
         """
@@ -52,8 +53,17 @@ class TreeNode:
         """
         if self.is_root:
             return 0
-        else:
+        elif self._link is not None:
             return self._link.tree_id
+        else:
+            return self._tree_id
+
+    @tree_id.setter
+    def tree_id(self, value):
+        """
+        Set the tree_id manually in CatalogArbors.
+        """
+        self._tree_id = value
 
     @property
     def is_root(self):
@@ -98,22 +108,52 @@ class TreeNode:
             return
         self._field_data.clear()
 
+    _descendent = None # used by CatalogArbor
     @property
     def descendent(self):
+        """
+        Return the descendent node.
+        """
+
         if self.is_root:
             return None
+
+        # set in CatalogArbor._plant_trees
+        if self._descendent is not None:
+            return self._descendent
+
+        # conventional Arbor object
         desc_link = self._link.descendent
         return self.arbor._generate_tree_node(self.root, desc_link)
 
+    _ancestors = None # used by CatalogArbor
     @property
     def ancestors(self):
+        """
+        Return a generator of ancestor nodes.
+        """
+
         self.arbor._grow_tree(self)
-        for link in self._link.ancestors:
-            yield self.arbor._generate_tree_node(self.root, link)
+
+        # conventional Arbor object
+        if self._link is not None:
+            for link in self._link.ancestors:
+                yield self.arbor._generate_tree_node(self.root, link)
+            return
+
+        # set in CatalogArbor._plant_trees
+        if self._ancestors is not None:
+            for ancestor in self._ancestors:
+                yield ancestor
+            return
+        return None
 
     _uids = None
     @property
     def uids(self):
+        """
+        Array of uids for all nodes in the tree.
+        """
         if not self.is_root:
             return None
         if self._uids is None:
@@ -123,6 +163,9 @@ class TreeNode:
     _desc_uids = None
     @property
     def desc_uids(self):
+        """
+        Array of descendent uids for all nodes in the tree.
+        """
         if not self.is_root:
             return None
         if self._desc_uids is None:
@@ -132,6 +175,9 @@ class TreeNode:
     _tree_size = None
     @property
     def tree_size(self):
+        """
+        Number of nodes in the tree.
+        """
         if self._tree_size is not None:
             return self._tree_size
         if self.is_root:
@@ -145,6 +191,12 @@ class TreeNode:
     _link_storage = None
     @property
     def _links(self):
+        """
+        Array of NodeLink objects with the ancestor/descendent structure.
+
+        This is only used by conventional Arbor objects, i.e., not
+        CatalogArbor objects.
+        """
         if not self.is_root:
             return None
         if self._link_storage is None:
@@ -152,6 +204,10 @@ class TreeNode:
         return self._link_storage
 
     def __setitem__(self, key, value):
+        """
+        Set analysis field value for this node.
+        """
+
         if self.is_root:
             root = self
             tree_id = 0
@@ -166,6 +222,9 @@ class TreeNode:
         data[tree_id] = value
 
     def __getitem__(self, key):
+        """
+        Return field values or tree/prog generators.
+        """
         return self.query(key)
 
     def query(self, key):
@@ -243,11 +302,14 @@ class TreeNode:
             return data_object._field_data[key][self.tree_id]
 
     def __repr__(self):
+        """
+        Call me TreeNode.
+        """
         return "TreeNode[%d]" % self.uid
 
     @property
     def _tree_nodes(self):
-        r"""
+        """
         An iterator over all TreeNodes in the tree beneath,
         starting with this TreeNode.
 
@@ -289,7 +351,7 @@ class TreeNode:
 
     @property
     def _prog_nodes(self):
-        r"""
+        """
         An iterator over all TreeNodes in the progenitor list,
         starting with this TreeNode.
 

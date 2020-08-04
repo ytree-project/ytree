@@ -204,7 +204,7 @@ class TreeFieldIO(FieldIO):
         if root_only:
             my_nodes = [root_node]
         else:
-            my_nodes = root_node.nodes
+            my_nodes = root_node._tree_nodes
 
         data_files = defaultdict(list)
         for node in my_nodes:

@@ -1142,7 +1142,7 @@ class CatalogArbor(Arbor):
                     descendent = descs[descid == lastids][0]
                     descendent._ancestors = ancestors
                     for ancestor in ancestors:
-                        ancestor.descendent = descendent
+                        ancestor._descendent = descendent
 
             if i < nfiles - 1:
                 descs = np.empty(sum(bsize), dtype=object)
@@ -1165,9 +1165,9 @@ class CatalogArbor(Arbor):
         nodes     = []
         uids      = []
         desc_uids = [-1]
-        for i, node in enumerate(tree_node.twalk()):
-            node.tree_id = i
-            node.root    = tree_node
+        for i, node in enumerate(tree_node._tree_nodes):
+            node._tree_id = i
+            node.root     = tree_node
             nodes.append(node)
             uids.append(node.uid)
             if i > 0:
