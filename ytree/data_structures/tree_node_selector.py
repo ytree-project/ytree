@@ -47,7 +47,7 @@ def add_tree_node_selector(name, function):
     """
     tree_node_selector_registry[name] = TreeNodeSelector(function)
 
-class TreeNodeSelector(object):
+class TreeNodeSelector:
     r"""
     The TreeNodeSelector is responsible for choosing which one of a
     halo's ancestors to return when querying the line of main

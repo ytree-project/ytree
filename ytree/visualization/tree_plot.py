@@ -32,7 +32,7 @@ def clear_graph(f):
         return rv
     return newfunc
 
-class TreePlot(object):
+class TreePlot:
     """
     Make a simple merger tree plot using pydot and graphviz.
 

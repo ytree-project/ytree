@@ -25,7 +25,7 @@ from ytree.utilities.exceptions import \
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
-class FieldIO(object):
+class FieldIO:
     """
     Base class for FieldIO classes.
 
@@ -256,7 +256,7 @@ class DefaultRootFieldIO(FieldIO):
 
         return field_data
 
-class DataFile(object):
+class DataFile:
     """
     Base class for data files.
 

@@ -70,7 +70,7 @@ class TempDirTest(TestCase):
         os.chdir(self.curdir)
         shutil.rmtree(self.tmpdir)
 
-class ArborTest(object):
+class ArborTest:
     """
     Do some standard tests on an arbor.
     """

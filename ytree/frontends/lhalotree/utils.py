@@ -304,7 +304,7 @@ def save_trees_default(filename, data, item_dtype=None, **kwargs):
     return _save_to_mmap(filename, data_ra, **kwargs)
 
 
-class LHaloTreeReader(object):
+class LHaloTreeReader:
     r"""Class for reading halos from an LHaloTree file.
 
     Args:
