@@ -221,16 +221,13 @@ class TreePlot:
         node_name = "%d" % halo.uid
         my_node = graph.get_node(node_name)
 
-        if halo.root == -1:
-            halo.arbor._grow_tree(halo)
-
         if len(my_node) == 0:
             if self.node_function is not None:
                 node_kwargs = self.node_function(halo)
 
             else:
-                prog_ids = halo.root._prog_field_indices
-                if halo.tree_id in prog_ids:
+                prog_ids = halo.find_root()['prog', 'uid']
+                if halo['uid'] in prog_ids:
                     color = 'red'
                 else:
                     color = 'black'

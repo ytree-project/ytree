@@ -300,10 +300,7 @@ class TreeNode:
             # return field value for this node
             self.arbor._node_io.get_fields(self, fields=[key],
                                            root_only=self.is_root)
-            if self.is_root:
-                data_object = self
-            else:
-                data_object = self.root
+            data_object = self.find_root()
             return data_object._field_data[key][self.tree_id]
 
     def __repr__(self):
