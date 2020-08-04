@@ -1078,6 +1078,16 @@ class CatalogArbor(Arbor):
         return self._trees is not None
 
     def _plant_trees(self):
+        """
+        Construct all trees.
+
+        Since nodes are spread out over multiple files, we will
+        plant all trees and create all ancestor/descendent links.
+
+        The links will be held by the nodes themselves and we will
+        not store the nodes in an array until _setup_tree is called.
+        """
+
         if self.is_planted:
             return
 
@@ -1159,6 +1169,11 @@ class CatalogArbor(Arbor):
         self._size = self._trees.size
 
     def _setup_tree(self, tree_node):
+        """
+        Walk the tree and place all nodes into an array.
+
+        This is required for field access.
+        """
         if self.is_setup(tree_node):
             return
 
@@ -1183,6 +1198,9 @@ class CatalogArbor(Arbor):
             tree_node._field_data["desc_uid"] = tree_node._desc_uids
 
     def _grow_tree(self, tree_node):
+        """
+        Trees are grown when they are planted.
+        """
         pass
 
 
