@@ -51,7 +51,7 @@ def determine_tree_list(arbor, trees):
     """
 
     if trees is None:
-        trees = arbor._yield_nodes(range(arbor.size))
+        trees = arbor._yield_root_nodes(range(arbor.size))
     else:
         trees = np.asarray(trees)
 

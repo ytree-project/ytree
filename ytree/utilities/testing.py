@@ -106,7 +106,7 @@ class ArborTest(object):
 
     def test_reset_node(self):
         t = self.arbor[0]
-        ts0 = t['tree'].size
+        ts0 = len(list(t['tree']))
         f0 = dict((field, t['tree', field])
                   for field in ['uid', 'desc_uid'])
 
@@ -122,7 +122,7 @@ class ArborTest(object):
         assert not self.arbor.is_grown(t)
 
         assert_equal(
-            t['tree'].size, ts0,
+            len(list(t['tree'])), ts0,
             err_msg='Trees are not the same size after resetting for %s.' %
             self.arbor)
 
@@ -134,15 +134,15 @@ class ArborTest(object):
 
     def test_reset_nonroot(self):
         t = self.arbor[0]
-        node = t['tree'][1]
-        ts0 = node['tree'].size
+        node = list(t['tree'])[1]
+        ts0 = len(list(node['tree']))
         f0 = dict((field, node['tree', field])
                   for field in ['uid', 'desc_uid'])
 
         self.arbor.reset_node(node)
 
         assert_equal(
-            node['tree'].size, ts0,
+            len(list(node['tree'])), ts0,
             err_msg='Trees are not the same size after resetting for %s.' %
             self.arbor)
 
