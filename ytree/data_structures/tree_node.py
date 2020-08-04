@@ -281,7 +281,12 @@ class TreeNode:
 
             self.arbor._node_io.get_fields(self, fields=[field], root_only=False)
             indices = getattr(self, "_%s_field_indices" % ftype)
-            return self.root._field_data[field][indices]
+
+            if self.is_root:
+                data_object = self
+            else:
+                data_object = self.root
+            return data_object._field_data[field][indices]
 
         else:
             if not isinstance(key, str):

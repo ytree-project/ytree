@@ -229,11 +229,10 @@ class Arbor(metaclass=RegisteredArbor):
         Create arrays of uids and desc_uids and attach them to the
         root node.
         """
+
         # skip if this is not a root or if already setup
         if self.is_setup(tree_node):
             return
-
-        mylog.debug(f"Setting up tree {str(tree_node)}.")
 
         idtype      = np.int64
         fields, _ = \
@@ -258,6 +257,7 @@ class Arbor(metaclass=RegisteredArbor):
         Construct the hierarchy of ancestors and descendents
         for all nodes in the tree.
         """
+
         # skip this if not a root or if already grown
         if self.is_grown(tree_node):
             return
@@ -1174,6 +1174,7 @@ class CatalogArbor(Arbor):
 
         This is required for field access.
         """
+
         if self.is_setup(tree_node):
             return
 
