@@ -1118,7 +1118,7 @@ class CatalogArbor(Arbor):
             for data_file in dfl:
                 data = data_file._read_fields(fields, dtypes=dtypes)
                 nhalos = len(data[halo_id_f])
-                batch = np.empty(nhalos, dtype=object)
+                batch = np.empty(nhalos, dtype=np.object)
 
                 for it in range(nhalos):
                     descid = data[desc_id_f][it]
@@ -1155,7 +1155,7 @@ class CatalogArbor(Arbor):
                         ancestor._descendent = descendent
 
             if i < nfiles - 1:
-                descs = np.empty(sum(bsize), dtype=object)
+                descs = np.empty(sum(bsize), dtype=np.object)
                 lastids = np.empty(descs.size, dtype=np.int64)
                 ib = 0
                 for batch, hid, bs in zip(batches, hids, bsize):
