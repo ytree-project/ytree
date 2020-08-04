@@ -155,13 +155,33 @@ for large trees.
    print (new_tree.tree_size) # retrieved from a cache
    691
 
+Accessing All Nodes in a Tree
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 The full lineage of the tree can be accessed by querying any
 :class:`~ytree.data_structures.tree_node.TreeNode` with the `tree` keyword.
+As of ``ytree`` version 3.0, this returns a generator that can be used
+to loop through all nodes in the tree.
 
 .. code-block:: python
 
    >>> print (my_tree["tree"])
-   [TreeNode[12900] TreeNode[12539] TreeNode[12166] TreeNode[11796] ...
+   <generator object TreeNode._tree_nodes at 0x11bbc1f20>
+
+.. code-block:: python
+
+   >>> for my_node in my_tree["tree"]:
+   ...     print (my_node, my_node["mass"])
+   TreeNode[12900] 657410100000000.0 Msun
+   TreeNode[12539] 657410100000000.0 Msun
+   TreeNode[12166] 653956900000000.0 Msun
+   TreeNode[11796] 650071960000000.0 Msun
+   ...
+
+To store all the nodes in a single structure, convert it to a list:
+
+   >>> print (list(my_tree["tree"]))
+   [TreeNode[12900], TreeNode[12539], TreeNode[12166], TreeNode[11796], ...
     TreeNode[591]]
 
 Fields can be queried for the tree by including the field name.
@@ -172,30 +192,74 @@ Fields can be queried for the tree by including the field name.
    [ 2277.73669065  2290.65899281  2301.43165468  2311.47625899  2313.99280576 ...
      434.59856115   410.13381295   411.25755396] kpc
 
-A halo's ancestors are stored as a list in the ``ancestors`` attribute.
-The descendents are stored in a similar fashion.
+The above examples will work for any halo in the tree, not just the final halo.
+The full tree leading up to any given halo can be accessed in the same way.
 
 .. code-block:: python
 
-   >>> print (my_tree.ancestors)
+   >>> tree_nodes = list(my_tree["tree"])
+   >>> # start with the 3rd halo in the above tree
+   >>> sub_tree = tree_nodes[2]
+   >>> print (list(sub_tree["tree"]))
+   [TreeNode[12166], TreeNode[11796], TreeNode[11431], TreeNode[11077], ...
+    TreeNode[591]]
+   >>> print (sub_tree["tree", "virial_radius"])
+   [2301.4316  2311.4763  2313.993   2331.413   2345.5454  2349.918 ...
+    434.59857  410.13382  411.25757] kpc
+
+Accessing a Halo's Ancestors and Descendent
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A halo's ancestors can be accessed through the ``ancestors`` attribute. Just as
+in accessing all nodes on a tree, these are generated.
+
+.. code-block:: python
+
+   >>> my_ancestors = list(my_tree.ancestors)
+   >>> print (my_ancestors)
    [TreeNode[12539]]
-   >>> print (my_tree.ancestors[0].descendent)
+
+A halo's descendent can be accessed in a similar fashion.
+
+.. code-block:: python
+
+   >>> print (my_ancestors[0].descendent)
    TreeNode[12900]
 
 Accessing the Progenitor Lineage of a Tree
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Similar to the `tree` keyword, the `prog` keyword can be used to access
-the line of main progenitors.
+the line of main progenitors. Just as above, this returns a generator
+of :class:`~ytree.data_structures.tree_node.TreeNode` objects.
 
 .. code-block:: python
 
-   >>> print (my_tree["prog"])
-   [TreeNode[12900] TreeNode[12539] TreeNode[12166] TreeNode[11796] ...
+   >>> print (list(my_tree["prog"]))
+   [TreeNode[12900], TreeNode[12539], TreeNode[12166], TreeNode[11796], ...
     TreeNode[62]]
+
+Fields for the main progenitors can be accessed just like for the whole
+tree.
+
+.. code-block:: python
+
    >>> print (my_tree["prog", "mass"])
    [  6.57410072e+14   6.57410072e+14   6.53956835e+14   6.50071942e+14 ...
       8.29496403e+13   7.72949640e+13   6.81726619e+13   5.99280576e+13] Msun
+
+Progenitor lists and fields can be accessed for any halo in the tree.
+
+.. code-block:: python
+
+   >>> tree_nodes = list(my_tree["tree"])
+   >>> # pick a random halo in the tree
+   >>> my_halo = tree_nodes[42]
+   >>> print (list(my_halo["prog"]))
+   [TreeNode[588], TreeNode[446], TreeNode[317], TreeNode[200], TreeNode[105],
+    TreeNode[62]]
+   >>> print (my_halo["prog", "virial_radius"])
+   [1404.1354 1381.4087 1392.2404 1363.2145 1310.3842 1258.0159] kpc
 
 Customizing the Progenitor Line
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -222,7 +286,7 @@ minimally accept a list of ancestors and return a single
    >>>
    >>> a.set_selector("max_field_value", "mass")
    >>> my_tree = a[0]
-   >>> print (my_tree["prog"])
+   >>> print (list(my_tree["prog"]))
 
 Searching for Halos
 -------------------
