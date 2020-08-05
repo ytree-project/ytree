@@ -371,7 +371,7 @@ class TreeNode:
         my_node = self
         while my_node is not None:
             yield my_node
-            ancestors = [a for a in my_node.ancestors]
+            ancestors = list(my_node.ancestors)
             if ancestors:
                 my_node = my_node.arbor.selector(ancestors)
             else:
