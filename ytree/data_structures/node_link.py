@@ -1,5 +1,5 @@
 """
-ytree imports
+NodeLink class
 
 
 
@@ -13,12 +13,14 @@ ytree imports
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.data_structures import \
-    load
-from ytree.data_structures.tree_node_selector import \
-    TreeNodeSelector, \
-    add_tree_node_selector
-from ytree.visualization.tree_plot import \
-    TreePlot
+class NodeLink:
+    __slots__ = ('tree_id', 'descendent', 'ancestors')
 
-__version__ = '3.0.dev1'
+    def __init__(self, tree_id):
+        self.tree_id = tree_id
+        self.descendent = None
+        self.ancestors = []
+
+    def add_ancestor(self, node):
+        self.ancestors.append(node)
+        node.descendent = self

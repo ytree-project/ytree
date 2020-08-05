@@ -77,7 +77,8 @@ the most massive progenitor red.
 .. code-block:: python
 
     def my_node(halo):
-        if halo in halo.root['prog']:
+        prog = list(halo.find_root()['prog', 'uid'])
+        if halo['uid'] in prog:
             color = 'red'
         else:
             color = 'black'

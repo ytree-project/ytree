@@ -20,7 +20,7 @@ from ytree.data_structures.io import \
     TreeFieldIO
 
 
-# class LHaloTreeFileID(object):
+# class LHaloTreeFileID:
 #     r"""Handle cached file ID.
 
 #     Args:

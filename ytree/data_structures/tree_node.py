@@ -19,7 +19,7 @@ import weakref
 from ytree.data_structures.fields import \
     FieldContainer
 
-class TreeNode(object):
+class TreeNode:
     """
     Class for objects stored in Arbors.
 
@@ -29,6 +29,9 @@ class TreeNode(object):
     Fields can be queried for it, its progenitor list, and the
     tree beneath.
     """
+
+    _link = None
+
     def __init__(self, uid, arbor=None, root=False):
         """
         Initialize a TreeNode with at least its halo catalog ID and
@@ -36,16 +39,37 @@ class TreeNode(object):
         """
         self.uid = uid
         self.arbor = weakref.proxy(arbor)
-        self.descendent = None
         if root:
             self.root = -1
-            self.treeid = 0
             self._field_data = FieldContainer(arbor)
         else:
             self.root = None
 
+    _tree_id = None # used by CatalogArbor
+    @property
+    def tree_id(self):
+        """
+        Return the index of this node in a list of all nodes in the tree.
+        """
+        if self.is_root:
+            return 0
+        elif self._link is not None:
+            return self._link.tree_id
+        else:
+            return self._tree_id
+
+    @tree_id.setter
+    def tree_id(self, value):
+        """
+        Set the tree_id manually in CatalogArbors.
+        """
+        self._tree_id = value
+
     @property
     def is_root(self):
+        """
+        Is this node the last in the tree?
+        """
         return self.root in [-1, self]
 
     def find_root(self):
@@ -84,47 +108,76 @@ class TreeNode(object):
             return
         self._field_data.clear()
 
-    def add_ancestor(self, ancestor):
+    _descendent = None # used by CatalogArbor
+    @property
+    def descendent(self):
         """
-        Add another TreeNode to the list of ancestors.
-
-        Parameters
-        ----------
-        ancestor : TreeNode
-            The ancestor TreeNode.
+        Return the descendent node.
         """
-        if self._ancestors is None:
-            self._ancestors = []
-        self._ancestors.append(ancestor)
 
-    _ancestors = None
+        if self.is_root:
+            return None
+
+        # set in CatalogArbor._plant_trees
+        if self._descendent is not None:
+            return self._descendent
+
+        # conventional Arbor object
+        desc_link = self._link.descendent
+        return self.arbor._generate_tree_node(self.root, desc_link)
+
+    _ancestors = None # used by CatalogArbor
     @property
     def ancestors(self):
-        if self.root == -1:
-            self.arbor._grow_tree(self)
-        return self._ancestors
+        """
+        Return a generator of ancestor nodes.
+        """
+
+        self.arbor._grow_tree(self)
+
+        # conventional Arbor object
+        if self._link is not None:
+            for link in self._link.ancestors:
+                yield self.arbor._generate_tree_node(self.root, link)
+            return
+
+        # set in CatalogArbor._plant_trees
+        if self._ancestors is not None:
+            for ancestor in self._ancestors:
+                yield ancestor
+            return
+        return None
 
     _uids = None
     @property
     def uids(self):
+        """
+        Array of uids for all nodes in the tree.
+        """
         if not self.is_root:
             return None
         if self._uids is None:
-            self.arbor._build_attrs("_uids", self)
+            self.arbor._build_attr("_uids", self)
         return self._uids
 
     _desc_uids = None
     @property
     def desc_uids(self):
+        """
+        Array of descendent uids for all nodes in the tree.
+        """
         if not self.is_root:
             return None
         if self._desc_uids is None:
-            self.arbor._build_attrs("_desc_uids", self)
+            self.arbor._build_attr("_desc_uids", self)
         return self._desc_uids
 
     _tree_size = None
     @property
     def tree_size(self):
+        """
+        Number of nodes in the tree.
+        """
         if self._tree_size is not None:
             return self._tree_size
         if self.is_root:
@@ -132,32 +185,46 @@ class TreeNode(object):
             # pass back to the arbor to avoid calculating again
             self.arbor._store_node_info(self, '_tree_size')
         else:
-            self._tree_size = self["tree"].size
+            self._tree_size = len(list(self["tree"]))
         return self._tree_size
 
-    _nodes = None
+    _link_storage = None
     @property
-    def nodes(self):
+    def _links(self):
+        """
+        Array of NodeLink objects with the ancestor/descendent structure.
+
+        This is only used by conventional Arbor objects, i.e., not
+        CatalogArbor objects.
+        """
         if not self.is_root:
             return None
-        self.arbor._build_attr("_nodes", self)
-        return self._nodes
+        if self._link_storage is None:
+            self.arbor._build_attr("_link_storage", self)
+        return self._link_storage
 
     def __setitem__(self, key, value):
+        """
+        Set analysis field value for this node.
+        """
+
         if self.is_root:
             root = self
-            treeid = 0
+            tree_id = 0
             # if root, set the value in the arbor field storage
             self.arbor._field_data[key][self._arbor_index] = value
         else:
             root = self.root
-            treeid = self.treeid
+            tree_id = self.tree_id
         self.arbor._node_io.get_fields(self, fields=[key],
                                        root_only=False)
         data = root._field_data[key]
-        data[treeid] = value
+        data[tree_id] = value
 
     def __getitem__(self, key):
+        """
+        Return field values or tree/prog generators.
+        """
         return self.query(key)
 
     def query(self, key):
@@ -214,7 +281,9 @@ class TreeNode(object):
 
             self.arbor._node_io.get_fields(self, fields=[field], root_only=False)
             indices = getattr(self, "_%s_field_indices" % ftype)
-            return self.root._field_data[field][indices]
+
+            data_object = self.find_root()
+            return data_object._field_data[field][indices]
 
         else:
             if not isinstance(key, str):
@@ -228,13 +297,13 @@ class TreeNode(object):
             # return field value for this node
             self.arbor._node_io.get_fields(self, fields=[key],
                                            root_only=self.is_root)
-            if self.is_root:
-                data_object = self
-            else:
-                data_object = self.root
-            return data_object._field_data[key][self.treeid]
+            data_object = self.find_root()
+            return data_object._field_data[key][self.tree_id]
 
     def __repr__(self):
+        """
+        Call me TreeNode.
+        """
         return "TreeNode[%d]" % self.uid
 
     _ffi = slice(None)
@@ -256,6 +325,33 @@ class TreeNode(object):
             self._fn = self.nodes
         return self._fn
 
+    @property
+    def _tree_nodes(self):
+        """
+        An iterator over all TreeNodes in the tree beneath,
+        starting with this TreeNode.
+
+        For internal use only. Use the following instead:
+
+        >>> for my_node in my_tree['tree']:
+        ...     print (my_node)
+
+        Examples
+        --------
+
+        >>> for my_node in my_tree._tree_nodes:
+        ...     print (my_node)
+
+        """
+
+        self.arbor._grow_tree(self)
+        yield self
+        if self.ancestors is None:
+            return
+        for ancestor in self.ancestors:
+            for a_node in ancestor._tree_nodes:
+                yield a_node
+
     _tfi = None
     @property
     def _tree_field_indices(self):
@@ -263,33 +359,42 @@ class TreeNode(object):
         Return the field array indices for all TreeNodes in
         the tree beneath, starting with this TreeNode.
         """
-        if self._tfi is None:
-            self._set_tree_attrs()
+
+        if self._tfi is not None:
+            return self._tfi
+
+        self.arbor._grow_tree(self)
+        self._tfi = np.array([node.tree_id for node in self._tree_nodes])
         return self._tfi
 
-    _tn = None
     @property
-    def _tree_nodes(self):
+    def _prog_nodes(self):
         """
-        Return a list of all TreeNodes in the tree beneath,
+        An iterator over all TreeNodes in the progenitor list,
         starting with this TreeNode.
-        """
-        if self._tn is None:
-            self._set_tree_attrs()
-        return self._tn
 
-    def _set_tree_attrs(self):
+        For internal use only. Use the following instead:
+
+        >>> for my_node in my_tree['prog']:
+        ...     print (my_node)
+
+        Examples
+        --------
+
+        >>> for my_node in my_tree._prog_nodes:
+        ...     print (my_node)
+
         """
-        Prepare the TreeNode list and field indices.
-        """
+
         self.arbor._grow_tree(self)
-        tfi = []
-        tn = []
-        for my_node in self.twalk():
-            tfi.append(my_node.treeid)
-            tn.append(my_node)
-        self._tfi = np.array(tfi)
-        self._tn = np.array(tn)
+        my_node = self
+        while my_node is not None:
+            yield my_node
+            ancestors = list(my_node.ancestors)
+            if ancestors:
+                my_node = my_node.arbor.selector(ancestors)
+            else:
+                my_node = None
 
     _pfi = None
     @property
@@ -298,74 +403,13 @@ class TreeNode(object):
         Return the field array indices for all TreeNodes in
         the progenitor list, starting with this TreeNode.
         """
-        if self._pfi is None:
-            self._set_prog_attrs()
+
+        if self._pfi is not None:
+            return self._pfi
+
+        self.arbor._grow_tree(self)
+        self._pfi = np.array([node.tree_id for node in self._prog_nodes])
         return self._pfi
-
-    _pn = None
-    @property
-    def _prog_nodes(self):
-        """
-        Return a list of all TreeNodes in the progenitor list, starting
-        with this TreeNode.
-        """
-        if self._pn is None:
-            self._set_prog_attrs()
-        return self._pn
-
-    def _set_prog_attrs(self):
-        """
-        Prepare the progenitor list list and field indices.
-        """
-        self.arbor._grow_tree(self)
-        lfi = []
-        ln = []
-        for my_node in self.pwalk():
-            lfi.append(my_node.treeid)
-            ln.append(my_node)
-        self._pfi = np.array(lfi)
-        self._pn = np.array(ln)
-
-    def twalk(self):
-        r"""
-        An iterator over all TreeNodes in the tree beneath,
-        starting with this TreeNode.
-
-        Examples
-        --------
-
-        >>> for my_node in my_tree.twalk():
-        ...     print (my_node)
-
-        """
-        self.arbor._grow_tree(self)
-        yield self
-        if self.ancestors is None:
-            return
-        for ancestor in self.ancestors:
-            for a_node in ancestor.twalk():
-                yield a_node
-
-    def pwalk(self):
-        r"""
-        An iterator over all TreeNodes in the progenitor list,
-        starting with this TreeNode.
-
-        Examples
-        --------
-
-        >>> for my_node in my_tree.pwalk():
-        ...     print (my_node)
-
-        """
-        self.arbor._grow_tree(self)
-        my_node = self
-        while my_node is not None:
-            yield my_node
-            if my_node.ancestors is None:
-                my_node = None
-            else:
-                my_node = my_node.arbor.selector(my_node.ancestors)
 
     def save_tree(self, filename=None, fields=None):
         r"""

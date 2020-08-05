@@ -32,7 +32,7 @@ def clear_graph(f):
         return rv
     return newfunc
 
-class TreePlot(object):
+class TreePlot:
     """
     Make a simple merger tree plot using pydot and graphviz.
 
@@ -194,10 +194,11 @@ class TreePlot(object):
         graph = self.graph
 
         my_node = self._plot_node(halo)
-        if halo.ancestors is None:
+        ancestors = list(halo.ancestors)
+        if ancestors is None:
             return
 
-        for anc in halo.ancestors:
+        for anc in ancestors:
             if self.min_mass is not None and \
               anc['mass'] < self.min_mass:
                 continue
@@ -220,15 +221,13 @@ class TreePlot(object):
         node_name = "%d" % halo.uid
         my_node = graph.get_node(node_name)
 
-        if halo.root == -1:
-            halo['tree']
-
         if len(my_node) == 0:
             if self.node_function is not None:
                 node_kwargs = self.node_function(halo)
 
             else:
-                if halo in halo.root['prog']:
+                prog_ids = halo.find_root()['prog', 'uid']
+                if halo['uid'] in prog_ids:
                     color = 'red'
                 else:
                     color = 'black'

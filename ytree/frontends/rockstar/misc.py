@@ -13,7 +13,7 @@ RockstarArbor miscellany
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-class Group(object):
+class Group:
     def __init__(self, name=None):
         self.things = None
         if name is not None:

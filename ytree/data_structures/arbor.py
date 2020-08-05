@@ -40,6 +40,8 @@ from ytree.data_structures.fields import \
 from ytree.data_structures.io import \
     DefaultRootFieldIO, \
     TreeFieldIO
+from ytree.data_structures.node_link import \
+    NodeLink
 from ytree.data_structures.save_arbor import \
     save_arbor
 from ytree.data_structures.tree_node import \
@@ -66,7 +68,7 @@ class RegisteredArbor(type):
         if arbor_type:
             arbor_registry[arbor_type] = cls
 
-class Arbor(object, metaclass=RegisteredArbor):
+class Arbor(metaclass=RegisteredArbor):
     """
     Base class for all Arbor classes.
 
@@ -99,10 +101,9 @@ class Arbor(object, metaclass=RegisteredArbor):
     ### These facilitate walking the tree, getting fields, etc.
     ### We keep track of these for resetting TreeNodes and
     ### deciding when they are setup or grown.
-    _reset_attrs = ("_tfi", "_tn", "_pfi", "_pn", "_fn")
-    _extra_reset_attrs = ("_ancestors", "descendent")
+    _reset_attrs = ("_tfi", "_pfi")
     _setup_attrs = ("_desc_uids", "_uids")
-    _grow_attrs = ("_nodes",)
+    _grow_attrs = ("_link_storage", "_link")
 
     def __init__(self, filename):
         """
@@ -228,11 +229,10 @@ class Arbor(object, metaclass=RegisteredArbor):
         Create arrays of uids and desc_uids and attach them to the
         root node.
         """
+
         # skip if this is not a root or if already setup
         if self.is_setup(tree_node):
             return
-
-        mylog.debug(f"Setting up tree {str(tree_node)}.")
 
         idtype      = np.int64
         fields, _ = \
@@ -254,37 +254,46 @@ class Arbor(object, metaclass=RegisteredArbor):
 
     def _grow_tree(self, tree_node, **kwargs):
         """
-        Create an array of TreeNodes hanging off the root node
-        and assemble the tree structure.
+        Construct the hierarchy of ancestors and descendents
+        for all nodes in the tree.
         """
+
         # skip this if not a root or if already grown
         if self.is_grown(tree_node):
             return
 
         self._setup_tree(tree_node, **kwargs)
-        nhalos   = tree_node.uids.size
-        nodes    = np.empty(nhalos, dtype=np.object)
-        nodes[0] = tree_node
-        for i in range(1, nhalos):
-            nodes[i] = TreeNode(tree_node.uids[i], arbor=self)
-        tree_node._nodes = nodes
+        size      = tree_node.tree_size
+        uids      = tree_node.uids
+        desc_uids = tree_node.desc_uids
+        links     = np.empty(size, dtype=np.object)
 
-        # Add tree information to nodes
+        # Make a dict mapping uids to index of storage array.
+        # First, try to get indices out as the dict is constructed
+        # since the dict will be smaller at first.
         uidmap = {}
-        for i, node in enumerate(nodes):
-            node.treeid = i
-            node.root   = tree_node
-            uidmap[tree_node.uids[i]] = i
-
-        # Link ancestor/descendents
-        # Separate loop for trees like lhalotree where descendent
-        # can follow in order
-        for i, node in enumerate(nodes):
-            descid      = tree_node.desc_uids[i]
-            if descid != -1:
-                desc = nodes[uidmap[descid]]
+        not_found = []
+        for i, (uid, desc_uid) in enumerate(zip(uids, desc_uids)):
+            node = NodeLink(i)
+            uidmap[uid] = i
+            desc_index = uidmap.get(desc_uid)
+            if desc_index is None:
+                not_found.append((node, desc_uid))
+            else:
+                desc = links[desc_index]
                 desc.add_ancestor(node)
-                node.descendent = desc
+            links[i] = node
+
+        # Make any additional links missed on the first pass.
+        for node, desc_uid in not_found:
+            if desc_uid == -1:
+                continue
+            desc = links[uidmap[desc_uid]]
+            desc.add_ancestor(node)
+
+        tree_node.root = tree_node
+        tree_node._link = links[0]
+        tree_node._link_storage = links
 
     _attr_map = None
     def _build_attr(self, attr, tree_node):
@@ -301,40 +310,31 @@ class Arbor(object, metaclass=RegisteredArbor):
 
         self._attr_map[attr](tree_node)
 
-    def reset_node(self, tree_node, reset_nonroot=False):
+    def reset_node(self, tree_node):
         """
         Reset all data structures for a single node.
 
         The goal is to clear as many data structures as
         possible without rendering the node object useless,
-        if they are intended to be kept around. In some
-        cases, we may only want to keep the root node and
-        allow the rest to be deleted.
+        if they are intended to be kept around.
 
-        If a root node, reset all child nodes as well.
-        If reset_nonroot is False, do not detach the
-        pointer to the root node. This will render the
-        node unable to get fields. However, if we are
-        trying to wipe out an entire tree, this is
-        what we want to do.
+        Calling reset_node on a non-root node should not make
+        the non-root node useless.
+
+        Calling reset_node on a root node will render any
+        generated non-root nodes useless.
         """
 
         tree_node.clear_fields()
         attrs = self._reset_attrs
+
         if tree_node.is_root:
-            attrs += self._extra_reset_attrs
             if self.is_grown(tree_node):
                 attrs += self._grow_attrs
-                for i in range(1, tree_node.tree_size):
-                    self.reset_node(tree_node.nodes[i],
-                                    reset_nonroot=True)
-                    tree_node.nodes[i] = None
                 tree_node.root = -1
             if self.is_setup(tree_node):
                 attrs += self._setup_attrs
-        elif reset_nonroot:
-            attrs += self._extra_reset_attrs
-            tree_node.root = None
+
         for attr in attrs:
             setattr(tree_node, attr, None)
 
@@ -395,7 +395,7 @@ class Arbor(object, metaclass=RegisteredArbor):
             else:
                 my_nodes = root_nodes[nodes]
 
-            for node in self._yield_nodes(my_nodes):
+            for node in self._yield_root_nodes(my_nodes):
                 rval = func(node, *args, **kwargs)
                 rvals.append(rval)
                 pbar.update(1)
@@ -464,7 +464,7 @@ class Arbor(object, metaclass=RegisteredArbor):
         """
 
         self._plant_trees()
-        for node in self._yield_nodes(range(self.size)):
+        for node in self._yield_root_nodes(range(self.size)):
             yield node
 
     def __repr__(self):
@@ -485,24 +485,24 @@ class Arbor(object, metaclass=RegisteredArbor):
                 raise SyntaxError("Argument must be a field or integer.")
             self._root_io.get_fields(self, fields=[key])
             return self._field_data[key]
-        return self._generate_nodes(key)
+        return self._generate_root_nodes(key)
 
-    def _generate_nodes(self, key):
+    def _generate_root_nodes(self, key):
         """
         Create root nodes given an index or slice from uid array.
         """
 
         self._plant_trees()
         if isinstance(key, (int, np.integer)):
-            return self._generate_node(key)
+            return self._generate_root_node(key)
         elif isinstance(key, slice) or isinstance(key, np.ndarray):
             indices = np.arange(self.size)[key]
             return np.array(
-                [node for node in self._yield_nodes(indices)])
+                [node for node in self._yield_root_nodes(indices)])
         else:
             raise ValueError('Cannot generate nodes from argument: ', key)
 
-    def _yield_nodes(self, indices):
+    def _yield_root_nodes(self, indices):
         """
         Root node generator.
         """
@@ -515,10 +515,10 @@ class Arbor(object, metaclass=RegisteredArbor):
             return
 
         for index in indices:
-            node = self._generate_node(index)
+            node = self._generate_root_node(index)
             yield node
 
-    def _generate_node(self, index):
+    def _generate_root_node(self, index):
         """
         Create a root node given its index in the array of uids.
         """
@@ -537,6 +537,20 @@ class Arbor(object, metaclass=RegisteredArbor):
                 setattr(my_node, attr, self._node_info[attr][index])
 
         return my_node
+
+    def _generate_tree_node(self, root_node, node_link):
+        """
+        Create a non-root node in a tree.
+        """
+
+        tree_id = node_link.tree_id
+        if tree_id == 0:
+            return root_node
+        uid        = root_node.uids[tree_id]
+        node       = TreeNode(uid, arbor=self, root=False)
+        node.root  = root_node
+        node._link = node_link
+        return node
 
     def _store_node_info(self, tree_node, attr):
         """
@@ -746,12 +760,13 @@ class Arbor(object, metaclass=RegisteredArbor):
         pbar = get_pbar("Selecting halos", trees.size)
         for tree in trees:
             my_filter = np.asarray(eval(criteria))
-            if my_filter.size != tree[select_from].size:
+            select_group = np.asarray(list(tree[select_from]))
+            if my_filter.size != select_group.size:
                 raise RuntimeError(
                     ("Filter array and tree array sizes do not match. " +
                      "Make sure select_from (\"%s\") matches criteria (\"%s\").") %
                     (select_from, criteria))
-            halos.extend(tree[select_from][my_filter])
+            halos.extend(select_group[my_filter])
             pbar.update(1)
         pbar.finish()
         return np.array(halos)
@@ -1030,7 +1045,6 @@ class CatalogArbor(Arbor):
 
     # Don't reset _ancestors or descendents because we won't be able to
     # rebuild trees without calling _plant_trees again.
-    _extra_reset_attrs = ()
     _setup_attrs = ("_desc_uids", "_uids", "_nodes")
     _grow_attrs = ()
 
@@ -1046,7 +1060,7 @@ class CatalogArbor(Arbor):
     def _get_data_files(self):
         raise NotImplementedError
 
-    def _generate_node(self, index):
+    def _generate_root_node(self, index):
         """
         Return a node self._trees.
 
@@ -1066,6 +1080,16 @@ class CatalogArbor(Arbor):
         return self._trees is not None
 
     def _plant_trees(self):
+        """
+        Construct all trees.
+
+        Since nodes are spread out over multiple files, we will
+        plant all trees and create all ancestor/descendent links.
+
+        The links will be held by the nodes themselves and we will
+        not store the nodes in an array until _setup_tree is called.
+        """
+
         if self.is_planted:
             return
 
@@ -1096,7 +1120,7 @@ class CatalogArbor(Arbor):
             for data_file in dfl:
                 data = data_file._read_fields(fields, dtypes=dtypes)
                 nhalos = len(data[halo_id_f])
-                batch = np.empty(nhalos, dtype=object)
+                batch = np.empty(nhalos, dtype=np.object)
 
                 for it in range(nhalos):
                     descid = data[desc_id_f][it]
@@ -1130,10 +1154,10 @@ class CatalogArbor(Arbor):
                     descendent = descs[descid == lastids][0]
                     descendent._ancestors = ancestors
                     for ancestor in ancestors:
-                        ancestor.descendent = descendent
+                        ancestor._descendent = descendent
 
             if i < nfiles - 1:
-                descs = np.empty(sum(bsize), dtype=object)
+                descs = np.empty(sum(bsize), dtype=np.object)
                 lastids = np.empty(descs.size, dtype=np.int64)
                 ib = 0
                 for batch, hid, bs in zip(batches, hids, bsize):
@@ -1147,15 +1171,21 @@ class CatalogArbor(Arbor):
         self._size = self._trees.size
 
     def _setup_tree(self, tree_node):
+        """
+        Walk the tree and place all nodes into an array.
+
+        This is required for field access.
+        """
+
         if self.is_setup(tree_node):
             return
 
         nodes     = []
         uids      = []
         desc_uids = [-1]
-        for i, node in enumerate(tree_node.twalk()):
-            node.treeid = i
-            node.root   = tree_node
+        for i, node in enumerate(tree_node._tree_nodes):
+            node._tree_id = i
+            node.root     = tree_node
             nodes.append(node)
             uids.append(node.uid)
             if i > 0:
@@ -1171,6 +1201,9 @@ class CatalogArbor(Arbor):
             tree_node._field_data["desc_uid"] = tree_node._desc_uids
 
     def _grow_tree(self, tree_node):
+        """
+        Trees are grown when they are planted.
+        """
         pass
 
 
