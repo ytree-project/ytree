@@ -167,9 +167,7 @@ to loop through all nodes in the tree.
 
    >>> print (my_tree["tree"])
    <generator object TreeNode._tree_nodes at 0x11bbc1f20>
-
-.. code-block:: python
-
+   >>> # loop over nodes
    >>> for my_node in my_tree["tree"]:
    ...     print (my_node, my_node["mass"])
    TreeNode[12900] 657410100000000.0 Msun
