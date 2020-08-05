@@ -312,18 +312,22 @@ class TreeNode:
         """
         Return default slice to select the whole forest.
         """
-        self.arbor._grow_tree(self)
         return self._ffi
 
-    _fn = None
     @property
     def _forest_nodes(self):
         """
-        Return a list of all TreeNodes in the forest.
+        An iterator over all TreeNodes in the forest.
+
+        This is different from _tree_nodes in that we don't walk
+        through the ancestors lists. We just yield every TreeNode
+        there is.
         """
-        if self._fn is None:
-            self._fn = self.nodes
-        return self._fn
+
+        self.arbor._grow_tree(self)
+        root = self.root
+        for link in root._links:
+            yield self.arbor._generate_tree_node(self.root, link)
 
     @property
     def _tree_nodes(self):
