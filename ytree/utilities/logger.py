@@ -39,7 +39,7 @@ def set_parallel_logger(comm):
     if len(ytreeLogger.handlers) > 0:
         ytreeLogger.handlers[0].setFormatter(f)
 
-class fake_pbar(object):
+class fake_pbar:
     def __init__(self, *args):
         pass
     def update(self, *args):

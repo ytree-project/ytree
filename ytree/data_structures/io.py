@@ -25,7 +25,7 @@ from ytree.utilities.exceptions import \
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
-class FieldIO(object):
+class FieldIO:
     """
     Base class for FieldIO classes.
 
@@ -204,7 +204,7 @@ class TreeFieldIO(FieldIO):
         if root_only:
             my_nodes = [root_node]
         else:
-            my_nodes = root_node.nodes
+            my_nodes = root_node._tree_nodes
 
         data_files = defaultdict(list)
         for node in my_nodes:
@@ -215,7 +215,7 @@ class TreeFieldIO(FieldIO):
                                              dtypes=my_dtypes)
             for field in fields:
                 for i, node in enumerate(nodes):
-                    field_data[field][node.treeid] = my_data[field][i]
+                    field_data[field][node.tree_id] = my_data[field][i]
 
         fi = self.arbor.field_info
         for field in fields:
@@ -256,7 +256,7 @@ class DefaultRootFieldIO(FieldIO):
 
         return field_data
 
-class DataFile(object):
+class DataFile:
     """
     Base class for data files.
 
