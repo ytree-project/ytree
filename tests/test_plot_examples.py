@@ -23,8 +23,8 @@ from ytree.utilities.testing import \
 import ytree
 
 def my_node(halo):
-    prog = list(halo.find_root()['prog'])
-    if halo in prog:
+    prog = list(halo.find_root()['prog', 'uid'])
+    if halo['uid'] in prog:
         color = 'red'
     else:
         color = 'black'
