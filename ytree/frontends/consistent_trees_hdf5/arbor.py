@@ -38,17 +38,19 @@ from ytree.utilities.exceptions import \
 
 _access_names = {
     'tree':   {'group'     : 'TreeInfo',
-               'unique_id' : 'TreeRootID',
+               'host_id'   : 'TreeRootID',
                'offset'    : 'TreeHalosOffset',
                'size'      : 'TreeNhalos',
                'total'     : 'TotNtrees',
-               'file_size' : 'Ntrees'},
+               'file_size' : 'Ntrees',
+               'host_attr' : 'tree_root_id'},
     'forest': {'group'     : 'ForestInfo',
-               'unique_id' : 'ForestID',
+               'host_id'   : 'ForestID',
                'offset'    : 'ForestHalosOffset',
                'size'      : 'ForestNhalos',
                'total'     : 'TotNforests',
-               'file_size' : 'Nforests'}
+               'file_size' : 'Nforests',
+               'host_attr' : 'forest_id'}
 }
 
 class ConsistentTreesHDF5Arbor(Arbor):
@@ -69,6 +71,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
                 ('Invalid access value: %s. '
                  'Valid options are: %s.') % (access, _access_names))
         self.access = access
+        self._node_io_attrs += (_access_names[access]['host_attr'],)
         super(ConsistentTreesHDF5Arbor, self).__init__(filename)
 
     _node_io_loop_prepare = ConsistentTreesGroupArbor._node_io_loop_prepare
@@ -158,7 +161,8 @@ class ConsistentTreesHDF5Arbor(Arbor):
 
         my_access  = _access_names[self.access]
         groupname  = my_access['group']
-        uidname    = my_access['unique_id']
+        hostname   = my_access['host_id']
+        hostattr   = my_access['host_attr']
         offsetname = my_access['offset']
         sizename   = my_access['size']
 
@@ -167,20 +171,21 @@ class ConsistentTreesHDF5Arbor(Arbor):
         pbar = get_pbar('Planting %ss' % self.access, self._size)
         for idf, data_file in enumerate(self.data_files):
             data_file.open()
-            uids = data_file.fh[groupname][uidname][()]
+            hostids = data_file.fh[groupname][hostname][()]
             offsets = data_file.fh[groupname][offsetname][()]
             tree_sizes = data_file.fh[groupname][sizename][()]
             data_file.close()
 
             istart = file_offsets[idf]
-            iend = istart + uids.size
-            self._node_info['uid'][istart:iend] = uids
+            iend = istart + offsets.size
+            self._node_info[hostattr][istart:iend] = hostids
             self._node_info['_fi'][istart:iend] = idf
             self._node_info['_si'][istart:iend] = offsets
             self._node_info['_ei'][istart:iend] = offsets + tree_sizes
-            c += uids.size
+            c += offsets.size
             pbar.update(c)
         pbar.finish()
+        self._node_info['uid'] = self['uid']
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
