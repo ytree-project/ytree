@@ -86,7 +86,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
 
     @property
     def _virtual_dataset(self):
-        return re.search("\_\d+\.h5$", self.parameter_filename) is None
+        return re.search(r"\_\d+\.h5$", self.parameter_filename) is None
 
     def _get_data_files(self):
         aname = _access_names[self.access]['file_size']
@@ -200,7 +200,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
             if not h5py.is_hdf5(fn):
                 return False
             # single data file
-            if re.search("\_\d+\.h5$", fn):
+            if re.search(r"\_\d+\.h5$", fn):
                 attrs = ['Nforests', 'Ntrees', 'Nhalos']
             # virtual data set file
             else:
