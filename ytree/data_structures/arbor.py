@@ -110,15 +110,27 @@ class Arbor(metaclass=RegisteredArbor):
         Initialize an Arbor given an input file.
         """
 
-        self.filename = filename
-        self.basename = os.path.basename(filename)
-        self.directory = os.path.dirname(filename)
+        self._set_paths(filename)
         self._parse_parameter_file()
         self._set_units()
         self._setup_io()
         self._get_data_files()
         self._setup_fields()
         self._set_default_selector()
+
+    def _set_paths(self, filename):
+        """
+        Set data paths.
+        """
+
+        self.filename = filename
+        if isinstance(filename, list):
+            fn = filename[0]
+        else:
+            fn = filename
+        self.parameter_filename = fn
+        self.basename = os.path.basename(fn)
+        self.directory = os.path.dirname(fn)
 
     def _parse_parameter_file(self):
         """
@@ -1252,13 +1264,22 @@ def load(filename, method=None, **kwargs):
     ...                hubble_constant=0.7)
 
     """
-    if not os.path.exists(filename):
+    if isinstance(filename, list):
+        for fn in filename:
+            if not os.path.exists(fn):
+                raise IOError("file does not exist: %s." % fn)
+    elif not os.path.exists(filename):
         raise IOError("file does not exist: %s." % filename)
+
     if method is None:
         candidates = []
         for candidate, c in arbor_registry.items():
-            if c._is_valid(filename, **kwargs):
-                candidates.append(candidate)
+            try:
+                if c._is_valid(filename, **kwargs):
+                    candidates.append(candidate)
+            except BaseException:
+                pass
+
         if len(candidates) == 0:
             raise IOError("Could not determine arbor type for %s." % filename)
         elif len(candidates) > 1:
@@ -1269,6 +1290,7 @@ def load(filename, method=None, **kwargs):
             raise IOError(errmsg)
         else:
             method = candidates[0]
+
     else:
         if method not in arbor_registry:
             raise IOError("Invalid method: %s.  Available: %s." %

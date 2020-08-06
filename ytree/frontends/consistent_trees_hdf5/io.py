@@ -34,11 +34,14 @@ class ConsistentTreesHDF5DataFile(DataFile):
 
     def open(self):
         self.real_fh = h5py.File(self.filename, mode="r")
-        self.fh = self.real_fh[self.linkname]
+        if self.linkname is None:
+            self.fh = self.real_fh
+        else:
+            self.fh = self.real_fh[self.linkname]
 
     def close(self):
-        self.fh = None
         self.real_fh.close()
+        self.fh = None
 
 class ConsistentTreesHDF5TreeFieldIO(TreeFieldIO):
     def _read_fields(self, root_node, fields, dtypes=None,
@@ -76,6 +79,8 @@ class ConsistentTreesHDF5TreeFieldIO(TreeFieldIO):
         fi = self.arbor.field_info
         for field in fields:
             units = fi[field].get("units", "")
+            if close:
+                field_data[field] = field_data[field].copy()
             if units != "":
                 field_data[field] = \
                   self.arbor.arr(field_data[field], units)

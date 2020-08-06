@@ -81,24 +81,47 @@ class ConsistentTreesHDF5Arbor(Arbor):
         data_file._field_cache = {}
         data_file.close()
 
+    @property
+    def _virtual_dataset(self):
+        return re.search("\_\d+\.h5$", self.parameter_filename) is None
+
     def _get_data_files(self):
         aname = _access_names[self.access]['file_size']
-        with h5py.File(self.filename, mode='r') as f:
-            self.data_files = \
-              [ConsistentTreesHDF5DataFile(self.filename, lname)
-               for lname in f]
+
+        if self._virtual_dataset:
+            with h5py.File(self.filename, mode='r') as f:
+                self.data_files = \
+                  [ConsistentTreesHDF5DataFile(self.filename, lname) for lname in f]
+                self._file_count = \
+                  np.array([f[lname].attrs[aname] for lname in f])
+        else:
+            if not isinstance(self.filename, list):
+                fns = [self.filename]
+            else:
+                fns = self.filename
+            self.data_files = [ConsistentTreesHDF5DataFile(fn, None) for fn in fns]
             self._file_count = \
-              np.array([f[lname].attrs[aname] for lname in f])
+              np.array([h5py.File(fn, mode='r').attrs[aname] for fn in fns])
+            self._size = sum(self._file_count)
 
     def _parse_parameter_file(self):
-        f = h5py.File(self.filename, mode='r')
-        fgroup = f.get('File0')
-        if fgroup is None:
-            raise ArborDataFileEmpty(self.filename)
+        f = h5py.File(self.parameter_filename, mode='r')
+
+        # Is the file a collection of virtual data sets
+        # pointing to multitple data files?
+        virtual = self._virtual_dataset
+        if virtual:
+            fgroup = f.get('File0')
+            if fgroup is None:
+                raise ArborDataFileEmpty(self.filename)
+        else:
+            fgroup = f
+
         my_fi = dict((field, {'dtype': data.dtype})
                     for field, data in fgroup['Forests'].items())
-        aname = _access_names[self.access]['total']
-        self._size = f.attrs[aname]
+        if virtual:
+            aname = _access_names[self.access]['total']
+            self._size = f.attrs[aname]
         header = fgroup.attrs['Consistent Trees_metadata'].astype(str)
         header = header.tolist()
         f.close()
@@ -133,7 +156,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
         if self.is_planted or self._size == 0:
             return
 
-        my_access = _access_names[self.access]
+        my_access  = _access_names[self.access]
         groupname  = my_access['group']
         uidname    = my_access['unique_id']
         offsetname = my_access['offset']
@@ -164,11 +187,25 @@ class ConsistentTreesHDF5Arbor(Arbor):
         """
         Should be an hdf5 file with a few key attributes.
         """
-        fn = args[0]
-        if not h5py.is_hdf5(fn):
-            return False
-        with h5py.File(fn, mode='r') as f:
-            for attr in ['Nfiles', 'TotNforests', 'TotNhalos', 'TotNtrees']:
-                if attr not in f.attrs:
-                    return False
+        fns = args[0]
+        if not isinstance(fns, list):
+            fns = [fns]
+
+        for fn in fns:
+            if not h5py.is_hdf5(fn):
+                return False
+            # single data file
+            if re.search("\_\d+\.h5$", fn):
+                attrs = ['Nforests', 'Ntrees', 'Nhalos']
+            # virtual data set file
+            else:
+                if len(fns) > 1:
+                    raise RuntimeError(
+                        'Virtual data set file cannot be given in a list.')
+                attrs = ['Nfiles', 'TotNforests', 'TotNhalos', 'TotNtrees']
+
+            with h5py.File(fn, mode='r') as f:
+                for attr in attrs:
+                    if attr not in f.attrs:
+                        return False
         return True
