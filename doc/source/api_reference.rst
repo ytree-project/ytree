@@ -6,7 +6,7 @@ API Reference
 Working with Merger Trees
 -------------------------
 
-The :func:`~ytree.data_structures.arbor.load` can load all supported
+The :func:`~ytree.data_structures.load.load` can load all supported
 merger tree formats.  Once loaded, the
 :func:`~ytree.data_structures.arbor.Arbor.save_arbor` and
 :func:`~ytree.data_structures.tree_node.TreeNode.save_tree` functions can be
@@ -15,7 +15,7 @@ used to save the entire arbor or individual trees.
 .. autosummary::
    :toctree: generated/
 
-   ~ytree.data_structures.arbor.load
+   ~ytree.data_structures.load.load
    ~ytree.data_structures.arbor.Arbor
    ~ytree.data_structures.arbor.Arbor.add_alias_field
    ~ytree.data_structures.arbor.Arbor.add_analysis_field

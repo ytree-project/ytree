@@ -11,7 +11,7 @@ Loading Merger-Tree Data
 ------------------------
 
 ``ytree`` can load merger-tree data from multiple sources using
-the :func:`~ytree.data_structures.arbor.load` command.
+the :func:`~ytree.data_structures.load.load` command.
 
 .. code-block:: python
 
@@ -368,7 +368,7 @@ Saving Arbors and Trees
 
 ``Arbors`` of any type can be saved to a universal file format with the
 :func:`~ytree.data_structures.arbor.Arbor.save_arbor` function.  These can be
-reloaded with the :func:`~ytree.data_structures.arbor.load` command.  This
+reloaded with the :func:`~ytree.data_structures.load.load` command.  This
 format is optimized for fast tree-building and field-access and so is
 recommended for most situations.
 

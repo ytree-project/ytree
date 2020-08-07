@@ -124,7 +124,7 @@ By default, ``ytree`` will load consistent-trees-hdf5 datasets to
 provide access to each tree, such that ``a[N]`` will return the Nth
 tree in the dataset and ``a[N]["tree"]`` will return all halos in
 that tree. However, by providing the ``access="forest"`` keyword to
-:func:`~ytree.data_structures.arbor.load`, data will be loaded
+:func:`~ytree.data_structures.load.load`, data will be loaded
 according to the forest it belongs to.
 
 .. code-block:: python
