@@ -38,7 +38,7 @@ from ytree.utilities.loading import \
 generate_results = \
   int(os.environ.get("YTREE_GENERATE_TEST_RESULTS", 0)) == 1
 
-def requires_file(req_file):
+def requires_file(filename):
 
     def ffalse(func):
         return None
@@ -46,11 +46,12 @@ def requires_file(req_file):
     def ftrue(func):
         return func
 
-    if not isinstance(req_file, list):
-        req_file = [req_file]
-    for fn in req_file:
-        if not os.path.exists(fn):
-            return ffalse
+    if not isinstance(filename, list):
+        filename = [filename]
+    try:
+        [check_path(fn) for fn in filename]
+    except IOError:
+        return ffalse
     return ftrue
 
 class TempDirTest(TestCase):

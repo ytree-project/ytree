@@ -17,7 +17,6 @@ import os
 
 from ytree.utilities.testing import \
     requires_file, \
-    test_data_dir, \
     TempDirTest
 
 import ytree
@@ -50,7 +49,7 @@ def my_edge(ancestor, descendent):
     my_kwargs = {"color": color, "penwidth": 5}
     return my_kwargs
 
-AHF = os.path.join(test_data_dir, "ahf_halos/snap_N64L16_000.parameter")
+AHF = "ahf_halos/snap_N64L16_000.parameter"
 
 class TreePlotTest(TempDirTest):
     @requires_file(AHF)

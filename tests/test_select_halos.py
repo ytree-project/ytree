@@ -17,10 +17,9 @@ import os
 import ytree
 
 from ytree.utilities.testing import \
-    requires_file, \
-    test_data_dir
+    requires_file
 
-CT = os.path.join(test_data_dir, "consistent_trees/tree_0_0_0.dat")
+CT = "consistent_trees/tree_0_0_0.dat"
 
 @requires_file(CT)
 def test_select_halos():

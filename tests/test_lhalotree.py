@@ -18,9 +18,10 @@ import numpy as np
 import os
 import tempfile
 import ytree
-from ytree.utilities.testing import \
-    requires_file, \
+from ytree.utilities.loading import \
     test_data_dir
+from ytree.utilities.testing import \
+    requires_file
 from ytree.frontends.lhalotree import \
     utils as lhtutils
 from ytree.frontends.lhalotree.arbor import \
