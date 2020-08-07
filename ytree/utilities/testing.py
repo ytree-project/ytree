@@ -32,13 +32,9 @@ from ytree.data_structures.load import \
     load
 from ytree.frontends.ytree import \
     YTreeArbor
-from ytree.config import \
-    ytreecfg
+from ytree.utilities.loading import \
+    check_path
 
-if "YTREE_TEST_DATA_DIR" in os.environ:
-    test_data_dir = os.environ["YTREE_TEST_DATA_DIR"]
-else:
-    test_data_dir = ytreecfg["ytree"].get("test_data_dir", ".")
 generate_results = \
   int(os.environ.get("YTREE_GENERATE_TEST_RESULTS", 0)) == 1
 
@@ -88,13 +84,10 @@ class ArborTest:
     @property
     def arbor(self):
         if self._arbor is None:
-            if not os.path.exists(self.test_filename):
-                test_filename = \
-                  os.path.join(test_data_dir, self.test_filename)
-                if os.path.exists(test_filename):
-                    self.test_filename = test_filename
-                else:
-                    self.skipTest("test file missing")
+            try:
+                self.test_filename = check_path(self.test_filename)
+            except IOError:
+                self.skipTest("test file missing")
 
             if self.load_kwargs is None:
                 self.load_kwargs = {}

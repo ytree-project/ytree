@@ -13,10 +13,10 @@ load function
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import os
-
 from ytree.data_structures.arbor import \
     arbor_registry
+from ytree.utilities.loading import \
+    check_path
 
 global load_warn
 load_warn = True
@@ -50,8 +50,10 @@ def load(filename, method=None, **kwargs):
     >>> a = ytree.load("arbor/arbor.h5")
     >>> # consistent-trees output
     >>> a = ytree.load("tiny_ctrees/locations.dat")
-    >>> a = ytree.load("rockstar_halos/trees/tree_0_0_0.dat")
+    >>> a = ytree.load("consistent_trees/tree_0_0_0.dat")
     >>> a = ytree.load("ctrees_hlists/hlists/hlist_0.12521.list")
+    >>> # consistent-trees-hdf5
+    >>> a = ytree.load("consistent_trees_hdf5/soa/forest.h5")
     >>> # Rockstar catalogs
     >>> a = ytree.load("rockstar_halos/out_0.list")
     >>> # treefarm catalogs
@@ -63,12 +65,11 @@ def load(filename, method=None, **kwargs):
     ...                hubble_constant=0.7)
 
     """
+
     if isinstance(filename, (list, tuple)):
-        for fn in filename:
-            if not os.path.exists(fn):
-                raise IOError("file does not exist: %s." % fn)
-    elif not os.path.exists(filename):
-        raise IOError("file does not exist: %s." % filename)
+        filename = [check_path(fn) for fn in filename]
+    else:
+        filename = check_path(filename)
 
     if method is None:
         candidates = []
