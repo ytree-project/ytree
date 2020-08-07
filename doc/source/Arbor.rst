@@ -155,6 +155,11 @@ for large trees.
    print (new_tree.tree_size) # retrieved from a cache
    691
 
+Accessing the Nodes in a Tree or Forest
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _tree_access:
+
 Accessing All Nodes in a Tree
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -205,6 +210,11 @@ The full tree leading up to any given halo can be accessed in the same way.
    [2301.4316  2311.4763  2313.993   2331.413   2345.5454  2349.918 ...
     434.59857  410.13382  411.25757] kpc
 
+.. _forest_access:
+
+Accessing All Nodes in a Forest
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Accessing a Halo's Ancestors and Descendent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -223,6 +233,8 @@ A halo's descendent can be accessed in a similar fashion.
 
    >>> print (my_ancestors[0].descendent)
    TreeNode[12900]
+
+.. _progenitor_access:
 
 Accessing the Progenitor Lineage of a Tree
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
