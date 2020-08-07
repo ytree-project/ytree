@@ -33,7 +33,7 @@ from ytree.data_structures.load import \
 from ytree.frontends.ytree import \
     YTreeArbor
 from ytree.utilities.loading import \
-    check_path
+    get_path
 
 generate_results = \
   int(os.environ.get("YTREE_GENERATE_TEST_RESULTS", 0)) == 1
@@ -49,7 +49,7 @@ def requires_file(filename):
     if not isinstance(filename, list):
         filename = [filename]
     try:
-        [check_path(fn) for fn in filename]
+        [get_path(fn) for fn in filename]
     except IOError:
         return ffalse
     return ftrue
@@ -86,7 +86,7 @@ class ArborTest:
     def arbor(self):
         if self._arbor is None:
             try:
-                self.test_filename = check_path(self.test_filename)
+                self.test_filename = get_path(self.test_filename)
             except IOError:
                 self.skipTest("test file missing")
 

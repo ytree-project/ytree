@@ -72,15 +72,16 @@ class ConsistentTreesHDF5ArborTest2(TempDirTest, ArborTest):
 
 class ConsistentTreesHDF5ArborTest3(TempDirTest, ArborTest):
     arbor_type = ConsistentTreesHDF5Arbor
-    test_filename = "consistent_trees_hdf5/soa/forest.h5"
+    test_filename = "consistent_trees_hdf5/soa/forest_0.h5"
     num_data_files = 1
     tree_skip = 10000
 
 class ConsistentTreesHDF5ArborTest4(TempDirTest, ArborTest):
     arbor_type = ConsistentTreesHDF5Arbor
-    test_filename = "consistent_trees_hdf5/soa/forest_0.h5"
-    num_data_files = 1
-    tree_skip = 10000
+    test_filename = ["consistent_trees_hdf5/soa/forest_0.h5",
+                     "consistent_trees_hdf5/soa/forest_0.h5"]
+    num_data_files = 2
+    tree_skip = 20000
 
 class RockstarArborTest(TempDirTest, ArborTest):
     arbor_type = RockstarArbor

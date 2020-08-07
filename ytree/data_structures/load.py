@@ -16,7 +16,7 @@ load function
 from ytree.data_structures.arbor import \
     arbor_registry
 from ytree.utilities.loading import \
-    check_path
+    get_path
 
 global load_warn
 load_warn = True
@@ -66,10 +66,7 @@ def load(filename, method=None, **kwargs):
 
     """
 
-    if isinstance(filename, (list, tuple)):
-        filename = [check_path(fn) for fn in filename]
-    else:
-        filename = check_path(filename)
+    filename = get_path(filename)
 
     if method is None:
         candidates = []
