@@ -158,7 +158,16 @@ for large trees.
 Accessing the Nodes in a Tree or Forest
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _tree_access:
+A node is defined as a single halo at a single time in a merger tree.
+Throughout these docs, the words halo and node are used interchangeably.
+Nodes in a given tree can be accessed in three different ways: by
+:ref:`tree-access`, :Ref:`forest-access`, or :ref:`progenitor-access`.
+Each of these will return a generator of
+:class:`~ytree.data_structures.tree_node.TreeNode` objects or field
+values for all :class:`~ytree.data_structures.tree_node.TreeNode` objects
+in the tree, forest, or progenitor line.
+
+.. _tree-access:
 
 Accessing All Nodes in a Tree
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -210,16 +219,50 @@ The full tree leading up to any given halo can be accessed in the same way.
    [2301.4316  2311.4763  2313.993   2331.413   2345.5454  2349.918 ...
     434.59857  410.13382  411.25757] kpc
 
-.. _forest_access:
+.. _forest-access:
 
 Accessing All Nodes in a Forest
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The :ref:`ctrees-hdf5` and :ref:`lhalotree` formats provide access to halos
+grouped by forest. A forest is a group of trees with halos that interact in
+a non-merging way through processes like fly-bys.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("consistent_trees_hdf5/soa/forest.h5",
+   ...                access="forest")
+   >>> my_forest = a[0]
+   >>> # all halos in the forest
+   >>> print (list(my_forest["forest"]))
+   [TreeNode[90049568], TreeNode[88202573], TreeNode[86292249], ...
+    TreeNode[9272027], TreeNode[7435733], TreeNode[5768880]]
+   >>> # all halo masses in forest
+   >>> print (my_forest["forest", "mass"])
+   [3.38352524e+11 3.34071450e+11 3.34071450e+11 3.31709477e+11 ...
+    7.24092117e+09 4.34455270e+09] Msun
+
+To find all of the roots in that forest, i.e., the start
+of all individual trees contained, one can do:
+
+.. code-block:: python
+
+   >>> my_forest = a[0]
+   >>> roots = [node for node in f["forest"] if node["desc_uid"] == -1]
+   >>> print (roots)
+   [TreeNode[90049568], TreeNode[89739051]]
+   >>> # all halos in second tree
+   >>> print (list(roots[1]["tree"]))
+   [TreeNode[89739051], TreeNode[87886920], TreeNode[85984854], ...
+    TreeNode[9272027], TreeNode[7435733], TreeNode[5768880]]
+
 Accessing a Halo's Ancestors and Descendent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A halo's ancestors can be accessed through the ``ancestors`` attribute. Just as
-in accessing all nodes on a tree, these are generated.
+The direct ancestors of any
+:class:`~ytree.data_structures.tree_node.TreeNode` object can be accessed
+through the ``ancestors`` attribute.
 
 .. code-block:: python
 
@@ -234,7 +277,7 @@ A halo's descendent can be accessed in a similar fashion.
    >>> print (my_ancestors[0].descendent)
    TreeNode[12900]
 
-.. _progenitor_access:
+.. _progenitor-access:
 
 Accessing the Progenitor Lineage of a Tree
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

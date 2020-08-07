@@ -7,13 +7,13 @@ and provides a similar interface for merger-tree data that includes universal
 field names, derived fields, and symbolic units. ``ytree`` is able to load in
 merger-tree from the following formats:
 
-- `Amiga Halo Finder <http://popia.ft.uam.es/AHF/Download.html>`_
-- `Consistent-Trees <https://bitbucket.org/pbehroozi/consistent-trees>`_
+- `Amiga Halo Finder <http://popia.ft.uam.es/AHF/Download.html>`__
+- `Consistent-Trees <https://bitbucket.org/pbehroozi/consistent-trees>`__
 - `Consistent-Trees-HDF5 <https://github.com/uchuuproject/uchuutools>`__
-- `LHaloTree <https://ui.adsabs.harvard.edu/abs/2005MNRAS.364.1105S>`_
-- `Rockstar <https://bitbucket.org/gfcstanford/rockstar>`_ halo catalogs
+- `LHaloTree <https://ui.adsabs.harvard.edu/abs/2005MNRAS.364.1105S>`__
+- `Rockstar <https://bitbucket.org/gfcstanford/rockstar>`__ halo catalogs
   without consistent-trees
-- `treefarm <https://treefarm.readthedocs.io/>`_
+- `treefarm <https://treefarm.readthedocs.io/>`__
 
 See :ref:`loading` for instructions specific to each format.
 All formats can be :ref:`resaved with a universal format <saving-trees>` that

@@ -82,6 +82,8 @@ can be loaded by providing the path to the first of these files.
    assemble each tree across multiple files. This method is not
    recommended unless the additional fields are necessary.
 
+.. _ctrees-hdf5:
+
 Consistent-Trees-HDF5
 ---------------------
 
@@ -115,8 +117,6 @@ a list/tuple of files.
    >>> # multiple data files (sample data only has one)
    >>> a = ytree.load(["forest_0.h5", "forest_1.h5"])
 
-.. _ctree-hdf5-forest:
-
 Access by Forest
 ^^^^^^^^^^^^^^^^
 
@@ -138,20 +138,8 @@ In this mode, ``a[N]`` will return the Nth forest and
 forest access mode, the "root" of the forest, i.e., the
 :class:`~ytree.data_structures.tree_node.TreeNode` object returned
 by doing ``a[N]`` will be the root of one of the trees in that
-forest. To find all of the roots in that forest, i.e., the start
-of all individual trees contained, one can do:
-
-.. code-block:: python
-
-   >>> my_forest = a[0]
-   >>> desc_uids = np.array(list(my_forest["forest", "desc_uid"]))
-   >>> roots = [node for node in f["forest"] if node["desc_uid"] == -1]
-   >>> print (roots)
-   [TreeNode[90049568], TreeNode[89739051]]
-   >>> # all halos in first tree
-   >>> print (list(roots[0]["tree"]))
-   [TreeNode[90049568], TreeNode[88202573], TreeNode[86292249], ...
-    TreeNode[13635225], TreeNode[11545001], TreeNode[9538546]]
+forest. See :ref:`forest-access` for how to locate all individual
+trees in a forest.
 
 Rockstar Catalogs
 -----------------
@@ -167,18 +155,18 @@ load in this format, simply provide the path to one of these files.
    >>> import ytree
    >>> a = ytree.load("rockstar/rockstar_halos/out_0.list")
 
+.. _lhalotree:
+
 LHaloTree
 ---------
 
-The `LHaloTree <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`_
+The `LHaloTree <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`__
 format is typically one or more files with a naming convention like
 "trees_063.0" that contain the trees themselves and a single file
 with a suffix ".a_list" that contains a list of the scale factors
 at the time of each simulation snapshot.
 
-.. note:: The LHaloTree format loads halos by forest. A similar
-   strategy as described in :ref:`ctree-hdf5-forest` can be used
-   for accessing all trees in a given forest. There is no need
+.. note:: The LHaloTree format loads halos by forest. There is no need
    to provide the ``access="forest"`` keyword here.
 
 In addition to the LHaloTree files, ``ytree`` also requires additional
