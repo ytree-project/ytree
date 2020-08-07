@@ -124,7 +124,7 @@ class Arbor(metaclass=RegisteredArbor):
         """
 
         self.filename = filename
-        if isinstance(filename, list):
+        if isinstance(filename, (list, tuple)):
             fn = filename[0]
         else:
             fn = filename
@@ -1264,7 +1264,7 @@ def load(filename, method=None, **kwargs):
     ...                hubble_constant=0.7)
 
     """
-    if isinstance(filename, list):
+    if isinstance(filename, (list, tuple)):
         for fn in filename:
             if not os.path.exists(fn):
                 raise IOError("file does not exist: %s." % fn)
