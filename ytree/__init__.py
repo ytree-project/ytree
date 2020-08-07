@@ -13,7 +13,7 @@ ytree imports
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.data_structures import \
+from ytree.data_structures.load import \
     load
 from ytree.data_structures.tree_node_selector import \
     TreeNodeSelector, \
