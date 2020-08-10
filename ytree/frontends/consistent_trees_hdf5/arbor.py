@@ -35,6 +35,8 @@ from ytree.frontends.consistent_trees_hdf5.io import \
     ConsistentTreesHDF5TreeFieldIO
 from ytree.utilities.exceptions import \
     ArborDataFileEmpty
+from ytree.utilities.logger import \
+    ytreeLogger as mylog
 
 _access_names = {
     'tree':   {'group'     : 'TreeInfo',
@@ -122,6 +124,10 @@ class ConsistentTreesHDF5Arbor(Arbor):
 
         if 'halos' in fgroup['Forests']:
             # array of structs layout
+            mylog.warn(
+                "This dataset was written in array of structs format. "
+                "Field access will be significantly slower than struct "
+                "of arrays format.")
             self._aos = True
             ftypes = fgroup['Forests/halos'].dtype
             my_fi = dict((ftypes.names[i], {'dtype': ftypes[i]})
