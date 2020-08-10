@@ -60,6 +60,8 @@ class ConsistentTreesHDF5TreeFieldIO(TreeFieldIO):
             close = True
             data_file.open()
         fh = data_file.fh['Forests']
+        if self.arbor._aos:
+            fh = fh['halos']
 
         field_cache = data_file._field_cache
         field_cache.update(
@@ -110,6 +112,9 @@ class ConsistentTreesHDF5RootFieldIO(DefaultRootFieldIO):
             arbor._node_io_loop_start(data_file)
 
             fh = data_file.fh['Forests']
+            if self.arbor._aos:
+                fh = fh['halos']
+
             field_cache = data_file._field_cache
             field_cache.update(
                 dict((field, fh[field][()])

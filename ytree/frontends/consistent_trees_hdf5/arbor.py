@@ -120,8 +120,18 @@ class ConsistentTreesHDF5Arbor(Arbor):
         else:
             fgroup = f
 
-        my_fi = dict((field, {'dtype': data.dtype})
-                    for field, data in fgroup['Forests'].items())
+        if 'halos' in fgroup['Forests']:
+            # array of structs layout
+            self._aos = True
+            ftypes = fgroup['Forests/halos'].dtype
+            my_fi = dict((ftypes.names[i], {'dtype': ftypes[i]})
+                         for i in range(len(ftypes)))
+        else:
+            # struct of arrays layout
+            self._aos = False
+            my_fi = dict((field, {'dtype': data.dtype})
+                        for field, data in fgroup['Forests'].items())
+
         if virtual:
             aname = _access_names[self.access]['total']
             self._size = f.attrs[aname]
