@@ -90,6 +90,13 @@ class ConsistentTreesHDF5TreeFieldIO(TreeFieldIO):
         return field_data
 
 class ConsistentTreesHDF5RootFieldIO(DefaultRootFieldIO):
+    """
+    Read in fields for first node in all trees/forest.
+
+    This function is optimized for the struct of arrays layout.
+    It will work for array of structs layout, but field access
+    will be 1 to 2 orders of magnitude slower.
+    """
     def _read_fields(self, storage_object, fields, dtypes=None):
         if dtypes is None:
             dtypes = {}

@@ -91,9 +91,11 @@ Consistent-Trees-HDF5
 is a variant of the consistent-trees format built on HDF5. It is used by
 the `Skies & Universe <http://www.skiesanduniverses.org/>`_ project.
 This format allows for access by either `forests` or `trees` as per the
-definitions above. This data can be stored as either structs of arrays
-or arrays of structs. Currently, ``ytree`` only supports the structs of
-arrays format.
+definitions above. The data can be stored as either a struct of arrays
+or an array of structs. Both layouts are supported, but ``ytree`` is
+currently optimized for the struct of arrays layout. Field access with
+struct of arrays will be 1 to 2 orders of magnitude faster than with
+array of structs.
 
 Datasets from this format consist of a series of HDF5 files with the
 naming convention, `forest.h5`, `forest_0.5`, ..., `forest_N.h5`.

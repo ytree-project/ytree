@@ -111,7 +111,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
         f = h5py.File(self.parameter_filename, mode='r')
 
         # Is the file a collection of virtual data sets
-        # pointing to multitple data files?
+        # pointing to multiple data files?
         virtual = self._virtual_dataset
         if virtual:
             fgroup = f.get('File0')
