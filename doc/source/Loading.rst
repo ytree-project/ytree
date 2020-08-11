@@ -82,6 +82,67 @@ can be loaded by providing the path to the first of these files.
    assemble each tree across multiple files. This method is not
    recommended unless the additional fields are necessary.
 
+.. _ctrees-hdf5:
+
+Consistent-Trees-HDF5
+---------------------
+
+`Consistent-Trees-HDF5 <https://github.com/uchuuproject/uchuutools>`__
+is a variant of the consistent-trees format built on HDF5. It is used by
+the `Skies & Universe <http://www.skiesanduniverses.org/>`_ project.
+This format allows for access by either `forests` or `trees` as per the
+definitions above. The data can be stored as either a struct of arrays
+or an array of structs. Both layouts are supported, but ``ytree`` is
+currently optimized for the struct of arrays layout. Field access with
+struct of arrays will be 1 to 2 orders of magnitude faster than with
+array of structs.
+
+Datasets from this format consist of a series of HDF5 files with the
+naming convention, `forest.h5`, `forest_0.5`, ..., `forest_N.h5`.
+The numbered files contain the actual data while the `forest.h5` file
+contains virtual datasets that point to the data files. To load all
+the data, provide the path to the virtual dataset file:
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("consistent_trees_hdf5/soa/forest.h5")
+
+To load a subset of the full dataset, provide a single data file or
+a list/tuple of files.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> # single file
+   >>> a = ytree.load("consistent_trees_hdf5/soa/forest_0.h5")
+   >>> # multiple data files (sample data only has one)
+   >>> a = ytree.load(["forest_0.h5", "forest_1.h5"])
+
+Access by Forest
+^^^^^^^^^^^^^^^^
+
+By default, ``ytree`` will load consistent-trees-hdf5 datasets to
+provide access to each tree, such that ``a[N]`` will return the Nth
+tree in the dataset and ``a[N]["tree"]`` will return all halos in
+that tree. However, by providing the ``access="forest"`` keyword to
+:func:`~ytree.data_structures.load.load`, data will be loaded
+according to the forest it belongs to.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("consistent_trees_hdf5/soa/forest.h5",
+   ...                access="forest")
+
+In this mode, ``a[N]`` will return the Nth forest and
+``a[N]["forest"]`` will return all halos in that forest. In
+forest access mode, the "root" of the forest, i.e., the
+:class:`~ytree.data_structures.tree_node.TreeNode` object returned
+by doing ``a[N]`` will be the root of one of the trees in that
+forest. See :ref:`forest-access` for how to locate all individual
+trees in a forest.
+
 Rockstar Catalogs
 -----------------
 
@@ -96,14 +157,19 @@ load in this format, simply provide the path to one of these files.
    >>> import ytree
    >>> a = ytree.load("rockstar/rockstar_halos/out_0.list")
 
+.. _lhalotree:
+
 LHaloTree
 ---------
 
-The `LHaloTree <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`_
+The `LHaloTree <http://adsabs.harvard.edu/abs/2005Natur.435..629S>`__
 format is typically one or more files with a naming convention like
 "trees_063.0" that contain the trees themselves and a single file
 with a suffix ".a_list" that contains a list of the scale factors
 at the time of each simulation snapshot.
+
+.. note:: The LHaloTree format loads halos by forest. There is no need
+   to provide the ``access="forest"`` keyword here.
 
 In addition to the LHaloTree files, ``ytree`` also requires additional
 information about the simulation from a parameter file (in

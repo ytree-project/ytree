@@ -17,13 +17,11 @@ import os
 
 from ytree.utilities.testing import \
     requires_file, \
-    test_data_dir, \
     TempDirTest
 
 import ytree
 
-CT = os.path.join(test_data_dir,
-                  "consistent_trees/tree_0_0_0.dat")
+CT = "consistent_trees/tree_0_0_0.dat"
 
 class TreePlotTest(TempDirTest):
     @requires_file(CT)

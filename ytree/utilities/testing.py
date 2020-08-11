@@ -28,21 +28,17 @@ from yt.testing import \
 from yt.funcs import \
     get_pbar
 
-from ytree.data_structures.arbor import \
+from ytree.data_structures.load import \
     load
 from ytree.frontends.ytree import \
     YTreeArbor
-from ytree.config import \
-    ytreecfg
+from ytree.utilities.loading import \
+    get_path
 
-if "YTREE_TEST_DATA_DIR" in os.environ:
-    test_data_dir = os.environ["YTREE_TEST_DATA_DIR"]
-else:
-    test_data_dir = ytreecfg["ytree"].get("test_data_dir", ".")
 generate_results = \
   int(os.environ.get("YTREE_GENERATE_TEST_RESULTS", 0)) == 1
 
-def requires_file(req_file):
+def requires_file(filename):
 
     def ffalse(func):
         return None
@@ -50,10 +46,13 @@ def requires_file(req_file):
     def ftrue(func):
         return func
 
-    if os.path.exists(req_file):
-        return ftrue
-    else:
+    if not isinstance(filename, list):
+        filename = [filename]
+    try:
+        [get_path(fn) for fn in filename]
+    except IOError:
         return ffalse
+    return ftrue
 
 class TempDirTest(TestCase):
     """
@@ -77,6 +76,8 @@ class ArborTest:
 
     arbor_type = None
     test_filename = None
+    load_kwargs = None
+    groups = ("tree", "prog")
     num_data_files = None
     tree_skip = 1
 
@@ -84,14 +85,15 @@ class ArborTest:
     @property
     def arbor(self):
         if self._arbor is None:
-            if not os.path.exists(self.test_filename):
-                test_filename = \
-                  os.path.join(test_data_dir, self.test_filename)
-                if os.path.exists(test_filename):
-                    self.test_filename = test_filename
-                else:
-                    self.skipTest("test file missing")
-            self._arbor = load(self.test_filename)
+            try:
+                self.test_filename = get_path(self.test_filename)
+            except IOError:
+                self.skipTest("test file missing")
+
+            if self.load_kwargs is None:
+                self.load_kwargs = {}
+
+            self._arbor = load(self.test_filename, **self.load_kwargs)
         return self._arbor
 
     def test_arbor_type(self):
@@ -153,7 +155,7 @@ class ArborTest:
                 (field, self.arbor))
 
     def test_save_and_reload(self):
-        save_and_compare(self.arbor, skip=self.tree_skip)
+        save_and_compare(self.arbor, groups=self.groups, skip=self.tree_skip)
 
     def test_vector_fields(self):
         a = self.arbor
@@ -177,7 +179,7 @@ class ArborTest:
                         t[group, "%s_%s" % (field, ax)],
                         t[group, field][:, i])
 
-def save_and_compare(arbor, skip=1):
+def save_and_compare(arbor, skip=1, groups=None):
     """
     Check that arbor saves correctly.
     """
@@ -190,7 +192,7 @@ def save_and_compare(arbor, skip=1):
     fn = arbor.save_arbor(trees=trees)
     save_arbor = load(fn)
     assert isinstance(save_arbor, YTreeArbor)
-    compare_arbors(save_arbor, arbor, skip2=skip)
+    compare_arbors(save_arbor, arbor, groups=groups, skip2=skip)
 
 def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
     """

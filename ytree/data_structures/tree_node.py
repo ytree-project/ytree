@@ -267,7 +267,7 @@ class TreeNode:
         float, ndarray/unyt_array, TreeNode
 
         """
-        arr_types = ("prog", "tree")
+        arr_types = ("forest", "prog", "tree")
         if isinstance(key, tuple):
             if len(key) != 2:
                 raise SyntaxError(
@@ -305,6 +305,29 @@ class TreeNode:
         Call me TreeNode.
         """
         return "TreeNode[%d]" % self.uid
+
+    _ffi = slice(None)
+    @property
+    def _forest_field_indices(self):
+        """
+        Return default slice to select the whole forest.
+        """
+        return self._ffi
+
+    @property
+    def _forest_nodes(self):
+        """
+        An iterator over all TreeNodes in the forest.
+
+        This is different from _tree_nodes in that we don't walk
+        through the ancestors lists. We just yield every TreeNode
+        there is.
+        """
+
+        self.arbor._grow_tree(self)
+        root = self.root
+        for link in root._links:
+            yield self.arbor._generate_tree_node(self.root, link)
 
     @property
     def _tree_nodes(self):

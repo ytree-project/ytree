@@ -18,12 +18,11 @@ import os
 
 from ytree.utilities.testing import \
     requires_file, \
-    TempDirTest, \
-    test_data_dir
+    TempDirTest
 
 import ytree
 
-CTG = os.path.join(test_data_dir, "tiny_ctrees/locations.dat")
+CTG = "tiny_ctrees/locations.dat"
 
 def t50(tree):
     # main progenitor masses

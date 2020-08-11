@@ -6,7 +6,7 @@ API Reference
 Working with Merger Trees
 -------------------------
 
-The :func:`~ytree.data_structures.arbor.load` can load all supported
+The :func:`~ytree.data_structures.load.load` can load all supported
 merger tree formats.  Once loaded, the
 :func:`~ytree.data_structures.arbor.Arbor.save_arbor` and
 :func:`~ytree.data_structures.tree_node.TreeNode.save_tree` functions can be
@@ -15,14 +15,16 @@ used to save the entire arbor or individual trees.
 .. autosummary::
    :toctree: generated/
 
-   ~ytree.data_structures.arbor.load
+   ~ytree.data_structures.load.load
    ~ytree.data_structures.arbor.Arbor
    ~ytree.data_structures.arbor.Arbor.add_alias_field
    ~ytree.data_structures.arbor.Arbor.add_analysis_field
    ~ytree.data_structures.arbor.Arbor.add_derived_field
    ~ytree.data_structures.arbor.Arbor.save_arbor
    ~ytree.data_structures.arbor.Arbor.select_halos
+   ~ytree.data_structures.tree_node.TreeNode
    ~ytree.data_structures.tree_node.TreeNode.save_tree
+   ~ytree.data_structures.tree_node_selector.TreeNodeSelector
    ~ytree.data_structures.arbor.Arbor.set_selector
    ~ytree.data_structures.tree_node_selector.TreeNodeSelector
    ~ytree.data_structures.tree_node_selector.add_tree_node_selector
@@ -56,8 +58,6 @@ Internal Classes
    ~ytree.data_structures.io.DefaultRootFieldIO
    ~ytree.data_structures.io.DataFile
    ~ytree.data_structures.io.CatalogDataFile
-   ~ytree.data_structures.tree_node.TreeNode
-   ~ytree.data_structures.tree_node_selector.TreeNodeSelector
    ~ytree.frontends.ahf.arbor.AHFArbor
    ~ytree.frontends.ahf.fields.AHFFieldInfo
    ~ytree.frontends.ahf.io.AHFDataFile
@@ -68,6 +68,11 @@ Internal Classes
    ~ytree.frontends.consistent_trees.io.ConsistentTreesDataFile
    ~ytree.frontends.consistent_trees.io.ConsistentTreesTreeFieldIO
    ~ytree.frontends.consistent_trees.io.ConsistentTreesHlistDataFile
+   ~ytree.frontends.consistent_trees_hdf5.arbor.ConsistentTreesHDF5Arbor
+   ~ytree.frontends.consistent_trees_hdf5.fields.ConsistentTreesHDF5FieldInfo
+   ~ytree.frontends.consistent_trees_hdf5.io.ConsistentTreesHDF5DataFile
+   ~ytree.frontends.consistent_trees_hdf5.io.ConsistentTreesHDF5TreeFieldIO
+   ~ytree.frontends.consistent_trees_hdf5.io.ConsistentTreesHDF5RootFieldIO
    ~ytree.frontends.lhalotree.arbor.LHaloTreeArbor
    ~ytree.frontends.lhalotree.fields.LHaloTreeFieldInfo
    ~ytree.frontends.lhalotree.io.LHaloTreeTreeFieldIO
