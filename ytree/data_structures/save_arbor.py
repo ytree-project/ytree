@@ -15,7 +15,6 @@ from yt.funcs import \
 from yt.frontends.ytdata.utilities import \
     save_as_dataset
 from ytree.utilities.logger import \
-    fake_pbar, \
     ytreeLogger as mylog
 
 #-----------------------------------------------------------------------------
@@ -78,7 +77,7 @@ def determine_save_state(arbor, filename, fields, trees):
     if fields not in [None, "all"]:
         return False, filename
 
-    if trees is not None and len(tree) != arbor.size:
+    if trees is not None and len(trees) != arbor.size:
         return False, filename
 
     return True, arbor.parameter_filename

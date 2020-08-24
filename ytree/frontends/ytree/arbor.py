@@ -16,6 +16,7 @@ YTreeArbor class and member functions
 import h5py
 import json
 import numpy as np
+import os
 
 from unyt.unit_registry import \
     UnitRegistry
@@ -77,7 +78,8 @@ class YTreeArbor(Arbor):
     def _parse_parameter_file(self):
         self._prefix = \
           self.filename[:self.filename.rfind(self._suffix)]
-        fh = h5py.File(self.filename, "r")
+
+        fh = h5py.File(self.filename, mode="r")
         for attr in ["hubble_constant",
                      "omega_matter",
                      "omega_lambda"]:
@@ -90,9 +92,23 @@ class YTreeArbor(Arbor):
             fh, "box_size", unit_registry=self.unit_registry)
         self.field_info.update(
             json.loads(parse_h5_attr(fh, "field_info")))
-        self.field_list = list(self.field_info.keys())
         self._size = fh.attrs["total_trees"]
         fh.close()
+
+        # analysis fields in sidecar files
+        analysis_filename = f"{self._prefix}-analysis{self._suffix}"
+        if os.path.exists(analysis_filename):
+            self.analysis_filename = analysis_filename
+            fh = h5py.File(analysis_filename, mode="r")
+            analysis_fi = json.loads(parse_h5_attr(fh, "field_info"))
+            fh.close()
+            for field in analysis_fi:
+                analysis_fi[field]["type"] = "analysis_saved"
+            self.field_info.update(analysis_fi)
+        else:
+            self.analysis_filename = None
+
+        self.field_list = list(self.field_info.keys())
 
     def _plant_trees(self):
         if self.is_planted:
@@ -105,9 +121,13 @@ class YTreeArbor(Arbor):
         fh.close()
 
         self._node_info['_ai'][:] = np.arange(self.size)
-        self._node_io.data_files = \
-          [YTreeDataFile("%s_%04d%s" % (self._prefix, i, self._suffix))
+        self.data_files = \
+          [YTreeDataFile(f"{self._prefix}_{i:04d}{self._suffix}")
            for i in range(self._node_io._si.size)]
+        if self.analysis_filename is not None:
+            for i, df in enumerate(self.data_files):
+                df.analysis_filename = \
+                  f"{self._prefix}-analysis_{i:04d}{self._suffix}"
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
