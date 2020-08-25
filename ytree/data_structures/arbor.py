@@ -820,6 +820,7 @@ class Arbor(metaclass=RegisteredArbor):
 
         self.analysis_field_list.append(name)
         self.field_info[name] = {"type": "analysis",
+                                 "default": default,
                                  "dtype": dtype,
                                  "units": units}
         self._field_data[name] = \

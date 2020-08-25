@@ -172,7 +172,8 @@ class TreeFieldIO(FieldIO):
         fi = self.arbor.field_info[name]
         units = fi.get('units', '')
         dtype = fi.get('dtype', self.default_dtype)
-        data = np.zeros(storage_object.tree_size, dtype=dtype)
+        value = fi.get('default', 0)
+        data = np.full(storage_object.tree_size, value, dtype=dtype)
         if units:
             data = self.arbor.arr(data, units)
         storage_object._field_data[name] = data
