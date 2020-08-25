@@ -120,7 +120,13 @@ def determine_field_list(arbor, fields, update):
     if fields in [None, "all"]:
         # If this is an update, don't resave disk fields.
         field_list = arbor.analysis_field_list.copy()
-        if not update:
+
+        # Add in previously saved analysis fields
+        if update:
+            field_list.extend(
+                [field for field in arbor.field_list
+                 if arbor.field_info[field].get("type") == "analysis_saved"])
+        else:
             field_list.extend(arbor.field_list)
 
         # If a field has an alias, get that instead.
@@ -218,7 +224,7 @@ def save_data_file(arbor, filename, fields, tree_group,
     for field, fieldname in zip(fields, fieldnames):
         fi = arbor.field_info[field]
 
-        if fi.get("type") == "analysis":
+        if fi.get("type") in ["analysis", "analysis_saved"]:
             my_fdata  = analysis_fdata
             my_ftypes = analysis_ftypes
         else:
@@ -283,7 +289,7 @@ def save_header_file(arbor, filename, fields, root_field_data,
     for field, fieldname in zip(fields, fieldnames):
         fi = arbor.field_info[field]
 
-        if fi.get("type") == "analysis":
+        if fi.get("type") in ["analysis", "analysis_saved"]:
             my_fi     = analysis_fi
             my_rdata  = analysis_rdata
             my_rtypes = analysis_rtypes
