@@ -62,7 +62,7 @@ class YTreeArbor(Arbor):
 
         dfi = np.digitize(ai, self._node_io._ei)
         udfi = np.unique(dfi)
-        data_files = [self._node_io.data_files[i] for i in udfi]
+        data_files = [self.data_files[i] for i in udfi]
         index_list = [io_order[dfi == i] for i in udfi]
 
         return data_files, index_list, return_order
