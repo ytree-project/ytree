@@ -170,7 +170,7 @@ def save_data_files(arbor, filename, fields, trees,
         group_nnodes.append(cg_nnodes)
         group_ntrees.append(cg_ntrees)
 
-        total_guess = int(np.round(arbor.size * cg_number /
+        total_guess = int(np.round(trees.size * cg_number /
                                    sum(group_ntrees)))
         save_data_file(
             arbor, filename, fields,
