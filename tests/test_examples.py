@@ -83,7 +83,7 @@ class ExampleTest(TempDirTest):
         for tree in my_trees:
             get_significance(tree)
 
-        fn = a.save_arbor('sig_tree', trees=my_trees)
+        fn = a.save_arbor(filename='sig_tree', trees=my_trees)
         a2 = ytree.load(fn)
         a2.set_selector('max_field_value', 'significance')
         prog = a2[0]['prog']
