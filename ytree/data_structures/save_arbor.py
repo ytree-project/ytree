@@ -258,7 +258,7 @@ def save_data_file(arbor, filename, fields, tree_group,
                         field_types=main_ftypes)
 
     if analysis_fdata:
-        my_filename = f"{filename}-analysis_{current_iteration-1:04d}.h5"
+        my_filename = f"{filename}_{current_iteration-1:04d}-analysis.h5"
         save_as_dataset({}, my_filename, analysis_fdata,
                         field_types=analysis_ftypes)
 

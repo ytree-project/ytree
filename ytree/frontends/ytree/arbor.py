@@ -127,7 +127,7 @@ class YTreeArbor(Arbor):
         if self.analysis_filename is not None:
             for i, df in enumerate(self.data_files):
                 df.analysis_filename = \
-                  f"{self._prefix}-analysis_{i:04d}{self._suffix}"
+                  f"{self._prefix}_{i:04d}-analysis{self._suffix}"
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
