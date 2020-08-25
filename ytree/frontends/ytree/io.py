@@ -35,8 +35,10 @@ class YTreeDataFile(DataFile):
 
     def close(self):
         self.fh.close()
+        self.fh = None
         if hasattr(self, "analysis_filename"):
             self.analysis_fh.close()
+            self.analysis_fh = None
 
 class YTreeTreeFieldIO(TreeFieldIO):
     def _read_fields(self, root_node, fields, dtypes=None, root_only=False):
