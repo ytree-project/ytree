@@ -27,8 +27,10 @@ follows:
 
 5. Issue pull request.
 
-The yt Developer Guide and `github <https://github.com/>`__ documentation
-will help with the mechanics of git and pull requests.
+The `yt Developer Guide
+<https://yt-project.org/docs/dev/developing/index.html>`__ and
+`github <https://github.com/>`__ documentation will help with the
+mechanics of git and pull requests.
 
 Testing
 -------

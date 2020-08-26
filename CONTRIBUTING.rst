@@ -18,7 +18,9 @@ to ytree, such as testing and adding support for new file formats, see
 the `ytree Developer Guide
 <http://ytree.readthedocs.io/en/latest/Developing.html>`__.
 
-If you'd like to know more, contact Britton Smith (brittonsmith@gmail.com).
+If you'd like to know more, contact Britton Smith (brittonsmith@gmail.com)
+or come by the #ytree channel on the `yt project Slack
+<https://yt-project.org/slack.html>`__.
 
 You can also find help on the `yt developers list
 <http://lists.spacepope.org/listinfo.cgi/yt-users-spacepope.org>`_.
