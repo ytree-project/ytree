@@ -212,7 +212,7 @@ class TreeNode:
             root = self
             tree_id = 0
             # if root, set the value in the arbor field storage
-            self.arbor._field_data[key][self._arbor_index] = value
+            self.arbor[key][self._arbor_index] = value
         else:
             root = self.root
             tree_id = self.tree_id
