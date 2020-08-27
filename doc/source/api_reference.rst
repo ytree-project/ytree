@@ -47,6 +47,12 @@ Functionality for plotting merger trees.
 Internal Classes
 ----------------
 
+Base Classes
+############
+
+All frontends inherit from these base classes for arbor, fields,
+and i/o.
+
 .. autosummary::
    :toctree: generated/
 
@@ -60,32 +66,68 @@ Internal Classes
    ~ytree.data_structures.io.DefaultRootFieldIO
    ~ytree.data_structures.io.DataFile
    ~ytree.data_structures.io.CatalogDataFile
+
+Arbor Subclasses
+################
+
+Arbor subclasses for each frontend.
+
+.. autosummary::
+   :toctree: generated/
+
    ~ytree.frontends.ahf.arbor.AHFArbor
-   ~ytree.frontends.ahf.fields.AHFFieldInfo
-   ~ytree.frontends.ahf.io.AHFDataFile
    ~ytree.frontends.consistent_trees.arbor.ConsistentTreesArbor
    ~ytree.frontends.consistent_trees.arbor.ConsistentTreesGroupArbor
    ~ytree.frontends.consistent_trees.arbor.ConsistentTreesHlistArbor
-   ~ytree.frontends.consistent_trees.fields.ConsistentTreesFieldInfo
-   ~ytree.frontends.consistent_trees.io.ConsistentTreesDataFile
-   ~ytree.frontends.consistent_trees.io.ConsistentTreesTreeFieldIO
-   ~ytree.frontends.consistent_trees.io.ConsistentTreesHlistDataFile
    ~ytree.frontends.consistent_trees_hdf5.arbor.ConsistentTreesHDF5Arbor
+   ~ytree.frontends.lhalotree.arbor.LHaloTreeArbor
+   ~ytree.frontends.rockstar.arbor.RockstarArbor
+   ~ytree.frontends.treefarm.arbor.TreeFarmArbor
+   ~ytree.frontends.ytree.arbor.YTreeArbor
+
+FieldInfo Subclasses
+####################
+
+Subclasses for frontend-specific field definitions.
+
+.. autosummary::
+   :toctree: generated/
+
+   ~ytree.frontends.ahf.fields.AHFFieldInfo
+   ~ytree.frontends.consistent_trees.fields.ConsistentTreesFieldInfo
    ~ytree.frontends.consistent_trees_hdf5.fields.ConsistentTreesHDF5FieldInfo
-   ~ytree.frontends.consistent_trees_hdf5.io.ConsistentTreesHDF5DataFile
+   ~ytree.frontends.lhalotree.fields.LHaloTreeFieldInfo
+   ~ytree.frontends.rockstar.fields.RockstarFieldInfo
+   ~ytree.frontends.treefarm.fields.TreeFarmFieldInfo
+
+FieldIO Subclasses
+##################
+
+Subclasses for data i/o from a whole dataset.
+
+.. autosummary::
+   :toctree: generated/
+
+   ~ytree.frontends.ahf.io.AHFDataFile
+   ~ytree.frontends.consistent_trees.io.ConsistentTreesTreeFieldIO
    ~ytree.frontends.consistent_trees_hdf5.io.ConsistentTreesHDF5TreeFieldIO
    ~ytree.frontends.consistent_trees_hdf5.io.ConsistentTreesHDF5RootFieldIO
-   ~ytree.frontends.lhalotree.arbor.LHaloTreeArbor
-   ~ytree.frontends.lhalotree.fields.LHaloTreeFieldInfo
    ~ytree.frontends.lhalotree.io.LHaloTreeTreeFieldIO
    ~ytree.frontends.lhalotree.io.LHaloTreeRootFieldIO
-   ~ytree.frontends.rockstar.arbor.RockstarArbor
-   ~ytree.frontends.rockstar.fields.RockstarFieldInfo
-   ~ytree.frontends.rockstar.io.RockstarDataFile
-   ~ytree.frontends.treefarm.arbor.TreeFarmArbor
-   ~ytree.frontends.treefarm.fields.TreeFarmFieldInfo
-   ~ytree.frontends.treefarm.io.TreeFarmDataFile
-   ~ytree.frontends.ytree.arbor.YTreeArbor
-   ~ytree.frontends.ytree.io.YTreeDataFile
    ~ytree.frontends.ytree.io.YTreeTreeFieldIO
    ~ytree.frontends.ytree.io.YTreeRootFieldIO
+
+DataFile Subclasses
+###################
+
+Subclasses for data i/o from individual files.
+
+.. autosummary::
+   :toctree: generated/
+
+   ~ytree.frontends.consistent_trees.io.ConsistentTreesDataFile
+   ~ytree.frontends.consistent_trees.io.ConsistentTreesHlistDataFile
+   ~ytree.frontends.consistent_trees_hdf5.io.ConsistentTreesHDF5DataFile
+   ~ytree.frontends.rockstar.io.RockstarDataFile
+   ~ytree.frontends.treefarm.io.TreeFarmDataFile
+   ~ytree.frontends.ytree.io.YTreeDataFile
