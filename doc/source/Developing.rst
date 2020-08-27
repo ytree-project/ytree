@@ -27,8 +27,10 @@ follows:
 
 5. Issue pull request.
 
-The yt Developer Guide and `github <https://github.com/>`__ documentation
-will help with the mechanics of git and pull requests.
+The `yt Developer Guide
+<https://yt-project.org/docs/dev/developing/index.html>`__ and
+`github <https://github.com/>`__ documentation will help with the
+mechanics of git and pull requests.
 
 Testing
 -------
@@ -108,24 +110,60 @@ Where do the files go?
 
 As in yt, the code specific to one file format is referred to as a
 "frontend".  Within the ``ytree`` source, each frontend is located in
-its own directory within ``ytree/arbor/frontends``.  Name your
+its own directory within ``ytree/frontends``.  Name your
 directory using lowercase and underscores and put it in there.
 
 To allow your frontend to be directly importable at run-time, add
-the name to the ``_frontends`` list in ``ytree/arbor/frontends/api.py``.
+the name to the ``_frontends`` list in ``ytree/frontends/api.py``.
 
 Building Your Frontend
 ^^^^^^^^^^^^^^^^^^^^^^
 
+A very good way to build a new frontend is to start with an
+existing frontend for a similar type of dataset. To see the variety
+of examples, consult the :ref:`internal-classes` section of the
+:ref:`api-reference`.
+
 To build a new frontend, you will need to make frontend-specific
-subclasses for a few components.  The easiest way to do this is
-to start with a blank ``Arbor`` subclass first.  Create a sample
-script that loads your data with :func:`~ytree.data_structures.load`, prints
-the number of trees, and queries some fields.  Within the base classes,
-the necessary functions will raise a ``NotImplementedError`` if you
-have not added them yet.  Keep running your script and implementing
-the function raising this error and before you know it, you'll be
-done.
+subclasses for a few components. A straightforward way to do this
+is to start with the script below, loading your data with it. Each
+line will run correctly after a distinct phase of the implementation
+is completed. As you progress, the next function needing implemented
+will raise a ``NotImplementedError`` exception, indicating what
+should be done next.
+
+.. code-block:: python
+
+   import ytree
+
+   # Arbor subclass with working _is_valid function
+   a = ytree.load(<your data>)
+
+   # Recognizing the available fields
+   print (a.field_list)
+
+   # Calculate the number of trees in the dataset
+   print (a.size)
+
+   # Create root TreeNode objects
+   my_tree = a[0]
+   print (my_tree)
+
+   # Query fields for individual trees
+   print (my_tree['mass'])
+
+   # Query fields for a whole tree
+   print (my_tree['tree', 'mass'])
+
+   # Create TreeNodes for whole tree
+   for node in my_tree['tree']:
+       print (node)
+
+   # Query fields for all root nodes
+   print (a['mass'])
+
+   # Putting it all together
+   a.save_arbor()
 
 The components and the files in which they belong are:
 
@@ -145,6 +183,16 @@ consistent-trees ``__init__.py`` looks like this:
    from ytree.frontends.consistent_trees.arbor import \
        ConsistentTreesArbor
 
+The ``_is_valid`` Function
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Within every :class:`~ytree.data_structures.arbor.Arbor` subclass should
+appear a method called ``_is_valid``.  This function is used by
+:func:`~ytree.data_structures.load` to determine if the provide file is
+the correct type.  This function can examine the file's naming convention
+and/or open it and inspect its contents, whatever is required to uniquely
+identify your frontend. Have a look at the various examples.
+
 Two Types of Arbors
 ^^^^^^^^^^^^^^^^^^^
 
@@ -152,7 +200,8 @@ There are generally two types of merger-tree data that ``ytree``
 ingests:
 
 1. all merger-tree data (full trees, halos, etc.) contained within
-a single file.  An example of this is the ``consistent-trees`` frontend.
+a single file. These include the ``consistent-trees``,
+``consistent-trees-hdf5``, ``lhalotree``, and ``ytree`` frontends.
 
 2. halos in files grouped by redshift (halo catalogs) that contain
 the halo id for the descendent halo which lives in the next catalog.
@@ -162,16 +211,6 @@ Depending on your case, different base classes should be subclassed.
 This is discussed below. There are also hybrid formats that use
 both merger-tree and halo catalog files together. An example of this
 is the ``ahf`` (Amiga Halo Finder) frontend.
-
-The ``_is_valid`` Function
-##########################
-
-Within every ``Arbor`` subclass should appear a function called
-``_is_valid``.  This function is used by :func:`~ytree.data_structures.load`
-to determine if the provide file is the correct type.  This function
-can examine the file's naming convention and/or open it and inspect
-its contents, whatever is required to uniquely identify your frontend.
-Have a look at the various examples.
 
 Merger-Tree Data in One File (or a few)
 #######################################
@@ -186,19 +225,24 @@ functions, ``_parse_parameter_file`` and ``_plant_trees``.
 dataset is loaded.  It is responsible for determining things like
 box size, cosmological parameters, and the list of fields.
 
-``_plant_trees``: This function is responsible for constructing the
-array containing the roots of all trees in the ``Arbor``.  This
-should not fully build the trees, but just create
-:class:`~ytree.data_structures.tree_node.TreeNode` instances for each root
-and put them in the array.
+``_plant_trees``: This function is responsible for creating arrays
+of the data required to build all the root
+:class:`~ytree.data_structures.tree_node.TreeNode` objects in the
+:class:`~ytree.data_structures.arbor.Arbor`. The names of these
+attributes are declared in the ``_node_io_attrs`` attribute. For
+example, the
+:class:`~ytree.frontends.consistent_trees_hdf5.arbor.ConsistentTreesHDF5Arbor`
+class names three required attributes: ``_fi``, the data file number in
+which this tree lives; ``_si``, the starting index of the section in the
+data array corresponding to this tree; and ``_ei``, the ending index in
+the data array.
 
 In ``io.py``, you will implement the machinery responsible for
 reading field data from disk.  You must create a subclass of
 the :class:`~ytree.data_structures.io.TreeFieldIO` class and implement
 the ``_read_fields`` function.  This function accepts a single
 root node (a ``TreeNode`` that is the root of a tree) and a list
-of fields and should return a dictionary with NumPy arrays for
-each field.
+of fields and should return a dictionary of NumPy arrays for each field.
 
 Halo Catalog-style Data
 #######################

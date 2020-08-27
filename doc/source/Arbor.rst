@@ -50,11 +50,10 @@ aliases.  For more information on fields in ``ytree``, see :ref:`fields`.
 How many trees are there?
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As soon as any information about the collection of trees within the loaded
-dataset is requested, an array will be constructed containing objects
-representing the root of each tree, i.e., the last descendent halo.  This
-structure is accessed by querying the loaded ``Arbor`` directly.  It can
-also be accessed as ``a.trees``.
+The total number of trees in the arbor can be found using the ``size``
+attribute. As soon as any information about the collection of trees within the
+loaded dataset is requested, arrays will be created containing the metadata
+required for generating the root nodes of every tree.
 
 .. code-block:: python
 
@@ -68,7 +67,6 @@ Root Fields
 Field data for all tree roots is accessed by querying the ``Arbor`` in a
 dictionary-like manner.
 
-
 .. code-block:: python
 
    >>> print (a["mass"])
@@ -76,9 +74,8 @@ dictionary-like manner.
    [  6.57410072e+14   5.28489209e+14   5.18129496e+14   4.88920863e+14, ...,
       8.68489209e+11   8.68489209e+11   8.68489209e+11] Msun
 
-``ytree`` uses `yt's system for symbolic units
-<http://yt-project.org/docs/dev/analyzing/units/index.html>`__, allowing for simple
-unit conversion.
+``ytree`` uses the `unyt <https://unyt.readthedocs.io/>`__ package for symbolic units
+on NumPy arrays.
 
 .. code-block:: python
 

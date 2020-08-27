@@ -57,7 +57,7 @@ _access_names = {
 
 class ConsistentTreesHDF5Arbor(Arbor):
     """
-    Arbors loaded from consistent-trees tree_*.dat files.
+    Arbors loaded from consistent-trees data converted into HDF5.
     """
 
     _parameter_file_is_data_file = True
