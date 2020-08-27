@@ -142,7 +142,7 @@ should be done next.
    # Recognizing the available fields
    print (a.field_list)
 
-   # Calculate number of trees in the dataset
+   # Calculate the number of trees in the dataset
    print (a.size)
 
    # Create root TreeNode objects
@@ -152,7 +152,7 @@ should be done next.
    # Query fields for individual trees
    print (my_tree['mass'])
 
-   # Query fields for a while tree
+   # Query fields for a whole tree
    print (my_tree['tree', 'mass'])
 
    # Create TreeNodes for whole tree
