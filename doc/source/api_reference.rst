@@ -42,6 +42,8 @@ Functionality for plotting merger trees.
    ~ytree.visualization.tree_plot.TreePlot
    ~ytree.visualization.tree_plot.TreePlot.save
 
+.. _internal-classes:
+
 Internal Classes
 ----------------
 
