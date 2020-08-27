@@ -74,9 +74,8 @@ dictionary-like manner.
    [  6.57410072e+14   5.28489209e+14   5.18129496e+14   4.88920863e+14, ...,
       8.68489209e+11   8.68489209e+11   8.68489209e+11] Msun
 
-``ytree`` uses `yt's system for symbolic units
-<http://yt-project.org/docs/dev/analyzing/units/index.html>`__, allowing for simple
-unit conversion.
+``ytree`` uses the `unyt <https://unyt.readthedocs.io/>`__ package for symbolic units
+on NumPy arrays.
 
 .. code-block:: python
 
