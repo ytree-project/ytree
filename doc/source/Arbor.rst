@@ -50,11 +50,10 @@ aliases.  For more information on fields in ``ytree``, see :ref:`fields`.
 How many trees are there?
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As soon as any information about the collection of trees within the loaded
-dataset is requested, an array will be constructed containing objects
-representing the root of each tree, i.e., the last descendent halo.  This
-structure is accessed by querying the loaded ``Arbor`` directly.  It can
-also be accessed as ``a.trees``.
+The total number of trees in the arbor can be found using the ``size``
+attribute. As soon as any information about the collection of trees within the
+loaded dataset is requested, arrays will be created containing the metadata
+required for generating the root nodes of every tree.
 
 .. code-block:: python
 
@@ -67,7 +66,6 @@ Root Fields
 
 Field data for all tree roots is accessed by querying the ``Arbor`` in a
 dictionary-like manner.
-
 
 .. code-block:: python
 
