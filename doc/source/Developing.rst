@@ -183,6 +183,16 @@ consistent-trees ``__init__.py`` looks like this:
    from ytree.frontends.consistent_trees.arbor import \
        ConsistentTreesArbor
 
+The ``_is_valid`` Function
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Within every :class:`~ytree.data_structures.arbor.Arbor` subclass should
+appear a method called ``_is_valid``.  This function is used by
+:func:`~ytree.data_structures.load` to determine if the provide file is
+the correct type.  This function can examine the file's naming convention
+and/or open it and inspect its contents, whatever is required to uniquely
+identify your frontend. Have a look at the various examples.
+
 Two Types of Arbors
 ^^^^^^^^^^^^^^^^^^^
 
@@ -201,16 +211,6 @@ Depending on your case, different base classes should be subclassed.
 This is discussed below. There are also hybrid formats that use
 both merger-tree and halo catalog files together. An example of this
 is the ``ahf`` (Amiga Halo Finder) frontend.
-
-The ``_is_valid`` Function
-##########################
-
-Within every ``Arbor`` subclass should appear a function called
-``_is_valid``.  This function is used by :func:`~ytree.data_structures.load`
-to determine if the provide file is the correct type.  This function
-can examine the file's naming convention and/or open it and inspect
-its contents, whatever is required to uniquely identify your frontend.
-Have a look at the various examples.
 
 Merger-Tree Data in One File (or a few)
 #######################################
