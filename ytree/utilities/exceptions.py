@@ -62,3 +62,9 @@ class ArborAnalysisFieldNotFound(ArborFieldException):
         return ("Analysis field \"%s\" has been removed "
                 "from arbor field storage in %s.") % \
           (self.field, self.arbor)
+
+class ArborUnsettableField(ArborFieldException):
+    def __str__(self):
+        return ("Cannot set values for field \"%s\" in %s. "
+                "Only analysis fields can be set.") % \
+          (self.field, self.arbor)

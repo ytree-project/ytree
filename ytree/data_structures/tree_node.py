@@ -18,6 +18,8 @@ import weakref
 
 from ytree.data_structures.fields import \
     FieldContainer
+from ytree.utilities.exceptions import \
+    ArborUnsettableField
 
 class TreeNode:
     """
@@ -207,6 +209,10 @@ class TreeNode:
         """
         Set analysis field value for this node.
         """
+
+        ftype = self.arbor.field_info[key].get('type')
+        if ftype not in ['analysis', 'analysis_saved']:
+            raise ArborUnsettableField(key, self.arbor)
 
         if self.is_root:
             root = self
