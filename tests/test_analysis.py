@@ -21,7 +21,8 @@ from numpy.testing import \
 import os
 
 from ytree.utilities.exceptions import \
-    ArborFieldAlreadyExists
+    ArborFieldAlreadyExists, \
+    ArborUnsettableField
 from ytree.utilities.testing import \
     requires_file, \
     TempDirTest
@@ -106,3 +107,11 @@ class AnalysisFieldTest(TempDirTest):
 
         with assert_raises(ArborFieldAlreadyExists):
             a.add_analysis_field('mass', units='g')
+
+    @requires_file(CT)
+    def test_analysis_unsettable_fields(self):
+        a = ytree.load(CT)
+
+        with assert_raises(ArborUnsettableField):
+            my_tree = a[0]
+            my_tree['mass'] = 50
