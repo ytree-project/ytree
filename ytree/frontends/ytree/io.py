@@ -29,12 +29,21 @@ class YTreeDataFile(DataFile):
         self._end_index = None
 
     def open(self):
-        self.fh = h5py.File(self.filename, "r")
+        self.fh = h5py.File(self.filename, mode="r")
+        if hasattr(self, "analysis_filename"):
+            self.analysis_fh = h5py.File(self.analysis_filename, mode="r")
+
+    def close(self):
+        self.fh.close()
+        self.fh = None
+        if hasattr(self, "analysis_filename"):
+            self.analysis_fh.close()
+            self.analysis_fh = None
 
 class YTreeTreeFieldIO(TreeFieldIO):
     def _read_fields(self, root_node, fields, dtypes=None, root_only=False):
         dfi = np.digitize(root_node._ai, self._ei)
-        data_file = self.data_files[dfi]
+        data_file = self.arbor.data_files[dfi]
 
         if dtypes is None:
             dtypes = {}
@@ -59,14 +68,21 @@ class YTreeTreeFieldIO(TreeFieldIO):
         fi = self.arbor.field_info
         for field in fields:
             if field not in data_file._field_cache:
-                fdata = data_file.fh["data/%s" % field][()]
+                if fi[field].get("type") == "analysis_saved":
+                    fh = data_file.analysis_fh
+                else:
+                    fh = data_file.fh
+                fdata = fh["data/%s" % field][()]
+
                 dtype = dtypes.get(field)
                 if dtype is not None:
                     fdata = fdata.astype(dtype)
+
                 units = fi[field].get("units", "")
                 if units != "":
                     fdata = self.arbor.arr(fdata, units)
                 data_file._field_cache[field] = fdata
+
             field_data[field] = \
               data_file._field_cache[field][
                   data_file._start_index[ii]:data_file._end_index[ii]]
@@ -81,11 +97,18 @@ class YTreeRootFieldIO(DefaultRootFieldIO):
         if dtypes is None:
             dtypes = {}
 
-        fh = h5py.File(self.arbor.filename, "r")
+        fh = h5py.File(self.arbor.filename, mode="r")
+        if self.arbor.analysis_filename is not None:
+            analysis_fh = h5py.File(self.arbor.analysis_filename, mode="r")
+
         field_data = {}
         fi = self.arbor.field_info
         for field in fields:
-            data = fh["data/%s" % field][()]
+            if fi[field].get("type") == "analysis_saved":
+                my_fh = analysis_fh
+            else:
+                my_fh = fh
+            data = my_fh["data/%s" % field][()]
             dtype = dtypes.get(field)
             if dtype is not None:
                 data = data.astype(dtype)
@@ -93,6 +116,9 @@ class YTreeRootFieldIO(DefaultRootFieldIO):
             if units != "":
                 data = self.arbor.arr(data, units)
             field_data[field] = data
+
         fh.close()
+        if self.arbor.analysis_filename is not None:
+            analysis_fh.close()
 
         return field_data

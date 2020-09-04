@@ -188,7 +188,7 @@ The ``_is_valid`` Function
 
 Within every :class:`~ytree.data_structures.arbor.Arbor` subclass should
 appear a method called ``_is_valid``.  This function is used by
-:func:`~ytree.data_structures.load` to determine if the provide file is
+:func:`~ytree.data_structures.load` to determine if the provided file is
 the correct type.  This function can examine the file's naming convention
 and/or open it and inspect its contents, whatever is required to uniquely
 identify your frontend. Have a look at the various examples.

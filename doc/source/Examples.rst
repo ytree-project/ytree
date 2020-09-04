@@ -88,7 +88,7 @@ significance field.
    >>> my_trees = a[:]
    >>> for tree in my_trees:
            get_significance(tree)
-   >>> a.save_arbor('sig_tree', trees=my_trees)
+   >>> a.save_arbor(filename='sig_tree', trees=my_trees)
 
 Finally, we can load the new data set and use the significance
 field to select the main progenitors.

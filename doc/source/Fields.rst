@@ -158,7 +158,7 @@ initialized to zero.
    [ 0.33919263  0.79557815  0.38264336  0.53073945  0.09634924  0.6035886, ...
      0.9506636   0.9094426   0.85436984  0.66779632  0.58816873] m**2
 
-Analysis fields will be automatically saved when the
+Analysis fields will be saved when the
 :class:`~ytree.data_structures.tree_node.TreeNode` objects that have been
 analyzed are saved with :func:`~ytree.data_structures.arbor.Arbor.save_arbor`
 or :func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.
@@ -166,5 +166,21 @@ or :func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.
 .. code-block:: python
 
    >>> my_trees = a[:] # all trees
-   >>> # do analysis...
+   >>> for my_tree in my_trees:
+   ...     # do analysis...
    >>> a.save_arbor(trees=my_trees)
+
+.. note:: Trees with altered analysis fields must be provided explicitly to
+   :func:`~ytree.data_structures.arbor.Arbor.save_arbor` in order for fields
+   to be saved properly.
+
+Re-saving Analysis Fields
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+All analysis fields are saved to sidecar files with the "-analysis" keyword
+appended to them. They can be altered and the arbor re-saved as many times
+as you like. In the very specific case of re-saving all trees and not
+providing a new filename or custom list of fields (as in the example above),
+analysis fields will be saved in place (i.e., over-writing the "-analysis"
+files). The conventional on-disk fields will not be re-saved as they cannot
+be altered.

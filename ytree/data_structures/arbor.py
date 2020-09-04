@@ -783,7 +783,7 @@ class Arbor(metaclass=RegisteredArbor):
         pbar.finish()
         return np.array(halos)
 
-    def add_analysis_field(self, name, units, dtype=None):
+    def add_analysis_field(self, name, units, dtype=None, default=0):
         r"""
         Add an empty field to be filled by analysis operations.
 
@@ -797,6 +797,9 @@ class Arbor(metaclass=RegisteredArbor):
             Data type for field values. If None, the default data type
             of the arbor is used.
             Default: None.
+        default: optional, numeric
+            Default field value when field is initialized.
+            Default: 0.
 
         Examples
         --------
@@ -805,7 +808,8 @@ class Arbor(metaclass=RegisteredArbor):
         >>> a = ytree.load("tree_0_0_0.dat")
         >>> a.add_analysis_field("robots", "Msun * kpc")
         >>> # Set field for some halo.
-        >>> a[0]["tree"][7]["robots"] = 1979.816
+        >>> my_tree = a[0]
+        >>> my_tree["tree"][7]["robots"] = 1979.816
         """
 
         if name in self.field_info:
@@ -816,10 +820,11 @@ class Arbor(metaclass=RegisteredArbor):
 
         self.analysis_field_list.append(name)
         self.field_info[name] = {"type": "analysis",
+                                 "default": default,
                                  "dtype": dtype,
                                  "units": units}
         self._field_data[name] = \
-          self.arr(np.zeros(self.size, dtype=dtype), units)
+          self.arr(np.full(self.size, default, dtype=dtype), units)
 
     def add_alias_field(self, alias, field, units=None,
                         force_add=True):
@@ -988,8 +993,7 @@ Check the TypeError exception above for more details.
         """
         return False
 
-    def save_arbor(self, filename="arbor", fields=None, trees=None,
-                   max_file_size=524288):
+    def save_arbor(self, **kwargs):
         r"""
         Save the arbor to a file.
 
@@ -1030,9 +1034,7 @@ Check the TypeError exception above for more details.
 
         """
 
-        fn = save_arbor(self, filename=filename,
-                        fields=fields, trees=trees,
-                        max_file_size=max_file_size)
+        fn = save_arbor(self, **kwargs)
         return fn
 
 class CatalogArbor(Arbor):

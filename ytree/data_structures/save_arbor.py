@@ -14,6 +14,8 @@ from yt.funcs import \
     ensure_dir
 from yt.frontends.ytdata.utilities import \
     save_as_dataset
+from ytree.utilities.logger import \
+    ytreeLogger as mylog
 
 #-----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
@@ -23,7 +25,7 @@ from yt.frontends.ytdata.utilities import \
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-def save_arbor(arbor, filename="arbor", fields=None, trees=None,
+def save_arbor(arbor, filename=None, fields=None, trees=None,
                max_file_size=524288):
     """
     Save the arbor to a file.
@@ -32,8 +34,19 @@ def save_arbor(arbor, filename="arbor", fields=None, trees=None,
     """
 
     arbor._plant_trees()
+    update, filename = determine_save_state(
+        arbor, filename, fields, trees)
     filename = determine_output_filename(filename, ".h5")
-    fields = determine_field_list(arbor, fields)
+    fields = determine_field_list(arbor, fields, update)
+
+    if not fields:
+        mylog.warn(
+            "No action will be taken for the following reasons:\n"
+            " - This dataset is already a YTreeArbor.\n"
+            " - No filename has been given.\n"
+            " - No new analysis fields have been created.\n"
+            " - No custom list of trees has been provided.")
+        return None
 
     group_nnodes, group_ntrees, root_field_data = \
       save_data_files(arbor, filename, fields, trees,
@@ -44,6 +57,30 @@ def save_arbor(arbor, filename="arbor", fields=None, trees=None,
         group_nnodes, group_ntrees)
 
     return header_filename
+
+def determine_save_state(arbor, filename, fields, trees):
+    """
+    Determine if we can just output new analysis fields to
+    sidecar files and skip saving the rest.
+
+    If updating return filenames associated with currently loaded arbor.
+    """
+
+    from ytree.frontends.ytree.arbor import YTreeArbor
+
+    if not isinstance(arbor, YTreeArbor):
+        return False, filename
+
+    if filename is not None:
+        return False, filename
+
+    if fields not in [None, "all"]:
+        return False, filename
+
+    if trees is not None and len(trees) != arbor.size:
+        return False, filename
+
+    return True, arbor.parameter_filename
 
 def determine_tree_list(arbor, trees):
     """
@@ -62,6 +99,9 @@ def determine_output_filename(path, suffix):
     Figure out the output filename.
     """
 
+    if path is None:
+        path = 'arbor'
+
     if path.endswith(suffix):
         dirname = os.path.dirname(path)
         filename = path[:-len(suffix)]
@@ -72,23 +112,34 @@ def determine_output_filename(path, suffix):
     ensure_dir(dirname)
     return filename
 
-def determine_field_list(arbor, fields):
+def determine_field_list(arbor, fields, update):
     """
     Get the list of fields to be saved.
     """
 
     if fields in [None, "all"]:
+        # If this is an update, don't resave disk fields.
+        field_list = arbor.analysis_field_list.copy()
+
+        # Add in previously saved analysis fields
+        if update:
+            field_list.extend(
+                [field for field in arbor.field_list
+                 if arbor.field_info[field].get("type") == "analysis_saved"])
+        else:
+            field_list.extend(arbor.field_list)
+
         # If a field has an alias, get that instead.
         fields = []
-        for field in arbor.field_list + arbor.analysis_field_list:
+        for field in field_list:
             fields.extend(
                 arbor.field_info[field].get("aliases", [field]))
+
     else:
         fields.extend([f for f in ["uid", "desc_uid"]
                        if f not in fields])
 
     return fields
-
 
 def get_output_fieldnames(fields):
     """
@@ -119,8 +170,9 @@ def save_data_files(arbor, filename, fields, trees,
         group_nnodes.append(cg_nnodes)
         group_ntrees.append(cg_ntrees)
 
-        total_guess = int(np.round(arbor.size * cg_number /
-                                   sum(group_ntrees)))
+        total_guess = \
+          int(np.round(len(list(trees)) * cg_number /
+                       sum(group_ntrees)))
         save_data_file(
             arbor, filename, fields,
             np.array(current_group), root_field_data,
@@ -155,40 +207,61 @@ def save_data_file(arbor, filename, fields, tree_group,
     """
 
     fieldnames = get_output_fieldnames(fields)
-    ftypes = dict((f, "data") for f in fieldnames)
 
     arbor._node_io_loop(
         arbor._node_io.get_fields,
         pbar="Getting fields [%d / ~%d]" % (current_iteration, total_guess),
         root_nodes=tree_group, fields=fields, root_only=False)
 
-    fdata = {}
+    main_fdata  = {}
+    main_ftypes = {}
+
+    analysis_fdata  = {}
+    analysis_ftypes = {}
+
     my_tree_size  = np.array([tree.tree_size for tree in tree_group])
     my_tree_end   = my_tree_size.cumsum()
     my_tree_start = my_tree_end - my_tree_size
     for field, fieldname in zip(fields, fieldnames):
-        fdata[fieldname] = uconcatenate(
+        fi = arbor.field_info[field]
+
+        if fi.get("type") in ["analysis", "analysis_saved"]:
+            my_fdata  = analysis_fdata
+            my_ftypes = analysis_ftypes
+        else:
+            my_fdata  = main_fdata
+            my_ftypes = main_ftypes
+
+        my_ftypes[fieldname] = "data"
+        my_fdata[fieldname]  = uconcatenate(
             [node._field_data[field] if node.is_root else node["tree", field]
              for node in tree_group])
-        root_field_data[field].append(fdata[fieldname][my_tree_start])
+        root_field_data[field].append(my_fdata[fieldname][my_tree_start])
 
     # In case we have saved any non-root trees,
     # mark them as having no descendents.
-    fdata['desc_uid'][my_tree_start] = -1
+    if "desc_uid" in main_fdata:
+        main_fdata["desc_uid"][my_tree_start] = -1
 
     for node in tree_group:
         arbor.reset_node(node)
 
-    fdata["tree_start_index"] = my_tree_start
-    fdata["tree_end_index"]   = my_tree_end
-    fdata["tree_size"]        = my_tree_size
-    for ft in ["tree_start_index",
-               "tree_end_index",
-               "tree_size"]:
-        ftypes[ft] = "index"
-    my_filename = "%s_%04d.h5" % (filename, current_iteration-1)
-    save_as_dataset({}, my_filename, fdata,
-                    field_types=ftypes)
+    if main_fdata:
+        main_fdata["tree_start_index"] = my_tree_start
+        main_fdata["tree_end_index"]   = my_tree_end
+        main_fdata["tree_size"]        = my_tree_size
+        for ft in ["tree_start_index",
+                   "tree_end_index",
+                   "tree_size"]:
+            main_ftypes[ft] = "index"
+        my_filename = f"{filename}_{current_iteration-1:04d}.h5"
+        save_as_dataset({}, my_filename, main_fdata,
+                        field_types=main_ftypes)
+
+    if analysis_fdata:
+        my_filename = f"{filename}_{current_iteration-1:04d}-analysis.h5"
+        save_as_dataset({}, my_filename, analysis_fdata,
+                        field_types=analysis_ftypes)
 
 def save_header_file(arbor, filename, fields, root_field_data,
                      group_nnodes, group_ntrees):
@@ -202,45 +275,81 @@ def save_header_file(arbor, filename, fields, root_field_data,
                  "omega_lambda"]:
         if hasattr(arbor, attr):
             ds[attr] = getattr(arbor, attr)
-    extra_attrs = {"box_size": arbor.box_size,
-                   "arbor_type": "YTreeArbor",
-                   "unit_registry_json": arbor.unit_registry.to_json()}
 
-    # write header file
-    myfi = {}
-    rdata = {}
-    rtypes = {}
+    # Data structures for disk fields.
+    main_fi     = {}
+    main_rdata  = {}
+    main_rtypes = {}
+
+    # Analysis fields saved separately.
+    analysis_fi     = {}
+    analysis_rdata  = {}
+    analysis_rtypes = {}
+
     fieldnames = get_output_fieldnames(fields)
     for field, fieldname in zip(fields, fieldnames):
         fi = arbor.field_info[field]
-        myfi[fieldname] = \
+
+        if fi.get("type") in ["analysis", "analysis_saved"]:
+            my_fi     = analysis_fi
+            my_rdata  = analysis_rdata
+            my_rtypes = analysis_rtypes
+        else:
+            my_fi     = main_fi
+            my_rdata  = main_rdata
+            my_rtypes = main_rtypes
+
+        my_fi[fieldname] = \
           dict((key, fi[key])
                for key in ["units", "description"]
                if key in fi)
-        rdata[fieldname] = uconcatenate(root_field_data[field])
-        rtypes[fieldname] = "data"
+        my_rdata[fieldname] = uconcatenate(root_field_data[field])
+        my_rtypes[fieldname] = "data"
+
     # all saved trees will be roots
-    rdata["desc_uid"][:] = -1
+    if "desc_uid" in main_rdata:
+        main_rdata["desc_uid"][:] = -1
 
-    tree_end_index   = group_ntrees.cumsum()
-    tree_start_index = tree_end_index - group_ntrees
+    # Save the primary fields.
+    header_filename = f"{filename}.h5"
+    if main_fi:
+        tree_end_index   = group_ntrees.cumsum()
+        tree_start_index = tree_end_index - group_ntrees
 
-    extra_attrs["field_info"] = json.dumps(myfi)
-    extra_attrs["total_files"] = group_nnodes.size
-    extra_attrs["total_trees"] = group_ntrees.sum()
-    extra_attrs["total_nodes"] = group_nnodes.sum()
-    hdata = {"tree_start_index": tree_start_index,
-             "tree_end_index"  : tree_end_index,
-             "tree_size"       : group_ntrees}
-    hdata.update(rdata)
-    del rdata
-    htypes = dict((f, "index") for f in hdata)
-    htypes.update(rtypes)
+        extra_attrs = {
+            "box_size": arbor.box_size,
+            "arbor_type": "YTreeArbor",
+            "unit_registry_json": arbor.unit_registry.to_json()}
+        extra_attrs["field_info"] = json.dumps(main_fi)
+        extra_attrs["total_files"] = group_nnodes.size
+        extra_attrs["total_trees"] = group_ntrees.sum()
+        extra_attrs["total_nodes"] = group_nnodes.sum()
+        hdata = {"tree_start_index": tree_start_index,
+                 "tree_end_index"  : tree_end_index,
+                 "tree_size"       : group_ntrees}
+        hdata.update(main_rdata)
+        del main_rdata
+        htypes = dict((f, "index") for f in hdata)
+        htypes.update(main_rtypes)
 
-    header_filename = "%s.h5" % filename
-    save_as_dataset(ds, header_filename, hdata,
-                    field_types=htypes,
-                    extra_attrs=extra_attrs)
-    del hdata
+        save_as_dataset(ds, header_filename, hdata,
+                        field_types=htypes,
+                        extra_attrs=extra_attrs)
+        del hdata
+
+    # Save analysis fields to a sidecar file.
+    if analysis_fi:
+        extra_attrs = {}
+        extra_attrs["field_info"] = json.dumps(analysis_fi)
+        hdata = analysis_rdata
+        del analysis_rdata
+        htypes = dict((f, "index") for f in hdata)
+        htypes.update(analysis_rtypes)
+
+        analysis_header_filename = f"{filename}-analysis.h5"
+        save_as_dataset(ds, analysis_header_filename, hdata,
+                        field_types=htypes,
+                        extra_attrs=extra_attrs)
+        del hdata
 
     return header_filename
