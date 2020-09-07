@@ -65,11 +65,9 @@ class FieldInfoContainer(dict):
 
         self.arbor.analysis_field_list.append(name)
         self[name] = {"type": "analysis",
-                                 "default": default,
-                                 "dtype": dtype,
-                                 "units": units}
-        self.arbor._field_data[name] = \
-          self.arbor.arr(np.full(self.arbor.size, default, dtype=dtype), units)
+                      "default": default,
+                      "dtype": dtype,
+                      "units": units}
 
     def add_alias_field(self, alias, field, units=None,
                         force_add=True):
