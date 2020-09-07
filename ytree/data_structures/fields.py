@@ -83,9 +83,10 @@ class FieldInfoContainer(dict):
         self.arbor.add_derived_field(
             "time", _time, units="Myr", force_add=False)
 
-    def setup_vector_fields(self):
+    def add_vector_field(self, fieldname):
         """
-        Add vector and magnitude fields.
+        Add vector and magnitude fields for a field with
+        x/y/z components.
         """
 
         def _vector_func(field, data):
@@ -100,17 +101,27 @@ class FieldInfoContainer(dict):
             return np.sqrt((data[name]**2).sum(axis=1))
 
         axes = "xyz"
+        exists = all([f"{fieldname}_{ax}" in self for ax in axes])
+        if not exists:
+            return None
+
+        units = self[f"{fieldname}_x"].get("units", None)
+        self.arbor.add_derived_field(
+            fieldname, _vector_func, vector_field=True, units=units)
+        self.arbor.add_derived_field(
+            f"{fieldname}_magnitude", _magnitude_func, units=units)
+        return fieldname
+
+    def setup_vector_fields(self):
+        """
+        Add vector and magnitude fields.
+        """
+
         added_fields = []
         for field in self.vector_fields:
-            exists = all([("%s_%s" % (field, ax)) in self for ax in axes])
-            if not exists:
+            field = self.add_vector_field(field)
+            if field is None:
                 continue
-
-            units = self["%s_x" % field].get("units", None)
-            self.arbor.add_derived_field(
-                field, _vector_func, vector_field=True, units=units)
-            self.arbor.add_derived_field(
-                "%s_magnitude" % field, _magnitude_func, units=units)
             added_fields.append(field)
 
         self.vector_fields = tuple(added_fields)

@@ -985,6 +985,9 @@ Check the TypeError exception above for more details.
         self.derived_field_list.append(name)
         self.field_info[name] = info
 
+    def add_vector_field(self, name):
+        self.field_info.add_vector_field(name)
+
     @classmethod
     def _is_valid(cls, *args, **kwargs):
         """
