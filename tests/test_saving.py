@@ -26,6 +26,14 @@ CT = "consistent_trees/tree_0_0_0.dat"
 
 class SaveArborTest(TempDirTest):
     @requires_file(CT)
+    def test_default_save(self):
+        a = ytree.load(CT)
+        fn = a.save_arbor(max_file_size=512)
+
+        a2 = ytree.load(fn)
+        assert a.size == a2.size
+
+    @requires_file(CT)
     def test_save_non_roots(self):
         a = ytree.load(CT)
 
