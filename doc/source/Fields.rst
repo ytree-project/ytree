@@ -133,6 +133,21 @@ quadrature sum of the components.
    [ 488.26936644  121.97143067  146.81450507, ...
      200.74057711  166.13782652  529.7336846 ] km/s
 
+Only specifically registered fields will be available as vector fields.
+For example, saved :ref:`analysis_fields` with x,y,z components will
+not automatically be available. However, vector fields can be created
+with the :func:`~ytree.data_structures.arbor.Arbor.add_vector_field`
+function.
+
+.. code-block:: python
+
+   >>> a.add_vector_field("thing")
+
+The above example assumes that fields named "thing_x", "thing_y",
+and "thing_z" already exist.
+
+.. _analysis_fields:
+
 Analysis Fields
 ---------------
 

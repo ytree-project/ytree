@@ -986,6 +986,31 @@ Check the TypeError exception above for more details.
         self.field_info[name] = info
 
     def add_vector_field(self, name):
+        """
+        Add vector fields for a set of x,y,z component fields.
+
+        This will add a general vector field that returns the combined
+        x, y, z components as a single Nx3 array. A <field>_magnitude
+        field with the quadrature sum of the components is also added.
+
+        Parameters
+        ----------
+        name : string
+            The name of the field. Component x,y,z fields must exist.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("tree_0_0_0.dat")
+        >>> for ax in 'xyz':
+        >>>     a.add_analysis_field(f"thing_{ax}")
+        >>> fn = a.save_arbor()
+        >>> a_new = ytree.load(fn)
+        >>> a_new.add_vector_field("thing")
+        >>> print (a_new["thing"])
+        >>> print (a_new["thing_magnitude"])
+        """
         self.field_info.add_vector_field(name)
 
     @classmethod
