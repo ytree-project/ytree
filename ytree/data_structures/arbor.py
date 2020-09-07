@@ -855,36 +855,8 @@ class Arbor(metaclass=RegisteredArbor):
 
         """
 
-        if alias in self.field_info:
-            if force_add:
-                ftype = self.field_info[alias].get("type", "on-disk")
-                if ftype in ["alias", "derived"]:
-                    fl = self.derived_field_list
-                else:
-                    fl = self.field_list
-                mylog.warn(
-                    ("Overriding field \"%s\" that already " +
-                     "exists as %s field.") % (alias, ftype))
-                fl.pop(fl.index(alias))
-            else:
-                return
-
-        if field not in self.field_info:
-            if force_add:
-                raise ArborFieldDependencyNotFound(
-                    field, alias, arbor=self)
-            else:
-                return
-
-        if units is None:
-            units = self.field_info[field].get("units")
-        self.derived_field_list.append(alias)
-        self.field_info[alias] = \
-          {"type": "alias", "units": units,
-           "dependencies": [field]}
-        if "aliases" not in self.field_info[field]:
-            self.field_info[field]["aliases"] = []
-            self.field_info[field]["aliases"].append(alias)
+        self.field_info.add_alias_field(
+            alias, field, units=units, force_add=force_add)
 
     def add_derived_field(self, name, function,
                           units=None, dtype=None, description=None,

@@ -51,6 +51,43 @@ class FieldInfoContainer(dict):
             if funits is None:
                 self[field]["units"] = units
 
+    def add_alias_field(self, alias, field, units=None,
+                        force_add=True):
+        """
+        Add an alias field.
+        """
+
+        if alias in self:
+            if force_add:
+                ftype = self[alias].get("type", "on-disk")
+                if ftype in ["alias", "derived"]:
+                    fl = self.arbor.derived_field_list
+                else:
+                    fl = self.arbor.field_list
+                mylog.warn(
+                    ("Overriding field \"%s\" that already " +
+                     "exists as %s field.") % (alias, ftype))
+                fl.pop(fl.index(alias))
+            else:
+                return
+
+        if field not in self:
+            if force_add:
+                raise ArborFieldDependencyNotFound(
+                    field, alias, arbor=self)
+            else:
+                return
+
+        if units is None:
+            units = self[field].get("units")
+        self.arbor.derived_field_list.append(alias)
+        self[alias] = \
+          {"type": "alias", "units": units,
+           "dependencies": [field]}
+        if "aliases" not in self[field]:
+            self[field]["aliases"] = []
+            self[field]["aliases"].append(alias)
+
     def setup_aliases(self):
         """
         Add aliases defined in the alias_fields tuple for each frontend.
