@@ -47,12 +47,8 @@ from ytree.data_structures.tree_node import \
     TreeNode
 from ytree.data_structures.tree_node_selector import \
     tree_node_selector_registry
-from ytree.utilities.exceptions import \
-    ArborFieldAlreadyExists, \
-    ArborFieldDependencyNotFound
 from ytree.utilities.logger import \
-    fake_pbar, \
-    ytreeLogger as mylog
+    fake_pbar
 
 arbor_registry = {}
 
