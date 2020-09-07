@@ -811,19 +811,9 @@ class Arbor(metaclass=RegisteredArbor):
         >>> my_tree["tree"][7]["robots"] = 1979.816
         """
 
-        if name in self.field_info:
-            raise ArborFieldAlreadyExists(name, arbor=self)
-
-        if dtype is None:
-            dtype = self._default_dtype
-
-        self.analysis_field_list.append(name)
-        self.field_info[name] = {"type": "analysis",
-                                 "default": default,
-                                 "dtype": dtype,
-                                 "units": units}
-        self._field_data[name] = \
-          self.arr(np.full(self.size, default, dtype=dtype), units)
+        self.field_info.add_analysis_field(
+            name, units,
+            dtype=dtype, default=default)
 
     def add_alias_field(self, alias, field, units=None,
                         force_add=True):

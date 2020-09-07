@@ -19,6 +19,7 @@ import numpy as np
 import weakref
 
 from ytree.utilities.exceptions import \
+    ArborFieldAlreadyExists, \
     ArborFieldCircularDependency, \
     ArborFieldDependencyNotFound, \
     ArborFieldNotFound
@@ -50,6 +51,25 @@ class FieldInfoContainer(dict):
             funits = self[field].get("units")
             if funits is None:
                 self[field]["units"] = units
+
+    def add_analysis_field(self, name, units, dtype=None, default=0):
+        """
+        Add an analysis field.
+        """
+
+        if name in self:
+            raise ArborFieldAlreadyExists(name, arbor=self)
+
+        if dtype is None:
+            dtype = self.arbor._default_dtype
+
+        self.arbor.analysis_field_list.append(name)
+        self[name] = {"type": "analysis",
+                                 "default": default,
+                                 "dtype": dtype,
+                                 "units": units}
+        self.arbor._field_data[name] = \
+          self.arbor.arr(np.full(self.arbor.size, default, dtype=dtype), units)
 
     def add_alias_field(self, alias, field, units=None,
                         force_add=True):
