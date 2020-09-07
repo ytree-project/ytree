@@ -22,6 +22,8 @@ from ytree.utilities.exceptions import \
     ArborFieldCircularDependency, \
     ArborFieldDependencyNotFound, \
     ArborFieldNotFound
+from ytree.utilities.logger import \
+    ytreeLogger as mylog
 
 class FieldInfoContainer(dict):
     """
@@ -68,6 +70,67 @@ class FieldInfoContainer(dict):
                 continue
             alias = field.replace("/", "_")
             self.arbor.add_alias_field(alias, field)
+
+    def add_derived_field(self, name, function,
+                          units=None, dtype=None, description=None,
+                          vector_field=False, force_add=True):
+        """
+        Add a derived field.
+        """
+
+        if name in self:
+            if force_add:
+                ftype = self[name].get("type", "on-disk")
+                if ftype in ["alias", "derived"]:
+                    fl = self.arbor.derived_field_list
+                else:
+                    fl = self.arbor.field_list
+                mylog.warn(
+                    ("Overriding field \"%s\" that already " +
+                     "exists as %s field.") % (name, ftype))
+                fl.pop(fl.index(name))
+            else:
+                return
+
+        if units is None:
+            units = ""
+        if dtype is None:
+            dtype = self.arbor._default_dtype
+        info = {"name": name,
+                "type": "derived",
+                "function": function,
+                "units": units,
+                "dtype": dtype,
+                "vector_field": vector_field,
+                "description": description}
+
+        fc = FakeFieldContainer(self.arbor, name=name)
+        try:
+            rv = function(info, fc)
+        except TypeError as e:
+            raise RuntimeError(
+"""
+
+Field function syntax in ytree has changed. Field functions must
+now take two arguments, as in the following:
+def my_field(field, data):
+    return data['mass']
+
+Check the TypeError exception above for more details.
+""")
+            raise e
+
+        except ArborFieldDependencyNotFound as e:
+            if force_add:
+                raise e
+            else:
+                return
+
+        rv.convert_to_units(units)
+        info["dependencies"] = list(fc.keys())
+
+        self.arbor.derived_field_list.append(name)
+        self[name] = info
 
     def setup_derived_fields(self):
         """
@@ -179,7 +242,7 @@ class FakeFieldContainer(defaultdict):
     A fake field data container used to calculate dependencies.
     """
     def __init__(self, arbor, name=None):
-        self.arbor = weakref.proxy(arbor)
+        self.arbor = arbor
         self.name = name
 
     def __missing__(self, key):

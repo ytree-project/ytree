@@ -34,7 +34,6 @@ from yt.utilities.cosmology import \
     Cosmology
 
 from ytree.data_structures.fields import \
-    FakeFieldContainer, \
     FieldContainer, \
     FieldInfoContainer
 from ytree.data_structures.io import \
@@ -931,59 +930,10 @@ class Arbor(metaclass=RegisteredArbor):
 
         """
 
-        if name in self.field_info:
-            if force_add:
-                ftype = self.field_info[name].get("type", "on-disk")
-                if ftype in ["alias", "derived"]:
-                    fl = self.derived_field_list
-                else:
-                    fl = self.field_list
-                mylog.warn(
-                    ("Overriding field \"%s\" that already " +
-                     "exists as %s field.") % (name, ftype))
-                fl.pop(fl.index(name))
-            else:
-                return
-
-        if units is None:
-            units = ""
-        if dtype is None:
-            dtype = self._default_dtype
-        info = {"name": name,
-                "type": "derived",
-                "function": function,
-                "units": units,
-                "dtype": dtype,
-                "vector_field": vector_field,
-                "description": description}
-
-        fc = FakeFieldContainer(self, name=name)
-        try:
-            rv = function(info, fc)
-        except TypeError as e:
-            raise RuntimeError(
-"""
-
-Field function syntax in ytree has changed. Field functions must
-now take two arguments, as in the following:
-def my_field(field, data):
-    return data['mass']
-
-Check the TypeError exception above for more details.
-""")
-            raise e
-
-        except ArborFieldDependencyNotFound as e:
-            if force_add:
-                raise e
-            else:
-                return
-
-        rv.convert_to_units(units)
-        info["dependencies"] = list(fc.keys())
-
-        self.derived_field_list.append(name)
-        self.field_info[name] = info
+        self.field_info.add_derived_field(
+            name, function,
+            units=units, dtype=dtype, description=description,
+            vector_field=vector_field, force_add=force_add)
 
     def add_vector_field(self, name):
         """
@@ -1010,7 +960,9 @@ Check the TypeError exception above for more details.
         >>> a_new.add_vector_field("thing")
         >>> print (a_new["thing"])
         >>> print (a_new["thing_magnitude"])
+
         """
+
         self.field_info.add_vector_field(name)
 
     @classmethod
