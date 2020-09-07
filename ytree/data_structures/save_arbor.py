@@ -82,18 +82,6 @@ def determine_save_state(arbor, filename, fields, trees):
 
     return True, arbor.parameter_filename
 
-def determine_tree_list(arbor, trees):
-    """
-    Determine what trees are being saved.
-    """
-
-    if trees is None:
-        trees = arbor._yield_root_nodes(range(arbor.size))
-    else:
-        trees = np.asarray(trees)
-
-    return trees
-
 def determine_output_filename(path, suffix):
     """
     Figure out the output filename.
@@ -157,7 +145,12 @@ def save_data_files(arbor, filename, fields, trees,
     as well as a dictionary of root fields.
     """
 
-    trees = determine_tree_list(arbor, trees)
+    if trees is None:
+        trees = arbor._yield_root_nodes(range(arbor.size))
+        save_size = arbor.size
+    else:
+        save_size = len(trees)
+
     root_field_data = dict((field, []) for field in fields)
 
     group_nnodes = []
@@ -170,9 +163,7 @@ def save_data_files(arbor, filename, fields, trees,
         group_nnodes.append(cg_nnodes)
         group_ntrees.append(cg_ntrees)
 
-        total_guess = \
-          int(np.round(len(list(trees)) * cg_number /
-                       sum(group_ntrees)))
+        total_guess = int(np.round(save_size * cg_number / sum(group_ntrees)))
         save_data_file(
             arbor, filename, fields,
             np.array(current_group), root_field_data,
