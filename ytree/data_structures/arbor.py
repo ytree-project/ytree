@@ -34,7 +34,6 @@ from yt.utilities.cosmology import \
     Cosmology
 
 from ytree.data_structures.fields import \
-    FakeFieldContainer, \
     FieldContainer, \
     FieldInfoContainer
 from ytree.data_structures.io import \
@@ -48,12 +47,8 @@ from ytree.data_structures.tree_node import \
     TreeNode
 from ytree.data_structures.tree_node_selector import \
     tree_node_selector_registry
-from ytree.utilities.exceptions import \
-    ArborFieldAlreadyExists, \
-    ArborFieldDependencyNotFound
 from ytree.utilities.logger import \
-    fake_pbar, \
-    ytreeLogger as mylog
+    fake_pbar
 
 arbor_registry = {}
 
@@ -812,19 +807,9 @@ class Arbor(metaclass=RegisteredArbor):
         >>> my_tree["tree"][7]["robots"] = 1979.816
         """
 
-        if name in self.field_info:
-            raise ArborFieldAlreadyExists(name, arbor=self)
-
-        if dtype is None:
-            dtype = self._default_dtype
-
-        self.analysis_field_list.append(name)
-        self.field_info[name] = {"type": "analysis",
-                                 "default": default,
-                                 "dtype": dtype,
-                                 "units": units}
-        self._field_data[name] = \
-          self.arr(np.full(self.size, default, dtype=dtype), units)
+        self.field_info.add_analysis_field(
+            name, units,
+            dtype=dtype, default=default)
 
     def add_alias_field(self, alias, field, units=None,
                         force_add=True):
@@ -856,36 +841,8 @@ class Arbor(metaclass=RegisteredArbor):
 
         """
 
-        if alias in self.field_info:
-            if force_add:
-                ftype = self.field_info[alias].get("type", "on-disk")
-                if ftype in ["alias", "derived"]:
-                    fl = self.derived_field_list
-                else:
-                    fl = self.field_list
-                mylog.warn(
-                    ("Overriding field \"%s\" that already " +
-                     "exists as %s field.") % (alias, ftype))
-                fl.pop(fl.index(alias))
-            else:
-                return
-
-        if field not in self.field_info:
-            if force_add:
-                raise ArborFieldDependencyNotFound(
-                    field, alias, arbor=self)
-            else:
-                return
-
-        if units is None:
-            units = self.field_info[field].get("units")
-        self.derived_field_list.append(alias)
-        self.field_info[alias] = \
-          {"type": "alias", "units": units,
-           "dependencies": [field]}
-        if "aliases" not in self.field_info[field]:
-            self.field_info[field]["aliases"] = []
-            self.field_info[field]["aliases"].append(alias)
+        self.field_info.add_alias_field(
+            alias, field, units=units, force_add=force_add)
 
     def add_derived_field(self, name, function,
                           units=None, dtype=None, description=None,
@@ -931,59 +888,40 @@ class Arbor(metaclass=RegisteredArbor):
 
         """
 
-        if name in self.field_info:
-            if force_add:
-                ftype = self.field_info[name].get("type", "on-disk")
-                if ftype in ["alias", "derived"]:
-                    fl = self.derived_field_list
-                else:
-                    fl = self.field_list
-                mylog.warn(
-                    ("Overriding field \"%s\" that already " +
-                     "exists as %s field.") % (name, ftype))
-                fl.pop(fl.index(name))
-            else:
-                return
+        self.field_info.add_derived_field(
+            name, function,
+            units=units, dtype=dtype, description=description,
+            vector_field=vector_field, force_add=force_add)
 
-        if units is None:
-            units = ""
-        if dtype is None:
-            dtype = self._default_dtype
-        info = {"name": name,
-                "type": "derived",
-                "function": function,
-                "units": units,
-                "dtype": dtype,
-                "vector_field": vector_field,
-                "description": description}
+    def add_vector_field(self, name):
+        """
+        Add vector fields for a set of x,y,z component fields.
 
-        fc = FakeFieldContainer(self, name=name)
-        try:
-            rv = function(info, fc)
-        except TypeError as e:
-            raise RuntimeError(
-"""
+        This will add a general vector field that returns the combined
+        x, y, z components as a single Nx3 array. A <field>_magnitude
+        field with the quadrature sum of the components is also added.
 
-Field function syntax in ytree has changed. Field functions must
-now take two arguments, as in the following:
-def my_field(field, data):
-    return data['mass']
+        Parameters
+        ----------
+        name : string
+            The name of the field. Component x,y,z fields must exist.
 
-Check the TypeError exception above for more details.
-""")
-            raise e
+        Examples
+        --------
 
-        except ArborFieldDependencyNotFound as e:
-            if force_add:
-                raise e
-            else:
-                return
+        >>> import ytree
+        >>> a = ytree.load("tree_0_0_0.dat")
+        >>> for ax in 'xyz':
+        >>>     a.add_analysis_field(f"thing_{ax}")
+        >>> fn = a.save_arbor()
+        >>> a_new = ytree.load(fn)
+        >>> a_new.add_vector_field("thing")
+        >>> print (a_new["thing"])
+        >>> print (a_new["thing_magnitude"])
 
-        rv.convert_to_units(units)
-        info["dependencies"] = list(fc.keys())
+        """
 
-        self.derived_field_list.append(name)
-        self.field_info[name] = info
+        self.field_info.add_vector_field(name)
 
     @classmethod
     def _is_valid(cls, *args, **kwargs):

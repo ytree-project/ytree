@@ -20,8 +20,7 @@ from unyt import uconcatenate
 import weakref
 
 from ytree.utilities.exceptions import \
-    ArborAnalysisFieldNotGenerated, \
-    ArborAnalysisFieldNotFound
+    ArborAnalysisFieldNotGenerated
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
@@ -234,7 +233,13 @@ class DefaultRootFieldIO(FieldIO):
     """
 
     def _initialize_analysis_field(self, storage_object, name):
-        raise ArborAnalysisFieldNotFound(name, arbor=self.arbor)
+        fi = self.arbor.field_info[name]
+        default = fi['default']
+        dtype   = fi['dtype']
+        units   = fi['units']
+
+        storage_object._field_data[name] = \
+          self.arbor.arr(np.full(self.arbor.size, default, dtype=dtype), units)
 
     def _read_fields(self, storage_object, fields, dtypes=None,
                      root_only=True):

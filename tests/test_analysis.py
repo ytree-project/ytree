@@ -115,3 +115,22 @@ class AnalysisFieldTest(TempDirTest):
         with assert_raises(ArborUnsettableField):
             my_tree = a[0]
             my_tree['mass'] = 50
+
+    @requires_file(CT)
+    def test_add_vector_field(self):
+        a = ytree.load(CT)
+
+        data = []
+        for i, ax in enumerate('xyz'):
+            a.add_analysis_field(f'thing_{ax}', '', default=i, dtype=np.float64)
+            data.append(i*np.ones(a.size, dtype=np.float64))
+        data = np.rollaxis(np.vstack(data), 1)
+
+        fn = a.save_arbor()
+        a2 = ytree.load(fn)
+        a2.add_vector_field('thing')
+
+        assert_array_equal(a2['thing'], data)
+
+        data_mag = np.sqrt((data**2).sum(axis=1))
+        assert_array_equal(a2['thing_magnitude'], data_mag)

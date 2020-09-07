@@ -19,9 +19,12 @@ import numpy as np
 import weakref
 
 from ytree.utilities.exceptions import \
+    ArborFieldAlreadyExists, \
     ArborFieldCircularDependency, \
     ArborFieldDependencyNotFound, \
     ArborFieldNotFound
+from ytree.utilities.logger import \
+    ytreeLogger as mylog
 
 class FieldInfoContainer(dict):
     """
@@ -49,6 +52,60 @@ class FieldInfoContainer(dict):
             if funits is None:
                 self[field]["units"] = units
 
+    def add_analysis_field(self, name, units, dtype=None, default=0):
+        """
+        Add an analysis field.
+        """
+
+        if name in self:
+            raise ArborFieldAlreadyExists(name, arbor=self)
+
+        if dtype is None:
+            dtype = self.arbor._default_dtype
+
+        self.arbor.analysis_field_list.append(name)
+        self[name] = {"type": "analysis",
+                      "default": default,
+                      "dtype": dtype,
+                      "units": units}
+
+    def add_alias_field(self, alias, field, units=None,
+                        force_add=True):
+        """
+        Add an alias field.
+        """
+
+        if alias in self:
+            if force_add:
+                ftype = self[alias].get("type", "on-disk")
+                if ftype in ["alias", "derived"]:
+                    fl = self.arbor.derived_field_list
+                else:
+                    fl = self.arbor.field_list
+                mylog.warn(
+                    ("Overriding field \"%s\" that already " +
+                     "exists as %s field.") % (alias, ftype))
+                fl.pop(fl.index(alias))
+            else:
+                return
+
+        if field not in self:
+            if force_add:
+                raise ArborFieldDependencyNotFound(
+                    field, alias, arbor=self)
+            else:
+                return
+
+        if units is None:
+            units = self[field].get("units")
+        self.arbor.derived_field_list.append(alias)
+        self[alias] = \
+          {"type": "alias", "units": units,
+           "dependencies": [field]}
+        if "aliases" not in self[field]:
+            self[field]["aliases"] = []
+            self[field]["aliases"].append(alias)
+
     def setup_aliases(self):
         """
         Add aliases defined in the alias_fields tuple for each frontend.
@@ -69,6 +126,67 @@ class FieldInfoContainer(dict):
             alias = field.replace("/", "_")
             self.arbor.add_alias_field(alias, field)
 
+    def add_derived_field(self, name, function,
+                          units=None, dtype=None, description=None,
+                          vector_field=False, force_add=True):
+        """
+        Add a derived field.
+        """
+
+        if name in self:
+            if force_add:
+                ftype = self[name].get("type", "on-disk")
+                if ftype in ["alias", "derived"]:
+                    fl = self.arbor.derived_field_list
+                else:
+                    fl = self.arbor.field_list
+                mylog.warn(
+                    ("Overriding field \"%s\" that already " +
+                     "exists as %s field.") % (name, ftype))
+                fl.pop(fl.index(name))
+            else:
+                return
+
+        if units is None:
+            units = ""
+        if dtype is None:
+            dtype = self.arbor._default_dtype
+        info = {"name": name,
+                "type": "derived",
+                "function": function,
+                "units": units,
+                "dtype": dtype,
+                "vector_field": vector_field,
+                "description": description}
+
+        fc = FakeFieldContainer(self.arbor, name=name)
+        try:
+            rv = function(info, fc)
+        except TypeError as e:
+            raise RuntimeError(
+"""
+
+Field function syntax in ytree has changed. Field functions must
+now take two arguments, as in the following:
+def my_field(field, data):
+    return data['mass']
+
+Check the TypeError exception above for more details.
+""")
+            raise e
+
+        except ArborFieldDependencyNotFound as e:
+            if force_add:
+                raise e
+            else:
+                return
+
+        rv.convert_to_units(units)
+        info["dependencies"] = list(fc.keys())
+
+        self.arbor.derived_field_list.append(name)
+        self[name] = info
+
     def setup_derived_fields(self):
         """
         Add stock derived fields.
@@ -83,9 +201,10 @@ class FieldInfoContainer(dict):
         self.arbor.add_derived_field(
             "time", _time, units="Myr", force_add=False)
 
-    def setup_vector_fields(self):
+    def add_vector_field(self, fieldname):
         """
-        Add vector and magnitude fields.
+        Add vector and magnitude fields for a field with
+        x/y/z components.
         """
 
         def _vector_func(field, data):
@@ -100,17 +219,27 @@ class FieldInfoContainer(dict):
             return np.sqrt((data[name]**2).sum(axis=1))
 
         axes = "xyz"
+        exists = all([f"{fieldname}_{ax}" in self for ax in axes])
+        if not exists:
+            return None
+
+        units = self[f"{fieldname}_x"].get("units", None)
+        self.arbor.add_derived_field(
+            fieldname, _vector_func, vector_field=True, units=units)
+        self.arbor.add_derived_field(
+            f"{fieldname}_magnitude", _magnitude_func, units=units)
+        return fieldname
+
+    def setup_vector_fields(self):
+        """
+        Add vector and magnitude fields.
+        """
+
         added_fields = []
         for field in self.vector_fields:
-            exists = all([("%s_%s" % (field, ax)) in self for ax in axes])
-            if not exists:
+            field = self.add_vector_field(field)
+            if field is None:
                 continue
-
-            units = self["%s_x" % field].get("units", None)
-            self.arbor.add_derived_field(
-                field, _vector_func, vector_field=True, units=units)
-            self.arbor.add_derived_field(
-                "%s_magnitude" % field, _magnitude_func, units=units)
             added_fields.append(field)
 
         self.vector_fields = tuple(added_fields)
@@ -168,7 +297,7 @@ class FakeFieldContainer(defaultdict):
     A fake field data container used to calculate dependencies.
     """
     def __init__(self, arbor, name=None):
-        self.arbor = weakref.proxy(arbor)
+        self.arbor = arbor
         self.name = name
 
     def __missing__(self, key):
