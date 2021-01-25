@@ -218,7 +218,7 @@ workflows:
            ytdev: 1
 
        - tests:
-           name: "Python 3.8 tests"
+           name: "Python 3.9 tests"
            tag: "3.9.1"
            coverage: 1
            ytdev: 1
@@ -237,7 +237,7 @@ workflows:
                 - main
      jobs:
        - tests:
-           name: "Python 3.8 tests with yt-dev"
+           name: "Python 3.9 tests with yt-dev"
            tag: "3.9.1"
            coverage: 0
            ytdev: 1
