@@ -1,7 +1,7 @@
 # ytree
 
-[![CircleCI](https://circleci.com/gh/ytree-project/ytree/tree/master.svg?style=svg)](https://circleci.com/gh/ytree-project/ytree/tree/master)
-[![codecov](https://codecov.io/gh/ytree-project/ytree/branch/master/graph/badge.svg)](https://codecov.io/gh/ytree-project/ytree)
+[![CircleCI](https://circleci.com/gh/ytree-project/ytree/tree/main.svg?style=svg)](https://circleci.com/gh/ytree-project/ytree/tree/main)
+[![codecov](https://codecov.io/gh/ytree-project/ytree/branch/main/graph/badge.svg)](https://codecov.io/gh/ytree-project/ytree)
 [![Documentation Status](https://readthedocs.org/projects/ytree/badge/?version=latest)](http://ytree.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/ytree.svg)](https://badge.fury.io/py/ytree)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.01881/status.svg)](https://doi.org/10.21105/joss.01881)
@@ -67,7 +67,7 @@ pip install -e .
 Below is a notebook that demonstrates how to use `ytree` with merger tree data.  For
 more information, see the full [ytree documentation](https://ytree.readthedocs.io).
 
- * [Introduction](https://github.com/ytree-project/ytree/blob/master/doc/source/notebooks/Intro_to_ytree.ipynb)
+ * [Introduction](https://github.com/ytree-project/ytree/blob/main/doc/source/notebooks/Intro_to_ytree.ipynb)
 
 ## Sample Data
 
