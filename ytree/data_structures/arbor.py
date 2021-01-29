@@ -125,7 +125,8 @@ class Arbor(metaclass=RegisteredArbor):
             fn = filename
         self.parameter_filename = fn
         self.basename = os.path.basename(fn)
-        self.directory = os.path.dirname(fn)
+        dn = os.path.dirname(fn)
+        self.directory = dn if dn else '.'
 
     def _parse_parameter_file(self):
         """
@@ -712,7 +713,7 @@ class Arbor(metaclass=RegisteredArbor):
         trees : optional, list or array of TreeNodes
             A list or array of TreeNode objects in which to search. If none given,
             the search is performed over the full arbor.
-        select_from : optional, "tree" or "prog"
+        select_from : optional, "tree", "forest", or "prog"
             Determines whether to perform the search over the full tree or just
             the main progenitors. Note, the value given must be consistent with
             what appears in the criteria string. For example, a criteria
@@ -744,9 +745,9 @@ class Arbor(metaclass=RegisteredArbor):
 
         """
 
-        if select_from not in ["tree", "prog"]:
+        if select_from not in ["tree", "forest", "prog"]:
             raise SyntaxError(
-                "Keyword \"select_from\" must be either \"tree\" or \"prog\".")
+                "Keyword \"select_from\" must be \"tree\", \"forest\", or \"prog\".")
 
         if trees is None:
             trees = self[:]
