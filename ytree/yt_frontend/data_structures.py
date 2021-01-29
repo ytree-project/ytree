@@ -17,6 +17,7 @@ Data structures for ytree frontend.
 from yt.utilities.on_demand_imports import _h5py as h5py
 import numpy as np
 import json
+import os
 
 from .fields import YTreeFieldInfo
 
@@ -39,6 +40,11 @@ class YTreeHDF5File(ParticleFile):
               {_ptype: f['data'].attrs['num_elements']}
         super().__init__(ds, io, filename, file_id, frange)
 
+    @property
+    def analysis_filename(self):
+        prefix = self.filename[:-len(self.ds._suffix)]
+        return f"{prefix}-analysis{self.ds._suffix}"
+
     def _read_particle_positions(self, ptype, f=None):
         raise NotImplementedError
 
@@ -51,10 +57,17 @@ class YTreeHDF5File(ParticleFile):
 
         si = self.start
         ei = self.end
-        data = f["data"][field][si:ei][mask].astype("float64")
+
+        if self.ds._field_dict[field].get("source") == "analysis":
+            my_f = h5py.File(self.analysis_filename, mode="r")
+            close = True
+        else:
+            my_f = f
+
+        data = my_f["data"][field][si:ei][mask].astype("float64")
 
         if close:
-            f.close()
+            my_f.close()
 
         return data
 
@@ -99,10 +112,23 @@ class YTreeDataset(SavedDataset):
     def __init__(self, filename, dataset_type="ytree_arbor",
                  index_order=None,
                  units_override=None, unit_system="cgs"):
+        self._prefix = filename[:filename.rfind(self._suffix)]
         self.index_order = validate_index_order(index_order)
         super().__init__(filename, dataset_type,
                          units_override=units_override,
                          unit_system=unit_system)
+        self._get_analysis_field_dict()
+
+    def _get_analysis_field_dict(self):
+        analysis_filename = f"{self._prefix}-analysis{self._suffix}"
+        if not os.path.exists(analysis_filename):
+            return
+
+        with h5py.File(analysis_filename, mode="r") as f:
+            afd = json.loads(f.attrs['field_info'])
+        for fi in afd.values():
+            fi["source"] = "analysis"
+        self._field_dict.update(afd)
 
     def _set_derived_attrs(self):
         self.domain_center = 0.5 * (self.domain_right_edge +
@@ -132,6 +158,9 @@ class YTreeDataset(SavedDataset):
           np.zeros(self.dimensionality)
         self.domain_right_edge = self.box_size * \
           np.ones(self.dimensionality)
+
+    def __repr__(self):
+        return self.basename[:self.basename.rfind(self._suffix)]
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
