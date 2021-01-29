@@ -17,16 +17,12 @@ Data structures for ytree frontend.
 from yt.utilities.on_demand_imports import _h5py as h5py
 import numpy as np
 import json
-import os
-import stat
 
 from .fields import YTreeFieldInfo
 
 from yt.data_objects.static_output import \
     ParticleFile, \
     validate_index_order
-from yt.frontends.halo_catalog.data_structures import \
-    HaloCatalogFile
 from yt.frontends.ytdata.data_structures import \
     SavedDataset
 from yt.geometry.particle_geometry_handler import \
