@@ -23,7 +23,8 @@ import stat
 from .fields import YTreeFieldInfo
 
 from yt.data_objects.static_output import \
-    ParticleFile
+    ParticleFile, \
+    validate_index_order
 from yt.frontends.halo_catalog.data_structures import \
     HaloCatalogFile
 from yt.frontends.ytdata.data_structures import \
@@ -100,7 +101,9 @@ class YTreeDataset(SavedDataset):
     _force_periodicity = True
 
     def __init__(self, filename, dataset_type="ytree_arbor",
+                 index_order=None,
                  units_override=None, unit_system="cgs"):
+        self.index_order = validate_index_order(index_order)
         super().__init__(filename, dataset_type,
                          units_override=units_override,
                          unit_system=unit_system)
