@@ -58,6 +58,7 @@ setup(name="ytree",
       install_requires=[
           'configparser',
           'h5py',
+          "more_itertools>=8.4",
           'numpy',
           'unyt',
           'yt>=3.6',

@@ -15,6 +15,7 @@ ytree data-file handling function
 #-----------------------------------------------------------------------------
 
 from yt.utilities.on_demand_imports import _h5py as h5py
+from more_itertools import always_iterable
 import numpy as np
 
 from yt.utilities.io_handler import BaseIOHandler
@@ -28,24 +29,12 @@ class IOHandlerYTreeHDF5(BaseIOHandler):
         raise NotImplementedError
 
     def _read_particle_coords(self, chunks, ptf):
-        chunks = list(chunks)
-        data_files = set([])
-        for chunk in chunks:
-            for obj in chunk.objs:
-                data_files.update(obj.data_files)
-
-        for data_file in sorted(data_files):
+        for data_file in self._yield_data_files(chunks):
             x, y, z = data_file._get_particle_positions(_ptype)
             yield _ptype, (x, y, z)
 
     def _read_particle_fields(self, chunks, ptf, selector):
-        chunks = list(chunks)
-        data_files = set([])
-        for chunk in chunks:
-            for obj in chunk.objs:
-                data_files.update(obj.data_files)
-
-        for data_file in sorted(data_files):
+        for data_file in self._yield_data_files(chunks):
             with h5py.File(data_file.filename, "r") as f:
                 for ptype, field_list in sorted(ptf.items()):
                     x, y, z = data_file._get_particle_positions(ptype, f=f)
@@ -58,6 +47,16 @@ class IOHandlerYTreeHDF5(BaseIOHandler):
                     for field in field_list:
                         data = data_file._read_field_data(field, mask, f=f)
                         yield (ptype, field), data
+
+    def _yield_data_files(self, chunks):
+        chunks = always_iterable(chunks)
+        data_files = set([])
+        for chunk in chunks:
+            for obj in chunk.objs:
+                data_files.update(obj.data_files)
+
+        for data_file in sorted(data_files):
+            yield data_file
 
     def _yield_coordinates(self, data_file):
         pos = data_file._get_particle_positions(_ptype, transpose=False)
