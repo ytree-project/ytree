@@ -7,7 +7,7 @@ Data structures for ytree frontend.
 """
 
 #-----------------------------------------------------------------------------
-# Copyright (c) yt Development Team. All rights reserved.
+# Copyright (c) ytree Development Team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -20,9 +20,10 @@ import json
 import os
 import stat
 
-from .fields import \
-    YTreeFieldInfo
+from .fields import YTreeFieldInfo
 
+from yt.data_objects.static_output import \
+    ParticleFile
 from yt.frontends.halo_catalog.data_structures import \
     HaloCatalogFile
 from yt.frontends.ytdata.data_structures import \
@@ -30,56 +31,79 @@ from yt.frontends.ytdata.data_structures import \
 from yt.geometry.particle_geometry_handler import \
     ParticleIndex
 
-class YTreeParticleIndex(ParticleIndex):
-    def _setup_filenames(self):
-        template = self.dataset.filename_template
-        cls = self.dataset._file_class
-        self.data_files = \
-          [cls(self.dataset, self.io, template % i, i)
-           for i in range(self.dataset.file_count)]
+from ytree.utilities.io import parse_h5_attr
 
-class YTreeHDF5File(HaloCatalogFile):
-    def __init__(self, ds, io, filename, file_id):
-        with h5py.File(filename, "r") as f:
-            self.particle_count = f['data'].attrs['num_elements']
-        super(YTreeHDF5File, self).__init__(
-            ds, io, filename, file_id)
+_ptype = "halos"
+
+class YTreeHDF5File(ParticleFile):
+    def __init__(self, ds, io, filename, file_id, frange):
+        with h5py.File(filename, mode="r") as f:
+            self.total_particles_file = \
+              {_ptype: f['data'].attrs['num_elements']}
+        super().__init__(ds, io, filename, file_id, frange)
 
     def _read_particle_positions(self, ptype, f=None):
-        """
-        Read all particle positions in this file.
-        """
+        raise NotImplementedError
 
+    def _read_field_data(self, field, mask, f=None):
         if f is None:
             close = True
-            f = h5py.File(self.filename, "r")
+            f = h5py.File(self.filename, mode="r")
         else:
             close = False
 
-        pos = np.empty((self.particle_count, 3), dtype="float64")
-        for i, ax in enumerate('xyz'):
-            pos[:, i] = f["data/position_%s" % ax][()]
+        si = self.start
+        ei = self.end
+        data = f["data"][field][si:ei][mask].astype("float64")
 
         if close:
             f.close()
 
+        return data
+
+    def _get_particle_positions(self, ptype, f=None, transpose=True):
+        if f is None:
+            close = True
+            f = h5py.File(self.filename, mode="r")
+        else:
+            close = False
+
+        si = self.start
+        ei = self.end
+        pn = "data/position_%s"
+        with h5py.File(self.filename, mode="r") as f:
+            units = parse_h5_attr(f[pn % "x"], "units")
+            pos = np.vstack(
+                [f[pn % ax][si:ei].astype("float64") for ax in "xyz"]).T
+
+        if close:
+            f.close()
+
+        dle = self.ds.domain_left_edge.to(units).v
+        dw = self.ds.domain_width.to(units).v
+
+        np.subtract(pos, dle, out=pos)
+        np.mod(pos, dw, out=pos)
+        np.add(pos, dle, out=pos)
+        if transpose:
+            pos = pos.T
+        pos = self.ds.arr(pos, units)
+
         return pos
 
 class YTreeDataset(SavedDataset):
-    _index_class = YTreeParticleIndex
+    _index_class = ParticleIndex
     _file_class = YTreeHDF5File
     _field_info_class = YTreeFieldInfo
     _suffix = ".h5"
     _con_attrs = ("hubble_constant", "omega_matter", "omega_lambda")
+    _force_periodicity = True
 
     def __init__(self, filename, dataset_type="ytree_arbor",
-                 n_ref = 16, over_refine_factor = 1, units_override=None,
-                 unit_system="cgs"):
-        self.n_ref = n_ref
-        self.over_refine_factor = over_refine_factor
-        super(YTreeDataset, self).__init__(filename, dataset_type,
-                                                 units_override=units_override,
-                                                 unit_system=unit_system)
+                 units_override=None, unit_system="cgs"):
+        super().__init__(filename, dataset_type,
+                         units_override=units_override,
+                         unit_system=unit_system)
 
     def _set_derived_attrs(self):
         self.domain_center = 0.5 * (self.domain_right_edge +
@@ -97,18 +121,12 @@ class YTreeDataset(SavedDataset):
         self.current_redshift = None
         self.current_time = None
         self.cosmological_simulation = 1
-        self.refine_by = 2
         self.dimensionality = 3
-        nz = 1 << self.over_refine_factor
-        self.domain_dimensions = np.ones(self.dimensionality, "int32") * nz
-        self.periodicity = (True, True, True)
-        self.unique_identifier = \
-          int(os.stat(self.parameter_filename)[stat.ST_CTIME])
         prefix = self.parameter_filename[:-len(self._suffix)]
-        self.filename_template = "%s_%%04d%s" % (prefix, self._suffix)
-        self.particle_types = ("halos")
-        self.particle_types_raw = ("halos")
-        super(YTreeDataset, self)._parse_parameter_file()
+        self.filename_template = f"{prefix}_%(num)04d{self._suffix}"
+        self.particle_types = (_ptype)
+        self.particle_types_raw = (_ptype)
+        super()._parse_parameter_file()
         # Set this again because unit registry has been updated.
         self.box_size = self.quan(self.box_size)
         self.domain_left_edge = self.box_size * \

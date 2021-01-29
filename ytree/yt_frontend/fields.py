@@ -7,7 +7,7 @@ ytree-specific fields
 """
 
 #-----------------------------------------------------------------------------
-# Copyright (c) yt Development Team. All rights reserved.
+# Copyright (c) ytree Development Team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -41,4 +41,4 @@ class YTreeFieldInfo(FieldInfoContainer):
         self.add_field((ptype, 'redshift'), function=_redshift,
                        sampling_type='particle', units='')
 
-        super(YTreeFieldInfo, self).setup_particle_fields(ptype)
+        super().setup_particle_fields(ptype)
