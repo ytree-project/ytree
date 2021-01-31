@@ -162,10 +162,7 @@ class YTreeDataset(SavedDataset):
         self.parameters["length_unit"] = box_size.uq
 
         for myu, info in _unit_defaults.items():
-            if info["field"] in self._field_dict:
-                cu = self._field_dict[info["field"]]["units"]
-            else:
-                cu = info["units"]
+            cu = self._field_dict.get(info["field"], info)["units"]
             cuval = self.quan(1, cu)
             self.parameters[f"{myu}_unit"] = cuval
             self.unit_registry.modify(f"code_{myu}", cuval.in_base())
