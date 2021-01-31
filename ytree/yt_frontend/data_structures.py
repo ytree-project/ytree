@@ -19,8 +19,6 @@ import numpy as np
 import json
 import os
 
-from .fields import YTreeFieldInfo
-
 from yt.data_objects.static_output import \
     ParticleFile, \
     validate_index_order
@@ -30,8 +28,13 @@ from yt.geometry.particle_geometry_handler import \
     ParticleIndex
 
 from ytree.utilities.io import parse_h5_attr
+from ytree.yt_frontend.fields import YTreeFieldInfo
 
 _ptype = "halos"
+_unit_defaults = \
+  {"mass":     {"field": "mass",       "units": "Msun"},
+   "velocity": {"field": "velocity_x", "units": "km/s"},
+   "time":     {"field": "time",       "units": "Gyr"}}
 
 class YTreeHDF5File(ParticleFile):
     def __init__(self, ds, io, filename, file_id, frange):
@@ -44,9 +47,6 @@ class YTreeHDF5File(ParticleFile):
     def analysis_filename(self):
         prefix = self.filename[:-len(self.ds._suffix)]
         return f"{prefix}-analysis{self.ds._suffix}"
-
-    def _read_particle_positions(self, ptype, f=None):
-        raise NotImplementedError
 
     def _read_field_data(self, field, mask, f=None):
         if f is None:
@@ -138,9 +138,9 @@ class YTreeDataset(SavedDataset):
     def _with_parameter_file_open(self, f):
         self.file_count = f.attrs['total_files']
         self.particle_count = f.attrs['total_nodes']
-        self.box_size = self.quan(
-            f.attrs['box_size'], f.attrs['box_size_units'])
         self._field_dict = json.loads(f.attrs['field_info'])
+        if "unit_system_name" not in self.parameters:
+            self.parameters["unit_system_name"] = "mks"
 
     def _parse_parameter_file(self):
         self.current_redshift = None
@@ -152,12 +152,23 @@ class YTreeDataset(SavedDataset):
         self.particle_types = (_ptype)
         self.particle_types_raw = (_ptype)
         super()._parse_parameter_file()
-        # Set this again because unit registry has been updated.
-        self.box_size = self.quan(self.box_size)
-        self.domain_left_edge = self.box_size * \
-          np.zeros(self.dimensionality)
-        self.domain_right_edge = self.box_size * \
-          np.ones(self.dimensionality)
+
+        box_size = self.parameters["box_size"]
+        self.domain_left_edge = box_size * np.zeros(self.dimensionality)
+        self.domain_right_edge = box_size * np.ones(self.dimensionality)
+
+        # Modify code units and attributes.
+        self.unit_registry.modify("code_length", box_size.uq.in_base())
+        self.parameters["length_unit"] = box_size.uq
+
+        for myu, info in _unit_defaults.items():
+            if info["field"] in self._field_dict:
+                cu = self._field_dict[info["field"]]["units"]
+            else:
+                cu = info["units"]
+            cuval = self.quan(1, cu)
+            self.parameters[f"{myu}_unit"] = cuval
+            self.unit_registry.modify(f"code_{myu}", cuval.in_base())
 
     def __repr__(self):
         return self.basename[:self.basename.rfind(self._suffix)]
