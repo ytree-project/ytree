@@ -104,11 +104,11 @@ def f_text_block(f, block_size=4096, file_size=None, sep="\n",
                 loc = offset - len(lbuff) + linl + 1
                 lbuff = ""
                 linl = inl
-                pbar.update(loc+len(line)-start)
+                pbar.update(loc+len(line)-start+1)
                 yield line, loc
         lbuff += buff[linl+1:]
     if lbuff:
         loc = f.tell() - len(lbuff)
-        pbar.update(loc+len(lbuff)-start)
+        pbar.update(loc+len(lbuff)-start+1)
         yield lbuff, loc
     pbar.finish()
