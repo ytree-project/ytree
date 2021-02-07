@@ -213,9 +213,9 @@ def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
 
     ntot = trees1.size
     pbar = get_pbar("Comparing trees", ntot)
-    for t1, t2 in zip(trees1, trees2):
+    for i, (t1, t2) in enumerate(zip(trees1, trees2)):
         compare_trees(t1, t2, groups=groups, fields=fields)
-        pbar.update(1)
+        pbar.update(i+1)
     pbar.finish()
 
 def compare_trees(t1, t2, groups=None, fields=None):

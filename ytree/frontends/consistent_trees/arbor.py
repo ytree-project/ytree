@@ -230,7 +230,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
             # Get end index from next tree.
             if same_file[i]:
                 self._node_info['_ei'][i] = ldata[i+1][2] - lkey - tdata[4]
-            pbar.update(i)
+            pbar.update(i+1)
         pbar.finish()
 
         # Get end index for last trees in files.

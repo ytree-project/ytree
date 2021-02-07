@@ -394,6 +394,7 @@ class Arbor(metaclass=RegisteredArbor):
             finish = False
 
         rvals = []
+        c = 0
         for data_file, nodes in zip(data_files, node_list):
             self._node_io_loop_start(data_file)
 
@@ -406,7 +407,8 @@ class Arbor(metaclass=RegisteredArbor):
             for node in self._yield_root_nodes(my_nodes):
                 rval = func(node, *args, **kwargs)
                 rvals.append(rval)
-                pbar.update(1)
+                c += 1
+                pbar.update(c)
 
             self._node_io_loop_finish(data_file)
 
@@ -766,7 +768,7 @@ class Arbor(metaclass=RegisteredArbor):
 
         halos = []
         pbar = get_pbar("Selecting halos", trees.size)
-        for tree in trees:
+        for i, tree in enumerate(trees):
             my_filter = np.asarray(eval(criteria))
             select_group = np.asarray(list(tree[select_from]))
             if my_filter.size != select_group.size:
@@ -775,7 +777,7 @@ class Arbor(metaclass=RegisteredArbor):
                      "Make sure select_from (\"%s\") matches criteria (\"%s\").") %
                     (select_from, criteria))
             halos.extend(select_group[my_filter])
-            pbar.update(1)
+            pbar.update(i+1)
         pbar.finish()
         return np.array(halos)
 
@@ -1117,7 +1119,7 @@ class CatalogArbor(Arbor):
                     descs[ib:ib+bs] = batch
                     lastids[ib:ib+bs] = hid
                     ib += bs
-            pbar.update(i)
+            pbar.update(i+1)
         pbar.finish()
 
         self._trees = np.array(trees)
