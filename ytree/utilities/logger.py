@@ -46,3 +46,21 @@ class fake_pbar:
         pass
     def finish(self):
         pass
+
+class log_level():
+    """
+    Context manager for setting log level.
+    """
+    def __init__(self, minlevel, mylog=None):
+        if mylog is None:
+            mylog = ytreeLogger
+        self.mylog = mylog
+        self.minlevel = minlevel
+        self.level = mylog.level
+
+    def __enter__(self):
+        if self.level > 10 and self.level < self.minlevel:
+            self.mylog.setLevel(40)
+
+    def __exit__(self, *args):
+        self.mylog.setLevel(self.level)

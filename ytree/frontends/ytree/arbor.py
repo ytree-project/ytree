@@ -21,6 +21,9 @@ import os
 from unyt.unit_registry import \
     UnitRegistry
 
+from yt.utilities.logger import \
+    ytLogger
+
 from ytree.data_structures.arbor import \
     Arbor
 from ytree.frontends.ytree.io import \
@@ -30,6 +33,10 @@ from ytree.frontends.ytree.io import \
 from ytree.utilities.io import \
     _hdf5_yt_attr, \
     parse_h5_attr
+from ytree.utilities.logger import \
+    log_level
+from ytree.yt_frontend import \
+    YTreeDataset
 
 class YTreeArbor(Arbor):
     """
@@ -128,6 +135,18 @@ class YTreeArbor(Arbor):
             for i, df in enumerate(self.data_files):
                 df.analysis_filename = \
                   f"{self._prefix}_{i:04d}-analysis{self._suffix}"
+
+    _ytds = None
+    @property
+    def ytds(self):
+        """
+        Load as a yt dataset.
+        """
+        if self._ytds is not None:
+            return self._ytds
+        with log_level(40, mylog=ytLogger):
+            self._ytds = YTreeDataset(self.filename)
+        return self._ytds
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
