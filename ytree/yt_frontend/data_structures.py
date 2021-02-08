@@ -48,6 +48,11 @@ class YTreeHDF5File(ParticleFile):
         prefix = self.filename[:-len(self.ds._suffix)]
         return f"{prefix}-analysis{self.ds._suffix}"
 
+    def _read_data(self, f, fname, mask):
+        si = self.start
+        ei = self.end
+        return f[fname][si:ei][mask]
+
     def _read_field_data(self, field, mask, f=None):
         if f is None:
             close = True
@@ -55,16 +60,13 @@ class YTreeHDF5File(ParticleFile):
         else:
             close = False
 
-        si = self.start
-        ei = self.end
-
         if self.ds._field_dict[field].get("source") == "analysis":
             my_f = h5py.File(self.analysis_filename, mode="r")
             close = True
         else:
             my_f = f
 
-        data = my_f["data"][field][si:ei][mask].astype("float64")
+        data = self._read_data(my_f, os.path.join("data", field), mask)
 
         if close:
             my_f.close()
@@ -78,13 +80,12 @@ class YTreeHDF5File(ParticleFile):
         else:
             close = False
 
-        si = self.start
-        ei = self.end
+        mask = slice(None)
         pn = "data/position_%s"
         with h5py.File(self.filename, mode="r") as f:
             units = parse_h5_attr(f[pn % "x"], "units")
             pos = np.vstack(
-                [f[pn % ax][si:ei].astype("float64") for ax in "xyz"]).T
+                [self._read_data(f, pn % ax, mask).astype("float64") for ax in "xyz"]).T
 
         if close:
             f.close()
