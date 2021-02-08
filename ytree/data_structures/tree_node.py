@@ -312,6 +312,17 @@ class TreeNode:
         """
         return "TreeNode[%d]" % self.uid
 
+    def get_node(self, selector, index):
+        if not self.is_root:
+            raise RuntimeError("Not root.")
+
+        indices = getattr(self, f"_{selector}_field_indices", None)
+        if indices is None:
+            raise RuntimeError("Bad selector.")
+
+        my_link = self._links[indices][index]
+        return self.arbor._generate_tree_node(self, my_link)
+
     _ffi = slice(None)
     @property
     def _forest_field_indices(self):
