@@ -74,7 +74,9 @@ class IOHandlerYTreeHDF5(BaseIOHandler):
         return pcount
 
     def _identify_fields(self, data_file):
-        fields = [(_ptype, field) for field in self.ds._field_dict]
+        _node_fields = ["file_root_index", "file_number", "tree_index"]
+        fields = [(_ptype, field) for field in list(self.ds._field_dict.keys()) +
+                  _node_fields]
         units = dict(((_ptype, field), self.ds._field_dict[field]['units'])
                      for field in self.ds._field_dict)
         return fields, units

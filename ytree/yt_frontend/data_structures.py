@@ -44,14 +44,54 @@ class YTreeHDF5File(ParticleFile):
         super().__init__(ds, io, filename, file_id, frange)
 
     @property
+    def _prefix(self):
+        return self.filename[:-len(self.ds._suffix)]
+
+    @property
+    def _file_number(self):
+        return int(self._prefix[-4:])
+
+    @property
     def analysis_filename(self):
-        prefix = self.filename[:-len(self.ds._suffix)]
-        return f"{prefix}-analysis{self.ds._suffix}"
+        return f"{self._prefix}-analysis{self.ds._suffix}"
 
     def _read_data(self, f, fname, mask):
         si = self.start
         ei = self.end
         return f[fname][si:ei][mask]
+
+    def _get_file_root_index(self, f, mask):
+        """
+        Return index locations of the root node in this file.
+
+        We use this to find the location of the root node in
+        the arbor on the ytree side.
+        """
+
+        indices = np.arange(self.start, self.end)[mask]
+        tree_start = self._read_data(f, "index/tree_start_index", mask)
+        return np.digitize(indices, tree_start) - 1
+
+    def _get_file_number(self, mask):
+        """
+        Return the file number as a field-like array.
+
+        We use this to find the index of the root node in the arbor.
+        """
+
+        return np.full(self.end-self.start, self._file_number)[mask]
+
+    def _get_tree_index(self, f, mask):
+        """
+        Return the index of a halo in a tree.
+
+        We use this to get the right node from a given root node.
+        """
+
+        indices = np.arange(self.start, self.end)[mask]
+        tree_start = self._read_data(f, "index/tree_start_index", mask)
+        root_index = np.digitize(indices, tree_start) - 1
+        return indices - tree_start[root_index]
 
     def _read_field_data(self, field, mask, f=None):
         if f is None:
@@ -60,13 +100,20 @@ class YTreeHDF5File(ParticleFile):
         else:
             close = False
 
-        if self.ds._field_dict[field].get("source") == "analysis":
+        if self.ds._field_dict.get(field, {}).get("source") == "analysis":
             my_f = h5py.File(self.analysis_filename, mode="r")
             close = True
         else:
             my_f = f
 
-        data = self._read_data(my_f, os.path.join("data", field), mask)
+        if field == "file_root_index":
+            data = self._get_file_root_index(my_f, mask)
+        elif field == "file_number":
+            data = self._get_file_number(mask)
+        elif field == "tree_index":
+            data = self._get_tree_index(my_f, mask)
+        else:
+            data = self._read_data(my_f, os.path.join("data", field), mask)
 
         if close:
             my_f.close()

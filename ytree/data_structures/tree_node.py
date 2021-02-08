@@ -313,6 +313,9 @@ class TreeNode:
         return "TreeNode[%d]" % self.uid
 
     def get_node(self, selector, index):
+        """
+        TODO: document me!
+        """
         if not self.is_root:
             raise RuntimeError("Not root.")
 

@@ -136,6 +136,22 @@ class YTreeArbor(Arbor):
                 df.analysis_filename = \
                   f"{self._prefix}_{i:04d}-analysis{self._suffix}"
 
+    def _generate_search_nodes(self, container):
+        self._plant_trees()
+        container.get_data([('halos', 'file_number'),
+                            ('halos', 'file_root_index'),
+                            ('halos', 'tree_index')])
+        file_number = container['halos', 'file_number'].d.astype(int)
+        file_root_index = container['halos', 'file_root_index'].d.astype(int)
+        tree_index = container['halos', 'tree_index'].d.astype(int)
+        arbor_index = self._node_io._si[file_number] + file_root_index
+        for ai, ti in zip(arbor_index, tree_index):
+            root_node = self._generate_root_node(ai)
+            if ti == 0:
+                yield root_node
+            else:
+                yield root_node.get_node("forest", ti)
+
     _ytds = None
     @property
     def ytds(self):
