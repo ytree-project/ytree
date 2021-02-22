@@ -15,6 +15,7 @@ AHFArbor class and member functions
 
 import glob
 import os
+import re
 
 from ytree.data_structures.arbor import \
     CatalogArbor
@@ -22,6 +23,8 @@ from ytree.frontends.ahf.fields import \
     AHFFieldInfo
 from ytree.frontends.ahf.io import \
     AHFDataFile
+from ytree.frontends.ahf.misc import \
+    parse_AHF_file
 from unyt.unit_registry import \
     UnitRegistry
 
@@ -34,17 +37,35 @@ class AHFArbor(CatalogArbor):
     _field_info_class = AHFFieldInfo
     _data_file_class = AHFDataFile
 
-    def __init__(self, filename, hubble_constant=1.0):
+    def __init__(self, filename, log_filename=None,
+                 hubble_constant=1.0, box_size=None,
+                 omega_matter=None, omega_lambda=None):
         self.unit_registry = UnitRegistry()
+        self.log_filename = log_filename
         self.hubble_constant = hubble_constant
+        self.omega_matter = omega_matter
+        self.omega_lambda = omega_lambda
+        self._box_size_user = box_size
         super(AHFArbor, self).__init__(filename)
 
     def _parse_parameter_file(self):
         df = AHFDataFile(self.filename, self)
-        for attr in ["omega_matter",
-                     "omega_lambda"]:
-            setattr(self, attr, getattr(df, attr))
-        self.box_size = self.quan(df.box_size, "Mpc/h")
+
+        pars = {"simu.omega0": "omega_matter",
+                "simu.lambda0": "omega_lambda",
+                "simu.boxsize": "box_size"}
+        log_filename = self.log_filename \
+          if self.log_filename is not None else df.filekey + ".log"
+        if os.path.exists(log_filename):
+            vals = parse_AHF_file(log_filename, pars, sep=":")
+            for attr in ["omega_matter",
+                         "omega_lambda"]:
+                setattr(self, attr, vals.get(attr))
+            if "box_size" in vals:
+                self.box_size = self.quan(vals["box_size"], "Mpc/h")
+
+        if self._box_size_user is not None:
+            self.box_size = self.quan(self._box_size_user, "Mpc/h")
 
         # fields from from the .AHF_halos files
         f = open("%s.AHF_halos" % df.data_filekey)
@@ -95,8 +116,11 @@ class AHFArbor(CatalogArbor):
         self.data_files.reverse()
 
     def _get_file_index(self, f):
-        return int(f[f.find(self._prefix) + len(self._prefix)+1:
-                     f.rfind(self._suffix)]),
+        reg = re.search(f"{self._prefix}_(\d+)\.", self.filename)
+        if not reg:
+            raise RuntimeError(
+                f"Could not locate index within file: {self.filename}.")
+        return int(reg.groups()[0])
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
@@ -106,8 +130,5 @@ class AHFArbor(CatalogArbor):
         """
         fn = args[0]
         if not fn.endswith(self._suffix):
-            return False
-        key = fn[:fn.rfind(self._suffix)]
-        if not os.path.exists(key + ".log"):
             return False
         return True

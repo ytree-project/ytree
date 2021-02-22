@@ -264,7 +264,7 @@ def save_header_file(arbor, filename, fields, root_field_data,
     for attr in ["hubble_constant",
                  "omega_matter",
                  "omega_lambda"]:
-        if hasattr(arbor, attr):
+        if getattr(arbor, attr, None) is not None:
             ds[attr] = getattr(arbor, attr)
 
     # Data structures for disk fields.
@@ -308,9 +308,10 @@ def save_header_file(arbor, filename, fields, root_field_data,
         tree_start_index = tree_end_index - group_ntrees
 
         extra_attrs = {
-            "box_size": arbor.box_size,
             "arbor_type": "YTreeArbor",
             "unit_registry_json": arbor.unit_registry.to_json()}
+        if arbor.box_size is not None:
+            extra_attrs["box_size"] = arbor.box_size
         extra_attrs["field_info"] = json.dumps(main_fi)
         extra_attrs["total_files"] = group_nnodes.size
         extra_attrs["total_trees"] = group_ntrees.sum()

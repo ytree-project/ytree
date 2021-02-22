@@ -48,6 +48,7 @@ from ytree.data_structures.tree_node import \
 from ytree.data_structures.tree_node_selector import \
     tree_node_selector_registry
 from ytree.utilities.logger import \
+    ytreeLogger, \
     fake_pbar
 
 arbor_registry = {}
@@ -100,6 +101,9 @@ class Arbor(metaclass=RegisteredArbor):
     _setup_attrs = ("_desc_uids", "_uids")
     _grow_attrs = ("_link_storage", "_link")
 
+    omega_matter = None
+    omega_lambda = None
+
     def __init__(self, filename):
         """
         Initialize an Arbor given an input file.
@@ -147,11 +151,22 @@ class Arbor(metaclass=RegisteredArbor):
                 new_unit, self._unit_registry.lut[my_unit][0],
                 length, self._unit_registry.lut[my_unit][3])
 
-        self.cosmology = Cosmology(
-            hubble_constant=self.hubble_constant,
-            omega_matter=self.omega_matter,
-            omega_lambda=self.omega_lambda,
-            unit_registry=self.unit_registry)
+        setup = True
+        for attr in ["hubble_constant",
+                     "omega_matter",
+                     "omega_lambda"]:
+            if getattr(self, attr) is None:
+                setup = False
+                ytreeLogger.warn(
+                    f"{attr} missing from data. "
+                    "Arbor will have no cosmology calculator.")
+
+        if setup:
+            self.cosmology = Cosmology(
+                hubble_constant=self.hubble_constant,
+                omega_matter=self.omega_matter,
+                omega_lambda=self.omega_lambda,
+                unit_registry=self.unit_registry)
 
     def _setup_io(self):
         """
@@ -624,6 +639,8 @@ class Arbor(metaclass=RegisteredArbor):
     @hubble_constant.setter
     def hubble_constant(self, value):
         self._hubble_constant = value
+        if value is None:
+            return
         # reset the unit registry lut while preserving other changes
         self.unit_registry = UnitRegistry.from_json(
             self.unit_registry.to_json())

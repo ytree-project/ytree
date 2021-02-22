@@ -211,8 +211,9 @@ Check the TypeError exception above for more details.
         self.arbor.add_derived_field(
             "redshift", _redshift, units="", force_add=False)
 
-        self.arbor.add_derived_field(
-            "time", _time, units="Myr", force_add=False)
+        if hasattr(self.arbor, "cosmology"):
+            self.arbor.add_derived_field(
+                "time", _time, units="Myr", force_add=False)
 
     def add_vector_field(self, fieldname):
         """
