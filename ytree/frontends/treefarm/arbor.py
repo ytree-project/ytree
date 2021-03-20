@@ -63,7 +63,7 @@ class TreeFarmArbor(CatalogArbor):
 
     def _get_data_files(self):
         suffix = ".0" + self._suffix
-        reg = re.search(f"^(.+\D)\d+{suffix}$", self.filename)
+        reg = re.search(rf"^(.+\D)\d+{suffix}$", self.filename)
         if reg is None:
             raise RuntimeError(
                 f"Cannot determine numbering system for {self.filename}.")
