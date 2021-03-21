@@ -260,7 +260,7 @@ Check the TypeError exception above for more details.
                 # Check that the field array is the size we want.
                 # It might not be if it was previously gotten just
                 # for the root and now we want it for the whole tree.
-                if fsize is None or fcache[field].size == fsize:
+                if fsize is None or fcache[field].shape[0] == fsize:
                     continue
                 del fcache[field]
 
