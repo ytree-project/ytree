@@ -68,7 +68,7 @@ class TreeFarmArbor(CatalogArbor):
             raise RuntimeError(
                 f"Cannot determine numbering system for {self.filename}.")
         prefix = reg.groups()[0]
-        files = glob.glob(f"{prefix}*{suffix}")
+        files = glob.glob(f"{prefix}*{self._suffix}")
         fids = defaultdict(list)
         for my_file in files:
             fid = int(my_file[len(prefix):-len(suffix)])
