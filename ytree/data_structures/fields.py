@@ -26,6 +26,23 @@ from ytree.utilities.exceptions import \
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
+def _redshift(field, data):
+    return 1. / data["scale_factor"] - 1.
+
+def _time(field, data):
+    return data.arbor.cosmology.t_from_z(data["redshift"])
+
+def _vector_func(field, data):
+    name = field["name"]
+    field_data = data.arbor.arr([data["%s_%s" % (name, ax)]
+                                 for ax in "xyz"])
+    field_data = np.rollaxis(field_data, 1)
+    return field_data
+
+def _magnitude_func(field, data):
+    name = field["name"][:-len("_magnitude")]
+    return np.sqrt((data[name]**2).sum(axis=1))
+
 class FieldInfoContainer(dict):
     """
     A container for information about fields.
@@ -191,15 +208,12 @@ Check the TypeError exception above for more details.
         """
         Add stock derived fields.
         """
-        def _redshift(field, data):
-            return 1. / data["scale_factor"] - 1.
         self.arbor.add_derived_field(
             "redshift", _redshift, units="", force_add=False)
 
-        def _time(field, data):
-            return data.arbor.cosmology.t_from_z(data["redshift"])
-        self.arbor.add_derived_field(
-            "time", _time, units="Myr", force_add=False)
+        if hasattr(self.arbor, "cosmology"):
+            self.arbor.add_derived_field(
+                "time", _time, units="Myr", force_add=False)
 
     def add_vector_field(self, fieldname):
         """
@@ -207,19 +221,7 @@ Check the TypeError exception above for more details.
         x/y/z components.
         """
 
-        def _vector_func(field, data):
-            name = field["name"]
-            field_data = data.arbor.arr([data["%s_%s" % (name, ax)]
-                                         for ax in axes])
-            field_data = np.rollaxis(field_data, 1)
-            return field_data
-
-        def _magnitude_func(field, data):
-            name = field["name"][:-len("_magnitude")]
-            return np.sqrt((data[name]**2).sum(axis=1))
-
-        axes = "xyz"
-        exists = all([f"{fieldname}_{ax}" in self for ax in axes])
+        exists = all([f"{fieldname}_{ax}" in self for ax in "xyz"])
         if not exists:
             return None
 

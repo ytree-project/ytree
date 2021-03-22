@@ -16,6 +16,7 @@ AHFArbor io classes and member functions
 from collections import defaultdict
 import numpy as np
 import os
+import re
 import weakref
 
 from ytree.frontends.ahf.misc import \
@@ -30,7 +31,13 @@ class AHFDataFile(CatalogDataFile):
         self.filename = filename
         self.filekey = self.filename[:self.filename.rfind(".parameter")]
         self._parse_header()
-        self.data_filekey = "%s.z%.03f" % (self.filekey, self.redshift)
+
+        res = re.search(r"\.z\d\.\d{3}", self.filekey)
+        if res:
+            self.data_filekey = self.filekey[:res.end()]
+        else:
+            self.data_filekey = "%s.z%.03f" % (self.filekey, self.redshift)
+
         self.halos_filename = self.data_filekey + ".AHF_halos"
         self.mtree_filename = self.data_filekey + ".AHF_mtree"
         if not os.path.exists(self.mtree_filename):
@@ -64,13 +71,8 @@ class AHFDataFile(CatalogDataFile):
         files. Use that to get the name of the data file.
         """
 
-        pars = {"simu.omega0": "omega_matter",
-                "simu.lambda0": "omega_lambda",
-                "simu.boxsize": "box_size"}
         vals = parse_AHF_file(
-            self.filekey + ".log", pars, sep=":")
-        vals.update(parse_AHF_file(
-            self.filekey + ".parameter", {"z": "redshift"}))
+            self.filekey + ".parameter", {"z": "redshift"})
 
         for par, val in vals.items():
             setattr(self, par, val)
