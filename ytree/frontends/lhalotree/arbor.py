@@ -184,7 +184,7 @@ class LHaloTreeArbor(Arbor):
         self._size = ntrees_tot
 
         pbar = get_pbar("Loading tree roots", ntrees_tot)
-        self._node_info['_lht'] = np.empty(ntrees_tot, dtype=np.object)
+        self._node_info['_lht'] = np.empty(ntrees_tot, dtype=object)
 
         itot = 0
         for ifile, lht in enumerate(self._lhtfiles):
