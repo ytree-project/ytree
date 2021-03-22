@@ -46,7 +46,7 @@ class YTreeArbor(Arbor):
         if nodes is None:
             nodes = np.arange(self.size)
             ai = self._node_info['_ai']
-        elif nodes.dtype == np.object:
+        elif nodes.dtype == object:
             ai = np.array(
                 [node._ai if node.is_root else node.root._ai
                  for node in nodes])

@@ -289,7 +289,7 @@ class Arbor(metaclass=RegisteredArbor):
         size      = tree_node.tree_size
         uids      = tree_node.uids
         desc_uids = tree_node.desc_uids
-        links     = np.empty(size, dtype=np.object)
+        links     = np.empty(size, dtype=object)
 
         # Make a dict mapping uids to index of storage array.
         # First, try to get indices out as the dict is constructed
@@ -534,7 +534,7 @@ class Arbor(metaclass=RegisteredArbor):
 
         # If we've been given an array of TreeNodes,
         # just yield them back.
-        if getattr(indices, 'dtype', None) == np.object:
+        if getattr(indices, 'dtype', None) == object:
             for index in indices:
                 yield index
             return
@@ -1092,7 +1092,7 @@ class CatalogArbor(Arbor):
             for data_file in dfl:
                 data = data_file._read_fields(fields, dtypes=dtypes)
                 nhalos = len(data[halo_id_f])
-                batch = np.empty(nhalos, dtype=np.object)
+                batch = np.empty(nhalos, dtype=object)
 
                 for it in range(nhalos):
                     descid = data[desc_id_f][it]
@@ -1129,7 +1129,7 @@ class CatalogArbor(Arbor):
                         ancestor._descendent = descendent
 
             if i < nfiles - 1:
-                descs = np.empty(sum(bsize), dtype=np.object)
+                descs = np.empty(sum(bsize), dtype=object)
                 lastids = np.empty(descs.size, dtype=np.int64)
                 ib = 0
                 for batch, hid, bs in zip(batches, hids, bsize):
