@@ -116,7 +116,7 @@ class AHFArbor(CatalogArbor):
         self.data_files.reverse()
 
     def _get_file_index(self, f):
-        reg = re.search(f"{self._prefix}_(\d+)\.", self.filename)
+        reg = re.search(rf"{self._prefix}_(\d+)\.", self.filename)
         if not reg:
             raise RuntimeError(
                 f"Could not locate index within file: {self.filename}.")
