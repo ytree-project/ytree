@@ -17,6 +17,7 @@ from collections import \
     defaultdict
 import glob
 import h5py
+import re
 
 from unyt.unit_registry import \
     UnitRegistry
@@ -61,15 +62,18 @@ class TreeFarmArbor(CatalogArbor):
         fh.close()
 
     def _get_data_files(self):
-        prefix = self.filename.rsplit("_", 1)[0] + "_"
-        files = glob.glob("%s*%s" % (prefix, self._suffix))
         suffix = ".0" + self._suffix
+        reg = re.search(rf"^(.+\D)\d+{suffix}$", self.filename)
+        if reg is None:
+            raise RuntimeError(
+                f"Cannot determine numbering system for {self.filename}.")
+        prefix = reg.groups()[0]
+        files = glob.glob(f"{prefix}*{self._suffix}")
         fids = defaultdict(list)
         for my_file in files:
             fid = int(my_file[len(prefix):-len(suffix)])
             fids[fid].append(my_file)
-        my_files = [fids[myfid]
-                    for myfid in sorted(fids.keys(), reverse=True)]
+        my_files = [fids[myfid] for myfid in sorted(fids.keys(), reverse=True)]
         self.data_files = [[self._data_file_class(f, self)
                             for f in fl] for fl in my_files]
 
