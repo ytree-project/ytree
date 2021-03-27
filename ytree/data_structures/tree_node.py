@@ -323,6 +323,19 @@ class TreeNode:
         my_link = self._links[indices][index]
         return self.arbor._generate_tree_node(self, my_link)
 
+    def get_leaf_nodes(self, selector=None):
+        if selector is None:
+            if self.is_root:
+                selector = "forest"
+            else:
+                selector = "tree"
+
+        uids = self[selector, "uid"]
+        desc_uids = self[selector, "desc_uid"]
+        lids = np.where(~np.in1d(uids, desc_uids))[0]
+        for lid in lids:
+            yield self.get_node(selector, lid)
+
     _ffi = slice(None)
     @property
     def _forest_field_indices(self):
