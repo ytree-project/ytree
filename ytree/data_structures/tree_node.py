@@ -313,15 +313,12 @@ class TreeNode:
         return "TreeNode[%d]" % self.uid
 
     def get_node(self, selector, index):
-        if not self.is_root:
-            raise RuntimeError("Not root.")
-
         indices = getattr(self, f"_{selector}_field_indices", None)
         if indices is None:
             raise RuntimeError("Bad selector.")
 
-        my_link = self._links[indices][index]
-        return self.arbor._generate_tree_node(self, my_link)
+        my_link = self.root._links[indices][index]
+        return self.arbor._generate_tree_node(self.root, my_link)
 
     def get_leaf_nodes(self, selector=None):
         if selector is None:
