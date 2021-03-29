@@ -313,6 +313,37 @@ class TreeNode:
         return "TreeNode[%d]" % self.uid
 
     def get_node(self, selector, index):
+        """
+        Get a single TreeNode from a tree.
+
+        Use this to get the nth TreeNode from a forest, tree, or
+        progenitor list for which the calling TreeNode is the head.
+
+        Parameters
+        ----------
+        selector : str ("forest", "tree", or "prog")
+            The tree selector from which to get the TreeNode. This
+            should be "forest", "tree", or "prog".
+        index : int
+            The index of the desired TreeNode in the forest, tree,
+            or progenitor list.
+
+        Returns
+        -------
+        node: :class:`~ytree.data_structures.tree_node.TreeNode`
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("tiny_ctrees/locations.dat")
+        >>> my_tree = a[0]
+        >>> # get 6th TreeNode in the progenitor list
+        >>> my_node = my_tree.get_node('prog', 5)
+
+        """
+
+        self.arbor._grow_tree(self)
         indices = getattr(self, f"_{selector}_field_indices", None)
         if indices is None:
             raise RuntimeError("Bad selector.")
@@ -321,6 +352,35 @@ class TreeNode:
         return self.arbor._generate_tree_node(self.root, my_link)
 
     def get_leaf_nodes(self, selector=None):
+        """
+        Get all leaf nodes from the tree of which this is the head.
+
+        This returns a generator of all leaf nodes belonging to this
+        tree. A leaf node is a node that has no ancestors.
+
+        Parameters
+        ----------
+        selector : optional, str ("forest", "tree", or "prog")
+            The tree selector from which leaf nodes will be found.
+            If none given, this will be set to "forest" if the
+            calling node is a root node and "tree" otherwise.
+
+        Returns
+        -------
+        leaf_nodes : a generator of
+            :class:`~ytree.data_structures.tree_node.TreeNode` objects.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("tiny_ctrees/locations.dat")
+        >>> my_tree = a[0]
+        >>> for leaf in my_tree.get_leaf_nodes():
+        ...     print (leaf["mass"])
+
+        """
+
         if selector is None:
             if self.is_root:
                 selector = "forest"
