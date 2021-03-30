@@ -106,6 +106,26 @@ class ArborTest:
             len(self.arbor.data_files), self.num_data_files,
             err_msg='Incorrect number of data files for %s.' % self.arbor)
 
+    def test_get_node(self):
+        np.random.seed(47988)
+        itrees = np.arange(self.arbor.size)
+        np.random.shuffle(itrees)
+        for itree in itrees[:5]:
+            my_tree = self.arbor[itree]
+            verify_get_node(my_tree)
+
+            ihalos = np.arange(1, my_tree.tree_size)
+            np.random.shuffle(ihalos)
+            for ihalo in ihalos[:3]:
+                my_halo = my_tree.get_node("forest", ihalo)
+                verify_get_node(my_halo)
+
+    def test_get_node_ungrown(self):
+        my_tree = list(self.arbor[0].ancestors)[0]
+        my_halo = my_tree.get_node("forest", 0)
+        node_list = list(my_tree["forest"])
+        assert_equal(my_halo.uid, node_list[0].uid)
+
     def test_reset_node(self):
         t = self.arbor[0]
         ts0 = len(list(t['tree']))
@@ -276,3 +296,24 @@ def assert_array_rel_equal(a1, a2, decimals=16, **kwargs):
     Wraps assert_rel_equal with, but decimals is a keyword arg.
     """
     assert_rel_equal(a1, a2, decimals, **kwargs)
+
+def verify_get_node(my_tree, n=3):
+    """
+    Unit tests for get_node.
+    """
+    for selector in ["forest", "tree", "prog"]:
+        node_list = list(my_tree[selector])
+
+        inodes = np.arange(len(node_list))
+        np.random.shuffle(inodes)
+
+        for inode in inodes[:3]:
+            my_node = my_tree.get_node(selector, inode)
+            err_msg = f"get_node failed: {selector} " + \
+              f"with {str(my_tree.arbor)}."
+            assert_equal(my_node.uid, node_list[inode].uid, err_msg=err_msg)
+
+            if selector == "forest":
+                err_msg = f"get_node index is not tree_id for " + \
+                  f"{str(my_tree.arbor)}."
+                assert_equal(my_node.tree_id, inode, err_msg=err_msg)
