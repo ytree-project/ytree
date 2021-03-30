@@ -326,7 +326,7 @@ def verify_get_node(my_tree, n=3):
             assert_equal(my_node.uid, node_list[inode].uid, err_msg=err_msg)
 
             if selector == "forest":
-                err_msg = f"get_node index is not tree_id for " + \
+                err_msg = "get_node index is not tree_id for " + \
                   f"{str(my_tree.arbor)}."
                 assert_equal(my_node.tree_id, inode, err_msg=err_msg)
 
@@ -335,8 +335,6 @@ def verify_get_leaf_nodes(my_tree):
     Unit tests for get_leaf_nodes.
     """
     for selector in ["forest", "tree", "prog"]:
-        node_list = list(my_tree[selector])
-
         uids1 = np.array([node.uid for node in
                           my_tree.get_leaf_nodes(selector=selector)])
         uids2 = np.array([my_halo.uid for my_halo in my_tree[selector]
