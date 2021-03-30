@@ -106,6 +106,18 @@ class ArborTest:
             len(self.arbor.data_files), self.num_data_files,
             err_msg='Incorrect number of data files for %s.' % self.arbor)
 
+    def test_get_leaf_nodes(self):
+        np.random.seed(41153)
+        itrees = np.arange(self.arbor.size)
+        np.random.shuffle(itrees)
+        for itree in itrees[:5]:
+            my_tree = self.arbor[itree]
+            verify_get_leaf_nodes(my_tree)
+
+    def test_get_leaf_nodes_ungrown_nonroot(self):
+        my_tree = list(self.arbor[0].ancestors)[0]
+        verify_get_leaf_nodes(my_tree)
+
     def test_get_node(self):
         np.random.seed(47988)
         itrees = np.arange(self.arbor.size)
@@ -120,7 +132,7 @@ class ArborTest:
                 my_halo = my_tree.get_node("forest", ihalo)
                 verify_get_node(my_halo)
 
-    def test_get_node_ungrown(self):
+    def test_get_node_ungrown_nonroot(self):
         my_tree = list(self.arbor[0].ancestors)[0]
         my_halo = my_tree.get_node("forest", 0)
         node_list = list(my_tree["forest"])
@@ -317,3 +329,18 @@ def verify_get_node(my_tree, n=3):
                 err_msg = f"get_node index is not tree_id for " + \
                   f"{str(my_tree.arbor)}."
                 assert_equal(my_node.tree_id, inode, err_msg=err_msg)
+
+def verify_get_leaf_nodes(my_tree):
+    """
+    Unit tests for get_leaf_nodes.
+    """
+    for selector in ["forest", "tree", "prog"]:
+        node_list = list(my_tree[selector])
+
+        uids1 = np.array([node.uid for node in
+                          my_tree.get_leaf_nodes(selector=selector)])
+        uids2 = np.array([my_halo.uid for my_halo in my_tree[selector]
+                          if not list(my_halo.ancestors)])
+
+        err_msg=f"get_leaf_nodes failure for {selector} in {my_tree.arbor}."
+        assert_equal(uids1, uids2, err_msg=err_msg)
