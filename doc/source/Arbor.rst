@@ -164,7 +164,16 @@ Nodes in a given tree can be accessed in three different ways: by
 Each of these will return a generator of
 :class:`~ytree.data_structures.tree_node.TreeNode` objects or field
 values for all :class:`~ytree.data_structures.tree_node.TreeNode` objects
-in the tree, forest, or progenitor line.
+in the tree, forest, or progenitor line. To get on specific node from a
+tree, see :ref:`single-node-access`.
+
+.. note:: Access by forest is supported even for datasets that do not
+   group trees by forest. If there is no requirement for the order in
+   which nodes are to be returned, then access by forest is recommended
+   as it will be considerably faster than access by tree. Access by tree
+   is effectively a depth-first walk through the tree. This requires
+   additional data structures to be built, whereas forest access does
+   not.
 
 .. _tree-access:
 
@@ -172,7 +181,7 @@ Accessing All Nodes in a Tree
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The full lineage of the tree can be accessed by querying any
-:class:`~ytree.data_structures.tree_node.TreeNode` with the `tree` keyword.
+:class:`~ytree.data_structures.tree_node.TreeNode` with the ``tree`` keyword.
 As of ``ytree`` version 3.0, this returns a generator that can be used
 to loop through all nodes in the tree.
 
@@ -281,7 +290,7 @@ A halo's descendent can be accessed in a similar fashion.
 Accessing the Progenitor Lineage of a Tree
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Similar to the `tree` keyword, the `prog` keyword can be used to access
+Similar to the ``tree`` keyword, the ``prog`` keyword can be used to access
 the line of main progenitors. Just as above, this returns a generator
 of :class:`~ytree.data_structures.tree_node.TreeNode` objects.
 
@@ -339,6 +348,49 @@ minimally accept a list of ancestors and return a single
    >>> a.set_selector("max_field_value", "mass")
    >>> my_tree = a[0]
    >>> print (list(my_tree["prog"]))
+
+.. _single-node-access:
+
+Accessing a Single Node in a Tree
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :func:`~ytree.data_structures.tree_node.TreeNode.get_node` functions can be
+used to retrieve a single node from the forest, tree, or progenitor lists.
+
+.. code-block:: python
+
+   >>> my_tree = a[0]
+   >>> my_node = my_tree.get_node("forest", 5)
+
+This function can be called for any node in a tree. For selection by "tree" or
+"prog", the index of the node returned will be relative to the calling node,
+i.e., calling with 0 will return the original node. For selection by "forest",
+the index is the absolute index within the entire forest and not relative to
+the calling node.
+
+Accessing the Leaf Nodes of a Tree
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The leaf nodes of a tree are the nodes with no ancestors. These are the very first
+halos to form. Accessing them for any tree can be useful for semi-analytical
+models or any framework where you want to start at the origins of a halo and work
+forward in time. The :func:`~ytree.data_structures.tree_node.TreeNode.get_leaf_nodes`
+function will return a generator of all leaf nodes of a tree's forest, tree, or
+progenitor lists.
+
+.. code-block:: python
+
+   >>> my_tree = a[0]
+   >>> my_leaves = my_tree.get_leaf_nodes(selector="forest")
+   >>> for my_leaf in my_leaves:
+   ...     print (my_leaf)
+
+Similar to the :func:`~ytree.data_structures.tree_node.TreeNode.get_node`
+function, calling :func:`~ytree.data_structures.tree_node.TreeNode.get_leaf_nodes`
+with ``selector`` set to "tree" or "prog" will return only leaf nodes from the
+tree for which the calling node is the head. With ``selector`` set to "forest",
+the resulting leaf nodes will be all the leaf nodes in the forest, regardless of
+the calling node.
 
 Searching for Halos
 -------------------
