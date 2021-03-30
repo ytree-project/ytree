@@ -143,9 +143,17 @@ class TreeNode:
                 yield self.arbor._generate_tree_node(self.root, link)
             return
 
+        # If tree is not setup yet, the ancestor nodes will not have
+        # root pointers yet.
+        need_root = not self.arbor.is_setup(self)
+        if need_root:
+            root = self.walk_to_root()
+
         # set in CatalogArbor._plant_trees
         if self._ancestors is not None:
             for ancestor in self._ancestors:
+                if need_root:
+                    ancestor.root = root
                 yield ancestor
             return
         return None
@@ -343,6 +351,7 @@ class TreeNode:
 
         """
 
+        self.arbor._setup_tree(self)
         self.arbor._grow_tree(self)
         indices = getattr(self, f"_{selector}_field_indices", None)
         if indices is None:
