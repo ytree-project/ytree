@@ -25,12 +25,35 @@ from ytree.data_structures.io import \
     DefaultRootFieldIO, \
     TreeFieldIO
 
+class ChunkStore:
+    def __init__(self, chunk_size=262144):
+        self.chunk_size = chunk_size
+        self.reset()
+
+    def reset(self):
+        self.data = {}
+        self.ind = {}
+
+    def get(self, fh, field, index):
+        start, end = index
+        si, ei = self.ind.get(field, (0, 0))
+
+        if field not in self.data or ei < end or si > start:
+            si = start
+            ei = start + self.chunk_size
+            self.ind[field] = (si, ei)
+            self.data[field] = fh[field][si:ei]
+
+        data_s = start - si
+        data_e = end - si
+        return self.data[field][data_s:data_e]
+
 class ConsistentTreesHDF5DataFile(DataFile):
     def __init__(self, filename, linkname):
         super(ConsistentTreesHDF5DataFile, self).__init__(filename)
         self.linkname = linkname
         self.real_fh = None
-        self._field_cache = None
+        self._field_cache = ChunkStore()
 
     def open(self):
         self.real_fh = h5py.File(self.filename, mode="r")
@@ -52,9 +75,6 @@ class ConsistentTreesHDF5TreeFieldIO(TreeFieldIO):
 
         data_file = self.arbor.data_files[root_node._fi]
 
-        if data_file._field_cache is None:
-            data_file._field_cache = {}
-
         close = False
         if data_file.fh is None:
             close = True
@@ -63,20 +83,17 @@ class ConsistentTreesHDF5TreeFieldIO(TreeFieldIO):
         if self.arbor._aos:
             fh = fh['halos']
 
+        if root_only:
+            index = (root_node._si, root_node._si+1)
+        else:
+            index = (root_node._si, root_node._ei)
+
         field_cache = data_file._field_cache
-        field_cache.update(
-            dict((field, fh[field][()])
-                 for field in fields
-                 if field not in field_cache))
+        field_data = dict((field, field_cache.get(fh, field, index))
+                          for field in fields)
+
         if close:
             data_file.close()
-
-        if root_only:
-            index = slice(root_node._si, root_node._si+1)
-        else:
-            index = slice(root_node._si, root_node._ei)
-        field_data = dict((field, field_cache[field][index])
-                          for field in fields)
 
         fi = self.arbor.field_info
         for field in fields:
@@ -116,23 +133,18 @@ class ConsistentTreesHDF5RootFieldIO(DefaultRootFieldIO):
 
         pbar = get_pbar('Reading root fields', arbor.size)
         for idf, (data_file, nodes) in enumerate(zip(data_files, index_list)):
+            my_indices = arbor._node_info['_si'][istart[idf]:iend[idf]]
             arbor._node_io_loop_start(data_file)
 
             fh = data_file.fh['Forests']
             if self.arbor._aos:
                 fh = fh['halos']
 
-            field_cache = data_file._field_cache
-            field_cache.update(
-                dict((field, fh[field][()])
-                     for field in fields
-                     if field not in field_cache))
+            for field in fields:
+                darray = fh[field][()]
+                rdata[field].append(darray[my_indices])
 
             arbor._node_io_loop_finish(data_file)
-
-            my_indices = arbor._node_info['_si'][istart[idf]:iend[idf]]
-            for field in fields:
-                rdata[field].append(field_cache[field][my_indices])
 
             c += my_indices.size
             pbar.update(c)

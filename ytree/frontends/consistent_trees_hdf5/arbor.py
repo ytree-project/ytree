@@ -79,11 +79,10 @@ class ConsistentTreesHDF5Arbor(Arbor):
     _node_io_loop_prepare = ConsistentTreesGroupArbor._node_io_loop_prepare
 
     def _node_io_loop_start(self, data_file):
-        data_file._field_cache = {}
         data_file.open()
 
     def _node_io_loop_finish(self, data_file):
-        data_file._field_cache = {}
+        data_file._field_cache.reset()
         data_file.close()
 
     @property
