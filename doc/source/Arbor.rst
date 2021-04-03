@@ -164,11 +164,11 @@ Nodes in a given tree can be accessed in three different ways: by
 Each of these will return a generator of
 :class:`~ytree.data_structures.tree_node.TreeNode` objects or field
 values for all :class:`~ytree.data_structures.tree_node.TreeNode` objects
-in the tree, forest, or progenitor line. To get on specific node from a
+in the tree, forest, or progenitor line. To get a specific node from a
 tree, see :ref:`single-node-access`.
 
 .. note:: Access by forest is supported even for datasets that do not
-   group trees by forest. If there is no requirement for the order in
+   group trees by forest. If you have no requirement for the order in
    which nodes are to be returned, then access by forest is recommended
    as it will be considerably faster than access by tree. Access by tree
    is effectively a depth-first walk through the tree. This requires
