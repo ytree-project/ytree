@@ -1017,7 +1017,7 @@ class CatalogArbor(Arbor):
 
     # Don't reset _ancestors or descendents because we won't be able to
     # rebuild trees without calling _plant_trees again.
-    _setup_attrs = ("_desc_uids", "_uids", "_nodes")
+    _setup_attrs = ("_desc_uids", "_uids", "_nodes", "_link_storage")
     _grow_attrs = ()
 
     def __init__(self, filename):
@@ -1155,17 +1155,25 @@ class CatalogArbor(Arbor):
         nodes     = []
         uids      = []
         desc_uids = [-1]
+        # This is redundant, but enables functionality that uses
+        # the link storage, like TreeNode.get_node.
+        links     = []
         for i, node in enumerate(tree_node._tree_nodes):
             node._tree_id = i
             node.root     = tree_node
             nodes.append(node)
             uids.append(node.uid)
+            link = NodeLink(i)
+            links.append(link)
             if i > 0:
                 desc_uids.append(node.descendent.uid)
+                desc_link = links[node.descendent.tree_id]
+                desc_link.add_ancestor(link)
         tree_node._nodes     = np.array(nodes)
         tree_node._uids      = np.array(uids)
         tree_node._desc_uids = np.array(desc_uids)
         tree_node._tree_size = tree_node._uids.size
+        tree_node._link_storage = np.array(links)
         # This should bypass any attempt to get this field in
         # the conventional way.
         if self.field_info["uid"].get("source") == "arbor":
