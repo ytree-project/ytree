@@ -21,6 +21,8 @@ import os
 from unyt.unit_registry import \
     UnitRegistry
 
+from yt.data_objects.data_containers import \
+    YTDataContainer
 from yt.utilities.logger import \
     ytLogger
 
@@ -30,6 +32,9 @@ from ytree.frontends.ytree.io import \
     YTreeDataFile, \
     YTreeRootFieldIO, \
     YTreeTreeFieldIO
+from ytree.frontends.ytree.utilities import \
+    get_about, \
+    get_conditional
 from ytree.utilities.io import \
     _hdf5_yt_attr, \
     parse_h5_attr
@@ -137,7 +142,56 @@ class YTreeArbor(Arbor):
                 df.analysis_filename = \
                   f"{self._prefix}_{i:04d}-analysis{self._suffix}"
 
-    def get_nodes_from_yt(self, container):
+    def get_yt_selection(self, above=None, below=None, equal=None, about=None,
+                         conditionals=None, data_source=None):
+
+        if above is None:
+            above = []
+        if below is None:
+            below = []
+        if equal is None:
+            equal = []
+        if about is None:
+            about = []
+        if conditionals is None:
+            conditionals = []
+
+        if not (bool(conditionals) ^ any([above, below, equal, about])):
+            raise ValueError(
+                "Must specify either conditionals or above/below/equal/about, not both."
+                f"\nconditionals: {conditionals}"
+                f"\nabove: {above}"
+                f"\nbelow: {below}"
+                f"\nequal: {equal}"
+                f"\nabout: {about}")
+
+        if data_source is None:
+            data_source = self.ytds.all_data()
+
+        if not isinstance(data_source, YTDataContainer):
+            raise ValueError(
+                f"data_source must be a YTDataContainer: {data_source}.")
+
+        for criterion in above:
+            condition = get_conditional("above", criterion)
+            conditionals.append(condition)
+
+        for criterion in below:
+            condition = get_conditional("below", criterion)
+            conditionals.append(condition)
+
+        for criterion in equal:
+            condition = get_conditional("equal", criterion)
+            conditionals.append(condition)
+
+        for criterion in about:
+            conditions = get_about(criterion)
+            conditionals.extend(conditions)
+
+        cr = data_source.cut_region(conditionals)
+        return cr
+
+    def get_nodes_from_selection(self, container):
         """
         Generate TreeNodes from a yt data container.
 
