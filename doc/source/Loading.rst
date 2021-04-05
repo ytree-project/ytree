@@ -22,16 +22,23 @@ of the first ".parameter" file.
    >>> a = ytree.load("ahf_halos/snap_N64L16_000.parameter",
    ...                hubble_constant=0.7)
 
-.. note:: Three important notes about loading AHF data:
+.. note:: Four important notes about loading AHF data:
 
           1. The dimensionless Hubble parameter is not provided in AHF
              outputs.  This should be supplied by hand using the
              ``hubble_constant`` keyword. The default value is 1.0.
 
-          2. There will be no ".AHF_mtree" file for index 0 as the
+          2. If the ".log" file is named in a unconventional way or cannot
+             be found for some reason, its path can be specified with the
+             ``log_filename`` keyword argument. If no log file exists,
+             values for ``omega_matter``, ``omega_lambda``, and ``box_size``
+             (in units of Mpc/h) can be provided with keyword arguments
+             named thusly.
+
+          3. There will be no ".AHF_mtree" file for index 0 as the
              ".AHF_mtree" files store links between files N-1 and N.
 
-          3. ``ytree`` is able to load data where the graph has been
+          4. ``ytree`` is able to load data where the graph has been
              calculated instead of the tree. However, even in this case,
              only the tree is preserved in ``ytree``. See the `Amiga Halo
              Finder Documentation

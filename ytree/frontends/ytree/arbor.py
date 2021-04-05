@@ -53,7 +53,7 @@ class YTreeArbor(Arbor):
         if nodes is None:
             nodes = np.arange(self.size)
             ai = self._node_info['_ai']
-        elif nodes.dtype == np.object:
+        elif nodes.dtype == object:
             ai = np.array(
                 [node._ai if node.is_root else node.root._ai
                  for node in nodes])
@@ -90,13 +90,14 @@ class YTreeArbor(Arbor):
         for attr in ["hubble_constant",
                      "omega_matter",
                      "omega_lambda"]:
-            setattr(self, attr, fh.attrs[attr])
+            setattr(self, attr, fh.attrs.get(attr, None))
         if "unit_registry_json" in fh.attrs:
             self.unit_registry = \
               UnitRegistry.from_json(
                   parse_h5_attr(fh, "unit_registry_json"))
-        self.box_size = _hdf5_yt_attr(
-            fh, "box_size", unit_registry=self.unit_registry)
+        if "box_size" in fh.attrs:
+            self.box_size = _hdf5_yt_attr(
+                fh, "box_size", unit_registry=self.unit_registry)
         self.field_info.update(
             json.loads(parse_h5_attr(fh, "field_info")))
         self._size = fh.attrs["total_trees"]

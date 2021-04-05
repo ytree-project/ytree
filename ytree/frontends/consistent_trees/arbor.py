@@ -147,7 +147,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         if nodes is None:
             nodes = np.arange(self.size)
             fi = self._node_info['_fi']
-        elif nodes.dtype == np.object:
+        elif nodes.dtype == object:
             fi = np.array(
                 [node._fi if node.is_root else node.root._fi
                  for node in nodes])

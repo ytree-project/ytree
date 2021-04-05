@@ -51,9 +51,9 @@ setup(name="ytree",
           "Operating System :: POSIX :: Linux",
           "Operating System :: Unix",
           "Natural Language :: English",
-          "Programming Language :: Python :: 3.6",
           "Programming Language :: Python :: 3.7",
           "Programming Language :: Python :: 3.8",
+          "Programming Language :: Python :: 3.9",
       ],
       install_requires=[
           'configparser',
@@ -67,5 +67,5 @@ setup(name="ytree",
           'dev': dev_requirements,
           'rtd': [pkg for pkg in dev_requirements if 'sphinx' not in pkg],
       },
-      python_requires='>=3.6'
+      python_requires='>=3.7'
 )

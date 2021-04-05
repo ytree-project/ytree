@@ -48,6 +48,7 @@ from ytree.data_structures.tree_node import \
 from ytree.data_structures.tree_node_selector import \
     tree_node_selector_registry
 from ytree.utilities.logger import \
+    ytreeLogger, \
     fake_pbar
 
 arbor_registry = {}
@@ -100,6 +101,9 @@ class Arbor(metaclass=RegisteredArbor):
     _setup_attrs = ("_desc_uids", "_uids")
     _grow_attrs = ("_link_storage", "_link")
 
+    omega_matter = None
+    omega_lambda = None
+
     def __init__(self, filename):
         """
         Initialize an Arbor given an input file.
@@ -147,11 +151,22 @@ class Arbor(metaclass=RegisteredArbor):
                 new_unit, self._unit_registry.lut[my_unit][0],
                 length, self._unit_registry.lut[my_unit][3])
 
-        self.cosmology = Cosmology(
-            hubble_constant=self.hubble_constant,
-            omega_matter=self.omega_matter,
-            omega_lambda=self.omega_lambda,
-            unit_registry=self.unit_registry)
+        setup = True
+        for attr in ["hubble_constant",
+                     "omega_matter",
+                     "omega_lambda"]:
+            if getattr(self, attr) is None:
+                setup = False
+                ytreeLogger.warn(
+                    f"{attr} missing from data. "
+                    "Arbor will have no cosmology calculator.")
+
+        if setup:
+            self.cosmology = Cosmology(
+                hubble_constant=self.hubble_constant,
+                omega_matter=self.omega_matter,
+                omega_lambda=self.omega_lambda,
+                unit_registry=self.unit_registry)
 
     def _setup_io(self):
         """
@@ -274,7 +289,7 @@ class Arbor(metaclass=RegisteredArbor):
         size      = tree_node.tree_size
         uids      = tree_node.uids
         desc_uids = tree_node.desc_uids
-        links     = np.empty(size, dtype=np.object)
+        links     = np.empty(size, dtype=object)
 
         # Make a dict mapping uids to index of storage array.
         # First, try to get indices out as the dict is constructed
@@ -525,7 +540,7 @@ class Arbor(metaclass=RegisteredArbor):
 
         # If we've been given an array of TreeNodes,
         # just yield them back.
-        if getattr(indices, 'dtype', None) == np.object:
+        if getattr(indices, 'dtype', None) == object:
             for index in indices:
                 yield index
             return
@@ -630,6 +645,8 @@ class Arbor(metaclass=RegisteredArbor):
     @hubble_constant.setter
     def hubble_constant(self, value):
         self._hubble_constant = value
+        if value is None:
+            return
         # reset the unit registry lut while preserving other changes
         self.unit_registry = UnitRegistry.from_json(
             self.unit_registry.to_json())
@@ -1006,7 +1023,7 @@ class CatalogArbor(Arbor):
 
     # Don't reset _ancestors or descendents because we won't be able to
     # rebuild trees without calling _plant_trees again.
-    _setup_attrs = ("_desc_uids", "_uids", "_nodes")
+    _setup_attrs = ("_desc_uids", "_uids", "_nodes", "_link_storage")
     _grow_attrs = ()
 
     def __init__(self, filename):
@@ -1081,7 +1098,7 @@ class CatalogArbor(Arbor):
             for data_file in dfl:
                 data = data_file._read_fields(fields, dtypes=dtypes)
                 nhalos = len(data[halo_id_f])
-                batch = np.empty(nhalos, dtype=np.object)
+                batch = np.empty(nhalos, dtype=object)
 
                 for it in range(nhalos):
                     descid = data[desc_id_f][it]
@@ -1118,7 +1135,7 @@ class CatalogArbor(Arbor):
                         ancestor._descendent = descendent
 
             if i < nfiles - 1:
-                descs = np.empty(sum(bsize), dtype=np.object)
+                descs = np.empty(sum(bsize), dtype=object)
                 lastids = np.empty(descs.size, dtype=np.int64)
                 ib = 0
                 for batch, hid, bs in zip(batches, hids, bsize):
@@ -1144,17 +1161,25 @@ class CatalogArbor(Arbor):
         nodes     = []
         uids      = []
         desc_uids = [-1]
+        # This is redundant, but enables functionality that uses
+        # the link storage, like TreeNode.get_node.
+        links     = []
         for i, node in enumerate(tree_node._tree_nodes):
             node._tree_id = i
             node.root     = tree_node
             nodes.append(node)
             uids.append(node.uid)
+            link = NodeLink(i)
+            links.append(link)
             if i > 0:
                 desc_uids.append(node.descendent.uid)
+                desc_link = links[node.descendent.tree_id]
+                desc_link.add_ancestor(link)
         tree_node._nodes     = np.array(nodes)
         tree_node._uids      = np.array(uids)
         tree_node._desc_uids = np.array(desc_uids)
         tree_node._tree_size = tree_node._uids.size
+        tree_node._link_storage = np.array(links)
         # This should bypass any attempt to get this field in
         # the conventional way.
         if self.field_info["uid"].get("source") == "arbor":
