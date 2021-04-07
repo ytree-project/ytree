@@ -154,7 +154,7 @@ class YTreeArbor(Arbor):
         selection criteria. The
         :class:`~yt.data_objects.selection_objects.cut_region.YTCutRegion`
         can then be passed to
-        :func:`~ytree.data_structures.arbor.Arbor.get_nodes_from_selection`
+        :func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_nodes_from_selection`
         to get all the
         :class:`~ytree.data_structures.tree_node.TreeNode` that meet the
         criteria.
@@ -192,7 +192,7 @@ class YTreeArbor(Arbor):
             A list of conditionals for constructing a custom
             :class:`~yt.data_objects.selection_objects.cut_region.YTCutRegion`.
             This can be used instead of above/below/equal/about to create
-            more complex selection criteria. See :ref:`cut-regions` in the
+            more complex selection criteria. See the Cut Regions section in the
             yt documentation for more information. The conditionals keyword
             can only be used if none of the first for selection keywords are
             given.
@@ -251,6 +251,9 @@ class YTreeArbor(Arbor):
         >>> sel = a.get_yt_selection(
         ...     above=[("mass", 1e13)],
         ...     data_source=sphere)
+        >>> # get the TreeNodes for the selection
+        >>> for node in a.get_nodes_from_selection(sel):
+        ...     print (node["mass"])
 
         See Also
         --------
@@ -320,8 +323,9 @@ class YTreeArbor(Arbor):
 
         Returns
         -------
-        nodes : a generator of
-            :class:`~ytree.data_structures.tree_node.TreeNode` objects
+        nodes : generator
+            The :class:`~ytree.data_structures.tree_node.TreeNode` objects
+            contained within the container.
 
         Examples
         --------
