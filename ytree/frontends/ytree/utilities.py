@@ -32,7 +32,7 @@ def get_about(criterion):
     if len(criterion) == 3:
         field, value, within = criterion
         units = None
-    elif len(criterion) == 3:
+    elif len(criterion) == 4:
         field, value, units, within = criterion
     else:
         raise ValueError(
