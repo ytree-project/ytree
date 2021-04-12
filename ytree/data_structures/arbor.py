@@ -147,9 +147,9 @@ class Arbor(metaclass=RegisteredArbor):
         """
         for my_unit in ["m", "pc", "AU"]:
             new_unit = "%scm" % my_unit
-            self._unit_registry.add(
-                new_unit, self._unit_registry.lut[my_unit][0],
-                length, self._unit_registry.lut[my_unit][3])
+            self.unit_registry.add(
+                new_unit, self.unit_registry.lut[my_unit][0],
+                length, self.unit_registry.lut[my_unit][3])
 
         setup = True
         for attr in ["hubble_constant",
