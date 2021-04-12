@@ -47,7 +47,7 @@ class LHaloTreeHDF5Arbor(Arbor):
     _root_field_io_class = LHaloTreeHDF5RootFieldIO
     _tree_field_io_class = LHaloTreeHDF5TreeFieldIO
     _default_dtype = np.float32
-    _node_io_attrs = ('_fi', '_si')
+    _node_io_attrs = ('_fi', '_si', '_tree_size')
 
     def __init__(self, filename):
         super(LHaloTreeHDF5Arbor, self).__init__(filename)
@@ -94,6 +94,10 @@ class LHaloTreeHDF5Arbor(Arbor):
 
         self.field_list = field_list
         fi = dict((field, {}) for field in field_list)
+        for field in ["uid", "desc_uid"]:
+            self.field_list.append(field)
+            fi[field] = {"units": "", "source": "arbor"}
+        fi["desc_uid"]["dependencies"] = ["Descendant"]
         self.field_info.update(fi)
 
     def _plant_trees(self):
@@ -102,7 +106,6 @@ class LHaloTreeHDF5Arbor(Arbor):
 
         c = 0
         file_offsets = self._file_count.cumsum() - self._file_count
-        uids = np.empty(self._size, dtype=np.int64)
         pbar = get_pbar('Planting trees', self._size)
         for idf, data_file in enumerate(self.data_files):
             data_file.open()
@@ -113,12 +116,13 @@ class LHaloTreeHDF5Arbor(Arbor):
             istart = file_offsets[idf]
             iend = istart + size
 
-            uids[istart:iend] = tree_size
             self._node_info['_fi'][istart:iend] = idf
             self._node_info['_si'][istart:iend] = np.arange(size)
+            self._node_info['_tree_size'][istart:iend] = tree_size
             c += size
             pbar.update(c)
         pbar.finish()
+        uids = self._node_info['_tree_size']
         self._node_info['uid'] = uids.cumsum() - uids
 
     @classmethod

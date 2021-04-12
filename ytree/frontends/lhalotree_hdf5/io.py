@@ -16,6 +16,7 @@ LHaloTreeHDF5Arbor io classes and member functions
 from collections import defaultdict
 import h5py
 import numpy as np
+import re
 
 from yt.funcs import \
     get_pbar
@@ -47,38 +48,81 @@ class LHaloTreeHDF5TreeFieldIO(TreeFieldIO):
         Read fields from disk for a single tree.
         """
 
-        data_file = self.arbor.data_files[root_node._fi]
+        fi = self.arbor.field_info
+        afields = [field for field in fields
+                   if fi[field].get("source") == "arbor"]
+        rfields = list(set(fields).difference(afields))
 
+        for afield in afields:
+            rfields.extend(
+                [dfield for dfield in fi[afield].get("dependencies", [])
+                 if dfield not in rfields])
+
+        data_file = self.arbor.data_files[root_node._fi]
         close = False
         if data_file.fh is None:
             close = True
             data_file.open()
-        fh = data_file.fh['Forests']
-        if self.arbor._aos:
-            fh = fh['halos']
+        fh = data_file.fh
+        g = fh[f"Tree{root_node._si}"]
 
         if root_only:
-            index = (root_node._si, root_node._si+1)
+            index = slice(0, 1)
         else:
-            index = (root_node._si, root_node._ei)
+            index = ()
 
-        field_cache = data_file._field_cache
-        field_data = dict((field, field_cache.get(fh, field, index))
-                          for field in fields)
+        field_cache = {}
+        field_data = {}
+        freg = re.compile("(^.+)_(\d+$)")
+        for field in rfields:
+            fs = freg.search(field)
+            if fs and fs.groups()[0] in g:
+                fieldname, ifield = fs.groups()
+                ifield = int(ifield)
+                if fieldname not in field_cache:
+                    field_cache[fieldname] = g[fieldname][index]
+                field_data[field] = field_cache[fieldname][:, ifield]
+            else:
+                field_data[field] = g[field][index]
+
+        if afields:
+            field_data.update(self._get_arbor_fields(
+                root_node, field_data, fields, afields, root_only))
 
         if close:
             data_file.close()
 
-        fi = self.arbor.field_info
-        for field in fields:
+        for field in rfields:
             units = fi[field].get("units", "")
-            if close:
-                field_data[field] = field_data[field].copy()
             if units != "":
                 field_data[field] = \
                   self.arbor.arr(field_data[field], units)
 
         return field_data
+
+    def _get_arbor_fields(self, root_node, field_data,
+                          fields, afields, root_only):
+        """
+        Generate special fields from the arbor/treenode.
+        """
+
+        adata = {}
+
+        if "uid" in afields:
+            if root_only:
+                adata["uid"] = np.array([root_node._tree_size])
+            else:
+                adata["uid"] = np.arange(root_node._tree_size)
+
+        if "desc_uid" in afields:
+            if "Descendant" in fields:
+                desc_uids = field_data["Descendant"].copy()
+            else:
+                desc_uids = field_data.pop("Descendant")
+            desc_uids[1:] += root_node.uid
+            adata["desc_uid"] = desc_uids
+
+        return adata
 
 class LHaloTreeHDF5RootFieldIO(DefaultRootFieldIO):
     """
