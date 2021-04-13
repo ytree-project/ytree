@@ -68,6 +68,7 @@ class LHaloTreeHDF5Arbor(SegmentedArbor):
         f = h5py.File(self.parameter_filename, mode='r')
         g = f["Header"]
         ntrees = g.attrs["NtreesPerFile"]
+        self._redshifts = g["Redshifts"][()]
 
         field_list = []
         if ntrees == 0:

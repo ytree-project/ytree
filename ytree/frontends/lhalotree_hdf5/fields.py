@@ -24,6 +24,10 @@ r_unit = "kpc/h"
 v_unit = "km/s"
 j_unit = "kpc * km/s"
 
+def _redshift(field, data):
+    isn = data["SnapNum"].astype(int)
+    return data.arbor.arr(data.arbor._redshifts[isn], "")
+
 class LHaloTreeHDF5FieldInfo(FieldInfoContainer):
     alias_fields = (
         ("position_x", "SubhaloPos_0", p_unit),
@@ -71,3 +75,9 @@ class LHaloTreeHDF5FieldInfo(FieldInfoContainer):
             fs = freg.search(field)
             if fs and fs.groups()[0] in kfields:
                 self[field]["units"] = kfields[fs.groups()[0]]
+
+    def setup_derived_fields(self):
+        self.arbor.add_derived_field(
+            "redshift", _redshift, units="", force_add=False)
+
+        super().setup_derived_fields()
