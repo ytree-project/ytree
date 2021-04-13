@@ -59,7 +59,7 @@ class LHaloTreeHDF5FieldInfo(FieldInfoContainer):
         """
 
         kfields = dict(self.known_fields)
-        freg = re.compile("(^.+)_\d+$")
+        freg = re.compile(r"(^.+)_\d+$")
         for field in self:
             if self[field].get("units") is not None:
                 continue

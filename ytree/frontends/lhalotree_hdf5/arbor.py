@@ -13,7 +13,6 @@ LHaloTreeHDF5Arbor class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from collections import defaultdict
 import glob
 import h5py
 import numpy as np
@@ -30,10 +29,6 @@ from ytree.frontends.lhalotree_hdf5.fields import \
 from ytree.frontends.lhalotree_hdf5.io import \
     LHaloTreeHDF5DataFile, \
     LHaloTreeHDF5TreeFieldIO
-from ytree.utilities.exceptions import \
-    ArborDataFileEmpty
-from ytree.utilities.logger import \
-    ytreeLogger as mylog
 
 class LHaloTreeHDF5Arbor(SegmentedArbor):
     """

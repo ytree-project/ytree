@@ -13,17 +13,12 @@ LHaloTreeHDF5Arbor io classes and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from collections import defaultdict
 import h5py
 import numpy as np
 import re
 
-from yt.funcs import \
-    get_pbar
-
 from ytree.data_structures.io import \
     DataFile, \
-    DefaultRootFieldIO, \
     TreeFieldIO
 
 class LHaloTreeHDF5DataFile(DataFile):
@@ -73,7 +68,7 @@ class LHaloTreeHDF5TreeFieldIO(TreeFieldIO):
 
         field_cache = {}
         field_data = {}
-        freg = re.compile("(^.+)_(\d+$)")
+        freg = re.compile(r"(^.+)_(\d+$)")
         for field in rfields:
             fs = freg.search(field)
             if fs and fs.groups()[0] in g:
