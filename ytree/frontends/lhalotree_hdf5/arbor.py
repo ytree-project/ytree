@@ -47,8 +47,14 @@ class LHaloTreeHDF5Arbor(SegmentedArbor):
     _default_dtype = np.float32
     _node_io_attrs = ('_fi', '_si', '_tree_size')
 
-    def __init__(self, filename):
-        self.hubble_constant = 0.7
+    def __init__(self, filename,
+                 hubble_constant=1.0, box_size=None,
+                 omega_matter=None, omega_lambda=None):
+        self.hubble_constant = hubble_constant
+        self.omega_matter = omega_matter
+        self.omega_lambda = omega_lambda
+        if box_size is not None:
+            self.box_size = self.quan(box_size, "Mpc/h")
         super(LHaloTreeHDF5Arbor, self).__init__(filename)
 
     def _get_data_files(self):

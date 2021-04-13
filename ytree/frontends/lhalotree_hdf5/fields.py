@@ -19,7 +19,7 @@ from ytree.data_structures.fields import \
     FieldInfoContainer
 
 m_unit = "1e10 * Msun/h"
-p_unit = "Mpc"
+p_unit = "Mpc/h"
 r_unit = "kpc/h"
 v_unit = "km/s"
 j_unit = "kpc * km/s"
