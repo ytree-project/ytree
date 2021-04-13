@@ -48,6 +48,7 @@ class LHaloTreeHDF5Arbor(SegmentedArbor):
     _node_io_attrs = ('_fi', '_si', '_tree_size')
 
     def __init__(self, filename):
+        self.hubble_constant = 0.7
         super(LHaloTreeHDF5Arbor, self).__init__(filename)
 
     def _get_data_files(self):
