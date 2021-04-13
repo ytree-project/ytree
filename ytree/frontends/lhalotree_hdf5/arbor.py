@@ -23,20 +23,19 @@ from yt.funcs import \
     get_pbar
 
 from ytree.data_structures.arbor import \
-    Arbor
+    SegmentedArbor
 
 from ytree.frontends.lhalotree_hdf5.fields import \
     LHaloTreeHDF5FieldInfo
 from ytree.frontends.lhalotree_hdf5.io import \
     LHaloTreeHDF5DataFile, \
-    LHaloTreeHDF5RootFieldIO, \
     LHaloTreeHDF5TreeFieldIO
 from ytree.utilities.exceptions import \
     ArborDataFileEmpty
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
-class LHaloTreeHDF5Arbor(Arbor):
+class LHaloTreeHDF5Arbor(SegmentedArbor):
     """
     Arbors loaded from consistent-trees data converted into HDF5.
     """
@@ -44,22 +43,12 @@ class LHaloTreeHDF5Arbor(Arbor):
     _suffix = ".hdf5"
     _data_file_class = LHaloTreeHDF5DataFile
     _field_info_class = LHaloTreeHDF5FieldInfo
-    _root_field_io_class = LHaloTreeHDF5RootFieldIO
     _tree_field_io_class = LHaloTreeHDF5TreeFieldIO
     _default_dtype = np.float32
     _node_io_attrs = ('_fi', '_si', '_tree_size')
 
     def __init__(self, filename):
         super(LHaloTreeHDF5Arbor, self).__init__(filename)
-
-    # _node_io_loop_prepare = LHaloTreeGroupArbor._node_io_loop_prepare
-
-    # def _node_io_loop_start(self, data_file):
-    #     data_file.open()
-
-    # def _node_io_loop_finish(self, data_file):
-    #     data_file._field_cache.reset()
-    #     data_file.close()
 
     def _get_data_files(self):
         suffix = self._suffix
