@@ -105,9 +105,10 @@ class LHaloTreeHDF5TreeFieldIO(TreeFieldIO):
 
         if "uid" in afields:
             if root_only:
-                adata["uid"] = np.array([root_node._tree_size])
+                adata["uid"] = np.array([root_node.uid])
             else:
-                adata["uid"] = np.arange(root_node._tree_size)
+                adata["uid"] = root_node.uid + \
+                  np.arange(root_node._tree_size)
 
         if "desc_uid" in afields:
             if "Descendant" in fields:
