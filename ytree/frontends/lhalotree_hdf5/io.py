@@ -115,7 +115,7 @@ class LHaloTreeHDF5TreeFieldIO(TreeFieldIO):
                 desc_uids = field_data["Descendant"].copy()
             else:
                 desc_uids = field_data.pop("Descendant")
-            desc_uids[1:] += root_node.uid
+            desc_uids[desc_uids != -1] += root_node.uid
             adata["desc_uid"] = desc_uids
 
         return adata

@@ -40,7 +40,7 @@ class LHaloTreeHDF5Arbor(SegmentedArbor):
     _field_info_class = LHaloTreeHDF5FieldInfo
     _tree_field_io_class = LHaloTreeHDF5TreeFieldIO
     _default_dtype = np.float32
-    _node_io_attrs = ('_fi', '_si', '_tree_size')
+    _node_io_attrs = ('_fi', '_si')
 
     def __init__(self, filename,
                  hubble_constant=1.0, box_size=None,
