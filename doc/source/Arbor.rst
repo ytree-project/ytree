@@ -232,9 +232,9 @@ The full tree leading up to any given halo can be accessed in the same way.
 Accessing All Nodes in a Forest
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :ref:`ctrees-hdf5` and :ref:`lhalotree` formats provide access to halos
-grouped by forest. A forest is a group of trees with halos that interact in
-a non-merging way through processes like fly-bys.
+The :ref:`load-ctrees-hdf5` and :ref:`load-lhalotree` formats provide access
+to halos grouped by forest. A forest is a group of trees with halos that interact
+in a non-merging way through processes like fly-bys.
 
 .. code-block:: python
 
