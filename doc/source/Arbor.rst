@@ -1,16 +1,16 @@
 .. _arbor:
 
-Working with Merger-Trees
+Working with Merger Trees
 =========================
 
 The :class:`~ytree.data_structures.arbor.Arbor` class is responsible for loading
-and providing access to merger-tree data. Below, we demonstrate how
+and providing access to merger tree data. Below, we demonstrate how
 to load data and what can be done with it.
 
-Loading Merger-Tree Data
+Loading Merger Tree Data
 ------------------------
 
-``ytree`` can load merger-tree data from multiple sources using
+``ytree`` can load merger tree data from multiple sources using
 the :func:`~ytree.data_structures.load.load` command.
 
 .. code-block:: python
@@ -26,7 +26,7 @@ accordingly. For examples of loading each format, see below.
 
    Loading
 
-Working with Merger-Tree Data
+Working with Merger Tree Data
 -----------------------------
 
 Very little happens immediately after a dataset has been loaded. All tree
@@ -99,7 +99,7 @@ Individual trees can be accessed by indexing the
    >>> print (a[0])
    TreeNode[12900]
 
-A :class:`~ytree.data_structures.tree_node.TreeNode` is one halo in a merger-tree.
+A :class:`~ytree.data_structures.tree_node.TreeNode` is one halo in a merger tree.
 The number is the universal identifier associated with halo. It is unique
 to the whole arbor. Fields can be accessed for any given
 :class:`~ytree.data_structures.tree_node.TreeNode` in the same dictionary-like

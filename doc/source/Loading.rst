@@ -246,7 +246,7 @@ load in this format, simply provide the path to one of these files.
 TreeFarm
 --------
 
-Merger-trees created with `treefarm <https://treefarm.readthedocs.io/>`__
+merger trees created with `treefarm <https://treefarm.readthedocs.io/>`__
 can be loaded in by providing the path to one of the catalogs created
 during the calculation.
 
@@ -260,7 +260,7 @@ during the calculation.
 Saved Arbors
 ------------
 
-Once merger-tree data has been loaded, it can be saved to a
+Once merger tree data has been loaded, it can be saved to a
 universal format using :func:`~ytree.data_structures.arbor.Arbor.save_arbor` or
 :func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.  These can be loaded by
 providing the path to the primary hdf5 file.
