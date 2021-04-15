@@ -14,7 +14,6 @@ LHaloTreeArbor class and member functions
 #-----------------------------------------------------------------------------
 
 import numpy as np
-import warnings
 import glob
 
 from yt.funcs import \
@@ -31,6 +30,8 @@ from ytree.frontends.lhalotree.io import \
     LHaloTreeTreeFieldIO, LHaloTreeRootFieldIO
 from ytree.frontends.lhalotree.utils import \
     LHaloTreeReader
+from ytree.utilities.logger import \
+    ytreeLogger
 
 
 class LHaloTreeArbor(Arbor):
@@ -159,7 +160,7 @@ class LHaloTreeArbor(Arbor):
                 self.quan(1, unit)
                 punit = unit
             except UnitParseError:  # pragma: no cover
-                warnings.warn("Could not parse unit: %s" % unit)
+                ytreeLogger.warning("Could not parse unit: %s" % unit)
                 punit = ''
             for k in keylist:
                 fi[k] = {'units': punit}

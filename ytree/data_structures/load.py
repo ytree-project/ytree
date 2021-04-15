@@ -46,23 +46,27 @@ def load(filename, method=None, **kwargs):
     --------
 
     >>> import ytree
-    >>> # saved Arbor
+    >>> # saved Arbor (ytree format)
     >>> a = ytree.load("arbor/arbor.h5")
-    >>> # consistent-trees output
+    >>> # Amiga Halo Finder
+    >>> a = ytree.load("ahf_halos/snap_N64L16_000.parameter",
+    ...                hubble_constant=0.7)
+    >>> # consistent-trees
     >>> a = ytree.load("tiny_ctrees/locations.dat")
     >>> a = ytree.load("consistent_trees/tree_0_0_0.dat")
     >>> a = ytree.load("ctrees_hlists/hlists/hlist_0.12521.list")
     >>> # consistent-trees-hdf5
     >>> a = ytree.load("consistent_trees_hdf5/soa/forest.h5")
-    >>> # Rockstar catalogs
-    >>> a = ytree.load("rockstar_halos/out_0.list")
-    >>> # treefarm catalogs
-    >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.h5")
-    >>> # LHaloTree catalogs
+    >>> # LHaloTree
     >>> a = ytree.load("my_halos/trees_063.0")
-    >>> # Amiga Halo Finder
-    >>> a = ytree.load("ahf_halos/snap_N64L16_000.parameter",
-    ...                hubble_constant=0.7)
+    >>> # LHaloTree-hdf5
+    >>> a = ytree.load("TNG50-4-Dark/trees_sf1_099.0.hdf5",
+    ...                box_size=35, hubble_constant=0.6774,
+    ...                omega_matter=0.3089, omega_lambda=0.6911)
+    >>> # Rockstar
+    >>> a = ytree.load("rockstar_halos/out_0.list")
+    >>> # treefarm
+    >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.h5")
 
     """
 

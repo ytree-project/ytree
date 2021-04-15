@@ -13,11 +13,12 @@ LHaloTree utilities
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import warnings
 import numpy as np
 import os
 import glob
 
+from ytree.utilities.logger import \
+    ytreeLogger
 
 """Default header data type."""
 dtype_header_default = [
@@ -459,7 +460,7 @@ class LHaloTreeReader:
         # File number
         self.filenum = data['FileNr'][0]
         if (data['SnapNum'][0] + 1) != len(self.scale_factors):  # pragma: no cover
-            warnings.warn("First FoF central is in snapshot %d/%d." % (
+            ytreeLogger.warning("First FoF central is in snapshot %d/%d." % (
                 data['SnapNum'][0] + 1, len(self.scale_factors)))
         # Halo unique IDs
         self.all_uids = np.bitwise_or(

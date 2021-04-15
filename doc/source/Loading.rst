@@ -6,10 +6,12 @@ Loading Data
 Below are instructions for loading all supported datasets. All examples
 use the freely available :ref:`sample-data`.
 
+.. _load-ahf:
+
 Amiga Halo Finder
 -----------------
 
-The `Amiga Halo Finder <http://popia.ft.uam.es/AHF/Download.html>`_ format
+The `Amiga Halo Finder <http://popia.ft.uam.es/AHF/Download.html>`__ format
 stores data in a series of files, with one each per snapshot.  Parameters
 are stored in ".parameters" and ".log" files, halo information in
 ".AHF_halos" files, and descendent/ancestor links are stored in ".AHF_mtree"
@@ -45,10 +47,12 @@ of the first ".parameter" file.
              <http://popia.ft.uam.es/AHF/Documentation.html>`_
              for a discussion of the difference between graphs and trees.
 
+.. _load-ctrees:
+
 Consistent-Trees
 ----------------
 
-The `consistent-trees <https://bitbucket.org/pbehroozi/consistent-trees>`_
+The `consistent-trees <https://bitbucket.org/pbehroozi/consistent-trees>`__
 format consists of a set of files called "locations.dat", "forests.list",
 at least one file named something like "tree_0_0_0.dat". For large
 simulations, there may be a number of these "tree_*.dat" files. After
@@ -89,7 +93,7 @@ can be loaded by providing the path to the first of these files.
    assemble each tree across multiple files. This method is not
    recommended unless the additional fields are necessary.
 
-.. _ctrees-hdf5:
+.. _load-ctrees-hdf5:
 
 Consistent-Trees-HDF5
 ---------------------
@@ -150,21 +154,7 @@ by doing ``a[N]`` will be the root of one of the trees in that
 forest. See :ref:`forest-access` for how to locate all individual
 trees in a forest.
 
-Rockstar Catalogs
------------------
-
-Rockstar catalogs with the naming convention "out_*.list" will contain
-information on the descendent ID of each halo and can be loaded
-independently of consistent-trees.  This can be useful when your
-simulation has very few halos, such as in a zoom-in simulation.  To
-load in this format, simply provide the path to one of these files.
-
-.. code-block:: python
-
-   >>> import ytree
-   >>> a = ytree.load("rockstar/rockstar_halos/out_0.list")
-
-.. _lhalotree:
+.. _load-lhalotree:
 
 LHaloTree
 ---------
@@ -234,12 +224,72 @@ explicitly from python.
    ...                parameters=parameters,
    ...                scale_factors=scale_factors)
 
+.. _load-lhalotree-hdf5:
+
+LHaloTree-HDF5
+--------------
+
+This is the same algorithm as :ref:`load-lhalotree`, except with data
+saved in HDF5 files instead of unformatted binary. LHaloTree-HDF5 is
+one of the formats used by the
+`Illustris-TNG project <https://www.tng-project.org/>`__ and is
+described in detail
+`here <https://www.tng-project.org/data/docs/specifications/#sec4b>`__.
+Like :ref:`load-lhalotree`, this format supports :ref:`accessing trees
+by forest <forest-access>`. The LHaloTree-HDF5 format stores trees in
+multiple HDF5 files contained within a single directory. Each tree is
+fully contained within a single file, so loading is possible even when
+only a subset of all files is present. To load, provide the path to
+one file.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("TNG50-4-Dark/trees_sf1_099.0.hdf5")
+
+The files do not contain information on the box size and cosmological
+parameters of the simulation, but they can be provided by hand, with
+the box size assumed to be in units of comoving Mpc/h.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("TNG50-4-Dark/trees_sf1_099.0.hdf5",
+   ...                box_size=35, hubble_constant=0.6774,
+   ...                omega_matter=0.3089, omega_lambda=0.6911)
+
+The LHaloTree-HDF5 format contains multiple definitions of halo mass
+(see `here <https://www.tng-project.org/data/docs/specifications/#sec4b>`__),
+and as such, the field alias "mass" is not defined by default. However,
+the :ref:`alias can be created <alias-fields>` if one is preferable.
+
+.. code-block:: python
+
+   >>> a.add_alias_field("mass", "Group_M_TopHat200", units="Msun")
+
+.. _load-rockstar:
+
+Rockstar Catalogs
+-----------------
+
+`Rockstar <https://bitbucket.org/gfcstanford/rockstar>`__
+catalogs with the naming convention "out_*.list" will contain
+information on the descendent ID of each halo and can be loaded
+independently of consistent-trees.  This can be useful when your
+simulation has very few halos, such as in a zoom-in simulation.  To
+load in this format, simply provide the path to one of these files.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("rockstar/rockstar_halos/out_0.list")
+
 .. _load-treefarm:
 
 TreeFarm
 --------
 
-Merger-trees created with `treefarm <https://treefarm.readthedocs.io/>`_
+Merger trees created with `treefarm <https://treefarm.readthedocs.io/>`__
 can be loaded in by providing the path to one of the catalogs created
 during the calculation.
 
@@ -253,7 +303,7 @@ during the calculation.
 Saved Arbors
 ------------
 
-Once merger-tree data has been loaded, it can be saved to a
+Once merger tree data has been loaded, it can be saved to a
 universal format using :func:`~ytree.data_structures.arbor.Arbor.save_arbor` or
 :func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.  These can be loaded by
 providing the path to the primary hdf5 file.

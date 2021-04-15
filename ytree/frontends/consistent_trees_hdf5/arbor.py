@@ -123,7 +123,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
 
         if 'halos' in fgroup['Forests']:
             # array of structs layout
-            mylog.warn(
+            mylog.warning(
                 "This dataset was written in array of structs format. "
                 "Field access will be significantly slower than struct "
                 "of arrays format.")

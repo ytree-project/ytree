@@ -40,7 +40,7 @@ def save_arbor(arbor, filename=None, fields=None, trees=None,
     fields = determine_field_list(arbor, fields, update)
 
     if not fields:
-        mylog.warn(
+        mylog.warning(
             "No action will be taken for the following reasons:\n"
             " - This dataset is already a YTreeArbor.\n"
             " - No filename has been given.\n"
