@@ -1,3 +1,4 @@
+from ytree.data_structures.load import load as ytree_load
 from ytree.frontends.lhalotree_hdf5 import \
     LHaloTreeHDF5Arbor
 from ytree.utilities.testing import \
@@ -20,3 +21,8 @@ class LHaloTreeHDF5ArborTest(TempDirTest, ArborTest):
             arbor.add_alias_field(
                 "mass", "Group_M_TopHat200", units="Msun")
         return arbor
+
+    def test_load_without_kwargs(self):
+        filename = self.arbor.filename
+        a = ytree_load(filename)
+        a.save_arbor()
