@@ -157,7 +157,7 @@ class Arbor(metaclass=RegisteredArbor):
                      "omega_lambda"]:
             if getattr(self, attr) is None:
                 setup = False
-                ytreeLogger.warn(
+                ytreeLogger.warning(
                     f"{attr} missing from data. "
                     "Arbor will have no cosmology calculator.")
 
