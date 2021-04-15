@@ -90,6 +90,7 @@ commands:
     steps:
       - run:
           name: "Build ytree and run tests."
+          no_output_timeout: 30m
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
