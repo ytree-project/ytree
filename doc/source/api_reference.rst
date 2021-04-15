@@ -60,6 +60,7 @@ and i/o.
    :toctree: generated/
 
    ~ytree.data_structures.arbor.Arbor
+   ~ytree.data_structures.arbor.SegmentedArbor
    ~ytree.data_structures.arbor.CatalogArbor
    ~ytree.data_structures.fields.FieldInfoContainer
    ~ytree.data_structures.fields.FieldContainer
@@ -84,6 +85,7 @@ Arbor subclasses for each frontend.
    ~ytree.frontends.consistent_trees.arbor.ConsistentTreesHlistArbor
    ~ytree.frontends.consistent_trees_hdf5.arbor.ConsistentTreesHDF5Arbor
    ~ytree.frontends.lhalotree.arbor.LHaloTreeArbor
+   ~ytree.frontends.lhalotree_hdf5.arbor.LHaloTreeHDF5Arbor
    ~ytree.frontends.rockstar.arbor.RockstarArbor
    ~ytree.frontends.treefarm.arbor.TreeFarmArbor
    ~ytree.frontends.ytree.arbor.YTreeArbor
@@ -100,6 +102,7 @@ Subclasses for frontend-specific field definitions.
    ~ytree.frontends.consistent_trees.fields.ConsistentTreesFieldInfo
    ~ytree.frontends.consistent_trees_hdf5.fields.ConsistentTreesHDF5FieldInfo
    ~ytree.frontends.lhalotree.fields.LHaloTreeFieldInfo
+   ~ytree.frontends.lhalotree_hdf5.fields.LHaloTreeHDF5FieldInfo
    ~ytree.frontends.rockstar.fields.RockstarFieldInfo
    ~ytree.frontends.treefarm.fields.TreeFarmFieldInfo
 
@@ -111,12 +114,12 @@ Subclasses for data i/o from a whole dataset.
 .. autosummary::
    :toctree: generated/
 
-   ~ytree.frontends.ahf.io.AHFDataFile
    ~ytree.frontends.consistent_trees.io.ConsistentTreesTreeFieldIO
    ~ytree.frontends.consistent_trees_hdf5.io.ConsistentTreesHDF5TreeFieldIO
    ~ytree.frontends.consistent_trees_hdf5.io.ConsistentTreesHDF5RootFieldIO
    ~ytree.frontends.lhalotree.io.LHaloTreeTreeFieldIO
    ~ytree.frontends.lhalotree.io.LHaloTreeRootFieldIO
+   ~ytree.frontends.lhalotree_hdf5.io.LHaloTreeHDF5TreeFieldIO
    ~ytree.frontends.ytree.io.YTreeTreeFieldIO
    ~ytree.frontends.ytree.io.YTreeRootFieldIO
 
@@ -128,9 +131,11 @@ Subclasses for data i/o from individual files.
 .. autosummary::
    :toctree: generated/
 
+   ~ytree.frontends.ahf.io.AHFDataFile
    ~ytree.frontends.consistent_trees.io.ConsistentTreesDataFile
    ~ytree.frontends.consistent_trees.io.ConsistentTreesHlistDataFile
    ~ytree.frontends.consistent_trees_hdf5.io.ConsistentTreesHDF5DataFile
+   ~ytree.frontends.lhalotree_hdf5.io.LHaloTreeHDF5DataFile
    ~ytree.frontends.rockstar.io.RockstarDataFile
    ~ytree.frontends.treefarm.io.TreeFarmDataFile
    ~ytree.frontends.ytree.io.YTreeDataFile

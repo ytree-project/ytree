@@ -34,6 +34,8 @@ from ytree.frontends.ytree import \
     YTreeArbor
 from ytree.utilities.loading import \
     get_path
+from ytree.utilities.logger import \
+    ytreeLogger as mylog
 
 generate_results = \
   int(os.environ.get("YTREE_GENERATE_TEST_RESULTS", 0)) == 1
@@ -194,6 +196,7 @@ class ArborTest:
         t = a[0]
         for field in a.field_info.vector_fields:
 
+            mylog.info(f"Comparing vector field: {field}.")
             magfield = np.sqrt((a[field]**2).sum(axis=1))
             assert_array_equal(a["%s_magnitude" % field], magfield)
 
@@ -237,7 +240,8 @@ def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
     if fields is None:
         fields = a1.field_list
 
-    for field in fields:
+    for i, field in enumerate(fields):
+        mylog.info(f"Comparing arbor field: {field} ({i+1}/{len(fields)}).")
         assert (a1[field][::skip1] == a2[field][::skip2]).all()
 
     trees1 = a1[::skip1]

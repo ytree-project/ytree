@@ -1,16 +1,16 @@
 .. _arbor:
 
-Working with Merger-Trees
+Working with Merger Trees
 =========================
 
 The :class:`~ytree.data_structures.arbor.Arbor` class is responsible for loading
-and providing access to merger-tree data. Below, we demonstrate how
+and providing access to merger tree data. Below, we demonstrate how
 to load data and what can be done with it.
 
-Loading Merger-Tree Data
+Loading Merger Tree Data
 ------------------------
 
-``ytree`` can load merger-tree data from multiple sources using
+``ytree`` can load merger tree data from multiple sources using
 the :func:`~ytree.data_structures.load.load` command.
 
 .. code-block:: python
@@ -26,7 +26,7 @@ accordingly. For examples of loading each format, see below.
 
    Loading
 
-Working with Merger-Tree Data
+Working with Merger Tree Data
 -----------------------------
 
 Very little happens immediately after a dataset has been loaded. All tree
@@ -99,7 +99,7 @@ Individual trees can be accessed by indexing the
    >>> print (a[0])
    TreeNode[12900]
 
-A :class:`~ytree.data_structures.tree_node.TreeNode` is one halo in a merger-tree.
+A :class:`~ytree.data_structures.tree_node.TreeNode` is one halo in a merger tree.
 The number is the universal identifier associated with halo. It is unique
 to the whole arbor. Fields can be accessed for any given
 :class:`~ytree.data_structures.tree_node.TreeNode` in the same dictionary-like
@@ -160,7 +160,7 @@ Accessing the Nodes in a Tree or Forest
 A node is defined as a single halo at a single time in a merger tree.
 Throughout these docs, the words halo and node are used interchangeably.
 Nodes in a given tree can be accessed in three different ways: by
-:ref:`tree-access`, :Ref:`forest-access`, or :ref:`progenitor-access`.
+:ref:`tree-access`, :ref:`forest-access`, or :ref:`progenitor-access`.
 Each of these will return a generator of
 :class:`~ytree.data_structures.tree_node.TreeNode` objects or field
 values for all :class:`~ytree.data_structures.tree_node.TreeNode` objects
@@ -232,9 +232,9 @@ The full tree leading up to any given halo can be accessed in the same way.
 Accessing All Nodes in a Forest
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :ref:`ctrees-hdf5` and :ref:`lhalotree` formats provide access to halos
-grouped by forest. A forest is a group of trees with halos that interact in
-a non-merging way through processes like fly-bys.
+The :ref:`load-ctrees-hdf5`, :ref:`load-lhalotree`, and :ref:`load-lhalotree-hdf5`
+formats provide access to halos grouped by forest. A forest is a group of trees
+with halos that interact in a non-merging way through processes like fly-bys.
 
 .. code-block:: python
 

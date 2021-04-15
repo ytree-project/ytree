@@ -196,10 +196,10 @@ identify your frontend. Have a look at the various examples.
 Two Types of Arbors
 ^^^^^^^^^^^^^^^^^^^
 
-There are generally two types of merger-tree data that ``ytree``
+There are generally two types of merger tree data that ``ytree``
 ingests:
 
-1. all merger-tree data (full trees, halos, etc.) contained within
+1. all merger tree data (full trees, halos, etc.) contained within
 a single file. These include the ``consistent-trees``,
 ``consistent-trees-hdf5``, ``lhalotree``, and ``ytree`` frontends.
 
@@ -209,10 +209,10 @@ An example of this is the ``rockstar`` frontend.
 
 Depending on your case, different base classes should be subclassed.
 This is discussed below. There are also hybrid formats that use
-both merger-tree and halo catalog files together. An example of this
+both merger tree and halo catalog files together. An example of this
 is the ``ahf`` (Amiga Halo Finder) frontend.
 
-Merger-Tree Data in One File (or a few)
+Merger Tree Data in One File (or a few)
 #######################################
 
 If this is your case, then the consistent-trees and "ytree" frontends
@@ -316,7 +316,7 @@ You made it!
 ^^^^^^^^^^^^
 
 That's all there is to it! Now you too can do whatever it is
-people do with merger-trees. There are probably important things
+people do with merger trees. There are probably important things
 that were left out of this document. If you find any, please consider
 making an addition or opening an issue. If you're stuck anywhere,
 don't hesitate to ask for help. If you've gotten this far, we

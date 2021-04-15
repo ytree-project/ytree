@@ -147,9 +147,9 @@ class Arbor(metaclass=RegisteredArbor):
         """
         for my_unit in ["m", "pc", "AU"]:
             new_unit = "%scm" % my_unit
-            self._unit_registry.add(
-                new_unit, self._unit_registry.lut[my_unit][0],
-                length, self._unit_registry.lut[my_unit][3])
+            self.unit_registry.add(
+                new_unit, self.unit_registry.lut[my_unit][0],
+                length, self.unit_registry.lut[my_unit][3])
 
         setup = True
         for attr in ["hubble_constant",
@@ -157,7 +157,7 @@ class Arbor(metaclass=RegisteredArbor):
                      "omega_lambda"]:
             if getattr(self, attr) is None:
                 setup = False
-                ytreeLogger.warn(
+                ytreeLogger.warning(
                     f"{attr} missing from data. "
                     "Arbor will have no cosmology calculator.")
 
@@ -994,6 +994,43 @@ class Arbor(metaclass=RegisteredArbor):
 
         fn = save_arbor(self, **kwargs)
         return fn
+
+class SegmentedArbor(Arbor):
+    """
+    Arbor subclass for multi-file datasets where an entire merger tree
+    is contained within a file (i.e., no overlap). This permits the
+    definition of a useful _node_io_loop_prepare function.
+    """
+
+    def _node_io_loop_start(self, data_file):
+        data_file.open()
+
+    def _node_io_loop_finish(self, data_file):
+        data_file.close()
+
+    def _node_io_loop_prepare(self, nodes):
+        if nodes is None:
+            nodes = np.arange(self.size)
+            fi = self._node_info['_fi']
+        elif nodes.dtype == object:
+            fi = np.array(
+                [node._fi if node.is_root else node.root._fi
+                 for node in nodes])
+        else: # assume an array of indices
+            fi = self._node_info['_fi'][nodes]
+
+        # the order they will be processed
+        io_order = np.argsort(fi)
+        fi = fi[io_order]
+        # array to return them to original order
+        return_order = np.empty_like(io_order)
+        return_order[io_order] = np.arange(io_order.size)
+
+        ufi = np.unique(fi)
+        data_files = [self.data_files[i] for i in ufi]
+        index_list = [io_order[fi == i] for i in ufi]
+
+        return data_files, index_list, return_order
 
 class CatalogArbor(Arbor):
     """

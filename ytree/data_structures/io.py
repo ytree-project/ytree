@@ -271,8 +271,9 @@ class DataFile:
     """
     def __init__(self, filename):
         if not os.path.exists(filename):
-            mylog.warn(("Cannot find data file: %s. " +
-                        "Will not be able to load field data.") % filename)
+            mylog.warning(
+                ("Cannot find data file: %s. " +
+                 "Will not be able to load field data.") % filename)
 
         self.filename = filename
         self.fh = None

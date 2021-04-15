@@ -90,6 +90,7 @@ commands:
     steps:
       - run:
           name: "Build ytree and run tests."
+          no_output_timeout: 30m
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
@@ -143,7 +144,7 @@ jobs:
 
       - restore_cache:
           name: "Restore dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-v7
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-2021-04-13
 
       - install:
           ytdev: << parameters.ytdev >>
@@ -151,7 +152,7 @@ jobs:
 
       - save_cache:
           name: "Save dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-v7
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-2021-04-13
           paths:
             - ~/.cache/pip
             - ~/venv
@@ -161,13 +162,13 @@ jobs:
 
       - restore_cache:
           name: "Restore test data cache."
-          key: test-data-v3
+          key: test-data-2021-04-13
 
       - download-test-data
 
       - save_cache:
           name: "Save test data cache."
-          key: test-data-v3
+          key: test-data-2021-04-13
           paths:
             - ~/ytree_test
 
@@ -191,7 +192,7 @@ jobs:
 
       - restore_cache:
           name: "Restore dependencies cache."
-          key: python-<< parameters.tag >>-1-dependencies-v7
+          key: python-<< parameters.tag >>-1-dependencies-2021-04-13
 
       - install:
           ytdev: 1
@@ -199,7 +200,7 @@ jobs:
 
       - save_cache:
           name: "Save dependencies cache."
-          key: python-<< parameters.tag >>-1-dependencies-v7
+          key: python-<< parameters.tag >>-1-dependencies-2021-04-13
           paths:
             - ~/.cache/pip
             - ~/venv
