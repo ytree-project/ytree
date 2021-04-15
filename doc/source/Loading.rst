@@ -224,6 +224,49 @@ explicitly from python.
    ...                parameters=parameters,
    ...                scale_factors=scale_factors)
 
+.. _load-lhalotree-hdf5:
+
+LHaloTree-HDF5
+--------------
+
+This is the same algorithm as :ref:`load-lhalotree`, except with data
+saved in HDF5 files instead of unformatted binary. LHaloTree-HDF5 is
+one of the formats used by the
+`Illustris-TNG project <https://www.tng-project.org/>`__ and is
+described in detail
+`here <https://www.tng-project.org/data/docs/specifications/#sec4b>`__.
+Like :ref:`load-lhalotree`, this format supports :ref:`accessing trees
+by forest <forest-access>`. The LHaloTree-HDF5 format stores trees in
+multiple HDF5 files contained within a single directory. Each tree is
+fully contained within a single file, so loading is possible even when
+only a subset of all files is present. To load, provide the path to
+one file.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("TNG50-4-Dark/trees_sf1_099.0.hdf5")
+
+The files do not contain information on the box size and cosmological
+parameters of the simulation, but they can be provided by hand, with
+the box size assumed to be in units of comoving Mpc/h.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("TNG50-4-Dark/trees_sf1_099.0.hdf5",
+   ...                box_size=35, hubble_constant=0.6774,
+   ...                omega_matter=0.3089, omega_lambda=0.6911)
+
+The LHaloTree-HDF5 format contains multiple definitions of halo mass
+(see `here <https://www.tng-project.org/data/docs/specifications/#sec4b>`__),
+and as such, the field alias "mass" is not defined by default. However,
+the :ref:`alias can be created <alias-fields>` if one is preferable.
+
+.. code-block:: python
+
+   >>> a.add_alias_field("mass", "Group_M_TopHat200", units="Msun")
+
 .. _load-rockstar:
 
 Rockstar Catalogs
@@ -246,7 +289,7 @@ load in this format, simply provide the path to one of these files.
 TreeFarm
 --------
 
-merger trees created with `treefarm <https://treefarm.readthedocs.io/>`__
+Merger trees created with `treefarm <https://treefarm.readthedocs.io/>`__
 can be loaded in by providing the path to one of the catalogs created
 during the calculation.
 
