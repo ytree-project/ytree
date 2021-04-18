@@ -77,6 +77,6 @@ class IOHandlerYTreeHDF5(BaseIOHandler):
         _node_fields = ["file_root_index", "file_number", "tree_index"]
         fields = [(_ptype, field) for field in list(self.ds._field_dict.keys()) +
                   _node_fields]
-        units = dict(((_ptype, field), self.ds._field_dict[field]['units'])
+        units = dict(((_ptype, field), self.ds._field_dict[field].get("units", ""))
                      for field in self.ds._field_dict)
         return fields, units
