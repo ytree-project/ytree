@@ -37,6 +37,7 @@ Table of Contents
 
    Installation.rst
    Data.rst
+   Frames.rst
    Arbor.rst
    Fields.rst
    Plotting.rst
