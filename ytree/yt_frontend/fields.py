@@ -20,6 +20,13 @@ from yt.fields.field_info_container import \
 p_units = 'unitary'
 v_units = 'km/s'
 
+def _redshift(field, data):
+    return 1. / data[ptype, 'scale_factor'] - 1
+
+def _time(field, data):
+    ptype, _ = field.name
+    return data.ds.cosmology.t_from_z(data[ptype, "redshift"])
+
 class YTreeFieldInfo(FieldInfoContainer):
     known_other_fields = (
     )
@@ -36,9 +43,12 @@ class YTreeFieldInfo(FieldInfoContainer):
 
     def setup_particle_fields(self, ptype):
 
-        def _redshift(field, data):
-            return 1. / data[ptype, 'scale_factor'] - 1
-        self.add_field((ptype, 'redshift'), function=_redshift,
-                       sampling_type='particle', units='')
+        if (ptype, "redshift") not in self.ds.field_list:
+            self.add_field((ptype, 'redshift'), function=_redshift,
+                           sampling_type='particle', units='')
+
+        if (ptype, "time") not in self.ds.field_list:
+            self.add_field((ptype, 'time'), function=_time,
+                           sampling_type='particle', units='Gyr')
 
         super().setup_particle_fields(ptype)
