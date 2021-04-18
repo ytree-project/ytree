@@ -4,8 +4,10 @@ Working with Merger Trees
 =========================
 
 The :class:`~ytree.data_structures.arbor.Arbor` class is responsible for loading
-and providing access to merger tree data. Below, we demonstrate how
-to load data and what can be done with it.
+and providing access to merger tree data. In this document a loaded merger tree
+dataset is referred to as an **arbor**. ``ytree`` provides several different
+ways to navigate, query, and analyze merger trees. It is recommended that you
+read this entire section to identify the way that is best for what you want to do.
 
 Loading Data
 ------------
