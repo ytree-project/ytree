@@ -32,9 +32,13 @@ import sys
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
 ]
+
+intersphinx_mapping = \
+  {'yt': ('http://yt-project.org/docs/dev/', None),}
 
 autosummary_generate = glob.glob("api_reference.rst")
 

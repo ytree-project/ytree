@@ -241,7 +241,7 @@ class YTreeArbor(Arbor):
         >>> a = ytree.load("arbor/arbor.h5")
         >>> # use a yt conditional
         >>> sel = a.get_yt_selection(
-        ...     conditionals=['obj["mass"] > 1e12'])
+        ...     conditionals=['obj["halos", "mass"] > 1e12'])
 
         >>> import ytree
         >>> a = ytree.load("arbor/arbor.h5")
@@ -368,6 +368,24 @@ class YTreeArbor(Arbor):
     def ytds(self):
         """
         Load as a yt dataset.
+
+        Merger tree data is loaded as a yt dataset, providing full access
+        to yt functionality. Fields are accessed with the naming convention,
+        ("halos", <field name>).
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("arbor/arbor.h5")
+        >>>
+        >>> ds = a.ytds
+        >>> sphere = ds.sphere(ds.domain_center, (5, "Mpc"))
+        >>> print (sphere["halos", "mass"])
+        >>>
+        >>> for node in a.get_nodes_from_selection(sphere):
+        ...     print (node["position"])
+
         """
         if self._ytds is not None:
             return self._ytds

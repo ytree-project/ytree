@@ -7,8 +7,8 @@ The :class:`~ytree.data_structures.arbor.Arbor` class is responsible for loading
 and providing access to merger tree data. Below, we demonstrate how
 to load data and what can be done with it.
 
-Loading Merger Tree Data
-------------------------
+Loading Data
+------------
 
 ``ytree`` can load merger tree data from multiple sources using
 the :func:`~ytree.data_structures.load.load` command.
@@ -26,8 +26,8 @@ accordingly. For examples of loading each format, see below.
 
    Loading
 
-Working with Merger Tree Data
------------------------------
+Getting Started with Merger Trees
+---------------------------------
 
 Very little happens immediately after a dataset has been loaded. All tree
 construction and data access occurs only on demand. After loading,
@@ -392,27 +392,6 @@ tree for which the calling node is the head. With ``selector`` set to "forest",
 the resulting leaf nodes will be all the leaf nodes in the forest, regardless of
 the calling node.
 
-Searching for Halos
--------------------
-
-The :func:`~ytree.data_structures.arbor.Arbor.select_halos` function can be used to
-search the :class:`~ytree.data_structures.arbor.Arbor` for halos matching a specific
-set of criteria. This is similar to the type of selection done with a relational
-database.
-
-.. code-block:: python
-
-   >>> halos = a.select_halos('tree["tree", "redshift"] > 1',
-   ...                        fields=["redshift"])
-   >>> print (halos)
-   [TreeNode[8987], TreeNode[6713], TreeNode[6091], TreeNode[448], ...,
-    TreeNode[9683], TreeNode[8316], TreeNode[10788]]
-
-The selection criteria string should be designed to ``eval`` correctly
-with a :class:`~ytree.data_structures.tree_node.TreeNode` object named,
-"tree". The ``fields`` keyword can
-be used to specify a list of fields to preload for speeding up selection.
-
 .. _saving-trees:
 
 Saving Arbors and Trees
@@ -444,6 +423,167 @@ For convenience, individual trees can also be saved by calling
    >>> fn = my_tree.save_tree()
    Creating field arrays [1/1]: 100%|████| 4897/4897 [00:00<00:00, 13711286.17it/s]
    >>> a2 = ytree.load(fn)
+
+Searching Through Merger Trees (Accessing Like a Database)
+----------------------------------------------------------
+
+There are a couple different ways to search through a merger tree dataset to find
+halos meeting various criteria, similar to the type of selection done with a
+relational database. The method discussed in :ref:`select-halos` can be used with
+all data loadable with ``ytree``, while the one described in :ref:`select-halos-yt`
+is only available for :ref:`load-ytree`.
+
+.. _select-halos:
+
+Select Halos
+^^^^^^^^^^^^
+
+The :func:`~ytree.data_structures.arbor.Arbor.select_halos` function can be used to
+search the :class:`~ytree.data_structures.arbor.Arbor` for halos matching a specific
+set of criteria.
+
+.. code-block:: python
+
+   >>> halos = a.select_halos('tree["tree", "redshift"] > 1',
+   ...                        fields=["redshift"])
+   >>> print (halos)
+   [TreeNode[8987], TreeNode[6713], TreeNode[6091], TreeNode[448], ...,
+    TreeNode[9683], TreeNode[8316], TreeNode[10788]]
+
+The selection criteria string should be designed to ``eval`` correctly
+with a :class:`~ytree.data_structures.tree_node.TreeNode` object named,
+"tree". The ``fields`` keyword can be used to specify a list of fields to preload
+for speeding up selection.
+
+.. _select-halos-yt:
+
+Select Halos with yt
+^^^^^^^^^^^^^^^^^^^^
+
+.. note:: This functionality only works with :ref:`load-ytree`. You will need to
+   :ref:`save your data in the ytree format <saving-trees>`.
+
+The :func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_yt_selection` function
+provides enhanced functionality beyond the capabilities of
+:func:`~ytree.data_structures.arbor.Arbor.select_halos` by loading the dataset
+into `yt <https://yt-project.org/>`__. Given search criteria,
+:func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_yt_selection` will return a
+:class:`~yt.data_objects.selection_objects.cut_region.YTCutRegion` data container
+that can then be queried to get the value of any field for all halos meeting the
+criteria. This :class:`~yt.data_objects.selection_objects.cut_region.YTCutRegion`
+can then be used to :ref:`generate tree nodes <halos-from-selection>` or
+:ref:`query fields <yt-data-containers>`.
+
+Creating the Selection
+^^^^^^^^^^^^^^^^^^^^^^
+
+Search criteria can be provided using a series of keywords: ``above``, ``below``,
+``equal``, and ``about``.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("arbor/arbor.h5")
+   >>> selection = a.get_yt_selection(,
+   ...     above=[("mass", 1e13, "Msun"),
+   ...            ("redshift", 0.5)])
+
+An individual criterion should be expressed as a tuple
+(e.g., ``(field, value, <units>)``), and the above keywords accept a list those
+tuples. The criteria keywords can be given together and the halos must meet all
+criteria, i.e., the criteria are combined with an AND operator.
+
+.. code-block:: python
+
+   >>> selection = a.get_yt_selection(
+   ...     below=[("mass", 1e13, "Msun")],
+   ...     above=[("redshift", 1)])
+
+For more complex search criteria, a cut region conditional string can be
+provided instead. These should be of the form described in :ref:`cut-regions`.
+These cannot not be given with any of the previously mentioned keywords.
+
+.. code-block:: python
+
+    >>> selection = a.get_yt_selection(
+    ...     conditionals=['obj["halos", "mass"] > 1e12'])
+
+Querying the Selection
+^^^^^^^^^^^^^^^^^^^^^^
+
+The selection object returned by
+:func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_yt_selection` can then be
+queried to get field values for all matching halos. Fields should be queried
+as ``("halos", <field name>)``.
+
+.. code-block:: python
+
+   >>> # halos with masses of 1e14 Msun +/- 5%
+   >>> selection = a.get_yt_selection(
+           about=[("mass", 1e14, "Msun", 0.05)])
+
+   >>> print (selection["halos", "redshift"])
+   [0.82939091 0.97172537 1.02453741 0.31893065 0.74571856 0.97172537 ...
+    0.50455122 0.53499009 0.18907477 0.29567248 0.31893065] dimensionless
+
+.. _halos-from-selection:
+
+Getting Halos from the Selection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_nodes_from_selection`
+function will return a generator of
+:class:`~ytree.data_structures.tree_node.TreeNode` objects for all halos
+contained within the selection.
+
+.. code-block:: python
+
+   >>> # halos with masses of 1e14 Msun +/- 5%
+   >>> selection = a.get_yt_selection(
+           about=[("mass", 1e14, "Msun", 0.05)])
+
+   >>> for node in a.get_nodes_from_selection(selector):
+   ...     print (node["prog", "mass"])
+
+This function can generate :class:`~ytree.data_structures.tree_node.TreeNode`
+objects for :ref:`any yt data container <yt-data-containers>`.
+
+.. _yt-data-containers:
+
+Halos and Fields from yt Data Containers
+----------------------------------------
+
+.. note:: This functionality only works with :ref:`load-ytree`. You will need to
+   :ref:`save your data in the ytree format <saving-trees>`.
+
+For merger tree data in the :ref:`ytree format <load-ytree>`, the
+:attr:`~ytree.frontends.ytree.arbor.YTreeArbor.ytds` attribute provides access
+to the data as a `yt <https://yt-project.org/>`__ dataset. This allows one to
+analyze the entire dataset using the full range of functionality provided by
+``yt``. In this way, a merger tree dataset is very much like any particle dataset,
+where each particle represent a halo at a single time. For example, this makes it
+possible to select halos within :ref:`geometric data containers <data-objects>`,
+like spheres or regions.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("arbor/arbor.h5")
+
+   >>> ds = a.ytds
+   >>> sphere = ds.sphere(ds.domain_center, (5, "Mpc"))
+   >>> print (sphere["halos", "mass"])
+
+These data containers can then be given to the
+:func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_nodes_from_selection` to
+:ref:`get the tree nodes <halos-from-selection>` for all halos within the
+container.
+
+.. code-block:: python
+
+   >>> sphere = ds.sphere(ds.domain_center, (5, "Mpc"))
+   >>> for node in a.get_nodes_from_selection(sphere):
+   ...     print (node["position"])
 
 .. _frames:
 
