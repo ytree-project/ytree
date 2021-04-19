@@ -1,5 +1,5 @@
 """
-miscellaneous utility tests
+tests for select_halos function
 
 
 
@@ -13,7 +13,6 @@ miscellaneous utility tests
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import os
 import ytree
 
 from ytree.utilities.testing import \
