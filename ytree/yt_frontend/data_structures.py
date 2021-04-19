@@ -69,7 +69,7 @@ class YTreeHDF5File(ParticleFile):
         """
 
         indices = np.arange(self.start, self.end)[mask]
-        tree_start = self._read_data(f, "index/tree_start_index", mask)
+        tree_start = f["index/tree_start_index"][()]
         return np.digitize(indices, tree_start) - 1
 
     def _get_file_number(self, mask):
@@ -89,7 +89,7 @@ class YTreeHDF5File(ParticleFile):
         """
 
         indices = np.arange(self.start, self.end)[mask]
-        tree_start = self._read_data(f, "index/tree_start_index", mask)
+        tree_start = f["index/tree_start_index"][()]
         root_index = np.digitize(indices, tree_start) - 1
         return indices - tree_start[root_index]
 
