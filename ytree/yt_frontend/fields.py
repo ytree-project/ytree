@@ -21,6 +21,7 @@ p_units = 'unitary'
 v_units = 'km/s'
 
 def _redshift(field, data):
+    ptype, _ = field.name
     return 1. / data[ptype, 'scale_factor'] - 1
 
 def _time(field, data):
@@ -42,7 +43,6 @@ class YTreeFieldInfo(FieldInfoContainer):
     )
 
     def setup_particle_fields(self, ptype):
-
         if (ptype, "redshift") not in self.ds.field_list:
             self.add_field((ptype, 'redshift'), function=_redshift,
                            sampling_type='particle', units='')
