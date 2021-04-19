@@ -300,15 +300,17 @@ during the calculation.
 
 .. _load-ytree:
 
-Saved Arbors
-------------
+Saved Arbors (ytree format)
+---------------------------
 
 Once merger tree data has been loaded, it can be saved to a
 universal format using :func:`~ytree.data_structures.arbor.Arbor.save_arbor` or
-:func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.  These can be loaded by
-providing the path to the primary hdf5 file.
+:func:`~ytree.data_structures.tree_node.TreeNode.save_tree`. These can be loaded
+by providing the path to the primary hdf5 file.
 
 .. code-block:: python
 
    >>> import ytree
    >>> a = ytree.load("arbor/arbor.h5")
+
+See :ref:`saving-trees` for more information on saving arbors and trees.

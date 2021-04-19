@@ -14,7 +14,6 @@ test for documented examples
 #-----------------------------------------------------------------------------
 
 import numpy as np
-import os
 
 from ytree.utilities.testing import \
     requires_file, \
@@ -70,6 +69,7 @@ class ExampleTest(TempDirTest):
         a = ytree.load(CTG)
         my_tree = a[0]
         age = t50(my_tree).to('Gyr')
+        print (age)
 
     @requires_file(CTG)
     def test_significance(self):
@@ -87,3 +87,4 @@ class ExampleTest(TempDirTest):
         a2 = ytree.load(fn)
         a2.set_selector('max_field_value', 'significance')
         prog = a2[0]['prog']
+        print (prog)

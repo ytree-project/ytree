@@ -33,6 +33,9 @@ used to save the entire arbor or individual trees.
    ~ytree.data_structures.tree_node_selector.add_tree_node_selector
    ~ytree.data_structures.tree_node_selector.max_field_value
    ~ytree.data_structures.tree_node_selector.min_field_value
+   ~ytree.frontends.ytree.arbor.YTreeArbor.get_yt_selection
+   ~ytree.frontends.ytree.arbor.YTreeArbor.get_nodes_from_selection
+   ~ytree.frontends.ytree.arbor.YTreeArbor.ytds
 
 Visualizing Merger Trees
 ------------------------

@@ -361,6 +361,12 @@ class Arbor(metaclass=RegisteredArbor):
         for attr in attrs:
             setattr(tree_node, attr, None)
 
+    @property
+    def ytds(self):
+        raise NotImplementedError(
+            "Only ytree data can be loaded with yt. "
+            "Save data with save_arbor and then reload.")
+
     def _node_io_loop(self, func, *args, **kwargs):
         """
         Call the provided function over a list of nodes.
@@ -725,7 +731,7 @@ class Arbor(metaclass=RegisteredArbor):
         Parameters
         ----------
 
-        criteria: string
+        criteria : string
             A string that will eval to a Numpy-like selection operation
             performed on a TreeNode object called "tree".
             Example: 'tree["tree", "redshift"] > 1'
@@ -942,6 +948,16 @@ class Arbor(metaclass=RegisteredArbor):
         """
 
         self.field_info.add_vector_field(name)
+
+    def get_yt_selection(self, *args, **kwargs):
+        raise NotImplementedError(
+            "This function is only implemented for ytree arbors."
+            "Use save_arbor to save your data in the correct format.")
+
+    def get_nodes_from_selection(self, *args, **kwargs):
+        raise NotImplementedError(
+            "This function is only implemented for ytree arbors."
+            "Use save_arbor to save your data in the correct format.")
 
     @classmethod
     def _is_valid(cls, *args, **kwargs):

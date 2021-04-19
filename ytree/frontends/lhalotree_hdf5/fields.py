@@ -79,5 +79,7 @@ class LHaloTreeHDF5FieldInfo(FieldInfoContainer):
     def setup_derived_fields(self):
         self.arbor.add_derived_field(
             "redshift", _redshift, units="", force_add=False)
+        # this will add it to field list for saving
+        self.arbor.field_list.append("redshift")
 
         super().setup_derived_fields()

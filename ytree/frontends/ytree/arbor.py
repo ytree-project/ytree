@@ -21,15 +21,27 @@ import os
 from unyt.unit_registry import \
     UnitRegistry
 
+from yt.data_objects.data_containers import \
+    YTDataContainer
+from yt.utilities.logger import \
+    ytLogger
+
 from ytree.data_structures.arbor import \
     Arbor
 from ytree.frontends.ytree.io import \
     YTreeDataFile, \
     YTreeRootFieldIO, \
     YTreeTreeFieldIO
+from ytree.frontends.ytree.utilities import \
+    get_about, \
+    get_conditional
 from ytree.utilities.io import \
     _hdf5_yt_attr, \
     parse_h5_attr
+from ytree.utilities.logger import \
+    log_level
+from ytree.yt_frontend import \
+    YTreeDataset
 
 class YTreeArbor(Arbor):
     """
@@ -129,6 +141,257 @@ class YTreeArbor(Arbor):
             for i, df in enumerate(self.data_files):
                 df.analysis_filename = \
                   f"{self._prefix}_{i:04d}-analysis{self._suffix}"
+
+    def get_yt_selection(self, above=None, below=None, equal=None, about=None,
+                         conditionals=None, data_source=None):
+        """
+        Get a selection of halos meeting given criteria.
+
+        This function can be used to create database-like queries to search
+        for halos meeting various criteria. It will return a
+        :class:`~yt.data_objects.selection_objects.cut_region.YTCutRegion`
+        that can be queried to get field values for all halos meeting the
+        selection criteria. The
+        :class:`~yt.data_objects.selection_objects.cut_region.YTCutRegion`
+        can then be passed to
+        :func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_nodes_from_selection`
+        to get all the
+        :class:`~ytree.data_structures.tree_node.TreeNode` objects that meet the
+        criteria.
+
+        If multiple criteria are provided, selected halos must meet all
+        criteria.
+
+        To specify a custom data container, use the ``ytds`` attribute
+        associated with the arbor to access the merger tree data as a yt
+        dataset. For example:
+
+        >>> import ytree
+        >>> a = ytree.load("arbor/arbor.h5")
+        >>> ds = a.ytds
+
+        Parameters
+        ----------
+        above : optional, list of tuples with (field, value, <units>)
+            Halos meeting a given criterion must have field values at or
+            above the provided limiting value. Each entry in the list must
+            contain the field name, limiting value, and (optionally) units.
+        below : optional, list of tuples with (field, value, <units>)
+            Halos meeting a given criterion must have field values at or
+            below the provided limiting value. Each entry in the list must
+            contain the field name, limiting value, and (optionally) units.
+        equal : optional, list of tuples with (field, value, <units>)
+            Halos meeting a given criterion must have field values equal to
+            the provided value. Each entry in the list must contain the
+            field name, value, and (optionally) units.
+        about : optional, list of tuples with (field, value, tolerance, <units>)
+            Halos meeting a given criterion must have field values within
+            the tolerance of the provided value. Each entry in the list must
+            contain the field name, value, tolerance, and (optionally) units.
+        conditionals : optional, list of strings
+            A list of conditionals for constructing a custom
+            :class:`~yt.data_objects.selection_objects.cut_region.YTCutRegion`.
+            This can be used instead of above/below/equal/about to create
+            more complex selection criteria. See the Cut Regions section in the
+            yt documentation for more information. The conditionals keyword
+            can only be used if none of the first for selection keywords are
+            given.
+        data_source : optional, :class:`~yt.data_objects.data_containers.YTDataContainer`
+            The source yt data container to be used to make the cut region.
+            If none given, the
+            :class:`~yt.data_objects.static_output.Dataset.all_data` container
+            (i.e., the full dataset) is used.
+
+        Returns
+        -------
+        cr : :class:`~yt.data_objects.selection_objects.cut_region.YTCutRegion`
+            The cut region associated with the provided selection criteria.
+
+        Examples
+        --------
+        >>> import ytree
+        >>> a = ytree.load("arbor/arbor.h5")
+        >>> # select halos above 1e12 Msun at redshift > 0.5
+        >>> sel = a.get_yt_selection(
+        ...     above=[("mass", 1e13, "Msun"),
+        ...            ("redshift", 0.5)])
+        >>> print (sel["halos", "mass"])
+        >>> print (sel["halos", "virial_radius"])
+
+        >>> import ytree
+        >>> a = ytree.load("arbor/arbor.h5")
+        >>> # select halos below 1e13 Msun at redshift > 1
+        >>> sel = a.get_yt_selection(
+        ...     below=[("mass", 1e13, "Msun")],
+        ...     above=[("redshift", 1)])
+        >>> print (sel["halos", "mass"])
+        >>> print (sel["halos", "virial_radius"])
+
+        >>> import ytree
+        >>> a = ytree.load("arbor/arbor.h5")
+        >>> # select phantom halos (a consistent-trees field)
+        >>> sel = a.get_yt_selection(equal=[("phantom", 1)])
+
+        >>> import ytree
+        >>> a = ytree.load("arbor/arbor.h5")
+        >>> # select halos with vmax of 200 +-10 km/s (i.e., 5%)
+        >>> sel = a.get_yt_selection(about=[("vmax", 200, "km/s", 0.05)])
+
+        >>> import ytree
+        >>> a = ytree.load("arbor/arbor.h5")
+        >>> # use a yt conditional
+        >>> sel = a.get_yt_selection(
+        ...     conditionals=['obj["halos", "mass"] > 1e12'])
+
+        >>> import ytree
+        >>> a = ytree.load("arbor/arbor.h5")
+        >>> # select halos only within a sphere
+        >>> ds = a.ytds
+        >>> sphere = ds.sphere(ds.domain_center, (10, Mpc))
+        >>> sel = a.get_yt_selection(
+        ...     above=[("mass", 1e13)],
+        ...     data_source=sphere)
+        >>> # get the TreeNodes for the selection
+        >>> for node in a.get_nodes_from_selection(sel):
+        ...     print (node["mass"])
+
+        See Also
+        --------
+        get_nodes_from_selection
+
+        """
+
+        if above is None:
+            above = []
+        if below is None:
+            below = []
+        if equal is None:
+            equal = []
+        if about is None:
+            about = []
+        if conditionals is None:
+            conditionals = []
+
+        if not (bool(conditionals) ^ any([above, below, equal, about])):
+            raise ValueError(
+                "Must specify either conditionals or above/below/equal/about, not both."
+                f"\nconditionals: {conditionals}"
+                f"\nabove: {above}"
+                f"\nbelow: {below}"
+                f"\nequal: {equal}"
+                f"\nabout: {about}")
+
+        if data_source is None:
+            data_source = self.ytds.all_data()
+
+        if not isinstance(data_source, YTDataContainer):
+            raise ValueError(
+                f"data_source must be a YTDataContainer: {data_source}.")
+
+        for criterion in above:
+            condition = get_conditional("above", criterion)
+            conditionals.append(condition)
+
+        for criterion in below:
+            condition = get_conditional("below", criterion)
+            conditionals.append(condition)
+
+        for criterion in equal:
+            condition = get_conditional("equal", criterion)
+            conditionals.append(condition)
+
+        for criterion in about:
+            conditions = get_about(criterion)
+            conditionals.extend(conditions)
+
+        cr = data_source.cut_region(conditionals)
+        return cr
+
+    def get_nodes_from_selection(self, container):
+        """
+        Generate TreeNodes from a yt data container.
+
+        All halos contained within the data container will be
+        returned as TreeNode objects. This returns a generator
+        that can be iterated over or cast as a list.
+
+        Parameters
+        ----------
+        container : :class:`~yt.data_objects.data_containers.YTDataContainer`
+            Data container, such as a sphere or region, from
+            which nodes will be generated.
+
+        Returns
+        -------
+        nodes : generator
+            The :class:`~ytree.data_structures.tree_node.TreeNode` objects
+            contained within the container.
+
+        Examples
+        --------
+        >>> import ytree
+        >>> a = ytree.load("arbor/arbor.h5")
+        >>> c = a.arr([0.5, 0.5, 0.5], "unitary")
+        >>> sphere = a.ytds.sphere(c, (0.1, "unitary"))
+        >>> for node in a.get_nodes_from_selection(sphere):
+        ...     print (node["mass"])
+
+        >>> import ytree
+        >>> a = ytree.load("arbor/arbor.h5")
+        >>> # select halos above 1e12 Msun at redshift > 0.5
+        >>> sel = a.get_yt_selection(
+        ...     above=[("mass", 1e13, "Msun"),
+        ...            ("redshift", 0.5)])
+        >>> my_nodes = list(a.get_nodes_from_selection(sel))
+
+        """
+
+        self._plant_trees()
+        container.get_data([('halos', 'file_number'),
+                            ('halos', 'file_root_index'),
+                            ('halos', 'tree_index')])
+
+        file_number = container['halos', 'file_number'].d.astype(int)
+        file_root_index = container['halos', 'file_root_index'].d.astype(int)
+        tree_index = container['halos', 'tree_index'].d.astype(int)
+        arbor_index = self._node_io._si[file_number] + file_root_index
+
+        for ai, ti in zip(arbor_index, tree_index):
+            root_node = self._generate_root_node(ai)
+            if ti == 0:
+                yield root_node
+            else:
+                yield root_node.get_node("forest", ti)
+
+    _ytds = None
+    @property
+    def ytds(self):
+        """
+        Load as a yt dataset.
+
+        Merger tree data is loaded as a yt dataset, providing full access
+        to yt functionality. Fields are accessed with the naming convention,
+        ("halos", <field name>).
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("arbor/arbor.h5")
+        >>>
+        >>> ds = a.ytds
+        >>> sphere = ds.sphere(ds.domain_center, (5, "Mpc"))
+        >>> print (sphere["halos", "mass"])
+        >>>
+        >>> for node in a.get_nodes_from_selection(sphere):
+        ...     print (node["position"])
+
+        """
+        if self._ytds is not None:
+            return self._ytds
+        with log_level(40, mylog=ytLogger):
+            self._ytds = YTreeDataset(self.filename)
+        return self._ytds
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
