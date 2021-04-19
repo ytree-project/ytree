@@ -13,8 +13,6 @@ tests for the plotting examples in the docs
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import os
-
 from ytree.utilities.testing import \
     requires_file, \
     TempDirTest
@@ -48,6 +46,7 @@ def my_edge(ancestor, descendent):
 
     my_kwargs = {"color": color, "penwidth": 5}
     return my_kwargs
+
 
 AHF = "ahf_halos/snap_N64L16_000.parameter"
 

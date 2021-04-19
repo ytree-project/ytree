@@ -14,9 +14,7 @@ tests for yt frontend and selection functions
 #-----------------------------------------------------------------------------
 
 import numpy as np
-from numpy.testing import \
-    assert_equal, \
-    assert_raises
+from numpy.testing import assert_raises
 from unyt import uconcatenate
 import ytree
 
@@ -327,7 +325,7 @@ class YTSelectionTest(TempDirTest):
         a = self.arbor
 
         with assert_raises(ValueError):
-            sel = a.get_yt_selection(
+            a.get_yt_selection(
                 conditionals=['obj["halos", "mass"] > 1e10'],
                 above=["mass", 1e10])
 
@@ -394,7 +392,6 @@ class YTSelectionTest(TempDirTest):
     @requires_file(CTG)
     def test_nodes_from_selection(self):
         a = self.arbor
-        ds = a.ytds
 
         sel = a.get_yt_selection(above=[("mass", 1e10, "Msun")])
         sel_mass = sel["halos", "mass"].to("Msun")
