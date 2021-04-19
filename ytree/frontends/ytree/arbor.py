@@ -156,14 +156,14 @@ class YTreeArbor(Arbor):
         can then be passed to
         :func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_nodes_from_selection`
         to get all the
-        :class:`~ytree.data_structures.tree_node.TreeNode` that meet the
+        :class:`~ytree.data_structures.tree_node.TreeNode` objects that meet the
         criteria.
 
         If multiple criteria are provided, selected halos must meet all
         criteria.
 
         To specify a custom data container, use the ``ytds`` attribute
-        associated the arbor to access the merger tree data as a yt
+        associated with the arbor to access the merger tree data as a yt
         dataset. For example:
 
         >>> import ytree

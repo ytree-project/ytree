@@ -4,7 +4,7 @@ Working with Merger Trees
 =========================
 
 The :class:`~ytree.data_structures.arbor.Arbor` class is responsible for loading
-and providing access to merger tree data. In this document a loaded merger tree
+and providing access to merger tree data. In this document, a loaded merger tree
 dataset is referred to as an **arbor**. ``ytree`` provides several different
 ways to navigate, query, and analyze merger trees. It is recommended that you
 read this entire section to identify the way that is best for what you want to do.
@@ -453,7 +453,7 @@ set of criteria.
     TreeNode[9683], TreeNode[8316], TreeNode[10788]]
 
 The selection criteria string should be designed to ``eval`` correctly
-with a :class:`~ytree.data_structures.tree_node.TreeNode` object named,
+with a :class:`~ytree.data_structures.tree_node.TreeNode` object, named
 "tree". The ``fields`` keyword can be used to specify a list of fields to preload
 for speeding up selection.
 
@@ -491,7 +491,7 @@ Search criteria can be provided using a series of keywords: ``above``, ``below``
    ...            ("redshift", 0.5)])
 
 An individual criterion should be expressed as a tuple
-(e.g., ``(field, value, <units>)``), and the above keywords accept a list those
+(e.g., ``(field, value, <units>)``), and the above keywords accept a list of those
 tuples. The criteria keywords can be given together and the halos must meet all
 criteria, i.e., the criteria are combined with an AND operator.
 
@@ -577,7 +577,7 @@ like spheres or regions.
    >>> print (sphere["halos", "mass"])
 
 These data containers can then be given to the
-:func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_nodes_from_selection` to
+:func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_nodes_from_selection` function to
 :ref:`get the tree nodes <halos-from-selection>` for all halos within the
 container.
 
