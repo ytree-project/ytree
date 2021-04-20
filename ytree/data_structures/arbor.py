@@ -745,11 +745,8 @@ class Arbor(metaclass=RegisteredArbor):
             string of 'tree["tree", "redshift"] > 1' cannot be used when setting
             select_from to "prog".
             Default: "tree".
-        fields : optional, list of strings
-            Use to provide a list of fields required by the criteria evaluation.
-            If given, fields will be preloaded in an optimized way and the search
-            will go faster.
-            Default: None.
+        fields : deprecated, do not use
+            This keyword is no longer required and using it does nothing.
 
         Returns
         -------
@@ -762,11 +759,10 @@ class Arbor(metaclass=RegisteredArbor):
 
         >>> import ytree
         >>> a = ytree.load("tree_0_0_0.dat")
-        >>> halos = a.select_halos('tree["tree", "redshift"] > 1',
-        ...                        fields=["redshift"])
+        >>> halos = a.select_halos('tree["tree", "redshift"] > 1')
         >>>
         >>> halos = a.select_halos('tree["prog", "mass"].to("Msun") >= 1e10',
-        ...                        select_from="prog", fields=["mass"])
+        ...                        select_from="prog")
 
         """
 
@@ -775,19 +771,14 @@ class Arbor(metaclass=RegisteredArbor):
                 "Keyword \"select_from\" must be \"tree\", \"forest\", or \"prog\".")
 
         if trees is None:
-            trees = self[:]
+            trees = self
 
-        if fields is None:
-            fields = []
-
-        self._node_io_loop(self._setup_tree, root_nodes=trees,
-                           pbar="Setting up trees")
-        if fields:
-            self._node_io_loop(
-                self._node_io.get_fields,
-                pbar="Getting fields",
-                root_nodes=trees, fields=fields, root_only=False)
-
+        if fields is not None:
+            import warnings
+            from numpy import VisibleDeprecationWarning
+            warnings.warn(
+                "The fields keyword is deprecated and no longer does anything.",
+                VisibleDeprecationWarning, stacklevel=2)
 
         halos = []
         pbar = get_pbar("Selecting halos", trees.size)

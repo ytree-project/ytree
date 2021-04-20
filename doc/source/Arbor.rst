@@ -446,16 +446,14 @@ set of criteria.
 
 .. code-block:: python
 
-   >>> halos = a.select_halos('tree["tree", "redshift"] > 1',
-   ...                        fields=["redshift"])
+   >>> halos = a.select_halos('tree["tree", "redshift"] > 1')
    >>> print (halos)
    [TreeNode[8987], TreeNode[6713], TreeNode[6091], TreeNode[448], ...,
     TreeNode[9683], TreeNode[8316], TreeNode[10788]]
 
 The selection criteria string should be designed to ``eval`` correctly
 with a :class:`~ytree.data_structures.tree_node.TreeNode` object, named
-"tree". The ``fields`` keyword can be used to specify a list of fields to preload
-for speeding up selection.
+"tree".
 
 .. _select-halos-yt:
 
