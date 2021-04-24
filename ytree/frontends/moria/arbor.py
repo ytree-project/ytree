@@ -32,14 +32,14 @@ from ytree.frontends.moria.io import \
 
 class MoriaArbor(Arbor):
     """
-    Arbors loaded from consistent-trees data converted into HDF5.
+    Arbors from Moria merger trees.
     """
 
     _suffix = ".hdf5"
     _data_file_class = MoriaDataFile
     _field_info_class = MoriaFieldInfo
     _tree_field_io_class = MoriaTreeFieldIO
-    _node_io_attrs = ('_fi', '_si')
+    _node_io_attrs = ('_ai', '_fi')
 
     def _parse_parameter_file(self):
         f = h5py.File(self.parameter_filename, mode='r')
@@ -70,30 +70,19 @@ class MoriaArbor(Arbor):
         self.field_list = field_list
         self.field_info.update(fi)
 
-    # def _plant_trees(self):
-    #     if self.is_planted or self._size == 0:
-    #         return
+    def _plant_trees(self):
+        if self.is_planted:
+            return
 
-    #     c = 0
-    #     file_offsets = self._file_count.cumsum() - self._file_count
-    #     pbar = get_pbar('Planting trees', self._size)
-    #     for idf, data_file in enumerate(self.data_files):
-    #         data_file.open()
-    #         tree_size = data_file.fh["Header"]["TreeNHalos"][()]
-    #         data_file.close()
-
-    #         size = data_file._size
-    #         istart = file_offsets[idf]
-    #         iend = istart + size
-
-    #         self._node_info['_fi'][istart:iend] = idf
-    #         self._node_info['_si'][istart:iend] = np.arange(size)
-    #         self._node_info['_tree_size'][istart:iend] = tree_size
-    #         c += size
-    #         pbar.update(c)
-    #     pbar.finish()
-    #     uids = self._node_info['_tree_size']
-    #     self._node_info['uid'] = uids.cumsum() - uids
+        f = h5py.File(self.parameter_filename, mode='r')
+        status = f["status_sparta"][-1]
+        hosts = status == 10
+        self._size = hosts.sum()
+        # fi is the index of the root in the 2d array
+        self._node_info['_ai'] = np.arange(self._size)
+        self._node_info['_fi'] = np.where(hosts)[0]
+        self._node_info['uid'] = f["id"][-1][hosts]
+        f.close()
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
