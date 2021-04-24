@@ -166,6 +166,7 @@ class Arbor(metaclass=RegisteredArbor):
                 hubble_constant=self.hubble_constant,
                 omega_matter=self.omega_matter,
                 omega_lambda=self.omega_lambda,
+                omega_radiation=getattr(self, "omega_radiation", None),
                 unit_registry=self.unit_registry)
 
     def _setup_io(self):
