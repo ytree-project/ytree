@@ -39,7 +39,7 @@ class MoriaArbor(Arbor):
     _data_file_class = MoriaDataFile
     _field_info_class = MoriaFieldInfo
     _tree_field_io_class = MoriaTreeFieldIO
-    _node_io_attrs = ('_ai', '_fi')
+    _node_io_attrs = ('_ai', '_si', '_ei')
 
     def _parse_parameter_file(self):
         f = h5py.File(self.parameter_filename, mode='r')
@@ -70,6 +70,9 @@ class MoriaArbor(Arbor):
         self.field_list = field_list
         self.field_info.update(fi)
 
+    def _get_data_files(self):
+        self.data_files = [self._data_file_class(self.parameter_filename)]
+
     def _plant_trees(self):
         if self.is_planted:
             return
@@ -78,9 +81,10 @@ class MoriaArbor(Arbor):
         status = f["status_sparta"][-1]
         hosts = status == 10
         self._size = hosts.sum()
-        # fi is the index of the root in the 2d array
         self._node_info['_ai'] = np.arange(self._size)
-        self._node_info['_fi'] = np.where(hosts)[0]
+        self._node_info['_si'] = np.where(hosts)[0]
+        self._node_info['_ei'][:-1] = self._node_info['_si'][1:]
+        self._node_info['_ei'][-1] = status.size
         self._node_info['uid'] = f["id"][-1][hosts]
         f.close()
 

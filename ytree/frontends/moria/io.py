@@ -22,13 +22,6 @@ from ytree.data_structures.io import \
     TreeFieldIO
 
 class MoriaDataFile(DataFile):
-    def __init__(self, filename, linkname):
-        super(MoriaDataFile, self).__init__(filename)
-
-        self.open()
-        self._size = self.fh["Header"].attrs["NtreesPerFile"]
-        self.close()
-
     def open(self):
         self.fh = h5py.File(self.filename, mode="r")
 
@@ -53,32 +46,31 @@ class MoriaTreeFieldIO(TreeFieldIO):
                 [dfield for dfield in fi[afield].get("dependencies", [])
                  if dfield not in rfields])
 
-        data_file = self.arbor.data_files[root_node._fi]
+        data_file = self.arbor.data_files[0]
         close = False
         if data_file.fh is None:
             close = True
             data_file.open()
         fh = data_file.fh
-        g = fh[f"Tree{root_node._si}"]
 
         if root_only:
-            index = slice(0, 1)
+            index = (-1, slice(root_node._si, root_node._si+1))
         else:
-            index = ()
+            index = (slice(None), slice(root_node._si, root_node._ei))
 
         field_cache = {}
         field_data = {}
         freg = re.compile(r"(^.+)_(\d+$)")
         for field in rfields:
             fs = freg.search(field)
-            if fs and fs.groups()[0] in g:
+            if fs and fs.groups()[0] in fh:
                 fieldname, ifield = fs.groups()
                 ifield = int(ifield)
                 if fieldname not in field_cache:
-                    field_cache[fieldname] = g[fieldname][index]
+                    field_cache[fieldname] = fh[fieldname][index]
                 field_data[field] = field_cache[fieldname][:, ifield]
             else:
-                field_data[field] = g[field][index]
+                field_data[field] = fh[field][index]
 
         if afields:
             field_data.update(self._get_arbor_fields(
