@@ -28,6 +28,7 @@ from ytree.frontends.moria.fields import \
     MoriaFieldInfo
 from ytree.frontends.moria.io import \
     MoriaDataFile, \
+    MoriaRootFieldIO, \
     MoriaTreeFieldIO
 
 class MoriaArbor(Arbor):
@@ -38,6 +39,7 @@ class MoriaArbor(Arbor):
     _suffix = ".hdf5"
     _data_file_class = MoriaDataFile
     _field_info_class = MoriaFieldInfo
+    _root_field_io_class = MoriaRootFieldIO
     _tree_field_io_class = MoriaTreeFieldIO
     _node_io_attrs = ('_ai', '_si', '_ei')
 

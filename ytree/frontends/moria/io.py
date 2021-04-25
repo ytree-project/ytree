@@ -18,6 +18,7 @@ import numpy as np
 import re
 
 from ytree.data_structures.io import \
+    DefaultRootFieldIO, \
     DataFile, \
     TreeFieldIO
 
@@ -111,3 +112,40 @@ class MoriaTreeFieldIO(TreeFieldIO):
             adata["desc_uid"] = desc_uids
 
         return adata
+
+class MoriaRootFieldIO(DefaultRootFieldIO):
+    def _read_fields(self, storage_object, fields, dtypes=None):
+        if dtypes is None:
+            dtypes = {}
+
+        data_file = self.arbor.data_files[0]
+        data_file.open()
+        fh = data_file.fh
+
+        index = self.arbor._node_info['_si']
+        field_cache = {}
+        field_data = {}
+        fi = self.arbor.field_info
+        freg = re.compile(r"(^.+)_(\d+$)")
+        for field in fields:
+            if fi[field].get("vector", False):
+                fs = freg.search(field)
+                fieldname, ifield = fs.groups()
+                ifield = int(ifield)
+                if fieldname not in field_cache:
+                    field_cache[fieldname] = fh[fieldname][-1][index]
+                data = field_cache[fieldname][:, ifield]
+            else:
+                data = fh[field][-1][index]
+
+            dtype = dtypes.get(field)
+            if dtype is not None:
+                data = data.astype(dtype)
+            units = fi[field].get("units", "")
+            if units != "":
+                data = self.arbor.arr(data, units)
+            field_data[field] = data
+
+        fh.close()
+
+        return field_data
