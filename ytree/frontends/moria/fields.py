@@ -25,6 +25,9 @@ r_unit = "kpc/h"
 v_unit = "km/s"
 j_unit = "Msun * Mpc * km * s**-1 * h**-2"
 
+def _arbor_field(field, data):
+    pass
+
 def _redshift(field, data):
     isn = data["SnapNum"].astype(int)
     return data.arbor.arr(data.arbor._redshifts[isn], "")
@@ -42,7 +45,7 @@ class MoriaFieldInfo(FieldInfoContainer):
         ("angular_momentum_z", "Jz", j_unit),
         ("velocity_dispersion", "vrms", v_unit),
         ("uid", "id", ""),
-        ("desc_uid", "descendent_id", ""),
+        ("desc_uid", "descendant_id", ""),
     )
 
     known_fields = (

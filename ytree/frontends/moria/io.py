@@ -56,8 +56,12 @@ class MoriaTreeFieldIO(TreeFieldIO):
 
         if root_only:
             index = (-1, slice(root_node._si, root_node._si+1))
+            dfilter = None
         else:
             index = (slice(None), slice(root_node._si, root_node._ei))
+            status = fh["status_sparta"][index]
+            status = self._transform_data(status)
+            dfilter = status != 0
 
         field_cache = {}
         field_data = {}
@@ -69,9 +73,11 @@ class MoriaTreeFieldIO(TreeFieldIO):
                 ifield = int(ifield)
                 if fieldname not in field_cache:
                     field_cache[fieldname] = fh[fieldname][index]
-                field_data[field] = field_cache[fieldname][:, ifield]
+                data = field_cache[fieldname][:, ifield]
             else:
-                field_data[field] = fh[field][index]
+                data = fh[field][index]
+            field_data[field] = self._transform_data(
+                data, my_filter=dfilter)
 
         if afields:
             field_data.update(self._get_arbor_fields(
@@ -87,6 +93,12 @@ class MoriaTreeFieldIO(TreeFieldIO):
                   self.arbor.arr(field_data[field], units)
 
         return field_data
+
+    def _transform_data(self, data, my_filter=None):
+        data = np.flip(data, axis=0).flatten()
+        if my_filter is not None:
+            data = data[my_filter]
+        return data
 
     def _get_arbor_fields(self, root_node, field_data,
                           fields, afields, root_only):
