@@ -73,7 +73,7 @@ class MoriaTreeFieldIO(TreeFieldIO):
                 ifield = int(ifield)
                 if fieldname not in field_cache:
                     field_cache[fieldname] = fh[fieldname][index]
-                data = field_cache[fieldname][:, ifield]
+                data = field_cache[fieldname][..., ifield]
             else:
                 data = fh[field][index]
             field_data[field] = self._transform_data(
@@ -81,7 +81,8 @@ class MoriaTreeFieldIO(TreeFieldIO):
 
         if afields:
             field_data.update(self._get_arbor_fields(
-                root_node, field_data, fields, afields, root_only))
+                root_node, field_data, fields, afields, root_only,
+                my_filter=dfilter))
 
         if close:
             data_file.close()
@@ -101,27 +102,23 @@ class MoriaTreeFieldIO(TreeFieldIO):
         return data
 
     def _get_arbor_fields(self, root_node, field_data,
-                          fields, afields, root_only):
+                          fields, afields, root_only,
+                          my_filter=None):
         """
         Generate special fields from the arbor/treenode.
         """
 
         adata = {}
 
-        if "uid" in afields:
+        if "snap_index" in fields:
             if root_only:
-                adata["uid"] = np.array([root_node.uid])
+                adata["snap_index"] = \
+                  np.array([self.arbor._redshifts.size-1], dtype=int)
             else:
-                adata["uid"] = root_node.uid + \
-                  np.arange(root_node._tree_size)
-
-        if "desc_uid" in afields:
-            if "Descendant" in fields:
-                desc_uids = field_data["Descendant"].copy()
-            else:
-                desc_uids = field_data.pop("Descendant")
-            desc_uids[desc_uids != -1] += root_node.uid
-            adata["desc_uid"] = desc_uids
+                data, _ = np.mgrid[:self.arbor._redshifts.size,
+                                   root_node._si:root_node._ei]
+                adata["snap_index"] = self._transform_data(
+                    data, my_filter=my_filter)
 
         return adata
 
@@ -130,6 +127,16 @@ class MoriaRootFieldIO(DefaultRootFieldIO):
         if dtypes is None:
             dtypes = {}
 
+        fi = self.arbor.field_info
+        afields = [field for field in fields
+                   if fi[field].get("source") == "arbor"]
+        rfields = list(set(fields).difference(afields))
+
+        for afield in afields:
+            rfields.extend(
+                [dfield for dfield in fi[afield].get("dependencies", [])
+                 if dfield not in rfields])
+
         data_file = self.arbor.data_files[0]
         data_file.open()
         fh = data_file.fh
@@ -137,9 +144,8 @@ class MoriaRootFieldIO(DefaultRootFieldIO):
         index = self.arbor._node_info['_si']
         field_cache = {}
         field_data = {}
-        fi = self.arbor.field_info
         freg = re.compile(r"(^.+)_(\d+$)")
-        for field in fields:
+        for field in rfields:
             if fi[field].get("vector", False):
                 fs = freg.search(field)
                 fieldname, ifield = fs.groups()
@@ -158,6 +164,19 @@ class MoriaRootFieldIO(DefaultRootFieldIO):
                 data = self.arbor.arr(data, units)
             field_data[field] = data
 
+        if afields:
+            field_data.update(self._get_arbor_fields(
+                field_data, fields, afields))
+
         fh.close()
 
         return field_data
+
+    def _get_arbor_fields(self, field_data, fields, afields):
+        adata = {}
+
+        if "snap_index" in fields:
+            adata["snap_index"] = \
+              np.full(self.arbor.size, self.arbor._redshifts.size-1)
+
+        return adata

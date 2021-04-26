@@ -25,12 +25,9 @@ r_unit = "kpc/h"
 v_unit = "km/s"
 j_unit = "Msun * Mpc * km * s**-1 * h**-2"
 
-def _arbor_field(field, data):
-    pass
-
-def _redshift(field, data):
-    isn = data["SnapNum"].astype(int)
-    return data.arbor.arr(data.arbor._redshifts[isn], "")
+def _arbor_index_field(field, data):
+    vals = getattr(data.arbor, f"_{field['name']}s")
+    return vals[data["snap_index"].astype(int)]
 
 class MoriaFieldInfo(FieldInfoContainer):
     alias_fields = (
@@ -143,9 +140,22 @@ class MoriaFieldInfo(FieldInfoContainer):
                 self[field]["units"] = kfields[fs.groups()[0]]
 
     def setup_derived_fields(self):
-        # self.arbor.add_derived_field(
-        #     "redshift", _redshift, units="", force_add=False)
-        # # this will add it to field list for saving
-        # self.arbor.field_list.append("redshift")
+        self.arbor.add_derived_field(
+            "redshift", _arbor_index_field,
+            units="", force_add=False)
+        # this will add it to field list for saving
+        self.arbor.field_list.append("redshift")
+
+        self.arbor.add_derived_field(
+            "scale_factor", _arbor_index_field,
+            units="", force_add=False)
+        # this will add it to field list for saving
+        self.arbor.field_list.append("scale_factor")
+
+        self.arbor.add_derived_field(
+            "time", _arbor_index_field,
+            units="Gyr", force_add=False)
+        # this will add it to field list for saving
+        self.arbor.field_list.append("time")
 
         super().setup_derived_fields()

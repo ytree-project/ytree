@@ -51,8 +51,8 @@ class MoriaArbor(Arbor):
         self.omega_lambda = g.attrs['cosmo_Omega_L']
         self.omega_radiation = g.attrs['cosmo_Omega_r']
         self.box_size = self.quan(g.attrs['box_size'], 'Mpc/h')
-        self._redshifts = g.attrs['snap_z']
-        self._scale_factors = g.attrs['snap_a']
+        self._redshifts = self.arr(g.attrs['snap_z'], '')
+        self._scale_factors = self.arr(g.attrs['snap_a'], '')
         self._times = self.arr(g.attrs['snap_t'], 'Gyr')
 
         field_list = []
@@ -68,6 +68,9 @@ class MoriaArbor(Arbor):
                 field_list.append(field)
                 fi[field] = {}
         f.close()
+
+        field_list.append("snap_index")
+        fi["snap_index"] = {"source": "arbor", "dtype": int}
 
         self.field_list = field_list
         self.field_info.update(fi)
