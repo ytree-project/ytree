@@ -103,6 +103,24 @@ class MoriaArbor(Arbor):
             pbar.update(i+1)
         pbar.finish()
 
+    def _node_io_loop_prepare(self, nodes):
+        self._plant_trees()
+
+        if nodes is None:
+            my_size = self.size
+        else:
+            my_size = nodes.size
+        indices = np.arange(my_size)
+
+        return self.data_files, [indices], None
+
+    def _node_io_loop_start(self, data_file):
+        data_file.full_read = True
+
+    def _node_io_loop_finish(self, data_file):
+        data_file.full_read = False
+        data_file.field_cache = None
+
     @classmethod
     def _is_valid(self, *args, **kwargs):
         """

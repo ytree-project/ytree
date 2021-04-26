@@ -23,12 +23,27 @@ from ytree.data_structures.io import \
     TreeFieldIO
 
 class MoriaDataFile(DataFile):
+    field_cache = None
+    full_read = False
+    fh = None
+
     def open(self):
         self.fh = h5py.File(self.filename, mode="r")
 
     def close(self):
         self.fh.close()
         self.fh = None
+
+    def read_data(self, field, index):
+        if self.full_read:
+            if self.field_cache is None:
+                self.field_cache = {}
+
+            if field not in self.field_cache:
+                self.field_cache[field] = self.fh[field][()]
+            return self.field_cache[field][index]
+        else:
+            return self.fh[field][index]
 
 class MoriaTreeFieldIO(TreeFieldIO):
     def _read_fields(self, root_node, fields, dtypes=None,
@@ -59,10 +74,11 @@ class MoriaTreeFieldIO(TreeFieldIO):
             dfilter = None
         else:
             index = (slice(None), slice(root_node._si, root_node._ei))
-            status = fh["status_sparta"][index]
+            status = data_file.read_data("status_sparta", index)
             status = self._transform_data(status)
             dfilter = status != 0
 
+        # this field cache is for temporarily storing vector field data
         field_cache = {}
         field_data = {}
         freg = re.compile(r"(^.+)_(\d+$)")
@@ -72,10 +88,10 @@ class MoriaTreeFieldIO(TreeFieldIO):
                 fieldname, ifield = fs.groups()
                 ifield = int(ifield)
                 if fieldname not in field_cache:
-                    field_cache[fieldname] = fh[fieldname][index]
+                    field_cache[fieldname] = data_file.read_data(fieldname, index)
                 data = field_cache[fieldname][..., ifield]
             else:
-                data = fh[field][index]
+                data = data_file.read_data(field, index)
             field_data[field] = self._transform_data(
                 data, my_filter=dfilter)
 
@@ -124,6 +140,8 @@ class MoriaTreeFieldIO(TreeFieldIO):
 
 class MoriaRootFieldIO(DefaultRootFieldIO):
     def _read_fields(self, storage_object, fields, dtypes=None):
+        self.arbor._plant_trees()
+
         if dtypes is None:
             dtypes = {}
 
