@@ -83,15 +83,25 @@ class MoriaArbor(Arbor):
             return
 
         f = h5py.File(self.parameter_filename, mode='r')
-        status = f["status_sparta"][-1]
-        hosts = status == 10
+        status = f["status_sparta"][()]
+        root_status = status[-1]
+        hosts = root_status == 10
         self._size = hosts.sum()
-        self._node_info['_ai'] = np.arange(self._size)
-        self._node_info['_si'] = np.where(hosts)[0]
+        self._node_info['_ai'][:] = np.arange(self._size)
+        self._node_info['_si'][:] = np.where(hosts)[0]
         self._node_info['_ei'][:-1] = self._node_info['_si'][1:]
-        self._node_info['_ei'][-1] = status.size
-        self._node_info['uid'] = f["id"][-1][hosts]
+        self._node_info['_ei'][-1] = root_status.size
+        self._node_info['uid'][:] = f["id"][-1][hosts]
         f.close()
+
+        pbar = get_pbar('Planting trees', self._size)
+        si = self._node_info['_si']
+        ei = self._node_info['_ei']
+        for i in range(self._size):
+            tree_status = status[:, si[i]:ei[i]]
+            self._node_info['_tree_size'][i] = (tree_status != 0).sum()
+            pbar.update(i+1)
+        pbar.finish()
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
