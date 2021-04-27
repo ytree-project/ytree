@@ -67,7 +67,6 @@ class MoriaTreeFieldIO(TreeFieldIO):
         if data_file.fh is None:
             close = True
             data_file.open()
-        fh = data_file.fh
 
         if root_only:
             index = (-1, slice(root_node._si, root_node._si+1))
@@ -83,8 +82,8 @@ class MoriaTreeFieldIO(TreeFieldIO):
         field_data = {}
         freg = re.compile(r"(^.+)_(\d+$)")
         for field in rfields:
-            fs = freg.search(field)
-            if fs and fs.groups()[0] in fh:
+            if fi[field].get("vector", False):
+                fs = freg.search(field)
                 fieldname, ifield = fs.groups()
                 ifield = int(ifield)
                 if fieldname not in field_cache:
@@ -186,7 +185,7 @@ class MoriaRootFieldIO(DefaultRootFieldIO):
             field_data.update(self._get_arbor_fields(
                 field_data, fields, afields))
 
-        fh.close()
+        data_file.close()
 
         return field_data
 

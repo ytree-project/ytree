@@ -103,6 +103,7 @@ class Arbor(metaclass=RegisteredArbor):
 
     omega_matter = None
     omega_lambda = None
+    omega_radiation = 0
 
     def __init__(self, filename):
         """
@@ -166,7 +167,7 @@ class Arbor(metaclass=RegisteredArbor):
                 hubble_constant=self.hubble_constant,
                 omega_matter=self.omega_matter,
                 omega_lambda=self.omega_lambda,
-                omega_radiation=getattr(self, "omega_radiation", None),
+                omega_radiation=self.omega_radiation,
                 unit_registry=self.unit_registry)
 
     def _setup_io(self):
