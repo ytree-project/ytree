@@ -113,7 +113,7 @@ class MoriaArbor(Arbor):
         desc_uids = tree_node.desc_uids
         missing = np.setdiff1d(desc_uids, uids)
         missing = np.setdiff1d(missing, [-1])
-        if not missing:
+        if missing.size == 0:
             return
 
         mfields = ["snap_index", "descendant_index"]
