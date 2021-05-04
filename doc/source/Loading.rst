@@ -299,6 +299,23 @@ is also necessary to facilitate :ref:`progenitor-access`.
 
    >>> a.add_alias_field("mass", "Mpeak", units="Msun")
 
+On rare occasions, a halo will be missing from the output even though
+another halo claims it as its descendent. This is usually because the
+halo has dropped below the minimum mass to be included. In these cases,
+MORIA will reassign the halo's descendent using the ``descendant_index``
+field (see discussion in `here
+<https://bdiemer.bitbucket.io/sparta/analysis_moria_output.html>`__).
+If ``ytree`` encounters such a situation, a message like the one below
+will be printed.
+
+.. code-block:: python
+
+   >>> t = a[85]
+   >>> print (t["tree", "Mpeak"])
+   ytree: [INFO     ] 2021-05-04 15:29:19,723 Reassigning descendent of halo 374749 from 398837 to 398836.
+   [1.458e+13 1.422e+13 1.363e+13 1.325e+13 1.295e+13 1.258e+13 1.212e+13 ...
+    1.309e+11 1.178e+11 1.178e+11 1.080e+11 9.596e+10 8.397e+10] Msun/h
+
 .. _load-rockstar:
 
 Rockstar Catalogs
