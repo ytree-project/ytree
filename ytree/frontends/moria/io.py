@@ -46,6 +46,16 @@ class MoriaDataFile(DataFile):
             return self.fh[field][index]
 
 class MoriaTreeFieldIO(TreeFieldIO):
+
+    def get_fields(self, data_object, fields=None, **kwargs):
+        """
+        Call _setup_tree if asking for desc_uid so we can correct it.
+        """
+
+        if fields is not None and "desc_uid" in fields:
+            self.arbor._setup_tree(data_object)
+        super().get_fields(data_object, fields=fields, **kwargs)
+
     def _read_fields(self, root_node, fields, dtypes=None,
                      root_only=False):
         """

@@ -264,11 +264,16 @@ class Arbor(metaclass=RegisteredArbor):
           self.field_info.resolve_field_dependencies(["uid", "desc_uid"])
         halo_id_f, desc_id_f = fields
         dtypes      = {halo_id_f: idtype, desc_id_f: idtype}
+        # Note to self, we call _read_fields and not _get_fields to
+        # avoid recursion issues.
         field_data  = self._node_io._read_fields(tree_node, fields,
                                                  dtypes=dtypes, **kwargs)
+
         tree_node._uids      = field_data[halo_id_f]
         tree_node._desc_uids = field_data[desc_id_f]
         tree_node._tree_size = tree_node._uids.size
+        tree_node._field_data["uid"] = tree_node._uids
+        tree_node._field_data["desc_uid"] = tree_node._desc_uids
 
     def is_grown(self, tree_node):
         """
