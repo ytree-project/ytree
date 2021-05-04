@@ -28,6 +28,8 @@ from ytree.frontends.moria.io import \
     MoriaDataFile, \
     MoriaRootFieldIO, \
     MoriaTreeFieldIO
+from ytree.utilities.logger import \
+    ytreeLogger as mylog
 
 class MoriaArbor(Arbor):
     """
@@ -100,6 +102,36 @@ class MoriaArbor(Arbor):
             self._node_info['_tree_size'][i] = (tree_status != 0).sum()
             pbar.update(i+1)
         pbar.finish()
+
+    def _setup_tree(self, tree_node, **kwargs):
+        """
+        Check for desc_uids missing from uid list.
+        """
+
+        super()._setup_tree(tree_node, **kwargs)
+        uids = tree_node.uids
+        desc_uids = tree_node.desc_uids
+        missing = np.setdiff1d(desc_uids, uids)
+        missing = np.setdiff1d(missing, [-1])
+        if not missing:
+            return
+
+        mfields = ["snap_index", "descendant_index"]
+        field_data  = self._node_io._read_fields(tree_node, mfields)
+
+        xsize = self._redshifts.size - 1
+        ysize = tree_node._ei - tree_node._si
+        xindex = xsize - field_data["snap_index"] - 1
+        yindex = field_data["descendant_index"] - tree_node._si
+
+        for muid in missing:
+            mi = np.where(desc_uids == muid)[0]
+            ndi = np.ravel_multi_index([xindex[mi], yindex[mi]], (xsize, ysize))
+            for my_mi, my_ndi in zip(mi, ndi):
+                new_uid = uids[np.where(my_ndi == tree_node._status)][0]
+                mylog.info(f"Reassigning descendent of halo {uids[my_mi]} from "
+                           f"{desc_uids[my_mi]} to {new_uid}.")
+                desc_uids[my_mi] = new_uid
 
     def _node_io_loop_prepare(self, nodes):
         self._plant_trees()

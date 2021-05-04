@@ -73,9 +73,11 @@ class MoriaTreeFieldIO(TreeFieldIO):
             dfilter = None
         else:
             index = (slice(None), slice(root_node._si, root_node._ei))
-            status = data_file.read_data("status_sparta", index)
-            status = self._transform_data(status)
-            dfilter = status != 0
+            if not hasattr(root_node, "_status"):
+                status = data_file.read_data("status_sparta", index)
+                status = self._transform_data(status)
+                root_node._status = np.where(status != 0)[0]
+            dfilter = root_node._status
 
         # this field cache is for temporarily storing vector field data
         field_cache = {}
