@@ -12,6 +12,7 @@ merger tree from the following formats:
 - :ref:`load-ctrees-hdf5`
 - :ref:`load-lhalotree`
 - :ref:`load-lhalotree-hdf5`
+- :ref:`load-moria`
 - :ref:`load-rockstar`
 - :ref:`load-treefarm`
 
