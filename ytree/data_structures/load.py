@@ -98,12 +98,12 @@ def load(filename, method=None, **kwargs):
                           (method, arbor_registry.keys()))
 
     global load_warn
-    if method not in ["YTree", "LHaloTree", "ConsistentTreeHDF5"] and load_warn:
+    if method not in ["YTree"] and load_warn:
         print(
-            ("Performance will be improved by saving this arbor with " +
-             "\"save_arbor\" and reloading:\n" +
-             "\t>>> a = ytree.load(\"%s\")\n" +
-             "\t>>> fn = a.save_arbor()\n" +
-             "\t>>> a = ytree.load(fn)") % filename)
+            ("Additional features and improved performance (usually) by saving "
+             "this arbor with \"save_arbor\" and reloading:\n"
+             f"\t>>> a = ytree.load(\"{filename}\")\n"
+             "\t>>> fn = a.save_arbor()\n"
+             "\t>>> a = ytree.load(fn)"))
         load_warn = False
     return arbor_registry[method](filename, **kwargs)

@@ -261,11 +261,60 @@ the box size assumed to be in units of comoving Mpc/h.
 The LHaloTree-HDF5 format contains multiple definitions of halo mass
 (see `here <https://www.tng-project.org/data/docs/specifications/#sec4b>`__),
 and as such, the field alias "mass" is not defined by default. However,
-the :ref:`alias can be created <alias-fields>` if one is preferable.
+the :ref:`alias can be created <alias-fields>` if one is preferable. This
+is also necessary to facilitate :ref:`progenitor-access`.
 
 .. code-block:: python
 
    >>> a.add_alias_field("mass", "Group_M_TopHat200", units="Msun")
+
+.. _load-moria:
+
+MORIA
+-----
+
+`MORIA <https://bdiemer.bitbucket.io/sparta/analysis_moria.html>`__ is a
+merger tree extension of the
+`SPARTA <https://bdiemer.bitbucket.io/sparta/index.html>`__ code
+(`Diemer 2017 <https://ui.adsabs.harvard.edu/abs/2017ApJS..231....5D/>`__;
+`Diemer 2020a <https://ui.adsabs.harvard.edu/abs/2020ApJS..251...17D/>`__).
+An output from MORIA is a single HDF5 file, whose path should be provided
+for loading.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("moria/moria_tree_testsim050.hdf5")
+
+Merger trees in MORIA are organized by :ref:`forest <forest-access>`, so
+printing ``a.size`` (following the example above) will give the number of
+forests, not the number of trees. MORIA outputs contain multiple definitions
+of halo mass (see `here
+<https://bdiemer.bitbucket.io/sparta/analysis_moria_output.html#complete-list-of-catalog-tree-fields-in-erebos-catalogs>`__),
+and as such, the field alias "mass" is not defined by default. However,
+the :ref:`alias can be created <alias-fields>` if one is preferable. This
+is also necessary to facilitate :ref:`progenitor-access`.
+
+.. code-block:: python
+
+   >>> a.add_alias_field("mass", "Mpeak", units="Msun")
+
+On rare occasions, a halo will be missing from the output even though
+another halo claims it as its descendent. This is usually because the
+halo has dropped below the minimum mass to be included. In these cases,
+MORIA will reassign the halo's descendent using the ``descendant_index``
+field (see discussion in `here
+<https://bdiemer.bitbucket.io/sparta/analysis_moria_output.html>`__).
+If ``ytree`` encounters such a situation, a message like the one below
+will be printed.
+
+.. code-block:: python
+
+   >>> t = a[85]
+   >>> print (t["tree", "Mpeak"])
+   ytree: [INFO     ] 2021-05-04 15:29:19,723 Reassigning descendent of halo 374749 from 398837 to 398836.
+   [1.458e+13 1.422e+13 1.363e+13 1.325e+13 1.295e+13 1.258e+13 1.212e+13 ...
+    1.309e+11 1.178e+11 1.178e+11 1.080e+11 9.596e+10 8.397e+10] Msun/h
 
 .. _load-rockstar:
 

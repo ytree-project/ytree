@@ -21,6 +21,7 @@ _frontends = [
     "consistent_trees_hdf5",
     "lhalotree",
     "lhalotree_hdf5",
+    "moria",
     "rockstar",
     "treefarm",
     "ytree",

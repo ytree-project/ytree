@@ -198,21 +198,25 @@ class ArborTest:
 
             mylog.info(f"Comparing vector field: {field}.")
             magfield = np.sqrt((a[field]**2).sum(axis=1))
-            assert_array_equal(a["%s_magnitude" % field], magfield)
+            assert_array_equal(a["%s_magnitude" % field], magfield,
+                               err_msg=f"Magnitude field incorrect: {field}.")
 
             for i, ax in enumerate("xyz"):
                 assert_array_equal(
-                    a["%s_%s" % (field, ax)],
-                    a[field][:, i])
+                    a[f"{field}_{ax}"], a[field][:, i],
+                    err_msg=(f"Arbor vector field {field} does not match "
+                             f"in dimension {i}."))
 
                 assert_array_equal(
-                    t["%s_%s" % (field, ax)],
-                    t[field][i])
+                    t[f"{field}_{ax}"], t[field][i],
+                    err_msg=(f"Tree vector field {field} does not match "
+                             f"in dimension {i}."))
 
                 for group in ["prog", "tree"]:
                     assert_array_equal(
-                        t[group, "%s_%s" % (field, ax)],
-                        t[group, field][:, i])
+                        t[group, f"{field}_{ax}"], t[group, field][:, i],
+                        err_msg=(f"{group} vector field {field} does not match "
+                                 f"in dimension {i}."))
 
 def save_and_compare(arbor, skip=1, groups=None):
     """
