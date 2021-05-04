@@ -2,7 +2,6 @@ import h5py
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from ytree.data_structures.load import load as ytree_load
 from ytree.frontends.moria import \
     MoriaArbor
 from ytree.utilities.testing import \
