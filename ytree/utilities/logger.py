@@ -56,7 +56,7 @@ class CompletionSpeedColumn(progress.ProgressColumn):
 
 def get_pbar(fake=False):
     if fake:
-        return fake_pbar()
+        return FakeProgressBar()
     else:
         return progress.Progress(
             "[progress.description]{task.description}",
@@ -67,12 +67,16 @@ def get_pbar(fake=False):
             progress.TimeRemainingColumn(),
             CompletionSpeedColumn())
 
-class fake_pbar:
+class FakeProgressBar:
     def __init__(self, *args, **kwargs):
         pass
     def add_task(self, *args, **kwargs):
         pass
     def update(self, *args, **kwargs):
+        pass
+    def __enter__(self, *args, **kwargs):
+        return self
+    def __exit__(self, *args, **kwargs):
         pass
 
 class log_level():
