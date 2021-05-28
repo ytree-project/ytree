@@ -11,13 +11,9 @@ import os
 import types
 from unyt import uconcatenate
 
-from yt.funcs import \
-    ensure_dir
-from yt.frontends.ytdata.utilities import \
-    save_as_dataset
-
-from ytree.utilities.logger import \
-    ytreeLogger as mylog
+from yt.frontends.ytdata.utilities import save_as_dataset
+from ytree.utilities.io import ensure_dir
+from ytree.utilities.logger import ytreeLogger as mylog
 
 #-----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
