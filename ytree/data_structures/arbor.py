@@ -410,7 +410,7 @@ class Arbor(metaclass=RegisteredArbor):
         rvals = []
         fake = pbar is None
         with get_pbar(fake=fake) as my_pbar:
-            task = pbar.add_task(pbar, total=nnodes)
+            task = my_pbar.add_task(pbar, total=nnodes)
             for data_file, nodes in zip(data_files, node_list):
                 self._node_io_loop_start(data_file)
 
