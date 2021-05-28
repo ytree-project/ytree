@@ -10,10 +10,10 @@ import numpy as np
 import os
 from unyt import uconcatenate
 
-from yt.funcs import \
-    ensure_dir
 from yt.frontends.ytdata.utilities import \
     save_as_dataset
+from ytree.utilities.io import \
+    ensure_dir
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 

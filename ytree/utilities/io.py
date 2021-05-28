@@ -13,13 +13,29 @@ io utilities
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import errno
 import numpy as np
+import os
 from unyt import \
     unyt_array, \
     unyt_quantity
 
 from ytree.utilities.logger import \
     get_pbar
+
+def ensure_dir(path):
+    r"""Parallel safe directory maker."""
+    if os.path.exists(path):
+        return path
+
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            pass
+        else:
+            raise
+    return path
 
 def parse_h5_attr(f, attr):
     """A Python3-safe function for getting hdf5 attributes.
