@@ -14,7 +14,7 @@ ytree io
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from yt.utilities.on_demand_imports import _h5py as h5py
+import h5py
 from more_itertools import always_iterable
 import numpy as np
 
