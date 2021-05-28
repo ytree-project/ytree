@@ -46,8 +46,7 @@ from ytree.data_structures.tree_node_selector import \
     tree_node_selector_registry
 from ytree.utilities.logger import \
     ytreeLogger, \
-    get_pbar, \
-    fake_pbar
+    get_pbar
 
 arbor_registry = {}
 
@@ -424,7 +423,7 @@ class Arbor(metaclass=RegisteredArbor):
                 for node in self._yield_root_nodes(my_nodes):
                     rval = func(node, *args, **kwargs)
                     rvals.append(rval)
-                    my_pbar.update(advance=1)
+                    my_pbar.update(task, advance=1)
 
                 self._node_io_loop_finish(data_file)
 
@@ -773,18 +772,18 @@ class Arbor(metaclass=RegisteredArbor):
                 VisibleDeprecationWarning, stacklevel=2)
 
         halos = []
-        pbar = get_pbar("Selecting halos", trees.size)
-        for i, tree in enumerate(trees):
-            my_filter = np.asarray(eval(criteria))
-            select_group = np.asarray(list(tree[select_from]))
-            if my_filter.size != select_group.size:
-                raise RuntimeError(
-                    ("Filter array and tree array sizes do not match. " +
-                     "Make sure select_from (\"%s\") matches criteria (\"%s\").") %
-                    (select_from, criteria))
-            halos.extend(select_group[my_filter])
-            pbar.update(i+1)
-        pbar.finish()
+        with get_pbar() as pbar:
+            task = pbar.add_task("Selecting halos", total=trees.size)
+            for i, tree in enumerate(trees):
+                my_filter = np.asarray(eval(criteria))
+                select_group = np.asarray(list(tree[select_from]))
+                if my_filter.size != select_group.size:
+                    raise RuntimeError(
+                        ("Filter array and tree array sizes do not match. " +
+                         "Make sure select_from (\"%s\") matches criteria (\"%s\").") %
+                        (select_from, criteria))
+                halos.extend(select_group[my_filter])
+                pbar.update(task, advance=1)
         return np.array(halos)
 
     def add_analysis_field(self, name, units, dtype=None, default=0):
@@ -1116,64 +1115,64 @@ class CatalogArbor(Arbor):
         trees = []
         nfiles = len(self.data_files)
         descs = lastids = None
-        pbar = get_pbar("Planting trees", len(self.data_files))
-        for i, dfl in enumerate(self.data_files):
-            if not isinstance(dfl, list):
-                dfl = [dfl]
+        with get_pbar() as pbar:
+            task = pbar.add_task("Planting trees", total=len(self.data_files))
+            for i, dfl in enumerate(self.data_files):
+                if not isinstance(dfl, list):
+                    dfl = [dfl]
 
-            batches = []
-            bsize = []
-            hids = []
-            ancs = defaultdict(list)
-            for data_file in dfl:
-                data = data_file._read_fields(fields, dtypes=dtypes)
-                nhalos = len(data[halo_id_f])
-                batch = np.empty(nhalos, dtype=object)
+                batches = []
+                bsize = []
+                hids = []
+                ancs = defaultdict(list)
+                for data_file in dfl:
+                    data = data_file._read_fields(fields, dtypes=dtypes)
+                    nhalos = len(data[halo_id_f])
+                    batch = np.empty(nhalos, dtype=object)
 
-                for it in range(nhalos):
-                    descid = data[desc_id_f][it]
-                    if self._has_uids:
-                        my_uid = data[halo_id_f][it]
-                    else:
-                        my_uid = uid
-                    root = i == 0 or descid == -1
-                    # The data says a descendent exists, but it's not there.
-                    # This shouldn't happen, but it does sometimes.
-                    if not root and descid not in lastids:
-                        root = True
-                        descid = data[desc_id_f][it] = -1
-                    tree_node = TreeNode(my_uid, arbor=self, root=root)
-                    tree_node._fi = it
-                    tree_node.data_file = data_file
-                    batch[it] = tree_node
-                    if root:
-                        trees.append(tree_node)
-                    else:
-                        ancs[descid].append(tree_node)
-                    uid += 1
-                data_file.trees = batch
-                batches.append(batch)
-                bsize.append(batch.size)
-                hids.append(data[halo_id_f])
+                    for it in range(nhalos):
+                        descid = data[desc_id_f][it]
+                        if self._has_uids:
+                            my_uid = data[halo_id_f][it]
+                        else:
+                            my_uid = uid
+                        root = i == 0 or descid == -1
+                        # The data says a descendent exists, but it's not there.
+                        # This shouldn't happen, but it does sometimes.
+                        if not root and descid not in lastids:
+                            root = True
+                            descid = data[desc_id_f][it] = -1
+                        tree_node = TreeNode(my_uid, arbor=self, root=root)
+                        tree_node._fi = it
+                        tree_node.data_file = data_file
+                        batch[it] = tree_node
+                        if root:
+                            trees.append(tree_node)
+                        else:
+                            ancs[descid].append(tree_node)
+                        uid += 1
+                    data_file.trees = batch
+                    batches.append(batch)
+                    bsize.append(batch.size)
+                    hids.append(data[halo_id_f])
 
-            if i > 0:
-                for descid, ancestors in ancs.items():
-                    # this will not be fast
-                    descendent = descs[descid == lastids][0]
-                    descendent._ancestors = ancestors
-                    for ancestor in ancestors:
-                        ancestor._descendent = descendent
+                if i > 0:
+                    for descid, ancestors in ancs.items():
+                        # this will not be fast
+                        descendent = descs[descid == lastids][0]
+                        descendent._ancestors = ancestors
+                        for ancestor in ancestors:
+                            ancestor._descendent = descendent
 
-            if i < nfiles - 1:
-                descs = np.empty(sum(bsize), dtype=object)
-                lastids = np.empty(descs.size, dtype=np.int64)
-                ib = 0
-                for batch, hid, bs in zip(batches, hids, bsize):
-                    descs[ib:ib+bs] = batch
-                    lastids[ib:ib+bs] = hid
-                    ib += bs
-            pbar.update(i+1)
-        pbar.finish()
+                if i < nfiles - 1:
+                    descs = np.empty(sum(bsize), dtype=object)
+                    lastids = np.empty(descs.size, dtype=np.int64)
+                    ib = 0
+                    for batch, hid, bs in zip(batches, hids, bsize):
+                        descs[ib:ib+bs] = batch
+                        lastids[ib:ib+bs] = hid
+                        ib += bs
+                pbar.update(task, advance=1)
 
         self._trees = np.array(trees)
         self._size = self._trees.size

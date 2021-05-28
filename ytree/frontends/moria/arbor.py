@@ -16,9 +16,6 @@ MoriaArbor class and member functions
 import h5py
 import numpy as np
 
-from yt.funcs import \
-    get_pbar
-
 from ytree.data_structures.arbor import \
     Arbor
 
@@ -29,6 +26,7 @@ from ytree.frontends.moria.io import \
     MoriaRootFieldIO, \
     MoriaTreeFieldIO
 from ytree.utilities.logger import \
+    get_pbar, \
     ytreeLogger as mylog
 
 class MoriaArbor(Arbor):
@@ -94,14 +92,14 @@ class MoriaArbor(Arbor):
         self._node_info['uid'][:] = f["id"][-1][hosts]
         f.close()
 
-        pbar = get_pbar('Planting trees', self._size)
         si = self._node_info['_si']
         ei = self._node_info['_ei']
-        for i in range(self._size):
-            tree_status = status[:, si[i]:ei[i]]
-            self._node_info['_tree_size'][i] = (tree_status != 0).sum()
-            pbar.update(i+1)
-        pbar.finish()
+        with get_pbar() as pbar:
+            task = pbar.add_task('Planting trees', total=self._size)
+            for i in range(self._size):
+                tree_status = status[:, si[i]:ei[i]]
+                self._node_info['_tree_size'][i] = (tree_status != 0).sum()
+                pbar.update(task, advance=1)
 
     def _setup_tree(self, tree_node, **kwargs):
         """

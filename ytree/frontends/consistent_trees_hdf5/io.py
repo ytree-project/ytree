@@ -17,13 +17,12 @@ from collections import defaultdict
 import h5py
 import numpy as np
 
-from yt.funcs import \
-    get_pbar
-
 from ytree.data_structures.io import \
     DataFile, \
     DefaultRootFieldIO, \
     TreeFieldIO
+from ytree.utilities.logger import \
+    get_pbar
 
 class ChunkStore:
     def __init__(self, chunk_size=262144):
@@ -125,30 +124,28 @@ class ConsistentTreesHDF5RootFieldIO(DefaultRootFieldIO):
         # and corresponding tree indices.
         data_files, index_list, _ = arbor._node_io_loop_prepare(None)
 
-        c = 0
         rdata = defaultdict(list)
 
         iend = arbor._file_count.cumsum()
         istart = iend - arbor._file_count
 
-        pbar = get_pbar('Reading root fields', arbor.size)
-        for idf, (data_file, nodes) in enumerate(zip(data_files, index_list)):
-            my_indices = arbor._node_info['_si'][istart[idf]:iend[idf]]
-            arbor._node_io_loop_start(data_file)
+        with get_pbar() as pbar:
+            task = pbar.add_task('Reading root fields', total=arbor.size)
+            for idf, (data_file, nodes) in enumerate(zip(data_files, index_list)):
+                my_indices = arbor._node_info['_si'][istart[idf]:iend[idf]]
+                arbor._node_io_loop_start(data_file)
 
-            fh = data_file.fh['Forests']
-            if self.arbor._aos:
-                fh = fh['halos']
+                fh = data_file.fh['Forests']
+                if self.arbor._aos:
+                    fh = fh['halos']
 
-            for field in fields:
-                darray = fh[field][()]
-                rdata[field].append(darray[my_indices])
+                for field in fields:
+                    darray = fh[field][()]
+                    rdata[field].append(darray[my_indices])
 
-            arbor._node_io_loop_finish(data_file)
+                arbor._node_io_loop_finish(data_file)
 
-            c += my_indices.size
-            pbar.update(c)
-        pbar.finish()
+                pbar.update(task, advance=my_indices.size)
 
         field_data = {}
         fi = self.arbor.field_info

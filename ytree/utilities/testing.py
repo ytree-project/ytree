@@ -25,8 +25,6 @@ from unittest import \
     TestCase
 from yt.testing import \
     assert_rel_equal
-from yt.funcs import \
-    get_pbar
 
 from ytree.data_structures.load import \
     load
@@ -35,6 +33,7 @@ from ytree.frontends.ytree import \
 from ytree.utilities.loading import \
     get_path
 from ytree.utilities.logger import \
+    get_pbar, \
     ytreeLogger as mylog
 
 generate_results = \
@@ -252,11 +251,11 @@ def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
     trees2 = a2[::skip2]
 
     ntot = trees1.size
-    pbar = get_pbar("Comparing trees", ntot)
-    for i, (t1, t2) in enumerate(zip(trees1, trees2)):
-        compare_trees(t1, t2, groups=groups, fields=fields)
-        pbar.update(i+1)
-    pbar.finish()
+    with get_pbar() as pbar:
+        task = pbar.add_task("Comparing trees", total=ntot)
+        for t1, t2 in zip(trees1, trees2):
+            compare_trees(t1, t2, groups=groups, fields=fields)
+            pbar.update(task, advance=1)
 
 def compare_trees(t1, t2, groups=None, fields=None):
     """

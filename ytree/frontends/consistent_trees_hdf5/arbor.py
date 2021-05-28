@@ -17,9 +17,6 @@ import h5py
 import numpy as np
 import re
 
-from yt.funcs import \
-    get_pbar
-
 from ytree.data_structures.arbor import \
     Arbor
 
@@ -36,6 +33,7 @@ from ytree.frontends.consistent_trees_hdf5.io import \
 from ytree.utilities.exceptions import \
     ArborDataFileEmpty
 from ytree.utilities.logger import \
+    get_pbar, \
     ytreeLogger as mylog
 
 _access_names = {
@@ -181,25 +179,23 @@ class ConsistentTreesHDF5Arbor(Arbor):
         offsetname = my_access['offset']
         sizename   = my_access['size']
 
-        c = 0
         file_offsets = self._file_count.cumsum() - self._file_count
-        pbar = get_pbar('Planting %ss' % self.access, self._size)
-        for idf, data_file in enumerate(self.data_files):
-            data_file.open()
-            hostids = data_file.fh[groupname][hostname][()]
-            offsets = data_file.fh[groupname][offsetname][()]
-            tree_sizes = data_file.fh[groupname][sizename][()]
-            data_file.close()
+        with get_pbar() as pbar:
+            task = pbar.add_task(f'Planting {self.access}s', total=self._size)
+            for idf, data_file in enumerate(self.data_files):
+                data_file.open()
+                hostids = data_file.fh[groupname][hostname][()]
+                offsets = data_file.fh[groupname][offsetname][()]
+                tree_sizes = data_file.fh[groupname][sizename][()]
+                data_file.close()
 
-            istart = file_offsets[idf]
-            iend = istart + offsets.size
-            self._node_info[hostattr][istart:iend] = hostids
-            self._node_info['_fi'][istart:iend] = idf
-            self._node_info['_si'][istart:iend] = offsets
-            self._node_info['_ei'][istart:iend] = offsets + tree_sizes
-            c += offsets.size
-            pbar.update(c)
-        pbar.finish()
+                istart = file_offsets[idf]
+                iend = istart + offsets.size
+                self._node_info[hostattr][istart:iend] = hostids
+                self._node_info['_fi'][istart:iend] = idf
+                self._node_info['_si'][istart:iend] = offsets
+                self._node_info['_ei'][istart:iend] = offsets + tree_sizes
+                pbar.update(task, advance=offsets.size)
         self._node_info['uid'] = self['uid']
 
     @classmethod

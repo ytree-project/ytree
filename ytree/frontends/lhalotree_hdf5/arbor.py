@@ -18,9 +18,6 @@ import h5py
 import numpy as np
 import re
 
-from yt.funcs import \
-    get_pbar
-
 from ytree.data_structures.arbor import \
     SegmentedArbor
 
@@ -29,6 +26,8 @@ from ytree.frontends.lhalotree_hdf5.fields import \
 from ytree.frontends.lhalotree_hdf5.io import \
     LHaloTreeHDF5DataFile, \
     LHaloTreeHDF5TreeFieldIO
+from ytree.utilities.logger import \
+    get_pbar
 
 class LHaloTreeHDF5Arbor(SegmentedArbor):
     """
@@ -95,24 +94,22 @@ class LHaloTreeHDF5Arbor(SegmentedArbor):
         if self.is_planted or self._size == 0:
             return
 
-        c = 0
         file_offsets = self._file_count.cumsum() - self._file_count
-        pbar = get_pbar('Planting trees', self._size)
-        for idf, data_file in enumerate(self.data_files):
-            data_file.open()
-            tree_size = data_file.fh["Header"]["TreeNHalos"][()]
-            data_file.close()
+        with get_pbar() as pbar:
+            task = pbar.add_task('Planting trees', total=self._size)
+            for idf, data_file in enumerate(self.data_files):
+                data_file.open()
+                tree_size = data_file.fh["Header"]["TreeNHalos"][()]
+                data_file.close()
 
-            size = data_file._size
-            istart = file_offsets[idf]
-            iend = istart + size
+                size = data_file._size
+                istart = file_offsets[idf]
+                iend = istart + size
 
-            self._node_info['_fi'][istart:iend] = idf
-            self._node_info['_si'][istart:iend] = np.arange(size)
-            self._node_info['_tree_size'][istart:iend] = tree_size
-            c += size
-            pbar.update(c)
-        pbar.finish()
+                self._node_info['_fi'][istart:iend] = idf
+                self._node_info['_si'][istart:iend] = np.arange(size)
+                self._node_info['_tree_size'][istart:iend] = tree_size
+                pbar.update(task, advance=size)
         uids = self._node_info['_tree_size']
         self._node_info['uid'] = uids.cumsum() - uids
 

@@ -16,8 +16,6 @@ LHaloTreeArbor class and member functions
 import numpy as np
 import glob
 
-from yt.funcs import \
-    get_pbar
 from unyt.exceptions import \
     UnitParseError
 
@@ -31,6 +29,7 @@ from ytree.frontends.lhalotree.io import \
 from ytree.frontends.lhalotree.utils import \
     LHaloTreeReader
 from ytree.utilities.logger import \
+    get_pbar, \
     ytreeLogger
 
 
@@ -184,21 +183,20 @@ class LHaloTreeArbor(Arbor):
             ntrees_tot += lht.ntrees
         self._size = ntrees_tot
 
-        pbar = get_pbar("Loading tree roots", ntrees_tot)
         self._node_info['_lht'] = np.empty(ntrees_tot, dtype=object)
 
         itot = 0
-        for ifile, lht in enumerate(self._lhtfiles):
-            ntrees = lht.ntrees
-            root_uids = lht.all_uids[lht.nhalos_before_tree]
-            for i in range(ntrees):
-                self._node_info['uid'][itot] = root_uids[i]
-                self._node_info['_lht'][itot] = lht
-                self._node_info['_index_in_lht'][itot] = i
-                itot += 1
-                pbar.update(itot)
-
-        pbar.finish()
+        with get_pbar() as pbar:
+            task = pbar.add_task("Loading tree roots", total=ntrees_tot)
+            for ifile, lht in enumerate(self._lhtfiles):
+                ntrees = lht.ntrees
+                root_uids = lht.all_uids[lht.nhalos_before_tree]
+                for i in range(ntrees):
+                    self._node_info['uid'][itot] = root_uids[i]
+                    self._node_info['_lht'][itot] = lht
+                    self._node_info['_index_in_lht'][itot] = i
+                    itot += 1
+                    pbar.update(task, advance=1)
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
