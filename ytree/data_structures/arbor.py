@@ -22,9 +22,6 @@ from unyt import \
     unyt_array, \
     unyt_quantity
 
-from yt.funcs import \
-    get_pbar, \
-    TqdmProgressBar
 from unyt.dimensions import \
     dimensionless, \
     length
@@ -49,6 +46,7 @@ from ytree.data_structures.tree_node_selector import \
     tree_node_selector_registry
 from ytree.utilities.logger import \
     ytreeLogger, \
+    get_pbar, \
     fake_pbar
 
 arbor_registry = {}
@@ -385,11 +383,8 @@ class Arbor(metaclass=RegisteredArbor):
         ----------
         func : function
             Function to be called on an array of nodes.
-        pbar : optional, string or yt.funcs.TqdmProgressBar
-            A progress bar to be updated with each iteration.
-            If a string, a progress bar will be created and the
-            finish function will be called. If a progress bar is
-            provided, the finish function will not be called.
+        pbar : optional, string
+            Title of a progress bar to be updated with each iteration.
             Default: None (no progress bar).
         root_nodes : optional, array of root TreeNodes
             Array of nodes over which the function will be called.
@@ -413,35 +408,25 @@ class Arbor(metaclass=RegisteredArbor):
           self._node_io_loop_prepare(root_nodes)
         nnodes = sum([nodes.size for nodes in node_list])
 
-        finish = True
-        if pbar is None:
-            pbar = fake_pbar("", nnodes)
-        elif not isinstance(pbar, TqdmProgressBar):
-            pbar = get_pbar(pbar, nnodes)
-        else:
-            finish = False
-
         rvals = []
-        c = 0
-        for data_file, nodes in zip(data_files, node_list):
-            self._node_io_loop_start(data_file)
+        fake = pbar is None
+        with get_pbar(fake=fake) as my_pbar:
+            task = pbar.add_task(pbar, total=nnodes)
+            for data_file, nodes in zip(data_files, node_list):
+                self._node_io_loop_start(data_file)
 
-            # if we're doing all of them, just give the indices
-            if root_nodes is None:
-                my_nodes = nodes
-            else:
-                my_nodes = root_nodes[nodes]
+                # if we're doing all of them, just give the indices
+                if root_nodes is None:
+                    my_nodes = nodes
+                else:
+                    my_nodes = root_nodes[nodes]
 
-            for node in self._yield_root_nodes(my_nodes):
-                rval = func(node, *args, **kwargs)
-                rvals.append(rval)
-                c += 1
-                pbar.update(c)
+                for node in self._yield_root_nodes(my_nodes):
+                    rval = func(node, *args, **kwargs)
+                    rvals.append(rval)
+                    my_pbar.update(advance=1)
 
-            self._node_io_loop_finish(data_file)
-
-        if finish:
-            pbar.finish()
+                self._node_io_loop_finish(data_file)
 
         if return_order is not None:
             rvals = [rvals[i] for i in return_order]

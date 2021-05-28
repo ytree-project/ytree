@@ -18,10 +18,8 @@ from unyt import \
     unyt_array, \
     unyt_quantity
 
-from yt.funcs import \
-    get_pbar
 from ytree.utilities.logger import \
-    fake_pbar
+    get_pbar
 
 def parse_h5_attr(f, attr):
     """A Python3-safe function for getting hdf5 attributes.
@@ -84,31 +82,29 @@ def f_text_block(f, block_size=4096, file_size=None, sep="\n",
                       block_size).astype(np.int64)
     read_size = file_size + start
     lbuff = ""
-    if pbar_string is None:
-        pbar = fake_pbar()
-    else:
-        pbar = get_pbar(pbar_string, file_size)
-    for ib in range(nblocks):
-        offset = f.tell()
-        my_block = min(block_size, read_size-offset)
-        if my_block <= 0: break
-        buff = f.read(my_block)
-        linl = -1
-        for ih in range(buff.count(sep)):
-            inl = buff.find(sep, linl+1)
-            if inl < 0:
-                lbuff += buff[linl+1:]
-                continue
-            else:
-                line = lbuff + buff[linl+1:inl]
-                loc = offset - len(lbuff) + linl + 1
-                lbuff = ""
-                linl = inl
-                pbar.update(loc+len(line)-start+1)
-                yield line, loc
-        lbuff += buff[linl+1:]
-    if lbuff:
-        loc = f.tell() - len(lbuff)
-        pbar.update(loc+len(lbuff)-start+1)
-        yield lbuff, loc
-    pbar.finish()
+    fake = pbar_string is None
+    with get_pbar(fake=fake) as pbar:
+        task = pbar.add_task(pbar_string, total=file_size)
+        for ib in range(nblocks):
+            offset = f.tell()
+            my_block = min(block_size, read_size-offset)
+            if my_block <= 0: break
+            buff = f.read(my_block)
+            linl = -1
+            for ih in range(buff.count(sep)):
+                inl = buff.find(sep, linl+1)
+                if inl < 0:
+                    lbuff += buff[linl+1:]
+                    continue
+                else:
+                    line = lbuff + buff[linl+1:inl]
+                    loc = offset - len(lbuff) + linl + 1
+                    lbuff = ""
+                    linl = inl
+                    pbar.update(task, completed=(loc+len(line)-start+1))
+                    yield line, loc
+            lbuff += buff[linl+1:]
+        if lbuff:
+            loc = f.tell() - len(lbuff)
+            pbar.update(task, completed=(loc+len(lbuff)-start+1))
+            yield lbuff, loc

@@ -18,9 +18,6 @@ import numpy as np
 import operator
 import os
 
-from yt.funcs import \
-    get_pbar
-
 from ytree.data_structures.arbor import \
     Arbor
 
@@ -39,6 +36,8 @@ from ytree.utilities.exceptions import \
     ArborDataFileEmpty
 from ytree.utilities.io import \
     f_text_block
+from ytree.utilities.logger import \
+    get_pbar
 
 class ConsistentTreesArbor(Arbor):
     """
@@ -86,37 +85,37 @@ class ConsistentTreesArbor(Arbor):
         data_file.open()
         data_file.fh.seek(0, 2)
         file_size = data_file.fh.tell()
-        pbar = get_pbar("Loading tree roots", file_size)
         data_file.fh.seek(self._hoffset)
 
         offset = self._hoffset
         itree = 0
         nblocks = np.ceil(float(file_size-self._hoffset) /
                           block_size).astype(np.int64)
-        for ib in range(nblocks):
-            my_block = min(block_size, file_size - offset)
-            if my_block <= 0: break
-            buff = data_file.fh.read(my_block)
-            lihash = -1
-            for ih in range(buff.count("#")):
-                ihash = buff.find("#", lihash+1)
-                inl = buff.find("\n", ihash+1)
-                if inl < 0:
-                    buff += data_file.fh.readline()
-                    inl = len(buff)
-                uid = int(buff[ihash+lkey:inl])
-                self._node_info['uid'][itree] = uid
-                lihash = ihash
-                self._node_info['_si'][itree] = offset + inl + 1
-                self._node_info['_fi'][itree] = 0
-                if itree > 0:
-                    self._node_info['_ei'][itree-1] = offset + ihash - 1
-                itree += 1
-            offset = data_file.fh.tell()
-            pbar.update(offset)
+        with get_pbar() as pbar:
+            task = pbar.add_task("Loading tree roots", total=file_size)
+            for ib in range(nblocks):
+                my_block = min(block_size, file_size - offset)
+                if my_block <= 0: break
+                buff = data_file.fh.read(my_block)
+                lihash = -1
+                for ih in range(buff.count("#")):
+                    ihash = buff.find("#", lihash+1)
+                    inl = buff.find("\n", ihash+1)
+                    if inl < 0:
+                        buff += data_file.fh.readline()
+                        inl = len(buff)
+                    uid = int(buff[ihash+lkey:inl])
+                    self._node_info['uid'][itree] = uid
+                    lihash = ihash
+                    self._node_info['_si'][itree] = offset + inl + 1
+                    self._node_info['_fi'][itree] = 0
+                    if itree > 0:
+                        self._node_info['_ei'][itree-1] = offset + ihash - 1
+                    itree += 1
+                offset = data_file.fh.tell()
+                pbar.update(task, completed=offset)
         self._node_info['_ei'][-1] = offset
         data_file.close()
-        pbar.finish()
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
@@ -190,7 +189,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         f.seek(self._hoffset)
         ldata = list(map(
             lambda x: [int(x[0]), int(x[1]), int(x[2]), x[3], len(x[0])],
-            [line.split() for line, _ in f_text_block(f, pbar_string='Reading locations')]
+            [line.split() for line, _ in f_text_block(f, pbar_string='Reading locations:')]
             ))
         f.close()
 
@@ -216,22 +215,22 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
            for fn in data_files]
 
         ldata.sort(key=operator.itemgetter(1, 2))
-        pbar = get_pbar("Loading tree roots", self._size)
 
         # Set end offsets for each tree.
         # We don't get them from the location file.
         lkey = len("tree ")+3 # length of the separation line between trees
         same_file = np.diff(fids, append=fids[-1]+1) == 0
 
-        for i, tdata in enumerate(ldata):
-            self._node_info['uid'][i] = tdata[0]
-            self._node_info['_fi'][i] = tdata[1]
-            self._node_info['_si'][i] = tdata[2]
-            # Get end index from next tree.
-            if same_file[i]:
-                self._node_info['_ei'][i] = ldata[i+1][2] - lkey - tdata[4]
-            pbar.update(i+1)
-        pbar.finish()
+        with get_pbar() as pbar:
+            task = pbar.add_task("Loading tree roots:", total=self._size)
+            for i, tdata in enumerate(ldata):
+                self._node_info['uid'][i] = tdata[0]
+                self._node_info['_fi'][i] = tdata[1]
+                self._node_info['_si'][i] = tdata[2]
+                # Get end index from next tree.
+                if same_file[i]:
+                    self._node_info['_ei'][i] = ldata[i+1][2] - lkey - tdata[4]
+                pbar.update(task, advance=1)
 
         # Get end index for last trees in files.
         for i in np.where(~same_file)[0]:

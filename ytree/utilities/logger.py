@@ -14,6 +14,7 @@ ytree logger
 #-----------------------------------------------------------------------------
 
 import logging
+from rich import progress
 import sys
 
 # CRITICAL 50
@@ -39,12 +40,39 @@ def set_parallel_logger(comm):
     if len(ytreeLogger.handlers) > 0:
         ytreeLogger.handlers[0].setFormatter(f)
 
+class CompletionSpeedColumn(progress.ProgressColumn):
+    """Renders human readable completion speed."""
+
+    # This was written by Clément Robert for yt.
+    # This is based off rich.progress.TransferSpeedColumn
+
+    def render(self, task):
+        """Show data transfer speed."""
+        speed = task.finished_speed or task.speed
+        if speed is None:
+            return progress.Text("?", style="progress.data.speed")
+        data_speed = int(speed)
+        return progress.Text(f"{data_speed} it/s", style="progress.data.speed")
+
+def get_pbar(fake=False):
+    if fake:
+        return fake_pbar()
+    else:
+        return progress.Progress(
+            "[progress.description]{task.description}",
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            progress.BarColumn(),
+            "{task.completed}/{task.total}",
+            progress.TimeElapsedColumn(),
+            progress.TimeRemainingColumn(),
+            CompletionSpeedColumn())
+
 class fake_pbar:
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         pass
-    def update(self, *args):
+    def add_task(self, *args, **kwargs):
         pass
-    def finish(self):
+    def update(self, *args, **kwargs):
         pass
 
 class log_level():
