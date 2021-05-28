@@ -14,7 +14,7 @@ Data structures for ytree frontend.
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from yt.utilities.on_demand_imports import _h5py as h5py
+import h5py
 import numpy as np
 import json
 import os
