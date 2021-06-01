@@ -54,11 +54,16 @@ class CompletionSpeedColumn(progress.ProgressColumn):
         data_speed = int(speed)
         return progress.Text(f"{data_speed} it/s", style="progress.data.speed")
 
+current_pbar = None
+
 def get_pbar(fake=False):
     if fake:
         return FakeProgressBar()
     else:
-        return progress.Progress(
+        global current_pbar
+        if current_pbar is not None:
+            return current_pbar
+        current_pbar = progress.Progress(
             "[progress.description]{task.description}",
             "[progress.percentage]{task.percentage:>3.0f}%",
             progress.BarColumn(),
@@ -66,6 +71,7 @@ def get_pbar(fake=False):
             progress.TimeElapsedColumn(),
             progress.TimeRemainingColumn(),
             CompletionSpeedColumn())
+        return current_pbar
 
 class FakeProgressBar:
     def __init__(self, *args, **kwargs):

@@ -774,7 +774,7 @@ class Arbor(metaclass=RegisteredArbor):
         halos = []
         with get_pbar() as pbar:
             task = pbar.add_task("Selecting halos", total=trees.size)
-            for i, tree in enumerate(trees):
+            for tree in trees:
                 my_filter = np.asarray(eval(criteria))
                 select_group = np.asarray(list(tree[select_from]))
                 if my_filter.size != select_group.size:
