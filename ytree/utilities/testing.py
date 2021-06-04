@@ -246,7 +246,8 @@ def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
 
     for i, field in enumerate(fields):
         mylog.info(f"Comparing arbor field: {field} ({i+1}/{len(fields)}).")
-        assert (a1[field][::skip1] == a2[field][::skip2]).all()
+        assert_array_equal(a1[field][::skip1], a2[field][::skip2],
+                           err_msg=f"Arbor field mismatch: {a1, a2, field}.")
 
     trees1 = a1[::skip1]
     trees2 = a2[::skip2]

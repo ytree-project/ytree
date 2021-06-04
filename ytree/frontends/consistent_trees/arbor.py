@@ -147,15 +147,18 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         if nodes is None:
             nodes = np.arange(self.size)
             fi = self._node_info['_fi']
+            si = self._node_info['_si']
         elif nodes.dtype == object:
-            fi = np.array(
-                [node._fi if node.is_root else node.root._fi
-                 for node in nodes])
+            fi = np.array([node._fi if node.is_root else node.root._fi
+                           for node in nodes])
+            si = np.array([node._si if node.is_root else node.root._si
+                           for node in nodes])
         else: # assume an array of indices
             fi = self._node_info['_fi'][nodes]
+            si = self._node_info['_si'][nodes]
 
         # the order they will be processed
-        io_order = np.argsort(fi)
+        io_order = np.lexsort((si, fi))
         fi = fi[io_order]
         # array to return them to original order
         return_order = np.empty_like(io_order)
