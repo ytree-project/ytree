@@ -158,7 +158,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
             si = self._node_info['_si'][nodes]
 
         # the order they will be processed
-        io_order = np.lexsort((fi, si))
+        io_order = np.lexsort((si, fi))
         fi = fi[io_order]
         # array to return them to original order
         return_order = np.empty_like(io_order)
