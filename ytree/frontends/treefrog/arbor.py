@@ -14,29 +14,20 @@ TreeFrogArbor class and member functions
 #-----------------------------------------------------------------------------
 
 import h5py
-import glob
 import numpy as np
 import os
-import re
-
-from yt.funcs import \
-    get_pbar
 
 from ytree.data_structures.arbor import \
     Arbor
 
 from ytree.frontends.consistent_trees.arbor import \
     ConsistentTreesGroupArbor
-from ytree.frontends.consistent_trees.utilities import \
-    parse_ctrees_header
 from ytree.frontends.treefrog.fields import \
     TreeFrogFieldInfo
 from ytree.frontends.treefrog.io import \
     TreeFrogDataFile, \
     TreeFrogRootFieldIO, \
     TreeFrogTreeFieldIO
-from ytree.utilities.exceptions import \
-    ArborDataFileEmpty
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
