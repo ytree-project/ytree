@@ -39,6 +39,9 @@ class TreeFrogFieldInfo(FieldInfoContainer):
         units["angular_momentum_unit"] = units["mass_unit"] * \
           units["length_unit"] * units["velocity_unit"]
 
+        for unit, val in units.items():
+            units[unit] = f"{str(val.d)}*{str(val.units)}"
+
         known_fields = []
         for field, ustr in self.known_fields:
             known_fields.append((field, units.get(ustr, "")))
