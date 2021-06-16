@@ -93,6 +93,12 @@ class TreeFrogArbor(Arbor):
                 mylog.warning(f"Dataset {self.parameter_filename} has no snapshots.")
                 return
 
+            self.units = {}
+            for attr in ["Length_unit_to_kpc",
+                         "Mass_unit_to_solarmass",
+                         "Velocity_unit_to_kms"]:
+                self.units[attr] = f["Header/Units"].attrs[attr]
+
             field_list = list(f["Snap_000"].keys())
 
         self.field_list = field_list
