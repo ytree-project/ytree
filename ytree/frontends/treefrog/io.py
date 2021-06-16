@@ -26,18 +26,43 @@ from ytree.data_structures.io import \
     TreeFieldIO
 
 class TreeFrogDataFile(DataFile):
-    # def __init__(self, filename, linkname):
-    #     super(TreeFrogDataFile, self).__init__(filename)
-    #     self.linkname = linkname
-    #     self.real_fh = None
-    #     self._field_cache = ChunkStore()
+    def _calculate_arbor_offsets(self):
+        close = self.fh is None
+        self.open()
+        fh = self.fh
+
+        offsets = fh["ForestInfoInFile/ForestOffsetsAllSnaps"][()]
+        sizes = fh["ForestInfoInFile/ForestSizesAllSnaps"][()]
+        size = sizes.shape[0]
+        s1 = np.empty(size, dtype=int)
+        o1 = np.empty(size, dtype=int)
+        for i in range(size):
+            s1[i] = np.where(sizes[i] > 0)[0][-1]
+            o1[i] = offsets[i, s1[i]]
+
+        if close:
+            self.close()
+
+        self._arbor_start = s1
+        self._arbor_offset = o1
+
+    _arbor_start = None
+    @property
+    def arbor_start(self):
+        if self._arbor_start is None:
+            self._calculate_arbor_offsets()
+        return self._arbor_start
+
+    _arbor_offset = None
+    @property
+    def arbor_offset(self):
+        if self._arbor_offset is None:
+            self._calculate_arbor_offsets()
+        return self._arbor_offset
 
     def open(self):
-        self.fh = h5py.File(self.filename, mode="r")
-
-    def close(self):
-        self.fh.close()
-        self.fh = None
+        if self.fh is None:
+            self.fh = h5py.File(self.filename, mode="r")
 
 class TreeFrogTreeFieldIO(TreeFieldIO):
     def _read_fields(self, root_node, fields, dtypes=None,
@@ -126,14 +151,9 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
             arbor._node_io_loop_start(data_file)
 
             fh = data_file.fh
-            offsets = fh["ForestInfoInFile/ForestOffsetsAllSnaps"][()][nodes]
-            sizes = fh["ForestInfoInFile/ForestSizesAllSnaps"][()][nodes]
             size = nodes.size
-            s1 = np.empty(size, dtype=int)
-            o1 = np.empty(size, dtype=int)
-            for i in range(size):
-                s1[i] = np.where(sizes[i] > 0)[0][-1]
-                o1[i] = offsets[i, s1[i]]
+            s1 = data_file.arbor_start[nodes]
+            o1 = data_file.arbor_offset[nodes]
 
             fdata = {}
             for gi in np.unique(s1):
