@@ -52,14 +52,13 @@ class TreeFrogArbor(Arbor):
     _tree_field_io_class = TreeFrogTreeFieldIO
     _node_io_attrs = ('_fi', '_si')
 
-    # _node_io_loop_prepare = ConsistentTreesGroupArbor._node_io_loop_prepare
+    _node_io_loop_prepare = ConsistentTreesGroupArbor._node_io_loop_prepare
 
-    # def _node_io_loop_start(self, data_file):
-    #     data_file.open()
+    def _node_io_loop_start(self, data_file):
+        data_file.open()
 
-    # def _node_io_loop_finish(self, data_file):
-    #     data_file._field_cache.reset()
-    #     data_file.close()
+    def _node_io_loop_finish(self, data_file):
+        data_file.close()
 
     def _get_data_files(self):
         self.data_files = [TreeFrogDataFile(f"{self._prefix}{self._suffix}.{i}")
@@ -75,7 +74,7 @@ class TreeFrogArbor(Arbor):
             self._nfiles = f["Header"].attrs["NFiles"]
             self._nsnaps = f["Header"].attrs["NSnaps"]
             self._size = f["ForestInfo"].attrs["NForests"]
-            self._fsizes = f["ForestInfo"]["NForestsPerFile"][()]
+            self._file_count = f["ForestInfo"]["NForestsPerFile"][()]
 
         if self._nfiles < 1:
             mylog.warning(f"Dataset {self.parameter_filename} has no data files.")
@@ -107,14 +106,21 @@ class TreeFrogArbor(Arbor):
             self._node_info['uid'] = f["ForestInfo"]["ForestIDs"][()]
             self._node_info['_tree_size'] = f["ForestInfo"]["ForestSizes"][()]
 
-        ei = self._fsizes.cumsum()
-        si = ei - self._fsizes
+        ei = self._file_count.cumsum()
+        si = ei - self._file_count
         trees = np.arange(self._size)
         fi = np.digitize(trees, ei)
         # number of the file each forest lives in
         self._node_info['_fi'] = fi
         # index within that file each forest is at
         self._node_info['_si'] = trees - si[fi]
+
+    def _setup_tree(self, tree_node, **kwargs):
+        if self.is_setup(tree_node):
+            return
+
+        super()._setup_tree(tree_node, **kwargs)
+        tree_node._desc_uids[0] = -1
 
     @classmethod
     def _is_valid(self, *args, **kwargs):

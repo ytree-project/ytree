@@ -25,29 +25,6 @@ from ytree.data_structures.io import \
     DefaultRootFieldIO, \
     TreeFieldIO
 
-class ChunkStore:
-    def __init__(self, chunk_size=262144):
-        self.chunk_size = chunk_size
-        self.reset()
-
-    def reset(self):
-        self.data = {}
-        self.ind = {}
-
-    def get(self, fh, field, index):
-        start, end = index
-        si, ei = self.ind.get(field, (0, 0))
-
-        if field not in self.data or ei < end or si > start:
-            si = start
-            ei = start + self.chunk_size
-            self.ind[field] = (si, ei)
-            self.data[field] = fh[field][si:ei]
-
-        data_s = start - si
-        data_e = end - si
-        return self.data[field][data_s:data_e]
-
 class TreeFrogDataFile(DataFile):
     # def __init__(self, filename, linkname):
     #     super(TreeFrogDataFile, self).__init__(filename)
@@ -69,36 +46,57 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
         Read fields from disk for a single tree.
         """
 
+        if dtypes is None:
+            dtypes = {}
+
         data_file = self.arbor.data_files[root_node._fi]
 
         close = False
         if data_file.fh is None:
             close = True
             data_file.open()
-        fh = data_file.fh['Forests']
-        if self.arbor._aos:
-            fh = fh['halos']
 
+        fh = data_file.fh
+        si = root_node._si
+
+        if not hasattr(root_node, "_offsets"):
+            root_node._offsets = fh["ForestInfoInFile/ForestOffsetsAllSnaps"][si]
+        offsets = root_node._offsets
+        if not hasattr(root_node, "_sizes"):
+            root_node._sizes = fh["ForestInfoInFile/ForestSizesAllSnaps"][si]
+        sizes = root_node._sizes
+
+        in_snap = np.where(sizes > 0)[0]
+        gs = in_snap[-1]
         if root_only:
-            index = (root_node._si, root_node._si+1)
+            ge = gs
         else:
-            index = (root_node._si, root_node._ei)
+            ge = in_snap[0]
 
-        field_cache = data_file._field_cache
-        field_data = dict((field, field_cache.get(fh, field, index))
-                          for field in fields)
+        rdata = defaultdict(list)
+        for gi in range(gs, ge-1, -1):
+            group = f"Snap_{gi:03d}"
+            offset = offsets[gi]
+            size = sizes[gi]
+            for field in fields:
+                rdata[field].append(fh[group][field][offset:offset+size])
+
+        for field, data in rdata.items():
+            rdata[field] = np.concatenate(data)
 
         if close:
             data_file.close()
 
+        field_data = root_node._field_data
         fi = self.arbor.field_info
         for field in fields:
+            field_data[field] = rdata[field]
+            dtype = dtypes.get(field, fi[field].get("dtype", None))
+            if dtype is not None:
+                field_data[field] = field_data[field].astype(dtype)
             units = fi[field].get("units", "")
-            if close:
-                field_data[field] = field_data[field].copy()
             if units != "":
-                field_data[field] = \
-                  self.arbor.arr(field_data[field], units)
+                field_data[field] = self.arbor.arr(field_data[field], units)
 
         return field_data
 
@@ -123,26 +121,36 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
 
         c = 0
         rdata = defaultdict(list)
-
-        iend = arbor._file_count.cumsum()
-        istart = iend - arbor._file_count
-
         pbar = get_pbar('Reading root fields', arbor.size)
         for idf, (data_file, nodes) in enumerate(zip(data_files, index_list)):
-            my_indices = arbor._node_info['_si'][istart[idf]:iend[idf]]
             arbor._node_io_loop_start(data_file)
 
-            fh = data_file.fh['Forests']
-            if self.arbor._aos:
-                fh = fh['halos']
+            fh = data_file.fh
+            offsets = fh["ForestInfoInFile/ForestOffsetsAllSnaps"][()][nodes]
+            sizes = fh["ForestInfoInFile/ForestSizesAllSnaps"][()][nodes]
+            size = nodes.size
+            s1 = np.empty(size, dtype=int)
+            o1 = np.empty(size, dtype=int)
+            for i in range(size):
+                s1[i] = np.where(sizes[i] > 0)[0][-1]
+                o1[i] = offsets[i, s1[i]]
+
+            fdata = {}
+            for gi in np.unique(s1):
+                group = f"Snap_{gi:03d}"
+                for field in fields:
+                    gdata = fh[group][field][()]
+                    if field not in fdata:
+                        fdata[field] = np.empty(size, dtype=gdata.dtype)
+                    isnap = np.where(s1 == gi)[0]
+                    fdata[field][isnap] = gdata[o1[isnap]]
 
             for field in fields:
-                darray = fh[field][()]
-                rdata[field].append(darray[my_indices])
+                rdata[field].append(fdata[field])
 
             arbor._node_io_loop_finish(data_file)
 
-            c += my_indices.size
+            c += size
             pbar.update(c)
         pbar.finish()
 
