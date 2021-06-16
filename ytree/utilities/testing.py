@@ -274,8 +274,7 @@ def compare_trees(t1, t2, groups=None, fields=None):
         for group in groups:
             assert_array_equal(
                 t1[group, field], t2[group, field],
-                err_msg="Tree comparison failed for %s field: %s." %
-                (group, field))
+                err_msg=f"Tree comparison failed for {group} field: {field}.")
     t1.arbor.reset_node(t1)
     t2.arbor.reset_node(t2)
 
