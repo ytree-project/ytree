@@ -94,6 +94,6 @@ class TreeFrogFieldInfo(FieldInfoContainer):
     )
 
     data_types = (
-        ("uid", id_type),
-        ("desc_uid", id_type),
+        ("ID", id_type),
+        ("Descendant", id_type),
     )

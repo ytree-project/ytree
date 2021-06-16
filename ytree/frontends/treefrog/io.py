@@ -75,6 +75,8 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
 
         if dtypes is None:
             dtypes = {}
+        my_dtypes = self._determine_dtypes(
+            fields, override_dict=dtypes)
 
         fi = self.arbor.field_info
         afields = [field for field in fields
@@ -125,7 +127,7 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
         field_data = root_node._field_data
         for field in fields:
             field_data[field] = rdata[field]
-            dtype = dtypes.get(field, fi[field].get("dtype", None))
+            dtype = my_dtypes.get(field, fi[field].get("dtype", None))
             if dtype is not None:
                 field_data[field] = field_data[field].astype(dtype)
             units = fi[field].get("units", "")
@@ -151,6 +153,8 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
     def _read_fields(self, storage_object, fields, dtypes=None):
         if dtypes is None:
             dtypes = {}
+        my_dtypes = self._determine_dtypes(
+            fields, override_dict=dtypes)
 
         fi = self.arbor.field_info
         afields = [field for field in fields
@@ -202,7 +206,7 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
         fi = self.arbor.field_info
         for field in fields:
             data = np.concatenate(rdata[field])
-            dtype = dtypes.get(field)
+            dtype = my_dtypes.get(field)
             if dtype is not None:
                 data = data.astype(dtype)
             units = fi[field].get("units", "")

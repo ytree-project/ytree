@@ -63,10 +63,14 @@ def load(filename, method=None, **kwargs):
     >>> a = ytree.load("TNG50-4-Dark/trees_sf1_099.0.hdf5",
     ...                box_size=35, hubble_constant=0.6774,
     ...                omega_matter=0.3089, omega_lambda=0.6911)
+    >>> # Moria
+    >>> a = ytree.load("moria/moria_tree_testsim050.hdf5")
     >>> # Rockstar
     >>> a = ytree.load("rockstar_halos/out_0.list")
     >>> # treefarm
     >>> a = ytree.load("my_halos/fof_subhalo_tab_025.0.h5")
+    >>> # TreeFrog
+    >>> a = ytree.load("treefrog/VELOCIraptor.tree.t4.0-131.walkabletree.sage.forestID.foreststats.hdf5")
 
     """
 
