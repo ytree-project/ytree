@@ -48,6 +48,18 @@ class TreeFrogDataFile(DataFile):
         self._arbor_start = s1
         self._arbor_offset = o1
 
+    def read_data(self, group, field, frange=None):
+        if frange is None:
+            frange = ()
+        # This is the easiest way I can think of to fix the
+        # descendent ids of roots.
+        if field == "Descendant":
+            data = self.fh[group][field][()][frange]
+            ids = self.fh[group]["ID"][()][frange]
+            data[data == ids] = -1
+            return data
+        return self.fh[group][field][()][frange]
+
     _arbor_start = None
     @property
     def arbor_start(self):
@@ -113,7 +125,10 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
             offset = offsets[gi]
             size = sizes[gi]
             for field in rfields:
-                rdata[field].append(fh[group][field][offset:offset+size])
+                rdata[field].append(
+                    data_file.read_data(
+                        group, field,
+                        frange=slice(offset,offset+size)))
 
             for field in afields:
                 rdata[field].append(self._get_arbor_field(field, gi, size))
@@ -174,7 +189,6 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
         for idf, (data_file, nodes) in enumerate(zip(data_files, index_list)):
             arbor._node_io_loop_start(data_file)
 
-            fh = data_file.fh
             size = nodes.size
             s1 = data_file.arbor_start[nodes]
             o1 = data_file.arbor_offset[nodes]
@@ -185,7 +199,7 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
                 isnap = np.where(s1 == gi)[0]
 
                 for field in rfields:
-                    gdata = fh[group][field][()]
+                    gdata = data_file.read_data(group, field)
                     if field not in fdata:
                         fdata[field] = np.empty(size, dtype=gdata.dtype)
                     fdata[field][isnap] = gdata[o1[isnap]]

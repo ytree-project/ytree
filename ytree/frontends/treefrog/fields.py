@@ -26,30 +26,9 @@ v_unit = "km/s"
 id_type = np.int64
 
 class TreeFrogFieldInfo(FieldInfoContainer):
-    def __init__(self, arbor):
-        super().__init__(arbor)
-        self._setup_field_units()
-
-    def _setup_field_units(self):
-        a = self.arbor
-        units = {}
-        units["length_unit"] = a.quan(a.units["Length_unit_to_kpc"], "kpc")
-        units["mass_unit"] = a.quan(a.units["Mass_unit_to_solarmass"], "Msun")
-        units["velocity_unit"] = a.quan(a.units["Velocity_unit_to_kms"], "km/s")
-        units["angular_momentum_unit"] = units["mass_unit"] * \
-          units["length_unit"] * units["velocity_unit"]
-
-        for unit, val in units.items():
-            units[unit] = f"{str(val.d)}*{str(val.units)}"
-
-        known_fields = []
-        for field, ustr in self.known_fields:
-            known_fields.append((field, units.get(ustr, "")))
-        self.known_fields = tuple(known_fields)
-
     alias_fields = (
-        ("uid", "ID", None),
-        ("desc_uid", "Descendant", None),
+        ("uid", "ID", ""),
+        ("desc_uid", "Descendant", ""),
         ("velocity_dispersion", "sigV", v_unit),
         ("position_x", "Xc", p_unit),
         ("position_y", "Yc", p_unit),
@@ -97,3 +76,24 @@ class TreeFrogFieldInfo(FieldInfoContainer):
         ("ID", id_type),
         ("Descendant", id_type),
     )
+
+    def __init__(self, arbor):
+        super().__init__(arbor)
+        self._setup_field_units()
+
+    def _setup_field_units(self):
+        a = self.arbor
+        units = {}
+        units["length_unit"] = a.quan(a.units["Length_unit_to_kpc"], "kpc")
+        units["mass_unit"] = a.quan(a.units["Mass_unit_to_solarmass"], "Msun")
+        units["velocity_unit"] = a.quan(a.units["Velocity_unit_to_kms"], "km/s")
+        units["angular_momentum_unit"] = units["mass_unit"] * \
+          units["length_unit"] * units["velocity_unit"]
+
+        for unit, val in units.items():
+            units[unit] = f"{str(val.d)}*{str(val.units)}"
+
+        known_fields = []
+        for field, ustr in self.known_fields:
+            known_fields.append((field, units.get(ustr, "")))
+        self.known_fields = tuple(known_fields)

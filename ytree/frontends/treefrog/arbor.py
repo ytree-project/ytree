@@ -123,6 +123,7 @@ class TreeFrogArbor(Arbor):
             return
 
         super()._setup_tree(tree_node, **kwargs)
+        # tree_node._desc_uids = tree_node._desc_uids.copy()
         tree_node._desc_uids[0] = -1
 
     @classmethod
