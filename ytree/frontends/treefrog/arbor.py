@@ -100,9 +100,15 @@ class TreeFrogArbor(Arbor):
                 self.units[attr] = f["Header/Units"].attrs[attr]
 
             field_list = list(f["Snap_000"].keys())
+            self._scale_factors = \
+              np.array([f[f"Snap_{i:03d}"].attrs["scalefactor"]
+                        for i in range(self._nsnaps)])
 
         self.field_list = field_list
         self.field_info.update({field: {} for field in field_list})
+
+        self.field_list.append("scale_factor")
+        self.field_info["scale_factor"] = {"source": "arbor"}
 
     def _plant_trees(self):
         if self.is_planted or self._size == 0:

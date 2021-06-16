@@ -24,6 +24,8 @@ from ytree.data_structures.io import \
     DataFile, \
     DefaultRootFieldIO, \
     TreeFieldIO
+from ytree.utilities.exceptions import \
+    ArborFieldNotFound
 
 class TreeFrogDataFile(DataFile):
     def _calculate_arbor_offsets(self):
@@ -74,6 +76,11 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
         if dtypes is None:
             dtypes = {}
 
+        fi = self.arbor.field_info
+        afields = [field for field in fields
+                   if fi[field].get("source") == "arbor"]
+        rfields = list(set(fields).difference(afields))
+
         data_file = self.arbor.data_files[root_node._fi]
 
         close = False
@@ -103,8 +110,11 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
             group = f"Snap_{gi:03d}"
             offset = offsets[gi]
             size = sizes[gi]
-            for field in fields:
+            for field in rfields:
                 rdata[field].append(fh[group][field][offset:offset+size])
+
+            for field in afields:
+                rdata[field].append(self._get_arbor_field(field, gi, size))
 
         for field, data in rdata.items():
             rdata[field] = np.concatenate(data)
@@ -113,7 +123,6 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
             data_file.close()
 
         field_data = root_node._field_data
-        fi = self.arbor.field_info
         for field in fields:
             field_data[field] = rdata[field]
             dtype = dtypes.get(field, fi[field].get("dtype", None))
@@ -124,6 +133,12 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
                 field_data[field] = self.arbor.arr(field_data[field], units)
 
         return field_data
+
+    def _get_arbor_field(self, field, gi, size):
+        if field == "scale_factor":
+            return self.arbor._scale_factors[gi] * np.ones(size)
+        else:
+            raise ArborFieldNotFound(field, arbor=self.arbor)
 
 class TreeFrogRootFieldIO(DefaultRootFieldIO):
     """
@@ -136,6 +151,11 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
     def _read_fields(self, storage_object, fields, dtypes=None):
         if dtypes is None:
             dtypes = {}
+
+        fi = self.arbor.field_info
+        afields = [field for field in fields
+                   if fi[field].get("source") == "arbor"]
+        rfields = list(set(fields).difference(afields))
 
         arbor = self.arbor
         arbor._plant_trees()
@@ -158,15 +178,19 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
             fdata = {}
             for gi in np.unique(s1):
                 group = f"Snap_{gi:03d}"
-                for field in fields:
+                isnap = np.where(s1 == gi)[0]
+
+                for field in rfields:
                     gdata = fh[group][field][()]
                     if field not in fdata:
                         fdata[field] = np.empty(size, dtype=gdata.dtype)
-                    isnap = np.where(s1 == gi)[0]
                     fdata[field][isnap] = gdata[o1[isnap]]
 
-            for field in fields:
+            for field in rfields:
                 rdata[field].append(fdata[field])
+
+            for field in afields:
+                rdata[field].append(self._get_arbor_field(field, s1))
 
             arbor._node_io_loop_finish(data_file)
 
@@ -187,3 +211,9 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
             field_data[field] = data
 
         return field_data
+
+    def _get_arbor_field(self, field, s1):
+        if field == "scale_factor":
+            return self.arbor._scale_factors[s1]
+        else:
+            raise ArborFieldNotFound(field, arbor=self.arbor)
