@@ -37,6 +37,7 @@ class TreeFrogArbor(Arbor):
     """
 
     _suffix = ".hdf5"
+    _default_dtype = None
     _parameter_file_is_data_file = True
     _field_info_class = TreeFrogFieldInfo
     _root_field_io_class = TreeFrogRootFieldIO
