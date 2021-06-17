@@ -1,4 +1,3 @@
-from ytree.data_structures.load import load as ytree_load
 from ytree.frontends.treefrog import \
     TreeFrogArbor
 from ytree.utilities.testing import \
