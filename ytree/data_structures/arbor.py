@@ -226,6 +226,13 @@ class Arbor(metaclass=RegisteredArbor):
 
         if self._node_info_storage is not None:
             return self._node_info_storage
+        self._initialize_node_info()
+        return self._node_info_storage
+
+    def _initialize_node_info(self):
+        """
+        Initialize the node_info arrays.
+        """
 
         attrs = self._node_con_attrs + \
           self._node_io_attrs
@@ -237,8 +244,6 @@ class Arbor(metaclass=RegisteredArbor):
         self._node_info_storage.update(
             dict((attr, -np.ones(self._size, dtype=np.int64))
                 for attr in self._node_too_attrs))
-
-        return self._node_info_storage
 
     def is_setup(self, tree_node):
         """

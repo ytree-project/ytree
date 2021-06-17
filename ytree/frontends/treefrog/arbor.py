@@ -106,7 +106,6 @@ class TreeFrogArbor(Arbor):
             return
 
         with h5py.File(self.parameter_filename, mode="r") as f:
-            self._node_info['uid'] = f["ForestInfo"]["ForestIDs"][()]
             self._node_info['_tree_size'] = f["ForestInfo"]["ForestSizes"][()]
 
         ei = self._file_count.cumsum()
@@ -117,14 +116,10 @@ class TreeFrogArbor(Arbor):
         self._node_info['_fi'] = fi
         # index within that file each forest is at
         self._node_info['_si'] = trees - si[fi]
-
-    def _setup_tree(self, tree_node, **kwargs):
-        if self.is_setup(tree_node):
-            return
-
-        super()._setup_tree(tree_node, **kwargs)
-        # tree_node._desc_uids = tree_node._desc_uids.copy()
-        tree_node._desc_uids[0] = -1
+        # This is slightly unsafe since the call to get_fields to get the uid field
+        # will call _plant_trees, too. It will not get here because is_planted will
+        # be True. As long as _fi and _si are initialized properly, it should be ok.
+        self._node_info['uid'] = self["uid"]
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
