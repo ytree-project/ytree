@@ -347,6 +347,46 @@ during the calculation.
    >>> import ytree
    >>> a = ytree.load("tree_farm/tree_farm_descendents/fof_subhalo_tab_000.0.h5")
 
+.. _load-treefrog:
+
+TreeFrog
+--------
+
+`TreeFrog <https://github.com/pelahi/TreeFrog>`__ generates merger trees
+primarily for `VELOCIraptor <https://github.com/pelahi/VELOCIraptor-STF>`__
+halo catalogs. The TreeFrog format consists of a series of HDF5 files.
+One file contains meta-data for the entire dataset. The other files contain
+the tree data, split into HDF5 groups corresponding to the original halo
+catalogs. To load, provide the path to the "foreststats" file, i.e., the
+one ending in ".hdf5".
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("treefrog/VELOCIraptor.tree.t4.0-131.walkabletree.sage.forestID.foreststats.hdf5")
+
+Merger trees in TreeFrog are organized by :ref:`forest <forest-access>`, so
+printing ``a.size`` (following the example above) will give the number of
+forests. Note, however, the id of the root halo for any given forest is not
+the same as the forest id.
+
+.. code-block:: python
+
+    >>> my_tree = a[0]
+    >>> print (my_tree["uid"])
+    131000000000001
+    >>> print (my_tree["ForestID"])
+    104000000011727
+
+TreeFrog outputs contain multiple definitions of halo mass, and as such, the field
+alias "mass" is not defined by default. However, the :ref:`alias can be created
+<alias-fields>` if one is preferable. This is also necessary to facilitate
+:ref:`progenitor-access`.
+
+.. code-block:: python
+
+   >>> a.add_alias_field("mass", "Mass_200crit", units="Msun")
+
 .. _load-ytree:
 
 Saved Arbors (ytree format)
@@ -355,7 +395,7 @@ Saved Arbors (ytree format)
 Once merger tree data has been loaded, it can be saved to a
 universal format using :func:`~ytree.data_structures.arbor.Arbor.save_arbor` or
 :func:`~ytree.data_structures.tree_node.TreeNode.save_tree`. These can be loaded
-by providing the path to the primary hdf5 file.
+by providing the path to the primary HDF5 file.
 
 .. code-block:: python
 
