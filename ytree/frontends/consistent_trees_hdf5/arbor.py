@@ -21,10 +21,7 @@ from yt.funcs import \
     get_pbar
 
 from ytree.data_structures.arbor import \
-    Arbor
-
-from ytree.frontends.consistent_trees.arbor import \
-    ConsistentTreesGroupArbor
+    SegmentedArbor
 from ytree.frontends.consistent_trees.utilities import \
     parse_ctrees_header
 from ytree.frontends.consistent_trees_hdf5.fields import \
@@ -55,7 +52,7 @@ _access_names = {
                'host_attr' : 'forest_id'}
 }
 
-class ConsistentTreesHDF5Arbor(Arbor):
+class ConsistentTreesHDF5Arbor(SegmentedArbor):
     """
     Arbors loaded from consistent-trees data converted into HDF5.
     """
@@ -75,11 +72,6 @@ class ConsistentTreesHDF5Arbor(Arbor):
         self.access = access
         self._node_io_attrs += (_access_names[access]['host_attr'],)
         super(ConsistentTreesHDF5Arbor, self).__init__(filename)
-
-    _node_io_loop_prepare = ConsistentTreesGroupArbor._node_io_loop_prepare
-
-    def _node_io_loop_start(self, data_file):
-        data_file.open()
 
     def _node_io_loop_finish(self, data_file):
         data_file._field_cache.reset()

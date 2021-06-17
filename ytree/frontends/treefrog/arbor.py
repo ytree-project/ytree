@@ -18,10 +18,7 @@ import numpy as np
 import os
 
 from ytree.data_structures.arbor import \
-    Arbor
-
-from ytree.frontends.consistent_trees.arbor import \
-    ConsistentTreesGroupArbor
+    SegmentedArbor
 from ytree.frontends.treefrog.fields import \
     TreeFrogFieldInfo
 from ytree.frontends.treefrog.io import \
@@ -31,26 +28,16 @@ from ytree.frontends.treefrog.io import \
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
-class TreeFrogArbor(Arbor):
+class TreeFrogArbor(SegmentedArbor):
     """
     Arbors loaded from consistent-trees data converted into HDF5.
     """
 
     _suffix = ".hdf5"
     _default_dtype = None
-    _parameter_file_is_data_file = True
     _field_info_class = TreeFrogFieldInfo
     _root_field_io_class = TreeFrogRootFieldIO
     _tree_field_io_class = TreeFrogTreeFieldIO
-    _node_io_attrs = ('_fi', '_si')
-
-    _node_io_loop_prepare = ConsistentTreesGroupArbor._node_io_loop_prepare
-
-    def _node_io_loop_start(self, data_file):
-        data_file.open()
-
-    def _node_io_loop_finish(self, data_file):
-        data_file.close()
 
     def _get_data_files(self):
         self.data_files = [TreeFrogDataFile(f"{self._prefix}{self._suffix}.{i}")

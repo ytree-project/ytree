@@ -1021,6 +1021,11 @@ class SegmentedArbor(Arbor):
     definition of a useful _node_io_loop_prepare function.
     """
 
+    # Data formats organized similar to below can use this class.
+    # _fi - file index, i.e., which data file is it in
+    # _si - start index, the array index where this tree starts
+    _node_io_attrs = ('_fi', '_si')
+
     def _node_io_loop_start(self, data_file):
         data_file.open()
 
@@ -1031,15 +1036,20 @@ class SegmentedArbor(Arbor):
         if nodes is None:
             nodes = np.arange(self.size)
             fi = self._node_info['_fi']
+            si = self._node_info['_si']
         elif nodes.dtype == object:
             fi = np.array(
                 [node._fi if node.is_root else node.root._fi
                  for node in nodes])
+            si = np.array(
+                [node._si if node.is_root else node.root._si
+                 for node in nodes])
         else: # assume an array of indices
             fi = self._node_info['_fi'][nodes]
+            si = self._node_info['_si'][nodes]
 
         # the order they will be processed
-        io_order = np.argsort(fi)
+        io_order = np.lexsort((si, fi))
         fi = fi[io_order]
         # array to return them to original order
         return_order = np.empty_like(io_order)
