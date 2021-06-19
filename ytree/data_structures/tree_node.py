@@ -402,6 +402,37 @@ class TreeNode:
         for lid in lids:
             yield self.get_node(selector, lid)
 
+    def get_root_nodes(self):
+        """
+        Get all root nodes from the forest to which this node belongs.
+
+        This returns a generator of all root nodes in the forest. A root
+        node is a node that has no descendents.
+
+        Returns
+        -------
+        root_nodes : a generator of
+            :class:`~ytree.data_structures.tree_node.TreeNode` objects.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("consistent_trees_hdf5/soa/forest.h5",
+        ...                access="forest")
+        >>> my_tree = a[0]
+        >>> for root in my_tree.get_root_nodes():
+        ...     print (root["mass"])
+
+        """
+
+        selector = "forest"
+        uids = self[selector, "uid"]
+        desc_uids = self[selector, "desc_uid"]
+        rids = np.where(desc_uids == -1)[0]
+        for rid in rids:
+            yield self.get_node(selector, rid)
+
     _ffi = slice(None)
     @property
     def _forest_field_indices(self):
