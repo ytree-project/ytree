@@ -126,6 +126,8 @@ class TreeNode:
 
         # conventional Arbor object
         desc_link = self._link.descendent
+        if desc_link is None:
+            return None
         return self.arbor._generate_tree_node(self.root, desc_link)
 
     _ancestors = None # used by CatalogArbor

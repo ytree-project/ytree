@@ -259,11 +259,11 @@ class Arbor(metaclass=RegisteredArbor):
         if self.is_setup(tree_node):
             return
 
-        idtype      = np.int64
+        idtype = np.int64
         fields, _ = \
           self.field_info.resolve_field_dependencies(["uid", "desc_uid"])
         halo_id_f, desc_id_f = fields
-        dtypes      = {halo_id_f: idtype, desc_id_f: idtype}
+        dtypes = {halo_id_f: idtype, desc_id_f: idtype}
         # Note to self, we call _read_fields and not _get_fields to
         # avoid recursion issues.
         field_data  = self._node_io._read_fields(tree_node, fields,
