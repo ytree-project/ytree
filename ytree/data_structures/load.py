@@ -82,11 +82,11 @@ def load(filename, method=None, **kwargs):
                 pass
 
         if len(candidates) == 0:
-            raise IOError("Could not determine arbor type for %s." % filename)
+            raise IOError(f"Could not determine arbor type for {filename}.")
         elif len(candidates) > 1:
             errmsg = "Could not distinguish between these arbor types:\n"
             for candidate in candidates:
-                errmsg += "Possible: %s.\n" % candidate
+                errmsg += f"Possible: {candidate}.\n"
             errmsg += "Provide one of these types using the \'method\' keyword."
             raise IOError(errmsg)
         else:

@@ -34,7 +34,7 @@ def _time(field, data):
 
 def _vector_func(field, data):
     name = field["name"]
-    field_data = data.arbor.arr([data["%s_%s" % (name, ax)]
+    field_data = data.arbor.arr([data[f"{name}_{ax}"]
                                  for ax in "xyz"])
     field_data = np.rollaxis(field_data, 1)
     return field_data

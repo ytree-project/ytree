@@ -147,7 +147,7 @@ class Arbor(metaclass=RegisteredArbor):
         we are dealing with data at multiple redshifts.
         """
         for my_unit in ["m", "pc", "AU"]:
-            new_unit = "%scm" % my_unit
+            new_unit = f"{my_unit}cm"
             self.unit_registry.add(
                 new_unit, self.unit_registry.lut[my_unit][0],
                 length, self.unit_registry.lut[my_unit][3])

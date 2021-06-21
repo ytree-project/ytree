@@ -34,7 +34,7 @@ def parse_ctrees_header(arbor, input_stream,
     fields = []
     fi = {}
     fdb = {}
-    rems = ["%s%s%s" % (s[0], t, s[1])
+    rems = [f"{s[0]}{t}{s[1]}"
             for s in [("(", ")"), ("", "")]
             for t in ["physical, peculiar",
                       "comoving", "physical"]]
@@ -69,7 +69,7 @@ def parse_ctrees_header(arbor, input_stream,
         if line is None:
             if ntrees_in_file:
                 raise IOError(
-                    "Encountered enexpected EOF reading %s." % input_stream)
+                    f"Encountered enexpected EOF reading {input_stream}.")
             else:
                 break
         elif not line.startswith("#"):

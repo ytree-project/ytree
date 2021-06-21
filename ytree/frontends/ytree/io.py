@@ -59,9 +59,9 @@ class YTreeTreeFieldIO(TreeFieldIO):
 
         # get start_index and end_index
         for itype in ["start", "end"]:
-            if getattr(data_file, "_%s_index" % itype) is None:
-                setattr(data_file, "_%s_index" % itype,
-                        data_file.fh["index/tree_%s_index" % itype][()])
+            if getattr(data_file, f"_{itype}_index") is None:
+                setattr(data_file, f"_{itype}_index",
+                        data_file.fh[f"index/tree_{itype}_index"][()])
         ii = root_node._ai - self._si[dfi]
 
         field_data = {}
@@ -72,7 +72,7 @@ class YTreeTreeFieldIO(TreeFieldIO):
                     fh = data_file.analysis_fh
                 else:
                     fh = data_file.fh
-                fdata = fh["data/%s" % field][()]
+                fdata = fh[f"data/{field}"][()]
 
                 dtype = dtypes.get(field)
                 if dtype is not None:
@@ -108,7 +108,7 @@ class YTreeRootFieldIO(DefaultRootFieldIO):
                 my_fh = analysis_fh
             else:
                 my_fh = fh
-            data = my_fh["data/%s" % field][()]
+            data = my_fh[f"data/{field}"][()]
             dtype = dtypes.get(field)
             if dtype is not None:
                 data = data.astype(dtype)

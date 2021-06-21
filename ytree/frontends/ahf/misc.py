@@ -32,7 +32,7 @@ def parse_AHF_file(filename, pars, sep=None):
             key = pars[par]
             if key in vals:
                 continue
-            if line.startswith("%s " % par):
+            if line.startswith(f"{par} "):
                 val = float(line.split(sep)[1])
                 vals[key] = val
     f.close()

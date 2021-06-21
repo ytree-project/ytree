@@ -287,7 +287,7 @@ class ConsistentTreesHlistArbor(RockstarArbor):
         """
         prefix = os.path.join(os.path.dirname(self.filename), "hlist_")
         suffix = ".list"
-        my_files = glob.glob("%s*%s" % (prefix, suffix))
+        my_files = glob.glob(f"{prefix}*{suffix}")
 
         # sort by catalog number
         my_files.sort(

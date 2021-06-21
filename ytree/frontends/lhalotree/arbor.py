@@ -160,7 +160,7 @@ class LHaloTreeArbor(Arbor):
                 self.quan(1, unit)
                 punit = unit
             except UnitParseError:  # pragma: no cover
-                ytreeLogger.warning("Could not parse unit: %s" % unit)
+                ytreeLogger.warning(f"Could not parse unit: {unit}")
                 punit = ''
             for k in keylist:
                 fi[k] = {'units': punit}

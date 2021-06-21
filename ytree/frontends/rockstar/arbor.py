@@ -40,7 +40,7 @@ class RockstarArbor(CatalogArbor):
 
     def _parse_parameter_file(self):
         fgroups = setup_field_groups()
-        rems = ["%s%s%s" % (s[0], t, s[1])
+        rems = [f"{s[0]}{t}{s[1]}"
                 for s in [("(", ")"), ("", "")]
                 for t in ["physical, peculiar",
                           "comoving", "physical"]]

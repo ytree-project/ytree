@@ -44,7 +44,7 @@ def _hdf5_yt_attr(fh, attr, unit_registry=None):
     """
     val = fh.attrs[attr]
     units = ""
-    ufield = "%s_units" % attr
+    ufield = f"{attr}_units"
     if ufield in fh.attrs:
         units = fh.attrs[ufield]
         if isinstance(units, bytes):

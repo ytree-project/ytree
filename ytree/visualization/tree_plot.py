@@ -179,9 +179,9 @@ class TreePlot:
             self._plot()
 
         suffix = filename[filename.rfind(".")+1:]
-        func = getattr(self.graph, "write_%s" % suffix, None)
+        func = getattr(self.graph, f"write_{suffix}", None)
         if func is None:
-            raise RuntimeError("Cannot save to file format: %s." % suffix)
+            raise RuntimeError(f"Cannot save to file format: {suffix}.")
 
         func(filename)
         return filename

@@ -18,7 +18,7 @@ class ArborDataFileEmpty(Exception):
         self.filename = filename
 
     def __str__(self):
-        return ("Data file is empty: %s." % self.filename)
+        return (f"Data file is empty: {self.filename}.")
 
 class ArborFieldException(Exception):
     def __init__(self, field, arbor=None):
@@ -38,18 +38,15 @@ class ArborFieldDependencyNotFound(Exception):
 
 class ArborFieldCircularDependency(ArborFieldException):
     def __str__(self):
-        return "Field depends on itself: \"%s\" in %s." % \
-          (self.field, self.arbor)
+        return f"Field depends on itself: \"{self.field}\" in {self.arbor}."
 
 class ArborFieldNotFound(ArborFieldException):
     def __str__(self):
-        return "Field not found: \"%s\" in %s." % \
-          (self.field, self.arbor)
+        return f"Field not found: \"{self.field}\" in {self.arbor}."
 
 class ArborFieldAlreadyExists(ArborFieldException):
     def __str__(self):
-        return "Field already exists: \"%s\" in %s." % \
-          (self.field, self.arbor)
+        return f"Field already exists: \"{self.field}\" in {self.arbor}."
 
 class ArborAnalysisFieldNotGenerated(ArborFieldException):
     def __str__(self):

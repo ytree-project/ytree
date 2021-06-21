@@ -106,7 +106,7 @@ class ArborTest:
             return
         assert_equal(
             len(self.arbor.data_files), self.num_data_files,
-            err_msg='Incorrect number of data files for %s.' % self.arbor)
+            err_msg=f'Incorrect number of data files for {self.arbor}.')
 
     def test_get_leaf_nodes(self):
         np.random.seed(41153)
@@ -159,8 +159,7 @@ class ArborTest:
 
         assert_equal(
             len(list(t['tree'])), ts0,
-            err_msg='Trees are not the same size after resetting for %s.' %
-            self.arbor)
+            err_msg=f'Trees are not the same size after resetting for {self.arbor}.')
 
         for field in f0:
             assert_array_equal(
@@ -179,8 +178,7 @@ class ArborTest:
 
         assert_equal(
             len(list(node['tree'])), ts0,
-            err_msg='Trees are not the same size after resetting for %s.' %
-            self.arbor)
+            err_msg=f'Trees are not the same size after resetting for {self.arbor}.')
 
         for field in f0:
             assert_array_equal(
@@ -198,7 +196,7 @@ class ArborTest:
 
             mylog.info(f"Comparing vector field: {field}.")
             magfield = np.sqrt((a[field]**2).sum(axis=1))
-            assert_array_equal(a["%s_magnitude" % field], magfield,
+            assert_array_equal(a[f"{field}_magnitude"], magfield,
                                err_msg=f"Magnitude field incorrect: {field}.")
 
             for i, ax in enumerate("xyz"):
@@ -274,8 +272,7 @@ def compare_trees(t1, t2, groups=None, fields=None):
         for group in groups:
             assert_array_equal(
                 t1[group, field], t2[group, field],
-                err_msg="Tree comparison failed for %s field: %s." %
-                (group, field))
+                err_msg=f"Tree comparison failed for {group} field: {field}.")
     t1.arbor.reset_node(t1)
     t2.arbor.reset_node(t2)
 
