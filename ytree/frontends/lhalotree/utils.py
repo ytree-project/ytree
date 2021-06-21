@@ -428,10 +428,9 @@ class LHaloTreeReader:
         file_size = os.stat(self.filename).st_size
         if body_size != (file_size - self.header_size):  # pragma: no cover
             raise IOError(
-                ("File is %d bytes, but %d items of size %d " +
-                 "with header of %d bytes should be %d bytes total.") \
-                 % (file_size, self.totnhalos, item_size,
-                    self.header_size, body_size + self.header_size))
+                f"File is {file_size} bytes, but {self.totnhalos} items of size "
+                f"{item_size} with header of {self.header_size} bytes should be "
+                f"{body_size + self.header_size} bytes total.")
         # Load all data, validate, and cache some fields
         self.set_global_properties(validate=validate)
 
@@ -460,8 +459,8 @@ class LHaloTreeReader:
         # File number
         self.filenum = data['FileNr'][0]
         if (data['SnapNum'][0] + 1) != len(self.scale_factors):  # pragma: no cover
-            ytreeLogger.warning("First FoF central is in snapshot %d/%d." % (
-                data['SnapNum'][0] + 1, len(self.scale_factors)))
+            ytreeLogger.warning(
+                f"First FoF central is in snapshot {data['SnapNum'][0] + 1}/{len(self.scale_factors)}.")
         # Halo unique IDs
         self.all_uids = np.bitwise_or(
             np.int64(self.filenum) << 32, np.arange(self.totnhalos, dtype='int64'))
@@ -567,7 +566,6 @@ class LHaloTreeReader:
     @property
     def units_vel(self):
         r"""str: Units of velocity."""
-        # out = "%s cm/s" % self.parameters['UnitVelocity_in_cm_per_s']
         u_cms = float(self.parameters['UnitVelocity_in_cm_per_s'])
         out = f"{u_cms / 100000.0:f}*km/s"
         # TODO: Does this need adjusted for comoving?
@@ -576,7 +574,6 @@ class LHaloTreeReader:
     @property
     def units_len(self):
         r"""str: Units of length."""
-        # out = "%s cm" % self.parameters['UnitLength_in_cm']
         u_cm = float(self.parameters['UnitLength_in_cm'])
         out = f"{u_cm / 3.085678e+21:f}*kpc"
         if self.comoving:
@@ -586,7 +583,6 @@ class LHaloTreeReader:
     @property
     def units_mass(self):
         r"""str: Units of mass."""
-        # out = "%s g" % self.parameters['UnitMass_in_g']
         u_g = float(self.parameters['UnitMass_in_g'])
         out = f"{u_g / 1.989e+33:f}*Msun"
         if self.comoving:

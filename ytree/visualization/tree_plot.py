@@ -87,7 +87,7 @@ class TreePlot:
     >>> # customizing nodes
     >>> import ytree
     >>> def my_node(halo):
-    ...     label = "%d" % halo['uid']
+    ...     label = f"{halo['uid']}"
     ...     my_kwargs = {"label": label, "fontsize": 8, "shape": "square"}
     ...     return my_kwargs
     >>> a = ytree.load("tree_0_0_0.dat")
@@ -173,7 +173,7 @@ class TreePlot:
         """
 
         if filename is None:
-            filename = 'tree_%06d.pdf' % self.tree.uid
+            filename = f"tree_{self.tree.uid:06d}.pdf"
 
         if self.graph is None:
             self._plot()
@@ -218,7 +218,7 @@ class TreePlot:
 
     def _plot_node(self, halo):
         graph = self.graph
-        node_name = "%d" % halo.uid
+        node_name = f"{halo.uid}"
         my_node = graph.get_node(node_name)
 
         if len(my_node) == 0:

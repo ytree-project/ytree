@@ -106,7 +106,7 @@ class RockstarArbor(CatalogArbor):
         prefix = self.basename[:reg.start()+1]
         suffix = self.basename[reg.end()-1:]
 
-        freg = re.compile(r"%s\d+%s" % (prefix, suffix))
+        freg = re.compile(rf"{prefix}\d+{suffix}")
         my_files = [os.path.join(self.directory, f)
                     for f in os.listdir(self.directory)
                     if freg.match(f)]

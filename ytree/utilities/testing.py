@@ -164,8 +164,7 @@ class ArborTest:
         for field in f0:
             assert_array_equal(
                 t['tree', field], f0[field],
-                err_msg='Tree field %s not the same after resetting for %s.' %
-                (field, self.arbor))
+                err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.")
 
     def test_reset_nonroot(self):
         t = self.arbor[0]
@@ -183,8 +182,7 @@ class ArborTest:
         for field in f0:
             assert_array_equal(
                 node['tree', field], f0[field],
-                err_msg='Tree field %s not the same after resetting for %s.' %
-                (field, self.arbor))
+                err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.")
 
     def test_save_and_reload(self):
         save_and_compare(self.arbor, groups=self.groups, skip=self.tree_skip)
@@ -290,9 +288,8 @@ def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
         fh2 = h5py.File(fh2, "r")
 
     if compare_groups:
-        assert sorted(list(fh1.keys())) == sorted(list(fh2.keys())), \
-          "%s and %s have different datasets in group %s." % \
-          (fh1.file.filename, fh2.file.filename, fh1.name)
+        err_msg = f"{fh1.file.filename} and {fh2.file.filename} have different datasets in group {fh1.name}."
+        assert_equal(sorted(list(fh1.keys())), sorted(list(fh2.keys())), err_msg=err_msg)
 
     for key in fh1.keys():
         if isinstance(fh1[key], h5py.Group):
@@ -300,8 +297,7 @@ def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
                          compare_groups=compare_groups,
                          compare=compare, **kwargs)
         else:
-            err_msg = "%s field not equal for %s and %s" % \
-              (key, fh1.file.filename, fh2.file.filename)
+            err_msg = f"{key} field not equal for {fh1.file.filename} and {fh2.file.filename}"
             if fh1[key].dtype == "int":
                 assert_array_equal(fh1[key][()], fh2[key][()],
                                    err_msg=err_msg)

@@ -100,8 +100,8 @@ class FieldInfoContainer(dict):
                 else:
                     fl = self.arbor.field_list
                 mylog.warning(
-                    ("Overriding field \"%s\" that already " +
-                     "exists as %s field.") % (alias, ftype))
+                    f"Overriding field \"{alias}\" that already "
+                    f"exists as {ftype} field.")
                 fl.pop(fl.index(alias))
             else:
                 return
@@ -158,8 +158,8 @@ class FieldInfoContainer(dict):
                 else:
                     fl = self.arbor.field_list
                 mylog.warning(
-                    ("Overriding field \"%s\" that already " +
-                     "exists as %s field.") % (name, ftype))
+                    f"Overriding field \"{name}\" that already "
+                    f"exists as {ftype} field.")
                 fl.pop(fl.index(name))
             else:
                 return

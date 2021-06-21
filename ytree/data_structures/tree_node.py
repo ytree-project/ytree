@@ -318,7 +318,7 @@ class TreeNode:
         """
         Call me TreeNode.
         """
-        return "TreeNode[%d]" % self.uid
+        return f"TreeNode[{self.uid}]"
 
     def get_node(self, selector, index):
         """
@@ -545,7 +545,7 @@ class TreeNode:
         """
 
         if filename is None:
-            filename = "tree_%d" % self.uid
+            filename = f"tree_{self.uid}"
 
         return self.arbor.save_arbor(
             filename=filename, fields=fields,
