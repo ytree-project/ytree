@@ -108,6 +108,18 @@ class ArborTest:
             len(self.arbor.data_files), self.num_data_files,
             err_msg='Incorrect number of data files for %s.' % self.arbor)
 
+    def test_get_root_nodes(self):
+        np.random.seed(47457)
+        itrees = np.arange(self.arbor.size)
+        np.random.shuffle(itrees)
+        for itree in itrees[:5]:
+            my_tree = self.arbor[itree]
+            verify_get_root_nodes(my_tree)
+
+    def test_get_roor_nodes_nonroot(self):
+        my_tree = list(self.arbor[0].ancestors)[0]
+        verify_get_root_nodes(my_tree)
+
     def test_get_leaf_nodes(self):
         np.random.seed(41153)
         itrees = np.arange(self.arbor.size)
@@ -351,3 +363,22 @@ def verify_get_leaf_nodes(my_tree):
 
         err_msg=f"get_leaf_nodes failure for {selector} in {my_tree.arbor}."
         assert_equal(uids1, uids2, err_msg=err_msg)
+
+def verify_get_root_nodes(my_tree):
+    """
+    Unit tests for get_root_nodes.
+    """
+
+    root_nodes1 = list(my_tree.get_root_nodes())
+    for root_node in root_nodes1:
+        assert_equal(root_node["desc_uid"], -1)
+
+    root_nodes2 = [node for node in my_tree["forest"]
+                    if node.descendent is None]
+
+    uids1 = np.sort([node.uid for node in root_nodes1])
+    uids2 = np.sort([node.uid for node in root_nodes2])
+
+    assert_array_equal(
+        uids1, uids2,
+        err_msg=f"get_root_nodes failure in {my_tree.arbor}.")
