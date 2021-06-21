@@ -73,7 +73,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
                 f"Invalid access value: {access}. Valid options are: {_access_names}.")
         self.access = access
         self._node_io_attrs += (_access_names[access]['host_attr'],)
-        super(ConsistentTreesHDF5Arbor, self).__init__(filename)
+        super().__init__(filename)
 
     _node_io_loop_prepare = ConsistentTreesGroupArbor._node_io_loop_prepare
 

@@ -303,7 +303,7 @@ class CatalogDataFile(DataFile):
     """
 
     def __init__(self, filename, arbor):
-        super(CatalogDataFile, self).__init__(filename)
+        super().__init__(filename)
         self.arbor = weakref.proxy(arbor)
         self._parse_header()
 

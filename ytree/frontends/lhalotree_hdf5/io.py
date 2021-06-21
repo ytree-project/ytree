@@ -23,7 +23,7 @@ from ytree.data_structures.io import \
 
 class LHaloTreeHDF5DataFile(DataFile):
     def __init__(self, filename, linkname):
-        super(LHaloTreeHDF5DataFile, self).__init__(filename)
+        super().__init__(filename)
 
         self.open()
         self._size = self.fh["Header"].attrs["NtreesPerFile"]

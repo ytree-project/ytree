@@ -49,7 +49,7 @@ class LHaloTreeHDF5Arbor(SegmentedArbor):
         self.omega_lambda = omega_lambda
         if box_size is not None:
             self.box_size = self.quan(box_size, "Mpc/h")
-        super(LHaloTreeHDF5Arbor, self).__init__(filename)
+        super().__init__(filename)
 
     def _get_data_files(self):
         suffix = self._suffix

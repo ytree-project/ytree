@@ -1072,7 +1072,7 @@ class CatalogArbor(Arbor):
     _grow_attrs = ()
 
     def __init__(self, filename):
-        super(CatalogArbor, self).__init__(filename)
+        super().__init__(filename)
         if not self._has_uids:
             if "uid" not in self.field_list:
                 for field in "uid", "desc_uid":

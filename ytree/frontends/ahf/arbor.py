@@ -46,7 +46,7 @@ class AHFArbor(CatalogArbor):
         self.omega_matter = omega_matter
         self.omega_lambda = omega_lambda
         self._box_size_user = box_size
-        super(AHFArbor, self).__init__(filename)
+        super().__init__(filename)
 
     def _parse_parameter_file(self):
         df = AHFDataFile(self.filename, self)

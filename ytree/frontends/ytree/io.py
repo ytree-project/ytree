@@ -23,7 +23,7 @@ from ytree.data_structures.io import \
 
 class YTreeDataFile(DataFile):
     def __init__(self, filename):
-        super(YTreeDataFile, self).__init__(filename)
+        super().__init__(filename)
         self._field_cache = None
         self._start_index = None
         self._end_index = None
