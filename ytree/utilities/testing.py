@@ -109,11 +109,7 @@ class ArborTest:
             err_msg='Incorrect number of data files for %s.' % self.arbor)
 
     def test_get_root_nodes(self):
-        np.random.seed(47457)
-        itrees = np.arange(self.arbor.size)
-        np.random.shuffle(itrees)
-        for itree in itrees[:5]:
-            my_tree = self.arbor[itree]
+        for my_tree in get_random_trees(self.arbor, 47457, 5):
             verify_get_root_nodes(my_tree)
 
     def test_get_roor_nodes_nonroot(self):
@@ -121,11 +117,7 @@ class ArborTest:
         verify_get_root_nodes(my_tree)
 
     def test_get_leaf_nodes(self):
-        np.random.seed(41153)
-        itrees = np.arange(self.arbor.size)
-        np.random.shuffle(itrees)
-        for itree in itrees[:5]:
-            my_tree = self.arbor[itree]
+        for my_tree in get_random_trees(self.arbor, 41153, 5):
             verify_get_leaf_nodes(my_tree)
 
     def test_get_leaf_nodes_ungrown_nonroot(self):
@@ -133,11 +125,7 @@ class ArborTest:
         verify_get_leaf_nodes(my_tree)
 
     def test_get_node(self):
-        np.random.seed(47988)
-        itrees = np.arange(self.arbor.size)
-        np.random.shuffle(itrees)
-        for itree in itrees[:5]:
-            my_tree = self.arbor[itree]
+        for my_tree in get_random_trees(self.arbor, 47988, 5):
             verify_get_node(my_tree)
 
             ihalos = np.arange(1, my_tree.tree_size)
@@ -229,6 +217,17 @@ class ArborTest:
                         t[group, f"{field}_{ax}"], t[group, field][:, i],
                         err_msg=(f"{group} vector field {field} does not match "
                                  f"in dimension {i}."))
+
+def get_random_trees(arbor, seed, n):
+    """
+    Get n random trees from the arbor.
+    """
+
+    np.random.seed(seed)
+    itrees = np.arange(arbor.size)
+    np.random.shuffle(itrees)
+    for itree in itrees[:5]:
+        yield arbor[itree]
 
 def save_and_compare(arbor, skip=1, groups=None):
     """
