@@ -429,7 +429,6 @@ class TreeNode:
         """
 
         selector = "forest"
-        uids = self[selector, "uid"]
         desc_uids = self[selector, "desc_uid"]
         rids = np.where(desc_uids == -1)[0]
         for rid in rids:
