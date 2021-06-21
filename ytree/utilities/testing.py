@@ -106,14 +106,18 @@ class ArborTest:
             return
         assert_equal(
             len(self.arbor.data_files), self.num_data_files,
-            err_msg='Incorrect number of data files for %s.' % self.arbor)
+            err_msg=f'Incorrect number of data files for {self.arbor}.')
+
+    def test_get_root_nodes(self):
+        for my_tree in get_random_trees(self.arbor, 47457, 5):
+            verify_get_root_nodes(my_tree)
+
+    def test_get_roor_nodes_nonroot(self):
+        my_tree = list(self.arbor[0].ancestors)[0]
+        verify_get_root_nodes(my_tree)
 
     def test_get_leaf_nodes(self):
-        np.random.seed(41153)
-        itrees = np.arange(self.arbor.size)
-        np.random.shuffle(itrees)
-        for itree in itrees[:5]:
-            my_tree = self.arbor[itree]
+        for my_tree in get_random_trees(self.arbor, 41153, 5):
             verify_get_leaf_nodes(my_tree)
 
     def test_get_leaf_nodes_ungrown_nonroot(self):
@@ -121,11 +125,7 @@ class ArborTest:
         verify_get_leaf_nodes(my_tree)
 
     def test_get_node(self):
-        np.random.seed(47988)
-        itrees = np.arange(self.arbor.size)
-        np.random.shuffle(itrees)
-        for itree in itrees[:5]:
-            my_tree = self.arbor[itree]
+        for my_tree in get_random_trees(self.arbor, 47988, 5):
             verify_get_node(my_tree)
 
             ihalos = np.arange(1, my_tree.tree_size)
@@ -159,14 +159,12 @@ class ArborTest:
 
         assert_equal(
             len(list(t['tree'])), ts0,
-            err_msg='Trees are not the same size after resetting for %s.' %
-            self.arbor)
+            err_msg=f'Trees are not the same size after resetting for {self.arbor}.')
 
         for field in f0:
             assert_array_equal(
                 t['tree', field], f0[field],
-                err_msg='Tree field %s not the same after resetting for %s.' %
-                (field, self.arbor))
+                err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.")
 
     def test_reset_nonroot(self):
         t = self.arbor[0]
@@ -179,14 +177,12 @@ class ArborTest:
 
         assert_equal(
             len(list(node['tree'])), ts0,
-            err_msg='Trees are not the same size after resetting for %s.' %
-            self.arbor)
+            err_msg=f'Trees are not the same size after resetting for {self.arbor}.')
 
         for field in f0:
             assert_array_equal(
                 node['tree', field], f0[field],
-                err_msg='Tree field %s not the same after resetting for %s.' %
-                (field, self.arbor))
+                err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.")
 
     def test_save_and_reload(self):
         save_and_compare(self.arbor, groups=self.groups, skip=self.tree_skip)
@@ -198,7 +194,7 @@ class ArborTest:
 
             mylog.info(f"Comparing vector field: {field}.")
             magfield = np.sqrt((a[field]**2).sum(axis=1))
-            assert_array_equal(a["%s_magnitude" % field], magfield,
+            assert_array_equal(a[f"{field}_magnitude"], magfield,
                                err_msg=f"Magnitude field incorrect: {field}.")
 
             for i, ax in enumerate("xyz"):
@@ -217,6 +213,17 @@ class ArborTest:
                         t[group, f"{field}_{ax}"], t[group, field][:, i],
                         err_msg=(f"{group} vector field {field} does not match "
                                  f"in dimension {i}."))
+
+def get_random_trees(arbor, seed, n):
+    """
+    Get n random trees from the arbor.
+    """
+
+    np.random.seed(seed)
+    itrees = np.arange(arbor.size)
+    np.random.shuffle(itrees)
+    for itree in itrees[:5]:
+        yield arbor[itree]
 
 def save_and_compare(arbor, skip=1, groups=None):
     """
@@ -292,9 +299,8 @@ def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
         fh2 = h5py.File(fh2, "r")
 
     if compare_groups:
-        assert sorted(list(fh1.keys())) == sorted(list(fh2.keys())), \
-          "%s and %s have different datasets in group %s." % \
-          (fh1.file.filename, fh2.file.filename, fh1.name)
+        err_msg = f"{fh1.file.filename} and {fh2.file.filename} have different datasets in group {fh1.name}."
+        assert_equal(sorted(list(fh1.keys())), sorted(list(fh2.keys())), err_msg=err_msg)
 
     for key in fh1.keys():
         if isinstance(fh1[key], h5py.Group):
@@ -302,8 +308,7 @@ def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
                          compare_groups=compare_groups,
                          compare=compare, **kwargs)
         else:
-            err_msg = "%s field not equal for %s and %s" % \
-              (key, fh1.file.filename, fh2.file.filename)
+            err_msg = f"{key} field not equal for {fh1.file.filename} and {fh2.file.filename}"
             if fh1[key].dtype == "int":
                 assert_array_equal(fh1[key][()], fh2[key][()],
                                    err_msg=err_msg)
@@ -350,3 +355,22 @@ def verify_get_leaf_nodes(my_tree):
 
         err_msg=f"get_leaf_nodes failure for {selector} in {my_tree.arbor}."
         assert_equal(uids1, uids2, err_msg=err_msg)
+
+def verify_get_root_nodes(my_tree):
+    """
+    Unit tests for get_root_nodes.
+    """
+
+    root_nodes1 = list(my_tree.get_root_nodes())
+    for root_node in root_nodes1:
+        assert_equal(root_node["desc_uid"], -1)
+
+    root_nodes2 = [node for node in my_tree["forest"]
+                    if node.descendent is None]
+
+    uids1 = np.sort([node.uid for node in root_nodes1])
+    uids2 = np.sort([node.uid for node in root_nodes2])
+
+    assert_array_equal(
+        uids1, uids2,
+        err_msg=f"get_root_nodes failure in {my_tree.arbor}.")

@@ -27,10 +27,10 @@ def my_node(halo):
         color = 'black'
 
     label = \
+    f"""
+    id: {halo['uid']:d}
+    mass: {halo['mass'].to('Msun'):.2e} Msun
     """
-    id: %d
-    mass: %.2e Msun
-    """ % (halo['uid'], halo['mass'].to('Msun'))
 
     my_kwargs = {"label": label, "fontsize": 8,
                  "shape": "square", "color": color}

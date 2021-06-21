@@ -147,7 +147,7 @@ class Arbor(metaclass=RegisteredArbor):
         we are dealing with data at multiple redshifts.
         """
         for my_unit in ["m", "pc", "AU"]:
-            new_unit = "%scm" % my_unit
+            new_unit = f"{my_unit}cm"
             self.unit_registry.add(
                 new_unit, self.unit_registry.lut[my_unit][0],
                 length, self.unit_registry.lut[my_unit][3])
@@ -264,11 +264,11 @@ class Arbor(metaclass=RegisteredArbor):
         if self.is_setup(tree_node):
             return
 
-        idtype      = np.int64
+        idtype = np.int64
         fields, _ = \
           self.field_info.resolve_field_dependencies(["uid", "desc_uid"])
         halo_id_f, desc_id_f = fields
-        dtypes      = {halo_id_f: idtype, desc_id_f: idtype}
+        dtypes = {halo_id_f: idtype, desc_id_f: idtype}
         # Note to self, we call _read_fields and not _get_fields to
         # avoid recursion issues.
         field_data  = self._node_io._read_fields(tree_node, fields,
@@ -799,9 +799,9 @@ class Arbor(metaclass=RegisteredArbor):
             select_group = np.asarray(list(tree[select_from]))
             if my_filter.size != select_group.size:
                 raise RuntimeError(
-                    ("Filter array and tree array sizes do not match. " +
-                     "Make sure select_from (\"%s\") matches criteria (\"%s\").") %
-                    (select_from, criteria))
+                    "Filter array and tree array sizes do not match. "
+                    f"Make sure select_from (\"{select_from}\") matches "
+                    f"criteria (\"{criteria}\").")
             halos.extend(select_group[my_filter])
             pbar.update(i+1)
         pbar.finish()
@@ -1087,7 +1087,7 @@ class CatalogArbor(Arbor):
     _grow_attrs = ()
 
     def __init__(self, filename):
-        super(CatalogArbor, self).__init__(filename)
+        super().__init__(filename)
         if not self._has_uids:
             if "uid" not in self.field_list:
                 for field in "uid", "desc_uid":

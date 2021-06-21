@@ -201,7 +201,7 @@ def save_data_file(arbor, filename, fields, tree_group,
 
     arbor._node_io_loop(
         arbor._node_io.get_fields,
-        pbar="Getting fields [%d / ~%d]" % (current_iteration, total_guess),
+        pbar=f"Getting fields [{current_iteration} / ~{total_guess}]",
         root_nodes=tree_group, fields=fields, root_only=False)
 
     main_fdata  = {}

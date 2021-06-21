@@ -86,28 +86,28 @@ def load(filename, method=None, **kwargs):
                 pass
 
         if len(candidates) == 0:
-            raise IOError("Could not determine arbor type for %s." % filename)
+            raise IOError(f"Could not determine arbor type for {filename}.")
         elif len(candidates) > 1:
             errmsg = "Could not distinguish between these arbor types:\n"
             for candidate in candidates:
-                errmsg += "Possible: %s.\n" % candidate
-            errmsg += "Provide one of these types using the \'method\' keyword."
+                errmsg += f"Possible: {candidate}.\n"
+            errmsg += "Provide one of these types using the \"method\" keyword."
             raise IOError(errmsg)
         else:
             method = candidates[0]
 
     else:
         if method not in arbor_registry:
-            raise IOError("Invalid method: %s.  Available: %s." %
-                          (method, arbor_registry.keys()))
+            raise IOError(
+                f"Invalid method: {method}. Available: {arbor_registry.keys()}.")
 
     global load_warn
     if method not in ["YTree"] and load_warn:
         print(
-            ("Additional features and improved performance (usually) by saving "
-             "this arbor with \"save_arbor\" and reloading:\n"
-             f"\t>>> a = ytree.load(\"{filename}\")\n"
-             "\t>>> fn = a.save_arbor()\n"
-             "\t>>> a = ytree.load(fn)"))
+f"""Additional features and improved performance (usually) by saving this arbor with \"save_arbor\" and reloading:
+\t>>> a = ytree.load(\"{filename}\")
+\t>>> fn = a.save_arbor()
+\t>>> a = ytree.load(fn)"""
+            )
         load_warn = False
     return arbor_registry[method](filename, **kwargs)

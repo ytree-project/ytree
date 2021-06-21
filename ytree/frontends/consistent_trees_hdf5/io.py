@@ -50,7 +50,7 @@ class ChunkStore:
 
 class ConsistentTreesHDF5DataFile(DataFile):
     def __init__(self, filename, linkname):
-        super(ConsistentTreesHDF5DataFile, self).__init__(filename)
+        super().__init__(filename)
         self.linkname = linkname
         self.real_fh = None
         self._field_cache = ChunkStore()

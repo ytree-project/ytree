@@ -80,7 +80,7 @@ class ConsistentTreesTreeFieldIO(TreeFieldIO):
 
 class ConsistentTreesHlistDataFile(RockstarDataFile):
     def _parse_header(self):
-        super(ConsistentTreesHlistDataFile, self)._parse_header()
+        super()._parse_header()
 
         prefix = os.path.join(os.path.dirname(self.filename), "hlist_")
         suffix = ".list"

@@ -145,8 +145,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
             raise ArborDataFileEmpty(self.filename)
 
         fn = os.path.join(self.directory, line.split()[-1])
-        super(ConsistentTreesGroupArbor, self)._parse_parameter_file(
-            filename=fn, ntrees_in_file=False)
+        super()._parse_parameter_file(filename=fn, ntrees_in_file=False)
 
     def _plant_trees(self):
         if self.is_planted:
@@ -250,7 +249,7 @@ class ConsistentTreesHlistArbor(RockstarArbor):
         """
         prefix = os.path.join(os.path.dirname(self.filename), "hlist_")
         suffix = ".list"
-        my_files = glob.glob("%s*%s" % (prefix, suffix))
+        my_files = glob.glob(f"{prefix}*{suffix}")
 
         # sort by catalog number
         my_files.sort(

@@ -254,19 +254,8 @@ way through processes like fly-bys.
    [3.38352524e+11 3.34071450e+11 3.34071450e+11 3.31709477e+11 ...
     7.24092117e+09 4.34455270e+09] Msun
 
-To find all of the roots in that forest, i.e., the start
-of all individual trees contained, one can do:
-
-.. code-block:: python
-
-   >>> my_forest = a[0]
-   >>> roots = [node for node in f["forest"] if node["desc_uid"] == -1]
-   >>> print (roots)
-   [TreeNode[90049568], TreeNode[89739051]]
-   >>> # all halos in second tree
-   >>> print (list(roots[1]["tree"]))
-   [TreeNode[89739051], TreeNode[87886920], TreeNode[85984854], ...
-    TreeNode[9272027], TreeNode[7435733], TreeNode[5768880]]
+To find all the roots in that forest, i.e., the roots of all individual trees
+contained, see :ref:`getting_root_nodes`.
 
 Accessing a Halo's Ancestors and Descendent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -394,6 +383,23 @@ with ``selector`` set to "tree" or "prog" will return only leaf nodes from the
 tree for which the calling node is the head. With ``selector`` set to "forest",
 the resulting leaf nodes will be all the leaf nodes in the forest, regardless of
 the calling node.
+
+.. _getting_root_nodes:
+
+Accessing the Root Nodes of a Forest
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A forest can have multiple root nodes, i.e., nodes that have no descendent. The
+:func:`~ytree.data_structures.tree_node.TreeNode.get_root_nodes` function will
+return a generator of all the root nodes in the forest. This function can be called
+from any tree within a forest.
+
+.. code-block:: python
+
+   >>> my_tree = a[0]
+   >>> my_roots = my_tree.get_root_nodes()
+   >>> for my_root in my_roots:
+   ...     print (my_root)
 
 .. _saving-trees:
 
