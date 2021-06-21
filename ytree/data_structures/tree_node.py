@@ -291,12 +291,12 @@ class TreeNode:
             ftype, field = key
             if ftype not in arr_types:
                 raise SyntaxError(
-                    "First argument must be one of %s." % str(arr_types))
+                    f"First argument must be one of {str(arr_types)}.")
             if not isinstance(field, str):
                 raise SyntaxError("Second argument must be a string.")
 
             self.arbor._node_io.get_fields(self, fields=[field], root_only=False)
-            indices = getattr(self, "_%s_field_indices" % ftype)
+            indices = getattr(self, f"_{ftype}_field_indices")
 
             data_object = self.find_root()
             return data_object._field_data[field][indices]
@@ -308,7 +308,7 @@ class TreeNode:
             # return the progenitor list or tree nodes in a list
             if key in arr_types:
                 self.arbor._setup_tree(self)
-                return getattr(self, "_%s_nodes" % key)
+                return getattr(self, f"_{key}_nodes")
 
             # return field value for this node
             self.arbor._node_io.get_fields(self, fields=[key],
@@ -320,7 +320,7 @@ class TreeNode:
         """
         Call me TreeNode.
         """
-        return "TreeNode[%d]" % self.uid
+        return f"TreeNode[{self.uid}]"
 
     def get_node(self, selector, index):
         """
@@ -577,7 +577,7 @@ class TreeNode:
         """
 
         if filename is None:
-            filename = "tree_%d" % self.uid
+            filename = f"tree_{self.uid}"
 
         return self.arbor.save_arbor(
             filename=filename, fields=fields,

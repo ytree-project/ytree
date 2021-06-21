@@ -46,7 +46,7 @@ class AHFArbor(CatalogArbor):
         self.omega_matter = omega_matter
         self.omega_lambda = omega_lambda
         self._box_size_user = box_size
-        super(AHFArbor, self).__init__(filename)
+        super().__init__(filename)
 
     def _parse_parameter_file(self):
         df = AHFDataFile(self.filename, self)
@@ -68,7 +68,7 @@ class AHFArbor(CatalogArbor):
             self.box_size = self.quan(self._box_size_user, "Mpc/h")
 
         # fields from from the .AHF_halos files
-        f = open("%s.AHF_halos" % df.data_filekey)
+        f = open(f"{df.data_filekey}.AHF_halos")
         line = f.readline()
         f.close()
 
@@ -99,7 +99,7 @@ class AHFArbor(CatalogArbor):
         """
         Get all *.parameter files and sort them in reverse order.
         """
-        my_files = glob.glob("%s_*%s" % (self._prefix, self._suffix))
+        my_files = glob.glob(f"{self._prefix}_*{self._suffix}")
         # sort by catalog number
         my_files.sort(
             key=lambda x:

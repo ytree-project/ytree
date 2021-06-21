@@ -272,8 +272,8 @@ class DataFile:
     def __init__(self, filename):
         if not os.path.exists(filename):
             mylog.warning(
-                ("Cannot find data file: %s. " +
-                 "Will not be able to load field data.") % filename)
+                f"Cannot find data file: {filename}. "
+                 "Will not be able to load field data.")
 
         self.filename = filename
         self.fh = None
@@ -303,7 +303,7 @@ class CatalogDataFile(DataFile):
     """
 
     def __init__(self, filename, arbor):
-        super(CatalogDataFile, self).__init__(filename)
+        super().__init__(filename)
         self.arbor = weakref.proxy(arbor)
         self._parse_header()
 

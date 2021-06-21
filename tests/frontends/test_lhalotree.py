@@ -52,7 +52,7 @@ def make_small_example(ntrees_per_file=None):
     fname_base = os.path.splitext(SMT)[0]
     prev_halos = 0
     for i in range(len(ntrees_per_file)):
-        ifile = '%s.%d' % (fname_base, i)
+        ifile = f"{fname_base}.{i}"
         start_tree = ntrees_before_file[i]
         stop_tree = start_tree + ntrees_per_file[i]
         nhalos_per_tree1 = nhalos_per_tree0[start_tree:stop_tree]

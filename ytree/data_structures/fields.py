@@ -34,7 +34,7 @@ def _time(field, data):
 
 def _vector_func(field, data):
     name = field["name"]
-    field_data = data.arbor.arr([data["%s_%s" % (name, ax)]
+    field_data = data.arbor.arr([data[f"{name}_{ax}"]
                                  for ax in "xyz"])
     field_data = np.rollaxis(field_data, 1)
     return field_data
@@ -100,8 +100,8 @@ class FieldInfoContainer(dict):
                 else:
                     fl = self.arbor.field_list
                 mylog.warning(
-                    ("Overriding field \"%s\" that already " +
-                     "exists as %s field.") % (alias, ftype))
+                    f"Overriding field \"{alias}\" that already "
+                    f"exists as {ftype} field.")
                 fl.pop(fl.index(alias))
             else:
                 return
@@ -158,8 +158,8 @@ class FieldInfoContainer(dict):
                 else:
                     fl = self.arbor.field_list
                 mylog.warning(
-                    ("Overriding field \"%s\" that already " +
-                     "exists as %s field.") % (name, ftype))
+                    f"Overriding field \"{name}\" that already "
+                    f"exists as {ftype} field.")
                 fl.pop(fl.index(name))
             else:
                 return

@@ -11,7 +11,7 @@ def get_version(filename):
             if line.startswith("__version__"):
                 return line.split("=")[1].strip()[1:-1]
     raise RuntimeError(
-        "Could not get version from %s." % filename)
+        f"Could not get version from {filename}.")
 
 
 VERSION = get_version("ytree/__init__.py")

@@ -36,7 +36,7 @@ class AHFDataFile(CatalogDataFile):
         if res:
             self.data_filekey = self.filekey[:res.end()]
         else:
-            self.data_filekey = "%s.z%.03f" % (self.filekey, self.redshift)
+            self.data_filekey = f"{self.filekey}.z{self.redshift:.03f}"
 
         self.halos_filename = self.data_filekey + ".AHF_halos"
         self.mtree_filename = self.data_filekey + ".AHF_mtree"

@@ -23,7 +23,7 @@ from ytree.utilities.io import \
 class RockstarDataFile(CatalogDataFile):
     def __init__(self, filename, arbor):
         self.offsets = None
-        super(RockstarDataFile, self).__init__(filename, arbor)
+        super().__init__(filename, arbor)
 
     def open(self):
         self.fh = open(self.filename, "r")

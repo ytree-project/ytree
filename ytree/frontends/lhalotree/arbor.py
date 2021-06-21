@@ -56,7 +56,7 @@ class LHaloTreeArbor(Arbor):
             if k in kwargs:
                 reader_kwargs[k] = kwargs.pop(k)
         self._lht0 = LHaloTreeReader(args[0], **reader_kwargs)
-        super(LHaloTreeArbor, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         kwargs.update(**reader_kwargs)
         lht0 = self._lht0
         files = sorted(glob.glob(lht0.filepattern))
@@ -111,7 +111,7 @@ class LHaloTreeArbor(Arbor):
     #     """
     #     self._node_io_fd = None
     #     kwargs["_func"] = func
-    #     super(LHaloTreeArbor, self)._node_io_loop(
+    #     super()._node_io_loop(
     #         self._func_update_file, *args, **kwargs)
     #     if self._node_io_fd is not None:
     #         self._node_io_fd.close()
@@ -160,7 +160,7 @@ class LHaloTreeArbor(Arbor):
                 self.quan(1, unit)
                 punit = unit
             except UnitParseError:  # pragma: no cover
-                ytreeLogger.warning("Could not parse unit: %s" % unit)
+                ytreeLogger.warning(f"Could not parse unit: {unit}")
                 punit = ''
             for k in keylist:
                 fi[k] = {'units': punit}

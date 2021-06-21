@@ -106,7 +106,7 @@ class ArborTest:
             return
         assert_equal(
             len(self.arbor.data_files), self.num_data_files,
-            err_msg='Incorrect number of data files for %s.' % self.arbor)
+            err_msg=f'Incorrect number of data files for {self.arbor}.')
 
     def test_get_root_nodes(self):
         for my_tree in get_random_trees(self.arbor, 47457, 5):
@@ -159,14 +159,12 @@ class ArborTest:
 
         assert_equal(
             len(list(t['tree'])), ts0,
-            err_msg='Trees are not the same size after resetting for %s.' %
-            self.arbor)
+            err_msg=f'Trees are not the same size after resetting for {self.arbor}.')
 
         for field in f0:
             assert_array_equal(
                 t['tree', field], f0[field],
-                err_msg='Tree field %s not the same after resetting for %s.' %
-                (field, self.arbor))
+                err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.")
 
     def test_reset_nonroot(self):
         t = self.arbor[0]
@@ -179,14 +177,12 @@ class ArborTest:
 
         assert_equal(
             len(list(node['tree'])), ts0,
-            err_msg='Trees are not the same size after resetting for %s.' %
-            self.arbor)
+            err_msg=f'Trees are not the same size after resetting for {self.arbor}.')
 
         for field in f0:
             assert_array_equal(
                 node['tree', field], f0[field],
-                err_msg='Tree field %s not the same after resetting for %s.' %
-                (field, self.arbor))
+                err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.")
 
     def test_save_and_reload(self):
         save_and_compare(self.arbor, groups=self.groups, skip=self.tree_skip)
@@ -198,7 +194,7 @@ class ArborTest:
 
             mylog.info(f"Comparing vector field: {field}.")
             magfield = np.sqrt((a[field]**2).sum(axis=1))
-            assert_array_equal(a["%s_magnitude" % field], magfield,
+            assert_array_equal(a[f"{field}_magnitude"], magfield,
                                err_msg=f"Magnitude field incorrect: {field}.")
 
             for i, ax in enumerate("xyz"):
@@ -285,8 +281,7 @@ def compare_trees(t1, t2, groups=None, fields=None):
         for group in groups:
             assert_array_equal(
                 t1[group, field], t2[group, field],
-                err_msg="Tree comparison failed for %s field: %s." %
-                (group, field))
+                err_msg=f"Tree comparison failed for {group} field: {field}.")
     t1.arbor.reset_node(t1)
     t2.arbor.reset_node(t2)
 
@@ -304,9 +299,8 @@ def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
         fh2 = h5py.File(fh2, "r")
 
     if compare_groups:
-        assert sorted(list(fh1.keys())) == sorted(list(fh2.keys())), \
-          "%s and %s have different datasets in group %s." % \
-          (fh1.file.filename, fh2.file.filename, fh1.name)
+        err_msg = f"{fh1.file.filename} and {fh2.file.filename} have different datasets in group {fh1.name}."
+        assert_equal(sorted(list(fh1.keys())), sorted(list(fh2.keys())), err_msg=err_msg)
 
     for key in fh1.keys():
         if isinstance(fh1[key], h5py.Group):
@@ -314,8 +308,7 @@ def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
                          compare_groups=compare_groups,
                          compare=compare, **kwargs)
         else:
-            err_msg = "%s field not equal for %s and %s" % \
-              (key, fh1.file.filename, fh2.file.filename)
+            err_msg = f"{key} field not equal for {fh1.file.filename} and {fh2.file.filename}"
             if fh1[key].dtype == "int":
                 assert_array_equal(fh1[key][()], fh2[key][()],
                                    err_msg=err_msg)

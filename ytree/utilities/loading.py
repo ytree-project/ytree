@@ -33,7 +33,7 @@ def check_path(filename):
     tfn = os.path.join(test_data_dir, filename)
     if os.path.exists(tfn):
         return tfn
-    raise IOError("File does not exist: %s." % filename)
+    raise IOError(f"File does not exist: {filename}.")
 
 def get_path(filename):
     """
