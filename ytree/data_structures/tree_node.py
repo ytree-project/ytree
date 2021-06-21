@@ -126,6 +126,8 @@ class TreeNode:
 
         # conventional Arbor object
         desc_link = self._link.descendent
+        if desc_link is None:
+            return None
         return self.arbor._generate_tree_node(self.root, desc_link)
 
     _ancestors = None # used by CatalogArbor
@@ -401,6 +403,36 @@ class TreeNode:
         lids = np.where(~np.in1d(uids, desc_uids))[0]
         for lid in lids:
             yield self.get_node(selector, lid)
+
+    def get_root_nodes(self):
+        """
+        Get all root nodes from the forest to which this node belongs.
+
+        This returns a generator of all root nodes in the forest. A root
+        node is a node that has no descendents.
+
+        Returns
+        -------
+        root_nodes : a generator of
+            :class:`~ytree.data_structures.tree_node.TreeNode` objects.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("consistent_trees_hdf5/soa/forest.h5",
+        ...                access="forest")
+        >>> my_tree = a[0]
+        >>> for root in my_tree.get_root_nodes():
+        ...     print (root["mass"])
+
+        """
+
+        selector = "forest"
+        desc_uids = self[selector, "desc_uid"]
+        rids = np.where(desc_uids == -1)[0]
+        for rid in rids:
+            yield self.get_node(selector, rid)
 
     _ffi = slice(None)
     @property

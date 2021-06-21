@@ -25,6 +25,7 @@ used to save the entire arbor or individual trees.
    ~ytree.data_structures.arbor.Arbor.select_halos
    ~ytree.data_structures.tree_node.TreeNode
    ~ytree.data_structures.tree_node.TreeNode.get_leaf_nodes
+   ~ytree.data_structures.tree_node.TreeNode.get_root_nodes
    ~ytree.data_structures.tree_node.TreeNode.get_node
    ~ytree.data_structures.tree_node.TreeNode.save_tree
    ~ytree.data_structures.tree_node_selector.TreeNodeSelector
