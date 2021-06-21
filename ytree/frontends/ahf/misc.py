@@ -38,8 +38,7 @@ def parse_AHF_file(filename, pars, sep=None):
     f.close()
 
     if len(vals) < npars:
-        raise RuntimeError(
-            mpars = ", ".join(set(pars.values()).difference(vals))
-            f"{filename} missing these parameters: {mpars}."
+        mpars = ", ".join(set(pars.values()).difference(vals))
+        raise RuntimeError(f"{filename} missing these parameters: {mpars}.")
 
     return vals
