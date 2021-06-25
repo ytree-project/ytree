@@ -5,6 +5,7 @@
 [![Documentation Status](https://readthedocs.org/projects/ytree/badge/?version=latest)](http://ytree.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/ytree.svg)](https://badge.fury.io/py/ytree)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.01881/status.svg)](https://doi.org/10.21105/joss.01881)
+[![yt-project](https://img.shields.io/static/v1?label="works%20with"&message="yt"&color="blueviolet")](https://yt-project.org)
 
 This is `ytree`, a [yt](https://github.com/yt-project/yt) extension for
 working with merger tree data.
