@@ -24,6 +24,7 @@ _frontends = [
     "moria",
     "rockstar",
     "treefarm",
+    "treefrog",
     "ytree",
 ]
 

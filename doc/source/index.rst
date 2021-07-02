@@ -15,6 +15,7 @@ merger tree from the following formats:
 - :ref:`load-moria`
 - :ref:`load-rockstar`
 - :ref:`load-treefarm`
+- :ref:`load-treefrog`
 
 See :ref:`loading` for instructions specific to each format.
 All formats can be :ref:`resaved with a universal format <saving-trees>` that

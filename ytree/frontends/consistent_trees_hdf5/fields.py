@@ -23,9 +23,9 @@ v_unit = "km/s"
 
 class ConsistentTreesHDF5FieldInfo(FieldInfoContainer):
     alias_fields = (
-        ("uid", "id", None),
-        ("desc_uid", "desc_id", None),
-        ("halo_id", "Orig_halo_ID", None),
+        ("uid", "id", ""),
+        ("desc_uid", "desc_id", ""),
+        ("halo_id", "Orig_halo_ID", ""),
         ("scale_factor", "scale", None),
         ("mass", "Mvir", m_unit),
         ("virial_mass", "Mvir", m_unit),

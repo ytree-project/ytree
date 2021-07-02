@@ -163,13 +163,13 @@ jobs:
 
       - restore_cache:
           name: "Restore test data cache."
-          key: test-data-2021-05-04
+          key: test-data-2021-06-16
 
       - download-test-data
 
       - save_cache:
           name: "Save test data cache."
-          key: test-data-2021-05-04
+          key: test-data-2021-06-16
           paths:
             - ~/ytree_test
 
