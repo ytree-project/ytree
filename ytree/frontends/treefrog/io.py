@@ -29,6 +29,20 @@ from ytree.utilities.exceptions import \
 
 class TreeFrogDataFile(DataFile):
     def _calculate_arbor_offsets(self):
+        """
+        Calculate snapshots and snapshot-offsets where each forest appears last.
+
+        For N forests and M snapshots, the data files contain two MxN arrays of:
+        - the size of forest i in each snapshot j
+        - the offset of forest i in each snapshot j
+
+        In this function, we calculate two things for each forest:
+        - the last (i.e. latest in time) snapshot in which the forest exists
+        - the file offset within that last snapshot
+
+        Since ytree reads from the root backward, this tell us where to start
+        reading for any given forest.
+        """
         close = self.fh is None
         self.open()
         fh = self.fh
@@ -159,11 +173,11 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
 
 class TreeFrogRootFieldIO(DefaultRootFieldIO):
     """
-    Read in fields for first node in all trees/forest.
+    Read fields for the roots of all forests.
 
-    This function is optimized for the struct of arrays layout.
-    It will work for array of structs layout, but field access
-    will be 1 to 2 orders of magnitude slower.
+    Each data file stores the latest snapshot where a forest exists
+    and the offset within that snapshot. We use this information to
+    open only the HDF5 groups that have data we need.
     """
     def _read_fields(self, storage_object, fields, dtypes=None):
         if dtypes is None:
@@ -190,18 +204,23 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
             arbor._node_io_loop_start(data_file)
 
             size = nodes.size
+            # the index of the last snapshot for each forest
             s1 = data_file.arbor_start[nodes]
+            # the offset within that snapshot
             o1 = data_file.arbor_offset[nodes]
 
             fdata = {}
+            # np.unique(s1) gives us the total number of HDF5 groups we need to open
             for gi in np.unique(s1):
                 group = f"Snap_{gi:03d}"
+                # which forests' roots are in this group
                 isnap = np.where(s1 == gi)[0]
 
                 for field in rfields:
                     gdata = data_file.read_data(group, field)
                     if field not in fdata:
                         fdata[field] = np.empty(size, dtype=gdata.dtype)
+                    # o1[isnap] is the list of file offsets for this HDF5 group
                     fdata[field][isnap] = gdata[o1[isnap]]
 
             for field in rfields:
