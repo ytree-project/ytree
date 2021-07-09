@@ -119,7 +119,7 @@ executors:
         type: string
         default: latest
     docker:
-      - image: circleci/python:<< parameters.tag >>
+      - image: cimg/python:<< parameters.tag >>
 
 jobs:
   tests:
@@ -145,7 +145,7 @@ jobs:
 
       - restore_cache:
           name: "Restore dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-2021-04-13
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-2021-07-09
 
       - install:
           ytdev: << parameters.ytdev >>
@@ -153,7 +153,7 @@ jobs:
 
       - save_cache:
           name: "Save dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-2021-04-13
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-2021-07-09
           paths:
             - ~/.cache/pip
             - ~/venv
@@ -193,7 +193,7 @@ jobs:
 
       - restore_cache:
           name: "Restore dependencies cache."
-          key: python-<< parameters.tag >>-1-dependencies-2021-04-13
+          key: python-<< parameters.tag >>-1-dependencies-2021-07-09
 
       - install:
           ytdev: 1
@@ -201,7 +201,7 @@ jobs:
 
       - save_cache:
           name: "Save dependencies cache."
-          key: python-<< parameters.tag >>-1-dependencies-2021-04-13
+          key: python-<< parameters.tag >>-1-dependencies-2021-07-09
           paths:
             - ~/.cache/pip
             - ~/venv
@@ -216,18 +216,18 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.7 tests"
-           tag: "3.7.10"
+           tag: "3.7.11"
            ytdev: 1
 
        - tests:
            name: "Python 3.9 tests"
-           tag: "3.9.2"
+           tag: "3.9.6"
            coverage: 1
            ytdev: 1
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.9.2"
+           tag: "3.9.6"
 
    daily:
      triggers:
@@ -240,13 +240,13 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.9 tests with yt-dev"
-           tag: "3.9.2"
+           tag: "3.9.6"
            coverage: 0
            ytdev: 1
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.9.2"
+           tag: "3.9.6"
 
    weekly:
      triggers:
@@ -259,5 +259,5 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.8 tests"
-           tag: "3.8.8"
+           tag: "3.8.11"
            ytdev: 1
