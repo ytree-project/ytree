@@ -61,7 +61,7 @@ setup(name="ytree",
           "more_itertools>=8.4",
           'numpy',
           'unyt',
-          'yt>=3.6',
+          'yt>=4.0',
       ],
       extras_require={
           'dev': dev_requirements,
