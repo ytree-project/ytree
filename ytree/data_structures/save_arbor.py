@@ -14,6 +14,7 @@ from yt.funcs import \
     ensure_dir
 from yt.frontends.ytdata.utilities import \
     save_as_dataset
+
 from ytree.utilities.logger import \
     ytreeLogger as mylog
 
@@ -50,7 +51,7 @@ def save_arbor(arbor, filename=None, fields=None, trees=None,
 
     group_nnodes, group_ntrees, root_field_data = \
       save_data_files(arbor, filename, fields, trees,
-                      max_file_size)
+                      max_file_size, update)
 
     header_filename = save_header_file(
         arbor, filename, fields, root_field_data,
@@ -137,12 +138,15 @@ def get_output_fieldnames(fields):
     return [field.replace("/", "_") for field in fields]
 
 def save_data_files(arbor, filename, fields, trees,
-                    max_file_size):
+                    max_file_size, update):
     """
     Write all data files by grouping trees together.
 
     Return arrays of number of nodes and trees written to each file
     as well as a dictionary of root fields.
+
+    If update is True, use the file layout of the arbor instead of
+    calculating from max_file_size.
     """
 
     if trees is None:
@@ -169,13 +173,18 @@ def save_data_files(arbor, filename, fields, trees,
             np.array(current_group), root_field_data,
             cg_number, total_guess)
 
+    if update:
+        file_sizes = np.diff(arbor._node_io._ei, prepend=0)
+
     i = 1
     for tree in trees:
         current_group.append(tree)
         cg_nnodes += tree.tree_size
         cg_ntrees += 1
 
-        if cg_nnodes > max_file_size:
+        # if updating, use file sizes of loaded arbor
+        if (update and len(current_group) == file_sizes[i-1]) or \
+          cg_nnodes > max_file_size:
             my_save(i, cg_nnodes, cg_ntrees)
             current_group = []
             cg_nnodes = 0
