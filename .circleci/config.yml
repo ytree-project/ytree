@@ -89,13 +89,17 @@ commands:
         default: 0
 
     steps:
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
       - run:
           name: "Build ytree and run tests."
           no_output_timeout: 30m
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
-            pytest --cov=ytree tests
+            pytest --cov=ytree --junitxml=test-results/junit.xml tests
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
                 codecov
