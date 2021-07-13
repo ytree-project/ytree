@@ -130,7 +130,7 @@ class TreeFrogArbor(SegmentedArbor):
         with h5py.File(fn, mode='r') as f:
             for group, attrs in info.items():
                 if group not in f:
-                    return f
+                    return False
                 for attr in attrs:
                     if attr not in f[group].attrs:
                         return False
