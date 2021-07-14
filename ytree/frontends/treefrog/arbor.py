@@ -16,6 +16,7 @@ TreeFrogArbor class and member functions
 import h5py
 import numpy as np
 import os
+import re
 
 from ytree.data_structures.arbor import \
     SegmentedArbor
@@ -38,6 +39,23 @@ class TreeFrogArbor(SegmentedArbor):
     _field_info_class = TreeFrogFieldInfo
     _root_field_io_class = TreeFrogRootFieldIO
     _tree_field_io_class = TreeFrogTreeFieldIO
+
+    def __init__(self, filename):
+        filename = self._determine_filename(filename)
+        super().__init__(filename)
+
+    def _determine_filename(self, filename):
+        """
+        Find the proper parameter filename if given a data file instead.
+        """
+
+        suffix = f".foreststats{self._suffix}"
+        if filename.endswith(suffix):
+            return filename
+
+        match = re.search(rf"{self._suffix}\.\d+$", filename)
+        forest_fn = filename[:match.start()] + suffix
+        return forest_fn
 
     def _get_data_files(self):
         self.data_files = [TreeFrogDataFile(f"{self._prefix}{self._suffix}.{i}")
@@ -114,7 +132,7 @@ class TreeFrogArbor(SegmentedArbor):
         """
         Should be an hdf5 file with a few key attributes.
         """
-        fn = args[0]
+        fn = self._determine_filename(self, args[0])
         suffix = f".foreststats{self._suffix}"
         if not fn.endswith(suffix):
             return False
