@@ -95,11 +95,15 @@ commands:
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
-            pytest --cov=ytree tests
+            pytest --cov=ytree --junitxml=test-results/junit.xml tests
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
                 codecov
             fi
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
 
   build-docs:
     description: "Test the docs build."
