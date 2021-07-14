@@ -89,10 +89,6 @@ commands:
         default: 0
 
     steps:
-      - store_test_results:
-          path: test-results
-      - store_artifacts:
-          path: test-results
       - run:
           name: "Build ytree and run tests."
           no_output_timeout: 30m
@@ -104,6 +100,10 @@ commands:
                 # code coverage report
                 codecov
             fi
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
 
   build-docs:
     description: "Test the docs build."
