@@ -540,8 +540,7 @@ class Arbor(metaclass=RegisteredArbor):
             return self._generate_root_node(key)
         elif isinstance(key, slice) or isinstance(key, np.ndarray):
             indices = np.arange(self.size)[key]
-            return np.array(
-                [node for node in self._yield_root_nodes(indices)])
+            return self._yield_root_nodes(indices)
         else:
             raise ValueError('Cannot generate nodes from argument: ', key)
 
