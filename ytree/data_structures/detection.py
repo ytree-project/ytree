@@ -36,7 +36,7 @@ class SelectionDetector(defaultdict):
 
         if selector not in _selectors:
             raise ValueError(f"Selector must be one of {_selectors}: {selector}.")
-        
+
         if field not in self.arbor.field_info:
             raise ArborFieldNotFound(field, self.arbor)
 
