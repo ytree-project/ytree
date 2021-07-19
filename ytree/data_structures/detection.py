@@ -22,7 +22,23 @@ from ytree.utilities.exceptions import \
 
 _selectors = ("forest", "tree", "prog")
 
-class FieldDetector(defaultdict):
+class Detector(defaultdict):
+    """
+    Base class for detecting field dependencies and testing operations.
+    """
+
+    def __missing__(self, key):
+        self._validate_key(key)
+        self._generate_data(key)
+        return self[key]
+
+    def _validate_key(self, key):
+        raise NotImplementedError
+
+    def _generate_data(self, key):
+        raise NotImplementedError
+
+class FieldDetector(Detector):
     """
     A fake field data container used to calculate dependencies.
     """
@@ -30,18 +46,18 @@ class FieldDetector(defaultdict):
         self.arbor = arbor
         self.name = name
 
-    def __missing__(self, key):
+    def _validate_key(self, key):
         if key not in self.arbor.field_info:
-            raise ArborFieldDependencyNotFound(
-                self.name, key, self.arbor)
+            raise ArborFieldDependencyNotFound(self.name, key, self.arbor)
+
+    def _generate_data(self, key):
         fi = self.arbor.field_info[key]
-        units = fi.get("units", "")
         if fi.get("vector_field", False):
             data = np.ones((1, 3))
         else:
             data = np.ones(1)
+        units = fi.get("units", "")
         self[key] = self.arbor.arr(data, units)
-        return self[key]
 
 class SelectionDetector(defaultdict):
     """
@@ -63,14 +79,11 @@ class SelectionDetector(defaultdict):
         if field not in self.arbor.field_info:
             raise ArborFieldNotFound(field, self.arbor)
 
-    def __missing__(self, key):
-        self._validate_key(key)
+    def _generate_data(self, key):
         selector, field = key
         if selector not in self.selectors:
             self.selectors.append(selector)
 
         fi = self.arbor.field_info[field]
         units = fi.get("units", "")
-
         self[key] = self.arbor.arr(np.ones(1), units)
-        return self[key]

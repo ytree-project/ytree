@@ -66,6 +66,7 @@ and i/o.
    ~ytree.data_structures.arbor.Arbor
    ~ytree.data_structures.arbor.SegmentedArbor
    ~ytree.data_structures.arbor.CatalogArbor
+   ~ytree.data_structures.detection.Detector
    ~ytree.data_structures.detection.FieldDetector
    ~ytree.data_structures.detection.SelectionDetector
    ~ytree.data_structures.fields.FieldInfoContainer
