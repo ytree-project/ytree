@@ -741,6 +741,10 @@ class Arbor(metaclass=RegisteredArbor):
         """
         Select halos from the arbor based on a set of criteria given as a string.
 
+        Halos matching the criteria will be returned through a generator. Matches
+        are returned as soon as they are found, allowing you to begin working
+        with them before the search has completed. The progress bar will update
+        to report the number of matches found as the search progresses.
 
         Parameters
         ----------
@@ -760,18 +764,19 @@ class Arbor(metaclass=RegisteredArbor):
         Returns
         -------
 
-        halos : array of TreeNodes
-            A flat array of all TreeNodes meeting the criteria.
+        halos : :class:`~ytree.data_structures.tree_node.TreeNode` generator
+            A generator yielding all TreeNodes meeting the criteria.
 
         Examples
         --------
 
         >>> import ytree
         >>> a = ytree.load("tree_0_0_0.dat")
-        >>> halos = a.select_halos('tree["tree", "redshift"] > 1')
+        >>> for halo in a.select_halos('tree["tree", "redshift"] > 1'):
+        ...     print (halo["mass"])
         >>>
-        >>> halos = a.select_halos('tree["prog", "mass"].to("Msun") >= 1e10',
-        ...                        select_from="prog")
+        >>> halos = list(a.select_halos('tree["prog", "mass"].to("Msun") >= 1e10'))
+        >>> print (len(halos))
 
         """
 
@@ -779,14 +784,14 @@ class Arbor(metaclass=RegisteredArbor):
             import warnings
             from numpy import VisibleDeprecationWarning
             warnings.warn(
-                "The select_from keyword is deprecated and no longer does anything.",
+                "The \"select_from\" keyword is deprecated and no longer does anything.",
                 VisibleDeprecationWarning, stacklevel=2)
 
         if fields is not None:
             import warnings
             from numpy import VisibleDeprecationWarning
             warnings.warn(
-                "The fields keyword is deprecated and no longer does anything.",
+                "The \"fields\" keyword is deprecated and no longer does anything.",
                 VisibleDeprecationWarning, stacklevel=2)
 
         tree = SelectionDetector(self)
@@ -801,20 +806,19 @@ class Arbor(metaclass=RegisteredArbor):
         if trees is None:
             trees = self
 
-        halos = []
-        pbar = get_pbar("Selecting halos", trees.size)
+        found = 0
+        pbar = get_pbar(f"Selecting halos ({found} found)", trees.size)
         for i, tree in enumerate(trees):
-            my_filter = np.asarray(eval(criteria))
-            select_group = np.asarray(list(tree[selector]))
-            if my_filter.size != select_group.size:
-                raise RuntimeError(
-                    "Filter array and tree array sizes do not match. "
-                    f"Make sure selector (\"{selector}\") matches "
-                    f"criteria (\"{criteria}\").")
-            halos.extend(select_group[my_filter])
+            imatches = np.where(eval(criteria))[0]
+            if imatches.size > 0:
+                found += imatches.size
+                pbar._pbar.set_description_str(f"Selecting halos (found {found})")
             pbar.update(i+1)
+
+            for imatch in imatches:
+                yield tree.get_node(selector, imatch)
+
         pbar.finish()
-        return np.array(halos)
 
     def add_analysis_field(self, name, units, dtype=None, default=0):
         r"""
