@@ -18,6 +18,7 @@ from collections import \
 import numpy as np
 import weakref
 
+from ytree.data_structures.detection import FieldDetector
 from ytree.utilities.exceptions import \
     ArborFieldAlreadyExists, \
     ArborFieldCircularDependency, \
@@ -176,7 +177,7 @@ class FieldInfoContainer(dict):
                 "vector_field": vector_field,
                 "description": description}
 
-        fc = FakeFieldContainer(self.arbor, name=name)
+        fc = FieldDetector(self.arbor, name=name)
         try:
             rv = function(info, fc)
         except TypeError as e:
@@ -293,24 +294,3 @@ class FieldContainer(dict):
     """
     def __init__(self, arbor):
         self.arbor = weakref.proxy(arbor)
-
-class FakeFieldContainer(defaultdict):
-    """
-    A fake field data container used to calculate dependencies.
-    """
-    def __init__(self, arbor, name=None):
-        self.arbor = arbor
-        self.name = name
-
-    def __missing__(self, key):
-        if key not in self.arbor.field_info:
-            raise ArborFieldDependencyNotFound(
-                self.name, key, self.arbor)
-        fi = self.arbor.field_info[key]
-        units = fi.get("units", "")
-        if fi.get("vector_field", False):
-            data = np.ones((1, 3))
-        else:
-            data = np.ones(1)
-        self[key] = self.arbor.arr(data, units)
-        return self[key]
