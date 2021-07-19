@@ -18,6 +18,7 @@ from collections import \
 import functools
 import numpy as np
 import os
+
 from unyt import \
     unyt_array, \
     unyt_quantity
@@ -33,6 +34,8 @@ from unyt.unit_registry import \
 from yt.utilities.cosmology import \
     Cosmology
 
+from ytree.data_structures.detection import \
+    SelectionDetector
 from ytree.data_structures.fields import \
     FieldContainer, \
     FieldInfoContainer
@@ -733,8 +736,8 @@ class Arbor(metaclass=RegisteredArbor):
                                        registry=self.unit_registry)
         return self._quan
 
-    def select_halos(self, criteria, trees=None, select_from="tree",
-                     fields=None):
+    def select_halos(self, criteria, trees=None,
+                     select_from=None, fields=None):
         """
         Select halos from the arbor based on a set of criteria given as a string.
 
@@ -749,13 +752,8 @@ class Arbor(metaclass=RegisteredArbor):
         trees : optional, list or array of TreeNodes
             A list or array of TreeNode objects in which to search. If none given,
             the search is performed over the full arbor.
-        select_from : optional, "tree", "forest", or "prog"
-            Determines whether to perform the search over the full tree or just
-            the main progenitors. Note, the value given must be consistent with
-            what appears in the criteria string. For example, a criteria
-            string of 'tree["tree", "redshift"] > 1' cannot be used when setting
-            select_from to "prog".
-            Default: "tree".
+        select_from : deprecated, do not use
+            This keyword is no longer required and using it does nothing.
         fields : deprecated, do not use
             This keyword is no longer required and using it does nothing.
 
@@ -777,12 +775,12 @@ class Arbor(metaclass=RegisteredArbor):
 
         """
 
-        if select_from not in ["tree", "forest", "prog"]:
-            raise SyntaxError(
-                "Keyword \"select_from\" must be \"tree\", \"forest\", or \"prog\".")
-
-        if trees is None:
-            trees = self
+        if select_from is not None:
+            import warnings
+            from numpy import VisibleDeprecationWarning
+            warnings.warn(
+                "The select_from keyword is deprecated and no longer does anything.",
+                VisibleDeprecationWarning, stacklevel=2)
 
         if fields is not None:
             import warnings
@@ -791,15 +789,27 @@ class Arbor(metaclass=RegisteredArbor):
                 "The fields keyword is deprecated and no longer does anything.",
                 VisibleDeprecationWarning, stacklevel=2)
 
+        tree = SelectionDetector(self)
+        eval(criteria)
+        if len(tree.selectors) > 1:
+            raise ValueError(
+                f"Selection criteria must only use one selector: \"{criteria}\".\n"
+                f"    Selection criteria uses {len(tree.selectors)} selectors: "
+                f"{tree.selectors}.")
+        selector = tree.selectors[0]
+
+        if trees is None:
+            trees = self
+
         halos = []
         pbar = get_pbar("Selecting halos", trees.size)
         for i, tree in enumerate(trees):
             my_filter = np.asarray(eval(criteria))
-            select_group = np.asarray(list(tree[select_from]))
+            select_group = np.asarray(list(tree[selector]))
             if my_filter.size != select_group.size:
                 raise RuntimeError(
                     "Filter array and tree array sizes do not match. "
-                    f"Make sure select_from (\"{select_from}\") matches "
+                    f"Make sure selector (\"{selector}\") matches "
                     f"criteria (\"{criteria}\").")
             halos.extend(select_group[my_filter])
             pbar.update(i+1)
