@@ -16,7 +16,9 @@ Field detection classes
 from collections import defaultdict
 import numpy as np
 
-from ytree.utilities.exceptions import ArborFieldNotFound
+from ytree.utilities.exceptions import \
+    ArborFieldNotFound, \
+    ArborFieldDependencyNotFound
 
 _selectors = ("forest", "tree", "prog")
 

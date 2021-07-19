@@ -13,8 +13,6 @@ Arbor field-related classes
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from collections import \
-    defaultdict
 import numpy as np
 import weakref
 
