@@ -59,7 +59,7 @@ class FieldDetector(Detector):
         units = fi.get("units", "")
         self[key] = self.arbor.arr(data, units)
 
-class SelectionDetector(defaultdict):
+class SelectionDetector(Detector):
     """
     A TreeNode-like object to test select_halos criteria.
     """
