@@ -114,12 +114,13 @@ fashion.
    657410071942446.1 Msun
 
 Array slicing can also be used to select multiple
-:class:`~ytree.data_structures.tree_node.TreeNode` objects.
+:class:`~ytree.data_structures.tree_node.TreeNode` objects. This will return a
+generator that can be iterated over or cast to a list.
 
 .. code-block:: python
 
-   >>> all_trees = a[:]
-   >>> print (all_trees[0]["mass"])
+   >>> every_second_tree = list(a[::2])
+   >>> print (every_second_tree[0]["mass"])
    657410071942446.1 Msun
 
 Note, the :class:`~ytree.data_structures.arbor.Arbor` object does not
