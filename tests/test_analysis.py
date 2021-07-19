@@ -41,7 +41,7 @@ class AnalysisFieldTest(TempDirTest):
         fake_bears = np.zeros(a.size)
         assert_array_equal(fake_bears, a['bears'])
 
-        all_trees = a[:]
+        all_trees = list(a[:])
         my_tree = all_trees[0]
         my_tree['bears'] = 9
         fake_bears[0] = 9
@@ -76,7 +76,7 @@ class AnalysisFieldTest(TempDirTest):
         fake_bears = np.zeros(a.size)
         assert_array_equal(fake_bears, a['bears'])
 
-        all_trees = a[:]
+        all_trees = list(a[:])
         my_tree = all_trees[0]
         my_tree['bears'] = 9
         fake_bears[0] = 9

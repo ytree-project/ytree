@@ -79,7 +79,7 @@ class ExampleTest(TempDirTest):
 
         a = ytree.load(CTG)
         a.add_analysis_field('significance', 'Msun*Myr')
-        my_trees = a[:]
+        my_trees = list(a[:])
         for tree in my_trees:
             get_significance(tree)
 
