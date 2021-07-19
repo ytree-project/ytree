@@ -453,14 +453,27 @@ set of criteria.
 
 .. code-block:: python
 
-   >>> halos = a.select_halos('tree["tree", "redshift"] > 1')
+   >>> halos = list(a.select_halos("tree['forest', 'mass'].to('Msun') > 5e11"))
+   Selecting halos (found 3): 100%|███████████████| 32/32 [00:00<00:00, 107.70it/s]
    >>> print (halos)
-   [TreeNode[8987], TreeNode[6713], TreeNode[6091], TreeNode[448], ...,
-    TreeNode[9683], TreeNode[8316], TreeNode[10788]]
+   [TreeNode[1457223360], TreeNode[1457381406], TreeNode[1420495006]]
+
+The :func:`~ytree.data_structures.arbor.Arbor.select_halos` function will return a
+generator of :class:`~ytree.data_structures.tree_node.TreeNode` objects that can be
+iterated over or cast to a list, as above. The function will return halos as they
+are found so the user does not have to wait until the end to begin working with
+them. The progress bar will continually update to report the number of matches
+found.
 
 The selection criteria string should be designed to ``eval`` correctly
 with a :class:`~ytree.data_structures.tree_node.TreeNode` object, named
-"tree".
+"tree". More complex criteria can be supplied using \& and \|.
+
+.. code-block:: python
+
+   >>> for halo in a.select_halos("(tree['tree', 'mass'].to('Msun') > 2e11) & (tree['tree', 'redshift'] < 0.2)"):
+   ...     progenitor_pos = halo["prog", "position"]
+   Selecting halos (found 69): 100%|███████████████| 32/32 [00:01<00:00, 22.50it/s]
 
 .. _select-halos-yt:
 
