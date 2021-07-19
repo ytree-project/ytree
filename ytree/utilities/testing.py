@@ -231,7 +231,7 @@ def save_and_compare(arbor, skip=1, groups=None):
     """
 
     if skip > 1:
-        trees = arbor[::skip]
+        trees = list(arbor[::skip])
     else:
         trees = None
 
@@ -256,10 +256,10 @@ def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
         assert_array_equal(a1[field][::skip1], a2[field][::skip2],
                            err_msg=f"Arbor field mismatch: {a1, a2, field}.")
 
-    trees1 = a1[::skip1]
-    trees2 = a2[::skip2]
+    trees1 = list(a1[::skip1])
+    trees2 = list(a2[::skip2])
 
-    ntot = trees1.size
+    ntot = len(trees1)
     pbar = get_pbar("Comparing trees", ntot)
     for i, (t1, t2) in enumerate(zip(trees1, trees2)):
         compare_trees(t1, t2, groups=groups, fields=fields)
