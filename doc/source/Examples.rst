@@ -85,7 +85,7 @@ significance field.
    >>> import ytree
    >>> a = ytree.load('consistent_trees/tree_0_0_0.dat')
    >>> a.add_analysis_field('significance', 'Msun*Myr')
-   >>> my_trees = a[:]
+   >>> my_trees = list(a[:])
    >>> for tree in my_trees:
            get_significance(tree)
    >>> a.save_arbor(filename='sig_tree', trees=my_trees)

@@ -257,7 +257,7 @@ class YTreeArbor(Arbor):
 
         See Also
         --------
-        get_nodes_from_selection
+        select_halos, get_nodes_from_selection
 
         """
 

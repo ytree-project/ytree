@@ -8,6 +8,7 @@ save_arbor supporting functions
 import json
 import numpy as np
 import os
+import types
 from unyt import uconcatenate
 
 from yt.funcs import \
@@ -33,6 +34,9 @@ def save_arbor(arbor, filename=None, fields=None, trees=None,
 
     This is the internal function called by Arbor.save_arbor.
     """
+
+    if isinstance(trees, types.GeneratorType):
+        trees = list(trees)
 
     arbor._plant_trees()
     update, filename = determine_save_state(
