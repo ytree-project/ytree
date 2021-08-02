@@ -175,7 +175,6 @@ ensure correct collection of results when getting nodes by "tree" or
    if yt.is_root():
        a.save_arbor(trees=my_trees)
 
-
 Note, the above code is inside the outer loop over all trees shown
 above. Note as well, to ensure that the tree has all of the new values
 for the "test_field", we only need to loop over all the relevant halos
@@ -247,3 +246,63 @@ process, we set ``tree_store.result_id`` to None. Without this, the
 results from the non-root processes (that we are not actually
 collecting) will clobber those from the root processes and nothing
 will be saved.
+
+.. _saving_partial_results:
+
+Saving Intermediate Results
+---------------------------
+
+Often the analysis is computationally expensive enough to want to save
+results as they come instead of waiting all halos to be analyzed. This
+can be useful if results require a lot of memory or the code takes a
+long time to run and you would like to restart from a partially
+completed state. In the example below, analysis is performed on blocks
+of eight trees at a time. Each block is done in parallel, the results
+are saved, and analysis resumes.
+
+.. code-block:: python
+
+   a = ytree.load("arbor/arbor.h5")
+   if "test_field" not in a.field_list:
+       a.add_analysis_field("test_field", default=-1, units="Msun")
+
+   block_size = 8
+   my_trees = list(a[:])
+   n_blocks = int(np.ceil(len(my_trees) / block_size))
+
+   for ib in range(n_blocks):
+       start = ib * block_size
+       end = min(start + block_size, len(my_trees))
+
+       tree_storage = {}
+       for tree_store, itree in yt.parallel_objects(
+               range(start, end), storage=tree_storage, dynamic=False):
+           my_tree = my_trees[itree]
+
+           for my_halo in my_tree["tree"]:
+               my_halo["test_field"] = 2 * my_halo["mass"]
+
+           tree_store.result_id = itree
+           tree_store.result = my_tree.field_data["test_field"]
+
+       if yt.is_root():
+           # re-assemble results on root processor
+           for itree, results in sorted(tree_storage.items()):
+               my_tree = my_trees[itree]
+               my_tree.field_data["test_field"] = results
+
+           a.save_arbor(trees=my_trees)
+
+           # now reload it and restore the list of trees
+           a = ytree.load(a.filename)
+           my_trees = list(a[:])
+
+There are some notable differences between this example and those
+above. First, we explicitly create a list of trees with ``my_trees =
+list(a[:])`` so we can restore it after saving and reloading. Second,
+we loop over ``range(start, end)`` instead of over trees so we can
+loop over a block of trees at a time.
+
+Like with most things, more is possible than what is shown here and
+there are other ways to do what is demonstrated. Parallel computing
+can be very satisfying. Enjoy!
