@@ -79,7 +79,7 @@ class FieldIO:
         """
         Only keep items on the fields list.
         """
-        fcache = storage_object._field_data
+        fcache = storage_object.field_data
         remove = set(fcache).difference(fields)
         for field in remove:
             del fcache[field]
@@ -99,7 +99,7 @@ class FieldIO:
 
         storage_object = \
           self._determine_field_storage(data_object)
-        fcache = storage_object._field_data
+        fcache = storage_object.field_data
 
         fi = self.arbor.field_info
 
@@ -158,7 +158,7 @@ class FieldIO:
                 fcache[field] = data
 
         self._store_fields(storage_object, set(old_fields).union(fields))
-        return storage_object._field_data
+        return storage_object.field_data
 
 class TreeFieldIO(FieldIO):
     """
@@ -166,7 +166,7 @@ class TreeFieldIO(FieldIO):
     """
 
     def _initialize_analysis_field(self, storage_object, name):
-        if name in storage_object._field_data:
+        if name in storage_object.field_data:
             return
         fi = self.arbor.field_info[name]
         units = fi.get('units', '')
@@ -175,7 +175,7 @@ class TreeFieldIO(FieldIO):
         data = np.full(storage_object.tree_size, value, dtype=dtype)
         if units:
             data = self.arbor.arr(data, units)
-        storage_object._field_data[name] = data
+        storage_object.field_data[name] = data
 
     def _determine_field_storage(self, data_object):
         return data_object.find_root()
@@ -238,7 +238,7 @@ class DefaultRootFieldIO(FieldIO):
         dtype   = fi['dtype']
         units   = fi['units']
 
-        storage_object._field_data[name] = \
+        storage_object.field_data[name] = \
           self.arbor.arr(np.full(self.arbor.size, default, dtype=dtype), units)
 
     def _read_fields(self, storage_object, fields, dtypes=None,

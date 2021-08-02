@@ -153,7 +153,7 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
         if close:
             data_file.close()
 
-        field_data = root_node._field_data
+        field_data = root_node.field_data
         for field in fields:
             field_data[field] = rdata[field]
             dtype = my_dtypes.get(field, fi[field].get("dtype", None))

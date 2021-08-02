@@ -43,7 +43,7 @@ class TreeNode:
         self.arbor = weakref.proxy(arbor)
         if root:
             self.root = -1
-            self._field_data = FieldContainer(arbor)
+            self.field_data = FieldContainer(arbor)
         else:
             self.root = None
 
@@ -108,7 +108,7 @@ class TreeNode:
 
         if not self.is_root:
             return
-        self._field_data.clear()
+        self.field_data.clear()
 
     _descendent = None # used by CatalogArbor
     @property
@@ -234,7 +234,7 @@ class TreeNode:
             tree_id = self.tree_id
         self.arbor._node_io.get_fields(self, fields=[key],
                                        root_only=False)
-        data = root._field_data[key]
+        data = root.field_data[key]
         data[tree_id] = value
 
     def __getitem__(self, key):
@@ -299,7 +299,7 @@ class TreeNode:
             indices = getattr(self, f"_{ftype}_field_indices")
 
             data_object = self.find_root()
-            return data_object._field_data[field][indices]
+            return data_object.field_data[field][indices]
 
         else:
             if not isinstance(key, str):
@@ -314,7 +314,7 @@ class TreeNode:
             self.arbor._node_io.get_fields(self, fields=[key],
                                            root_only=self.is_root)
             data_object = self.find_root()
-            return data_object._field_data[key][self.tree_id]
+            return data_object.field_data[key][self.tree_id]
 
     def __repr__(self):
         """

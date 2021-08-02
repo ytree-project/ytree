@@ -153,7 +153,7 @@ class ArborTest:
 
         for attr in self.arbor._reset_attrs:
             assert getattr(t, attr) is None
-        assert_equal(len(t._field_data), 0)
+        assert_equal(len(t.field_data), 0)
         assert not self.arbor.is_setup(t)
         assert not self.arbor.is_grown(t)
 
