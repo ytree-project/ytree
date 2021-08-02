@@ -238,7 +238,7 @@ def save_data_file(arbor, filename, fields, tree_group,
 
         my_ftypes[fieldname] = "data"
         my_fdata[fieldname]  = uconcatenate(
-            [node._field_data[field] if node.is_root else node["tree", field]
+            [node.field_data[field] if node.is_root else node["tree", field]
              for node in tree_group])
         root_field_data[field].append(my_fdata[fieldname][my_tree_start])
 

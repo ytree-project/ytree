@@ -193,7 +193,7 @@ class Arbor(metaclass=RegisteredArbor):
         """
         Setup field containers and definitions.
         """
-        self._field_data = FieldContainer(self)
+        self.field_data = FieldContainer(self)
         self.derived_field_list = []
         self.analysis_field_list = []
         self.field_info.setup_known_fields()
@@ -280,8 +280,8 @@ class Arbor(metaclass=RegisteredArbor):
         tree_node._uids      = field_data[halo_id_f]
         tree_node._desc_uids = field_data[desc_id_f]
         tree_node._tree_size = tree_node._uids.size
-        tree_node._field_data["uid"] = tree_node._uids
-        tree_node._field_data["desc_uid"] = tree_node._desc_uids
+        tree_node.field_data["uid"] = tree_node._uids
+        tree_node.field_data["desc_uid"] = tree_node._desc_uids
 
     def is_grown(self, tree_node):
         """
@@ -530,7 +530,7 @@ class Arbor(metaclass=RegisteredArbor):
             if key in ("tree", "prog"):
                 raise SyntaxError("Argument must be a field or integer.")
             self._root_io.get_fields(self, fields=[key])
-            return self._field_data[key]
+            return self.field_data[key]
         return self._generate_root_nodes(key)
 
     def _generate_root_nodes(self, key):
@@ -1256,8 +1256,8 @@ class CatalogArbor(Arbor):
         # This should bypass any attempt to get this field in
         # the conventional way.
         if self.field_info["uid"].get("source") == "arbor":
-            tree_node._field_data["uid"] = tree_node._uids
-            tree_node._field_data["desc_uid"] = tree_node._desc_uids
+            tree_node.field_data["uid"] = tree_node._uids
+            tree_node.field_data["desc_uid"] = tree_node._desc_uids
 
     def _grow_tree(self, tree_node):
         """
