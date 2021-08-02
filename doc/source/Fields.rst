@@ -98,7 +98,7 @@ will be defined. It can be used to access field data for any other
 available field. This argument will also have access to the parent
 :class:`~ytree.data_structures.arbor.Arbor` as ``data.arbor``.
 
-.. _analysis-fields:
+.. _vector-fields:
 
 Vector Fields
 -------------
@@ -136,7 +136,7 @@ quadrature sum of the components.
      200.74057711  166.13782652  529.7336846 ] km/s
 
 Only specifically registered fields will be available as vector fields.
-For example, saved :ref:`analysis_fields` with x,y,z components will
+For example, saved :ref:`analysis-fields` with x,y,z components will
 not automatically be available. However, vector fields can be created
 with the :func:`~ytree.data_structures.arbor.Arbor.add_vector_field`
 function.
@@ -148,7 +148,7 @@ function.
 The above example assumes that fields named "thing_x", "thing_y",
 and "thing_z" already exist.
 
-.. _analysis_fields:
+.. _analysis-fields:
 
 Analysis Fields
 ---------------
