@@ -253,7 +253,7 @@ Saving Intermediate Results
 ---------------------------
 
 Often the analysis is computationally expensive enough to want to save
-results as they come instead of waiting all halos to be analyzed. This
+results as they come instead of waiting for all halos to be analyzed. This
 can be useful if results require a lot of memory or the code takes a
 long time to run and you would like to restart from a partially
 completed state. In the example below, analysis is performed on blocks
