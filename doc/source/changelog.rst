@@ -44,7 +44,7 @@ New Featues
  * Add get_node and get_leaf_nodes functions
    (`PR #80 <https://github.com/ytree-project/ytree/pull/80>`__)
 
- * Add get_root_nodes function  enhancement
+ * Add get_root_nodes function
    (`PR #91 <https://github.com/ytree-project/ytree/pull/91>`__)
 
  * Add add_vector_field function
