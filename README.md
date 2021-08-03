@@ -65,10 +65,9 @@ pip install -e .
 
 ## Getting Started
 
-Below is a notebook that demonstrates how to use `ytree` with merger tree data.  For
-more information, see the full [ytree documentation](https://ytree.readthedocs.io).
-
- * [Introduction](https://github.com/ytree-project/ytree/blob/main/doc/source/notebooks/Intro_to_ytree.ipynb)
+The [ytree documentation](https://ytree.readthedocs.io) will walk you
+through installation, get you started analyzing merger trees, and help
+you become a contributor to the project. Have a look!
 
 ## Sample Data
 
