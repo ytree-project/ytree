@@ -21,4 +21,4 @@ from ytree.data_structures.tree_node_selector import \
 from ytree.visualization.tree_plot import \
     TreePlot
 
-__version__ = '3.0.0'
+__version__ = '3.1.dev0'
