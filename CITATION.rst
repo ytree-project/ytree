@@ -30,14 +30,15 @@ your work, include the following reference:
 
 ::
 
-  @software{ytree_2_3,
+  @software{britton_smith_2021_5155536,
     author       = {Britton Smith and
-                    Meagan Lang},
-    title        = {ytree: A Python package for analyzing merger trees},
-    month        = dec,
-    year         = 2019,
+                    Meagan Lang and
+                    Juanjo Bazán},
+    title        = {ytree-project/ytree: ytree 3.0 Release},
+    month        = aug,
+    year         = 2021,
     publisher    = {Zenodo},
-    version      = {ytree-2.3.0},
-    doi          = {10.5281/zenodo.3580978},
-    url          = {https://doi.org/10.5281/zenodo.3580978}
+    version      = {ytree-3.0.0},
+    doi          = {10.5281/zenodo.5155536},
+    url          = {https://doi.org/10.5281/zenodo.5155536}
   }
