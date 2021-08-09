@@ -183,14 +183,16 @@ or :func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.
 
 .. code-block:: python
 
-   >>> my_trees = a[:] # all trees
+   >>> my_trees = list(a[:]) # all trees
    >>> for my_tree in my_trees:
    ...     # do analysis...
    >>> a.save_arbor(trees=my_trees)
 
-.. note:: Trees with altered analysis fields must be provided explicitly to
-   :func:`~ytree.data_structures.arbor.Arbor.save_arbor` in order for fields
-   to be saved properly.
+Note that we do ``my_trees = list(a[:])`` and not just ``my_trees =
+a[:]``. This is because ``a[:]`` is a generator that will return a new
+set of trees each time. The newly generated trees will not retain
+changes made to any analysis fields. Thus, we must use ``list(a[:])``
+to explicitly store a list of trees.
 
 Re-saving Analysis Fields
 ^^^^^^^^^^^^^^^^^^^^^^^^^
