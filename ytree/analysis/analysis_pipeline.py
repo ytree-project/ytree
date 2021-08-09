@@ -7,6 +7,8 @@ AnalysisPipeline class and member functions
 
 import os
 
+from yt.utilities.parallel_tools.parallel_analysis_interface import parallel_root_only
+
 from ytree.utilities.io import ensure_dir
 
 from ytree.analysis.analysis_operators import \
@@ -20,6 +22,7 @@ class AnalysisPipeline:
         if output_dir is None:
             output_dir = "."
         self.output_dir = ensure_dir(output_dir)
+        self._preprocessed = False
 
     def add_operation(self, my_operation, *args, **kwargs):
         my_operation = operation_registry.find(my_operation, *args, **kwargs)
@@ -33,8 +36,12 @@ class AnalysisPipeline:
         analysis_recipe = recipe_registry.find(recipe, *args, **kwargs)
         analysis_recipe(self)
 
+    @parallel_root_only
     def _preprocess(self):
-        "Create operation output directories."
+        "Create output directories and do any other preliminary steps."
+
+        if self._preprocessed:
+            return
 
         for action_type, action in self.actions:
             if action_type != "operation":
@@ -45,7 +52,10 @@ class AnalysisPipeline:
                     os.path.join(self.output_dir, my_output_dir))
                 action.kwargs["output_dir"] = new_output_dir
 
-    def _process_target(self, target):
+        self._preprocessed = True
+
+    def process_target(self, target):
+        self._preprocess()
         target_filter = True
         for action_type, action in self.actions:
             if action_type == "operation":
