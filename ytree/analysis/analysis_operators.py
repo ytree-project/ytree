@@ -15,6 +15,7 @@ class OperatorRegistry(dict):
             op.kwargs = kwargs
         return op
 
+
 operation_registry = OperatorRegistry()
 
 def add_operation(name, function):
@@ -37,6 +38,7 @@ class AnalysisOperation(object):
         self.function(target, *self.args, **self.kwargs)
         return True
 
+
 filter_registry = OperatorRegistry()
 
 def add_filter(name, function):
@@ -53,6 +55,7 @@ class AnalysisFilter(AnalysisOperation):
 
     def __call__(self, target):
         return self.function(target, *self.args, **self.kwargs)
+
 
 recipe_registry = OperatorRegistry()
 

@@ -10,9 +10,9 @@ import os
 from ytree.utilities.io import ensure_dir
 
 from ytree.analysis.analysis_operators import \
-     operation_registry, \
-     filter_registry, \
-     recipe_registry
+    operation_registry, \
+    filter_registry, \
+    recipe_registry
 
 class AnalysisPipeline:
     def __init__(self, output_dir=None):
