@@ -17,14 +17,13 @@ import h5py
 import numpy as np
 from numpy.testing import \
     assert_equal, \
+    assert_almost_equal, \
     assert_array_equal
 import os
 import shutil
 import tempfile
 from unittest import \
     TestCase
-from yt.testing import \
-    assert_rel_equal
 from yt.funcs import \
     get_pbar
 
@@ -315,6 +314,30 @@ def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
             else:
                 compare(fh1[key][()], fh2[key][()],
                         err_msg=err_msg, **kwargs)
+
+def assert_rel_equal(a1, a2, decimals, err_msg="", verbose=True):
+    # We have nan checks in here because occasionally we have fields that get
+    # weighted without non-zero weights.  I'm looking at you, particle fields!
+    if isinstance(a1, np.ndarray):
+        assert a1.size == a2.size
+        # Mask out NaNs
+        assert (np.isnan(a1) == np.isnan(a2)).all()
+        a1[np.isnan(a1)] = 1.0
+        a2[np.isnan(a2)] = 1.0
+        # Mask out 0
+        ind1 = np.array(np.abs(a1) < np.finfo(a1.dtype).eps)
+        ind2 = np.array(np.abs(a2) < np.finfo(a2.dtype).eps)
+        assert (ind1 == ind2).all()
+        a1[ind1] = 1.0
+        a2[ind2] = 1.0
+    elif np.any(np.isnan(a1)) and np.any(np.isnan(a2)):
+        return True
+    if not isinstance(a1, np.ndarray) and a1 == a2 == 0.0:
+        # NANS!
+        a1 = a2 = 1.0
+    return assert_almost_equal(
+        np.array(a1) / np.array(a2), 1.0, decimals, err_msg=err_msg, verbose=verbose
+    )
 
 def assert_array_rel_equal(a1, a2, decimals=16, **kwargs):
     """
