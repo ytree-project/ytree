@@ -24,8 +24,6 @@ import shutil
 import tempfile
 from unittest import \
     TestCase
-from yt.testing import \
-    assert_rel_equal
 from yt.funcs import \
     get_pbar
 
