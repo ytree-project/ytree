@@ -33,7 +33,7 @@ def regenerate_node(arbor, node):
     return root_node.get_node("forest", node.tree_id)
 
 def parallel_trees(trees, group="forest", save_every=None,
-                   njobs=None):
+                   njobs=None, dynamic=None):
     arbor = trees[0].arbor
     fi = arbor.field_info
     afields = \
@@ -57,6 +57,12 @@ def parallel_trees(trees, group="forest", save_every=None,
         if not isinstance(njobs, (tuple, list)) or len(njobs) != 2:
             raise ValueError(f"njobs must be a tuple of length 2: {njobs}.")
 
+    if dynamic is None:
+        dynamic = (False, False)
+    else:
+        if not isinstance(dynamic, (tuple, list)) or len(dynamic) != 2:
+            raise ValueError(f"dynamic must be a tuple of length 2: {dynamic}.")
+
     for ib in range(nb):
         if save_every is None:
             start = 0
@@ -68,15 +74,17 @@ def parallel_trees(trees, group="forest", save_every=None,
         arbor_storage = {}
         for tree_store, itree in parallel_objects(
                 range(start, end), storage=arbor_storage,
-                njobs=njobs[0], dynamic=False):
+                njobs=njobs[0], dynamic=dynamic[0]):
 
             my_tree = trees[itree]
+            my_halos = list(my_tree[group])
 
             tree_storage = {}
-            for halo_store, my_halo in parallel_objects(
-                    my_tree[group], storage=tree_storage,
-                    njobs=njobs[1]):
+            for halo_store, ihalo in parallel_objects(
+                    range(len(my_halos)), storage=tree_storage,
+                    njobs=njobs[1], dynamic=dynamic[1]):
 
+                my_halo = my_halos[ihalo]
                 halo_store.result_id = my_halo.tree_id
                 yield my_halo
                 halo_store.result = {field: my_halo[field]
