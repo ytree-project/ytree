@@ -35,8 +35,55 @@ def regenerate_node(arbor, node):
     root_node = node.root
     return root_node.get_node("forest", node.tree_id)
 
+def parallel_trees(trees, save_every=None,
+                   njobs=0, dynamic=False):
+
+    arbor = trees[0].arbor
+    fi = arbor.field_info
+    afields = \
+      [field for field in fi
+       if fi[field].get("type") in ("analysis", "analysis_saved")]
+
+    nt = len(trees)
+    if save_every is None:
+        nb = 1
+        start = 0
+        end = nt
+    else:
+        nb = int(np.ceil(nt / save_every))
+
+    for ib in range(nb):
+        if save_every is not None:
+            start = ib * save_every
+            end = min(start + save_every, nt)
+
+        arbor_storage = {}
+        for tree_store, itree in parallel_objects(
+                range(start, end), storage=arbor_storage,
+                njobs=njobs, dynamic=dynamic):
+
+            my_tree = trees[itree]
+            yield my_tree
+
+            tree_store.result_id = my_tree._arbor_index
+            tree_store.result = {field: my_tree["forest", field]
+                                 for field in afields}
+
+        # combine results for all trees
+        if is_root():
+            for itree in range(start, end):
+                my_tree = trees[itree]
+                data = arbor_storage[itree]
+                for field in afields:
+                    my_tree.field_data[field] = data[field]
+            if save_every is not None:
+                fn = arbor.save_arbor(trees=trees)
+                arbor = ytree_load(fn)
+                trees = [regenerate_node(arbor, tree) for tree in trees]
+
 def parallel_nodes(trees, group="forest", save_every=None,
                    njobs=None, dynamic=None):
+
     arbor = trees[0].arbor
     fi = arbor.field_info
     afields = \
