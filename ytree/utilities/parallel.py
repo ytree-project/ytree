@@ -35,7 +35,7 @@ def regenerate_node(arbor, node):
     root_node = node.root
     return root_node.get_node("forest", node.tree_id)
 
-def parallel_trees(trees, group="forest", save_every=None,
+def parallel_nodes(trees, group="forest", save_every=None,
                    njobs=None, dynamic=None):
     arbor = trees[0].arbor
     fi = arbor.field_info
