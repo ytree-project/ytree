@@ -13,10 +13,14 @@ parallel utilities
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import numpy as np
+
 from yt.funcs import is_root
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm, \
     parallel_objects
+
+from ytree.data_structures.load import load as ytree_load
 
 def regenerate_node(arbor, node):
     """
@@ -105,11 +109,12 @@ def parallel_trees(trees, group="forest", save_every=None,
 
         # combine results for all trees
         if is_root():
-            for i, my_tree in enumerate(trees):
-                data = arbor_storage[i]
+            for itree in range(start, end):
+                my_tree = trees[itree]
+                data = arbor_storage[itree]
                 for field in afields:
                     my_tree.field_data[field] = data[field]
             if save_every is not None:
-                fn = arbor.save_arbor(trees=my_trees)
-                arbor = ytree.load(fn)
+                fn = arbor.save_arbor(trees=trees)
+                arbor = ytree_load(fn)
                 trees = [regenerate_node(arbor, tree) for tree in trees]
