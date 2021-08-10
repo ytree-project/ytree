@@ -16,8 +16,7 @@ parallel utilities
 from yt.funcs import is_root
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm, \
-    parallel_objects, \
-    parallel_root_only
+    parallel_objects
 
 def regenerate_node(arbor, node):
     """
@@ -98,6 +97,7 @@ def parallel_trees(trees, group="forest", save_every=None,
                     for field, value in result.items():
                         my_halo[field] = value
 
+                tree_store.result_id = my_tree._arbor_index
                 tree_store.result = {field: my_tree["forest", field]
                                      for field in afields}
             else:
