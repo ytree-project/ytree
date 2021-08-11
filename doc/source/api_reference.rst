@@ -51,6 +51,18 @@ Functionality for plotting merger trees.
 
 .. _internal-classes:
 
+Parallelism
+-----------
+
+Functions for iterating over trees and/or nodes in parallel.
+
+.. autosummary::
+   :toctree: generated/
+
+   ~ytree.utilities.parallel.parallel_trees
+   ~ytree.utilities.parallel.parallel_tree_nodes
+   ~ytree.utilities.parallel.parallel_nodes
+
 Internal Classes
 ----------------
 
