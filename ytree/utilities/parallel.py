@@ -35,7 +35,7 @@ def regenerate_node(arbor, node):
     root_node = node.root
     return root_node.get_node("forest", node.tree_id)
 
-def _analysis_fields(arbor):
+def _get_analysis_fields(arbor):
     fi = arbor.field_info
     return [field for field in fi
             if fi[field].get("type") in ("analysis", "analysis_saved")]
@@ -43,7 +43,8 @@ def _analysis_fields(arbor):
 def parallel_trees(trees, save_every=None,
                    njobs=0, dynamic=False):
 
-    afields = _analysis_fields(trees[0].arbor)
+    arbor = trees[0].arbor
+    afields = _get_analysis_fields(arbor)
 
     nt = len(trees)
     if save_every is None:
@@ -108,18 +109,10 @@ def parallel_tree_nodes(tree, group="forest",
 def parallel_nodes(trees, group="forest", save_every=None,
                    njobs=None, dynamic=None):
 
-    afields = _get_analysis_fields(trees[0].arbor)
-
-    nt = len(trees)
-    if save_every is None:
-        nb = 1
-    else:
-        nb = int(np.ceil(nt / save_every))
-
     if njobs is None:
         comm = _get_comm(())
         # parallelize over trees if more trees than cores
-        if nt > comm.size:
+        if len(trees) > comm.size:
             njobs = (0, 1)
         else:
             njobs = (1, 0)
@@ -133,55 +126,12 @@ def parallel_nodes(trees, group="forest", save_every=None,
         if not isinstance(dynamic, (tuple, list)) or len(dynamic) != 2:
             raise ValueError(f"dynamic must be a tuple of length 2: {dynamic}.")
 
-    for ib in range(nb):
-        if save_every is None:
-            start = 0
-            end = nt
-        else:
-            start = ib * save_every
-            end = min(start + save_every, nt)
+    for tree in parallel_trees(
+            trees, save_every=save_every,
+            njobs=njobs[0], dynamic=dynamic[0]):
 
-        arbor_storage = {}
-        for tree_store, itree in parallel_objects(
-                range(start, end), storage=arbor_storage,
-                njobs=njobs[0], dynamic=dynamic[0]):
+        for node in parallel_tree_nodes(
+                tree, group=group,
+                njobs=njobs[1], dynamic=dynamic[1]):
 
-            my_tree = trees[itree]
-            my_halos = list(my_tree[group])
-
-            tree_storage = {}
-            for halo_store, ihalo in parallel_objects(
-                    range(len(my_halos)), storage=tree_storage,
-                    njobs=njobs[1], dynamic=dynamic[1]):
-
-                my_halo = my_halos[ihalo]
-                halo_store.result_id = my_halo.tree_id
-                yield my_halo
-                halo_store.result = {field: my_halo[field]
-                                     for field in afields}
-
-            # combine results for this tree
-            if is_root():
-                for tree_id, result in tree_storage.items():
-                    my_halo = my_tree.get_node("forest", tree_id)
-
-                    for field, value in result.items():
-                        my_halo[field] = value
-
-                tree_store.result_id = my_tree._arbor_index
-                tree_store.result = {field: my_tree["forest", field]
-                                     for field in afields}
-            else:
-                tree_store.result_id = None
-
-        # combine results for all trees
-        if is_root():
-            for itree in range(start, end):
-                my_tree = trees[itree]
-                data = arbor_storage[itree]
-                for field in afields:
-                    my_tree.field_data[field] = data[field]
-            if save_every is not None:
-                fn = arbor.save_arbor(trees=trees)
-                arbor = ytree_load(fn)
-                trees = [regenerate_node(arbor, tree) for tree in trees]
+            yield node
