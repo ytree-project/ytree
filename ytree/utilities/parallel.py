@@ -42,6 +42,60 @@ def _get_analysis_fields(arbor):
 
 def parallel_trees(trees, save_every=None,
                    njobs=0, dynamic=False):
+    """
+    Iterate over a list of trees in parallel.
+
+    Trees are divided up between the available processor groups. Analysis
+    field values can then be assigned to halos within the tree. The trees
+    will be saved either at the end of the loop or after a number of trees
+    given by the ``save_every`` keyword are completed.
+
+    This uses the yt
+    :func:`~yt.utilities.parallel_tools.parallel_analysis_interface.parallel_objects`
+    function, which is parallelized with MPI underneath and so is suitable
+    for parallelism across compute nodes.
+
+    Parameters
+    ----------
+    trees : list of :class:`~ytree.data_structures.tree_node.TreeNode` objects
+        The trees to be iterated over in parallel.
+    save_every : optional, int
+        Number of trees to be completed before results are saved. This is
+        used to save intermediate results in case scripts need to be restarted.
+        If None, save will only occur after iterating over all trees.
+        Default: None
+    njobs : optional, int
+        The number of process groups for parallel iteration. Set to 0 to make
+        the same number of process groups as available processors. Hence,
+        each tree will be allocated to a single processor. Set to a number
+        less than the total number of processors to create groups with multiple
+        processors, which will allow for further parallelization within a tree.
+        For example, running with 8 processors and setting njobs to 4 will result
+        in 4 groups of 2 processors each.
+        Default: 0
+    dynamic : optional, bool
+        Set to False to divide iterations evenly among process groups. Set to
+        True to allocate iterations with a task queue. If True, the number of
+        processors available will be one fewer than the total as one will act
+        as the task queue server.
+        Default: False
+
+    Examples
+    --------
+
+    >>> import ytree
+    >>> a = ytree.load("arbor/arbor.h5")
+    >>> a.add_analysis_field("test_field", default=-1, units="Msun")
+    >>> trees = list(a[:])
+    >>> for tree in ytree.parallel_trees(trees):
+    ...     for node in tree["forest"]:
+    ...         node["test_field"] = 2 * node["mass"] # some analysis
+
+    See Also
+    --------
+    parallel_tree_nodes, parallel_nodes
+
+    """
 
     arbor = trees[0].arbor
     afields = _get_analysis_fields(arbor)
@@ -82,6 +136,63 @@ def parallel_trees(trees, save_every=None,
 
 def parallel_tree_nodes(tree, group="forest",
                         njobs=0, dynamic=False):
+    """
+    Iterate over nodes in a single tree in parallel.
+
+    Nodes are divided up between the available processor groups. Analysis
+    field values can then be assigned to each node (halo).
+
+    Note, unlike the parallel_trees and parallel_nodes function, no saving
+    is performed internally. Results saving with the
+    :func:`~ytree.data_structures.arbor.Arbor.save_arbor` must be done
+    manually.
+
+    This uses the yt
+    :func:`~yt.utilities.parallel_tools.parallel_analysis_interface.parallel_objects`
+    function, which is parallelized with MPI underneath and so is suitable
+    for parallelism across compute nodes.
+
+    Parameters
+    ----------
+    tree : :class:`~ytree.data_structures.tree_node.TreeNode`
+        The tree whose nodes will be iterated over.
+    group : str, optional ("forest", "tree", or "prog")
+        Determines the nodes to be iterated over in the tree: "forest" for
+        all nodes in the forest, "tree" for all nodes in the tree, or "prog"
+        for all nodes in the line of main progenitors.
+        Default: "forest"
+    njobs : optional, int
+        The number of process groups for parallel iteration. Set to 0 to make
+        the same number of process groups as available processors. Hence,
+        each node will be allocated to a single processor. Set to a number
+        less than the total number of processors to create groups with multiple
+        processors, which will allow for further parallelization. For example,
+        running with 8 processors and setting njobs to 4 will result in 4
+        groups of 2 processors each.
+        Default: 0
+    dynamic : optional, bool
+        Set to False to divide iterations evenly among process groups. Set to
+        True to allocate iterations with a task queue. If True, the number of
+        processors available will be one fewer than the total as one will act
+        as the task queue server.
+        Default: False
+
+    Examples
+    --------
+
+    >>> import ytree
+    >>> a = ytree.load("arbor/arbor.h5")
+    >>> a.add_analysis_field("test_field", default=-1, units="Msun")
+    >>> trees = list(a[:])
+    >>> for tree in trees:
+    ...     for node in ytree.parallel_tree_nodes(tree):
+    ...         node["test_field"] = 2 * node["mass"] # some analysis
+
+    See Also
+    --------
+    parallel_trees, parallel_nodes
+
+    """
 
     afields = _get_analysis_fields(tree.arbor)
 
@@ -108,6 +219,73 @@ def parallel_tree_nodes(tree, group="forest",
 
 def parallel_nodes(trees, group="forest", save_every=None,
                    njobs=None, dynamic=None):
+    """
+    Iterate over all nodes in a list of trees in parallel.
+
+    Both trees and/or nodes within a tree are divided up between available
+    process groups using multi-level parallelism. Analysis field values can
+    then be assigned to all nodes (halos). Trees will be saved either at the
+    end of the loop over all trees or after a number of trees given by the
+    ``save_every`` keyword are completed.
+
+    This uses the yt
+    :func:`~yt.utilities.parallel_tools.parallel_analysis_interface.parallel_objects`
+    function, which is parallelized with MPI underneath and so is suitable
+    for parallelism across compute nodes.
+
+    Parameters
+    ----------
+    tree : :class:`~ytree.data_structures.tree_node.TreeNode`
+        The tree whose nodes will be iterated over.
+    group : str, optional ("forest", "tree", or "prog")
+        Determines the nodes to be iterated over in the tree: "forest" for
+        all nodes in the forest, "tree" for all nodes in the tree, or "prog"
+        for all nodes in the line of main progenitors.
+        Default: "forest"
+    save_every : optional, int
+        Number of trees to be completed before results are saved. This is
+        used to save intermediate results in case scripts need to be restarted.
+        If None, save will only occur after iterating over all trees.
+        Default: None
+    njobs : optional, tuple of ints
+        The number of process groups for parallel iteration over trees and
+        nodes within each tree. The first value sets behavior for iteration
+        over trees and the second for iteration over nodes in a tree. For
+        example, set to (1, 0) to parallelize only over nodes in a tree and
+        (0, 1) to parallelize only over trees. For multi-level parallelism
+        set the first value to a number less than the total number of
+        processors and the second to 0. For example, if running with 8
+        processors, set njobs to (2, 0) to iterate over each tree with a
+        group of 4 processors. Within each tree, each of the 4 processors
+        in the group will work on a single node. If set to None, njobs will
+        be set to (0, 1) if there are most trees than processors (tree
+        parallel) and (1, 0) otherwise (node parallel).
+        Default: None
+    dynamic : optional, tuples of bools
+        Toggles task queue on/off for parallelism over trees (first value)
+        and nodes within a tree (second). Set to a value False to divide
+        iterations evenly among process groups. Set to True to allocate
+        iterations with a task queue. If True, the number of
+        processors available will be one fewer than the total as one will
+        act as the task queue server. Yes, this can be set to (True, True).
+        Try it.
+        Default: (False, False)
+
+    Examples
+    --------
+
+    >>> import ytree
+    >>> a = ytree.load("arbor/arbor.h5")
+    >>> a.add_analysis_field("test_field", default=-1, units="Msun")
+    >>> trees = list(a[:])
+    >>> for node in ytree.parallel_nodes(trees):
+    ...     node["test_field"] = 2 * node["mass"] # some analysis
+
+    See Also
+    --------
+    parallel_trees, parallel_tree_nodes
+
+    """
 
     if njobs is None:
         comm = _get_comm(())
