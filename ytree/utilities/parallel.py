@@ -35,22 +35,20 @@ def regenerate_node(arbor, node):
     root_node = node.root
     return root_node.get_node("forest", node.tree_id)
 
+def _analysis_fields(arbor):
+    fi = arbor.field_info
+    return [field for field in fi
+            if fi[field].get("type") in ("analysis", "analysis_saved")]
+
 def parallel_trees(trees, save_every=None,
                    njobs=0, dynamic=False):
 
-    arbor = trees[0].arbor
-    fi = arbor.field_info
-    afields = \
-      [field for field in fi
-       if fi[field].get("type") in ("analysis", "analysis_saved")]
+    afields = _analysis_fields(trees[0].arbor)
 
     nt = len(trees)
     if save_every is None:
-        nb = 1
-        start = 0
-        end = nt
-    else:
-        nb = int(np.ceil(nt / save_every))
+        save_every = nt
+    nb = int(np.ceil(nt / save_every))
 
     for ib in range(nb):
         if save_every is not None:
@@ -76,19 +74,15 @@ def parallel_trees(trees, save_every=None,
                 data = arbor_storage[itree]
                 for field in afields:
                     my_tree.field_data[field] = data[field]
-            if save_every is not None:
-                fn = arbor.save_arbor(trees=trees)
-                arbor = ytree_load(fn)
-                trees = [regenerate_node(arbor, tree) for tree in trees]
+
+            fn = arbor.save_arbor(trees=trees)
+            arbor = ytree_load(fn)
+            trees = [regenerate_node(arbor, tree) for tree in trees]
 
 def parallel_tree_nodes(tree, group="forest",
                         njobs=0, dynamic=False):
 
-    arbor = tree.arbor
-    fi = arbor.field_info
-    afields = \
-      [field for field in fi
-       if fi[field].get("type") in ("analysis", "analysis_saved")]
+    afields = _get_analysis_fields(tree.arbor)
 
     my_halos = list(tree[group])
 
@@ -114,11 +108,7 @@ def parallel_tree_nodes(tree, group="forest",
 def parallel_nodes(trees, group="forest", save_every=None,
                    njobs=None, dynamic=None):
 
-    arbor = trees[0].arbor
-    fi = arbor.field_info
-    afields = \
-      [field for field in fi
-       if fi[field].get("type") in ("analysis", "analysis_saved")]
+    afields = _get_analysis_fields(trees[0].arbor)
 
     nt = len(trees)
     if save_every is None:
