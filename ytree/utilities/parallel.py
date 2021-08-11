@@ -81,6 +81,36 @@ def parallel_trees(trees, save_every=None,
                 arbor = ytree_load(fn)
                 trees = [regenerate_node(arbor, tree) for tree in trees]
 
+def parallel_tree_nodes(tree, group="forest",
+                        njobs=0, dynamic=False):
+
+    arbor = tree.arbor
+    fi = arbor.field_info
+    afields = \
+      [field for field in fi
+       if fi[field].get("type") in ("analysis", "analysis_saved")]
+
+    my_halos = list(tree[group])
+
+    tree_storage = {}
+    for halo_store, ihalo in parallel_objects(
+            range(len(my_halos)), storage=tree_storage,
+            njobs=njobs, dynamic=dynamic):
+
+        my_halo = my_halos[ihalo]
+        halo_store.result_id = my_halo.tree_id
+        yield my_halo
+        halo_store.result = {field: my_halo[field]
+                             for field in afields}
+
+    # combine results for this tree
+    if is_root():
+        for tree_id, result in tree_storage.items():
+            my_halo = tree.get_node("forest", tree_id)
+
+            for field, value in result.items():
+                my_halo[field] = value
+
 def parallel_nodes(trees, group="forest", save_every=None,
                    njobs=None, dynamic=None):
 
