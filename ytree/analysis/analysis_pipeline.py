@@ -9,9 +9,7 @@ import os
 
 from yt.utilities.parallel_tools.parallel_analysis_interface import parallel_root_only
 
-from ytree.analysis.analysis_operators import \
-    operation_registry, \
-    recipe_registry
+from ytree.analysis.analysis_operators import AnalysisOperation
 from ytree.utilities.io import ensure_dir
 
 class AnalysisPipeline:
@@ -22,7 +20,7 @@ class AnalysisPipeline:
         self.output_dir = ensure_dir(output_dir)
         self._preprocessed = False
 
-    def add_operation(self, name, *args, **kwargs):
+    def add_operation(self, function, *args, **kwargs):
         """
         Add an operation to the AnalysisPipeline.
 
@@ -37,27 +35,43 @@ class AnalysisPipeline:
 
         Parameters
         ----------
-        name : str
-            The name of the operation in the registry.
+        function : callable
+            The function to be called for each node/halo.
+        args : positional arguments
+            Any additional positional arguments to be provided to the funciton.
+        kwargs : keyword arguments
+            Any keyword arguments to be provided to the function.
         """
-        name = operation_registry.find(name, *args, **kwargs)
-        self.actions.append(("operation", name))
 
-    def add_recipe(self, name, *args, **kwargs):
+        if not callable(function):
+            raise ValueError("function argument must be a callable function.")
+
+        operation = AnalysisOperation(function, *args, **kwargs)
+        self.actions.append(operation)
+
+    def add_recipe(self, function, *args, **kwargs):
         """
         Add a recipe to the AnalysisPipeline.
 
-        An recipe is a function that accepts an AnalysisPipeline and
-        adds a series of operations. This is a way of creating a
-        shortcut for a series of operations.
+        An recipe is a function that accepts an AnalysisPipeline and adds a
+        series of operations with calls to add_operation. This is a way of
+        creating a shortcut for a series of operations.
 
         Parameters
         ----------
-        name : str
-            The name of the recipe in the registry.
+        function : callable
+            A function accepting an AnalysisPipeline object.
+        args : positional arguments
+            Any additional positional arguments to be provided to the funciton.
+        kwargs : keyword arguments
+            Any keyword arguments to be provided to the function.
         """
-        analysis_recipe = recipe_registry.find(name, *args, **kwargs)
-        analysis_recipe(self)
+
+        if not callable(function):
+            raise ValueError("function argument must be a callable function.")
+
+        recipe = AnalysisOperation(function, *args, **kwargs)
+        recipe(self)
 
     @parallel_root_only
     def _preprocess(self):
@@ -66,9 +80,7 @@ class AnalysisPipeline:
         if self._preprocessed:
             return
 
-        for action_type, action in self.actions:
-            if action_type != "operation":
-                continue
+        for action in self.actions:
             my_output_dir = action.kwargs.get("output_dir")
             if my_output_dir is not None:
                 new_output_dir = ensure_dir(
@@ -80,14 +92,11 @@ class AnalysisPipeline:
     def process_target(self, target):
         self._preprocess()
         target_filter = True
-        for action_type, action in self.actions:
-            if action_type == "operation":
-                rval = action(target)
-                if rval in (True, False):
-                    target_filter = rval
-                if not target_filter:
-                    break
-            else:
-                raise RuntimeError("Action must be an operation.")
+        for action in self.actions:
+            rval = action(target)
+            if rval in (True, False):
+                target_filter = rval
+            if not target_filter:
+                break
 
         return target_filter
