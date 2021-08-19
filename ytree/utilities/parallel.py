@@ -59,10 +59,11 @@ def parallel_trees(trees, save_every=None,
     ----------
     trees : list of :class:`~ytree.data_structures.tree_node.TreeNode` objects
         The trees to be iterated over in parallel.
-    save_every : optional, int
+    save_every : optional, int or False
         Number of trees to be completed before results are saved. This is
         used to save intermediate results in case scripts need to be restarted.
-        If None, save will only occur after iterating over all trees.
+        If None, save will only occur after iterating over all trees. If False,
+        no saving will be done.
         Default: None
     njobs : optional, int
         The number of process groups for parallel iteration. Set to 0 to make
@@ -101,14 +102,17 @@ def parallel_trees(trees, save_every=None,
     afields = _get_analysis_fields(arbor)
 
     nt = len(trees)
+    save = True
     if save_every is None:
         save_every = nt
+    elif save_every == False:
+        save_every = nt
+        save = False
     nb = int(np.ceil(nt / save_every))
 
     for ib in range(nb):
-        if save_every is not None:
-            start = ib * save_every
-            end = min(start + save_every, nt)
+        start = ib * save_every
+        end = min(start + save_every, nt)
 
         arbor_storage = {}
         for tree_store, itree in parallel_objects(
@@ -130,9 +134,10 @@ def parallel_trees(trees, save_every=None,
                 for field in afields:
                     my_tree.field_data[field] = data[field]
 
-            fn = arbor.save_arbor(trees=trees)
-            arbor = ytree_load(fn)
-            trees = [regenerate_node(arbor, tree) for tree in trees]
+            if save:
+                fn = arbor.save_arbor(trees=trees)
+                arbor = ytree_load(fn)
+                trees = [regenerate_node(arbor, tree) for tree in trees]
 
 def parallel_tree_nodes(tree, group="forest",
                         njobs=0, dynamic=False):
@@ -242,10 +247,11 @@ def parallel_nodes(trees, group="forest", save_every=None,
         all nodes in the forest, "tree" for all nodes in the tree, or "prog"
         for all nodes in the line of main progenitors.
         Default: "forest"
-    save_every : optional, int
+    save_every : optional, int or False
         Number of trees to be completed before results are saved. This is
         used to save intermediate results in case scripts need to be restarted.
-        If None, save will only occur after iterating over all trees.
+        If None, save will only occur after iterating over all trees. If False,
+        no saving will be done.
         Default: None
     njobs : optional, tuple of ints
         The number of process groups for parallel iteration over trees and
