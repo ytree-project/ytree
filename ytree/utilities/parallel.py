@@ -122,9 +122,12 @@ def parallel_trees(trees, save_every=None,
             my_tree = trees[itree]
             yield my_tree
 
-            tree_store.result_id = my_tree._arbor_index
-            tree_store.result = {field: my_tree["forest", field]
-                                 for field in afields}
+            if is_root():
+                tree_store.result_id = my_tree._arbor_index
+                tree_store.result = {field: my_tree["forest", field]
+                                     for field in afields}
+            else:
+                tree_store.result_id = None
 
         # combine results for all trees
         if is_root():
@@ -216,7 +219,7 @@ def parallel_tree_nodes(tree, group="forest",
 
     # combine results for this tree
     if is_root():
-        for tree_id, result in tree_storage.items():
+        for tree_id, result in sorted(tree_storage.items()):
             my_halo = tree.get_node("forest", tree_id)
 
             for field, value in result.items():
