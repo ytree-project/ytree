@@ -14,7 +14,6 @@ parallel_tree_nodes test script
 #-----------------------------------------------------------------------------
 
 from mpi4py import MPI
-import os
 import sys
 import yt
 yt.enable_parallelism()

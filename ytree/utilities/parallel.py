@@ -105,7 +105,7 @@ def parallel_trees(trees, save_every=None,
     save = True
     if save_every is None:
         save_every = nt
-    elif save_every == False:
+    elif save_every is False:
         save_every = nt
         save = False
     nb = int(np.ceil(nt / save_every))
