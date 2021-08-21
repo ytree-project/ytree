@@ -212,14 +212,19 @@ def parallel_tree_nodes(tree, group="forest",
             njobs=njobs, dynamic=dynamic):
 
         my_halo = my_halos[ihalo]
-        halo_store.result_id = my_halo.tree_id
         yield my_halo
-        halo_store.result = {field: my_halo[field]
-                             for field in afields}
+        if is_root():
+            halo_store.result_id = my_halo.tree_id
+            halo_store.result = {field: my_halo[field]
+                                 for field in afields}
+        else:
+            halo_store.result_id = -1
 
     # combine results for this tree
     if is_root():
         for tree_id, result in sorted(tree_storage.items()):
+            if tree_id == -1:
+                continue
             my_halo = tree.get_node("forest", tree_id)
 
             for field, value in result.items():
