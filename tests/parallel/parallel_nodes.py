@@ -42,6 +42,7 @@ def run():
         yt.mylog.info(f"Doing {node.tree_id}/{root.tree_size} of {root._arbor_index}")
         node["test_field"] = 2 * node["mass"]
 
+
 if __name__ == "__main__":
     comm = MPI.Comm.Get_parent()
     try:
