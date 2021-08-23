@@ -34,29 +34,53 @@ class ParallelTest:
     @unittest.skipIf(MPI is None, "mpi4py not installed")
     def test_parallel(self):
 
-        for i, (my_args, my_cores) in enumerate(zip(self.arg_sets, self.core_sets)):
+        for i, my_args in enumerate(self.arg_sets):
             with self.subTest(i=i):
 
                 a = ytree.load(self.test_filename)
-                fn = a.save_arbor()
+                fn = a.save_arbor(trees=a[:8])
 
                 filename = os.path.join(os.path.dirname(__file__), self.test_script)
 
+                group = my_args[0]
                 args = [filename, fn] + [str(arg) for arg in my_args]
-                comm = MPI.COMM_SELF.Spawn(sys.executable, args=args, maxprocs=my_cores)
+                comm = MPI.COMM_SELF.Spawn(sys.executable, args=args, maxprocs=4)
                 comm.Disconnect()
 
                 a2 = ytree.load(fn)
                 assert_array_equal(a2["test_field"], 2 * a2["mass"])
                 for tree in a2:
-                    assert_array_equal(tree["forest", "test_field"], 2 * tree["forest", "mass"])
+                    assert_array_equal(tree[group, "test_field"], 2 * tree[group, "mass"])
 
 class ParallelTreesTest(TempDirTest, ParallelTest):
     test_script = "parallel/parallel_trees.py"
-    core_sets = (4, 4, 4, 4)
     arg_sets = (
-        (0, 0, 8),
-        (0, 0), # sets save_every to None
-        (2, 0, 8),
-        (0, 1, 8),
+        ("forest", 0, 0, 4),
+        ("tree",   0, 0, 4),
+        ("prog",   0, 0, 4),
+        ("forest", 0, 0,  ), # sets save_every to None
+        ("forest", 2, 0, 4),
+        ("forest", 0, 1, 4),
+    )
+
+class ParallelTreeNodesTest(TempDirTest, ParallelTest):
+    test_script = "parallel/parallel_tree_nodes.py"
+    arg_sets = (
+        ("forest", 0, 0),
+        ("tree",   0, 0),
+        ("prog",   0, 0),
+        ("forest", 2, 0),
+        ("forest", 0, 1),
+    )
+
+class ParallelNodesTest(TempDirTest, ParallelTest):
+    test_script = "parallel/parallel_nodes.py"
+    arg_sets = (
+        ("forest", 1, 0, 0, 0, 4),
+        ("tree",   1, 0, 0, 0, 4),
+        ("prog",   1, 0, 0, 0, 4),
+        ("forest", 0, 1, 0, 0, 4),
+        ("forest", 1, 0, 0, 0,  ), # sets save_every to None
+        ("forest", 1, 0, 0, 1, 4),
+        ("forest", 0, 1, 1, 0, 4),
     )

@@ -19,23 +19,32 @@ import yt
 yt.enable_parallelism()
 import ytree
 
-comm = MPI.Comm.Get_parent()
+def run():
+    fn = sys.argv[1]
+    group = sys.argv[2]
+    njobs = int(sys.argv[3])
+    dynamic = bool(int(sys.argv[4]))
 
-fn = sys.argv[1]
-a = ytree.load(fn)
-if "test_field" not in a.field_list:
-    a.add_analysis_field("test_field", default=-1, units="Msun")
+    a = ytree.load(fn)
+    if "test_field" not in a.field_list:
+        a.add_analysis_field("test_field", default=-1, units="Msun")
 
-trees = list(a[:])
+    trees = list(a[:])
 
-for tree in trees:
-    for node in ytree.parallel_tree_nodes(tree, group='forest',
-                                          njobs=0, dynamic=False):
-        root = node.root
-        yt.mylog.info(f"Doing {node.tree_id}/{root.tree_size} of {root._arbor_index}")
-        node["test_field"] = 2 * node["mass"]
+    for tree in trees:
+        for node in ytree.parallel_tree_nodes(tree, group=group,
+                                              njobs=njobs, dynamic=dynamic):
+            root = node.root
+            yt.mylog.info(f"Doing {node.tree_id}/{root.tree_size} of {root._arbor_index}")
+            node["test_field"] = 2 * node["mass"]
 
-if yt.is_root():
-    a.save_arbor(trees=trees)
+    if yt.is_root():
+        a.save_arbor(trees=trees)
 
-comm.Disconnect()
+if __name__ == "__main__":
+    comm = MPI.Comm.Get_parent()
+    try:
+        run()
+    except BaseException:
+        pass
+    comm.Disconnect()
