@@ -45,7 +45,7 @@ commands:
                 pip install -e .
                 popd
             fi
-            pip install -e .[dev]
+            pip install -e .[dev,parallel]
 
   configure-ytree:
     description: "Configure ytree."
