@@ -34,22 +34,29 @@ class ParallelTest:
     @unittest.skipIf(MPI is None, "mpi4py not installed")
     def test_parallel(self):
 
-        a = ytree.load(self.test_filename)
-        fn = a.save_arbor()
+        for i, (my_args, my_cores) in enumerate(zip(self.arg_sets, self.core_sets)):
+            with self.subTest(i=i):
 
-        filename = os.path.join(os.path.dirname(__file__), self.test_script)
+                a = ytree.load(self.test_filename)
+                fn = a.save_arbor()
 
-        comm = MPI.COMM_SELF.Spawn(
-            sys.executable,
-            args=[filename, fn],
-            maxprocs=self.ncores)
-        comm.Disconnect()
+                filename = os.path.join(os.path.dirname(__file__), self.test_script)
 
-        a2 = ytree.load(fn)
-        assert_array_equal(a2["test_field"], 2 * a2["mass"])
-        for tree in a2:
-            assert_array_equal(tree["forest", "test_field"], 2 * tree["forest", "mass"])
+                args = [filename, fn] + [str(arg) for arg in my_args]
+                comm = MPI.COMM_SELF.Spawn(sys.executable, args=args, maxprocs=my_cores)
+                comm.Disconnect()
+
+                a2 = ytree.load(fn)
+                assert_array_equal(a2["test_field"], 2 * a2["mass"])
+                for tree in a2:
+                    assert_array_equal(tree["forest", "test_field"], 2 * tree["forest", "mass"])
 
 class ParallelTreesTest(TempDirTest, ParallelTest):
     test_script = "parallel/parallel_trees.py"
-    ncores = 4
+    core_sets = (4, 4, 4, 4)
+    arg_sets = (
+        (0, 0, 8),
+        (0, 0), # sets save_every to None
+        (2, 0, 8),
+        (0, 1, 8),
+    )

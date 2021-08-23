@@ -22,13 +22,21 @@ import ytree
 comm = MPI.Comm.Get_parent()
 
 fn = sys.argv[1]
+njobs = int(sys.argv[2])
+dynamic = bool(sys.argv[3])
+if len(sys.argv) > 4:
+    save_every = int(sys.argv[4])
+else:
+    save_every = None
+
 a = ytree.load(fn)
 if "test_field" not in a.field_list:
     a.add_analysis_field("test_field", default=-1, units="Msun")
 
 trees = list(a[:])
 
-for tree in ytree.parallel_trees(trees, njobs=0, dynamic=False, save_every=8):
+for tree in ytree.parallel_trees(trees, njobs=njobs, dynamic=dynamic,
+                                 save_every=save_every):
     for node in tree["forest"]:
         root = node.root
         yt.mylog.info(f"Doing {node.tree_id}/{root.tree_size} of {root._arbor_index}")
