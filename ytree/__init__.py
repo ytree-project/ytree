@@ -21,4 +21,9 @@ from ytree.data_structures.tree_node_selector import \
 from ytree.visualization.tree_plot import \
     TreePlot
 
-__version__ = '3.1.dev0'
+from ytree.utilities.parallel import \
+    parallel_trees, \
+    parallel_tree_nodes, \
+    parallel_nodes
+
+__version__ = '3.1.dev1'

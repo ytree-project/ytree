@@ -66,6 +66,7 @@ setup(name="ytree",
       extras_require={
           'dev': dev_requirements,
           'rtd': [pkg for pkg in dev_requirements if 'sphinx' not in pkg],
+          'parallel': ['mpi4py'],
       },
       python_requires='>=3.7'
 )
