@@ -164,7 +164,7 @@ def parallel_tree_nodes(tree, group="forest",
     ----------
     tree : :class:`~ytree.data_structures.tree_node.TreeNode`
         The tree whose nodes will be iterated over.
-    group : str, optional ("forest", "tree", or "prog")
+    group : optional, str ("forest", "tree", or "prog")
         Determines the nodes to be iterated over in the tree: "forest" for
         all nodes in the forest, "tree" for all nodes in the tree, or "prog"
         for all nodes in the line of main progenitors.
@@ -248,9 +248,9 @@ def parallel_nodes(trees, group="forest", save_every=None,
 
     Parameters
     ----------
-    tree : :class:`~ytree.data_structures.tree_node.TreeNode`
-        The tree whose nodes will be iterated over.
-    group : str, optional ("forest", "tree", or "prog")
+    trees : list of :class:`~ytree.data_structures.tree_node.TreeNode` objects
+        The trees to be iterated over in parallel.
+    group : optional, str ("forest", "tree", or "prog")
         Determines the nodes to be iterated over in the tree: "forest" for
         all nodes in the forest, "tree" for all nodes in the tree, or "prog"
         for all nodes in the line of main progenitors.
