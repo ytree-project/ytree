@@ -13,6 +13,7 @@ ytree imports
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from ytree.analysis.analysis_pipeline import AnalysisPipeline
 from ytree.data_structures.load import \
     load
 from ytree.data_structures.tree_node_selector import \
