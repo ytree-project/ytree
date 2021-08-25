@@ -40,12 +40,15 @@ class AnalysisPipeline:
     >>> def minimum_mass(node, value):
     ...     return node["mass"] > value
     >>>
+    >>> def my_recipe(pipeline):
+    ...     pipeline.add_operation(my_analysis)
+    >>>
     >>> a = ytree.load("arbor/arbor.h5")
     >>>
     >>> ap = AnalysisPipeline()
     >>> # don't analyze halos below 3e11 Msun
     >>> ap.add_operation(minimum_mass, 3e11)
-    >>> ap.add_operation(my_analysis)
+    >>> ap.add_recipe(my_recipe)
     >>>
     >>> trees = list(a[:])
     >>> for tree in trees:

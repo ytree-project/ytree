@@ -23,13 +23,13 @@ used to save the entire arbor or individual trees.
    ~ytree.data_structures.arbor.Arbor.add_vector_field
    ~ytree.data_structures.arbor.Arbor.save_arbor
    ~ytree.data_structures.arbor.Arbor.select_halos
+   ~ytree.data_structures.arbor.Arbor.set_selector
    ~ytree.data_structures.tree_node.TreeNode
    ~ytree.data_structures.tree_node.TreeNode.get_leaf_nodes
    ~ytree.data_structures.tree_node.TreeNode.get_root_nodes
    ~ytree.data_structures.tree_node.TreeNode.get_node
    ~ytree.data_structures.tree_node.TreeNode.save_tree
    ~ytree.data_structures.tree_node_selector.TreeNodeSelector
-   ~ytree.data_structures.arbor.Arbor.set_selector
    ~ytree.data_structures.tree_node_selector.TreeNodeSelector
    ~ytree.data_structures.tree_node_selector.add_tree_node_selector
    ~ytree.data_structures.tree_node_selector.max_field_value
@@ -49,7 +49,20 @@ Functionality for plotting merger trees.
    ~ytree.visualization.tree_plot.TreePlot
    ~ytree.visualization.tree_plot.TreePlot.save
 
-.. _internal-classes:
+Analysis Pipeline
+-----------------
+
+Machinery for creating a pipeline of analysis to be run on halos
+in a merger tree.
+
+.. autosummary::
+   :toctree: generated/
+
+   ~ytree.analysis.analysis_pipeline.AnalysisPipeline
+   ~ytree.analysis.analysis_pipeline.AnalysisPipeline.add_operation
+   ~ytree.analysis.analysis_pipeline.AnalysisPipeline.add_recipe
+   ~ytree.analysis.analysis_pipeline.AnalysisPipeline.process_target
+   ~ytree.analysis.analysis_operators.AnalysisOperation
 
 Parallelism
 -----------
@@ -62,6 +75,8 @@ Functions for iterating over trees and/or nodes in parallel.
    ~ytree.utilities.parallel.parallel_trees
    ~ytree.utilities.parallel.parallel_tree_nodes
    ~ytree.utilities.parallel.parallel_nodes
+
+.. _internal-classes:
 
 Internal Classes
 ----------------
