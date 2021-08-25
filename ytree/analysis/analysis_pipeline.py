@@ -13,6 +13,48 @@ from ytree.analysis.analysis_operators import AnalysisOperation
 from ytree.utilities.io import ensure_dir
 
 class AnalysisPipeline:
+    """
+    Initialize an AnalysisPipeline.
+
+    An AnalysisPipeline allows one to create a workflow of analysis to be
+    performed on a node/halo in a tree. This is done by creating functions
+    that minimally accept a node as the first argument and providing these
+    to the AnalysisPipeline in the order they are meant to be run. This
+    makes it straightforward to organize an analysis workflow into a series
+    of distinct, reusable functions.
+
+    Parameters
+    ----------
+    output_dir : optional, str
+        Path to a directory into which any files will be saved. The
+        directory will be created if it does not already exist.
+
+    Examples
+    --------
+
+    >>> import ytree
+    >>>
+    >>> def my_analysis(node):
+    ...     node["test_field"] = 2 * node["mass"]
+    >>>
+    >>> def minimum_mass(node, value):
+    ...     return node["mass"] > value
+    >>>
+    >>> a = ytree.load("arbor/arbor.h5")
+    >>>
+    >>> ap = AnalysisPipeline()
+    >>> # don't analyze halos below 3e11 Msun
+    >>> ap.add_operation(minimum_mass, 3e11)
+    >>> ap.add_operation(my_analysis)
+    >>>
+    >>> trees = list(a[:])
+    >>> for tree in trees:
+    ...     for node in tree["forest"]:
+    ...         ap.process_target(node)
+    >>>
+    >>> a.save_arbor(trees=trees)
+    """
+
     def __init__(self, output_dir=None):
         self.actions = []
         if output_dir is None:
@@ -37,9 +79,9 @@ class AnalysisPipeline:
         ----------
         function : callable
             The function to be called for each node/halo.
-        args : positional arguments
+        *args : positional arguments
             Any additional positional arguments to be provided to the funciton.
-        kwargs : keyword arguments
+        **kwargs : keyword arguments
             Any keyword arguments to be provided to the function.
         """
 
@@ -61,9 +103,9 @@ class AnalysisPipeline:
         ----------
         function : callable
             A function accepting an AnalysisPipeline object.
-        args : positional arguments
+        *args : positional arguments
             Any additional positional arguments to be provided to the funciton.
-        kwargs : keyword arguments
+        **kwargs : keyword arguments
             Any keyword arguments to be provided to the function.
         """
 
@@ -90,6 +132,17 @@ class AnalysisPipeline:
         self._preprocessed = True
 
     def process_target(self, target):
+        """
+        Process a node through the AnalysisPipeline.
+
+        All operations added to the AnalysisPipeline will be run on the
+        provided target.
+
+        Parameters
+        ----------
+        target : :class:`~ytree.data_structures.tree_node.TreeNode`
+            The node on which to run the analysis pipeline.
+        """
         self._preprocess()
         target_filter = True
         for action in self.actions:
