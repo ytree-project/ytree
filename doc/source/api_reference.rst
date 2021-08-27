@@ -82,7 +82,7 @@ Internal Classes
 ----------------
 
 Base Classes
-############
+^^^^^^^^^^^^
 
 All frontends inherit from these base classes for arbor, fields,
 and i/o.
@@ -105,7 +105,7 @@ and i/o.
    ~ytree.data_structures.io.CatalogDataFile
 
 Arbor Subclasses
-################
+^^^^^^^^^^^^^^^^
 
 Arbor subclasses for each frontend.
 
@@ -125,7 +125,7 @@ Arbor subclasses for each frontend.
    ~ytree.frontends.ytree.arbor.YTreeArbor
 
 FieldInfo Subclasses
-####################
+^^^^^^^^^^^^^^^^^^^^
 
 Subclasses for frontend-specific field definitions.
 
@@ -142,7 +142,7 @@ Subclasses for frontend-specific field definitions.
    ~ytree.frontends.treefarm.fields.TreeFarmFieldInfo
 
 FieldIO Subclasses
-##################
+^^^^^^^^^^^^^^^^^^
 
 Subclasses for data i/o from a whole dataset.
 
@@ -160,7 +160,7 @@ Subclasses for data i/o from a whole dataset.
    ~ytree.frontends.ytree.io.YTreeRootFieldIO
 
 DataFile Subclasses
-###################
+^^^^^^^^^^^^^^^^^^^
 
 Subclasses for data i/o from individual files.
 
