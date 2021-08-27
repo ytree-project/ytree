@@ -43,6 +43,7 @@ Table of Contents
    Arbor.rst
    Fields.rst
    Plotting.rst
+   Analysis.rst
    Parallelism.rst
    Examples.rst
    Conduct.rst

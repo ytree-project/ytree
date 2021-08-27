@@ -38,6 +38,8 @@ parallel. For example, to run on 4 processors, do:
 
 where "my_analysis.py" is the name of the script.
 
+.. _parallel_iterators:
+
 Parallel Iterators
 ------------------
 

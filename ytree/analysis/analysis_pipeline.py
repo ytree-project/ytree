@@ -110,6 +110,18 @@ class AnalysisPipeline:
             Any additional positional arguments to be provided to the funciton.
         **kwargs : keyword arguments
             Any keyword arguments to be provided to the function.
+
+        Examples
+        --------
+        >>> def print_field_value(node, field):
+        ...     print (f"Node {node} has {field} of {node[field]}.")
+        >>>
+        >>> def print_many_things(pipeline, fields):
+        ...    for field in fields:
+        ...        pipeline.add_operation(print_field_value, field)
+        >>>
+        >>> ap = ytree.AnalysisPipeline()
+        >>> ap.add_recipe(print_many_things, ["mass", "virial_radius"])
         """
 
         if not callable(function):
