@@ -98,7 +98,8 @@ Creating Pipeline Operations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 An analysis pipeline is assembled by creating functions that accept a
-single tree or node as an argument.
+single :class:`~ytree.data_structures.tree_node.TreeNode` as an
+argument.
 
 .. code-block:: python
 
@@ -268,14 +269,14 @@ that has no descendent.
 Creating a Analysis Recipe
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Through the previous examples, we have put designed a workflow by
-defining functions and adding them to our pipeline in the order we
-want them to be called. Has it resulted in fewer lines of code?
-No. But it has allowed us to construct a workflow out of a series of
-reusable parts, so the creation of future pipelines will certainly
-involve fewer lines of code. It is also possible to define a more
-complex series of operations as a "recipe" that can be added in one
-go to the pipeline using the
+Through the previous examples, we have designed a workflow by defining
+functions and adding them to our pipeline in the order we want them to
+be called. Has it resulted in fewer lines of code? No. But it has
+allowed us to construct a workflow out of a series of reusable parts,
+so the creation of future pipelines will certainly involve fewer lines
+of code. It is also possible to define a more complex series of
+operations as a "recipe" that can be added in one go to the pipeline
+using the
 :func:`~ytree.analysis.analysis_pipeline.AnalysisPipeline.add_recipe`
 function. A recipe should be a function that, minimally, accepts an
 :class:`~ytree.analysis.analysis_pipeline.AnalysisPipeline` object as
@@ -332,4 +333,4 @@ multiple processors.
    for node in ytree.parallel_nodes(trees):
        ap.process_target(node)
 
-Star Trek.
+Off you go.
