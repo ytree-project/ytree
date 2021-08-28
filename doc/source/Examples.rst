@@ -98,7 +98,7 @@ field to select the main progenitors.
    >>> import ytree
    >>> a = ytree.load('sig_tree/sig_tree.h5')
    >>> a.set_selector('max_field_value', 'significance')
-   >>> print (a[0]['prog'])
+   >>> print (list(a[0]['prog']))
    [TreeNode[12900] TreeNode[12539] TreeNode[12166] TreeNode[11796] ...
     TreeNode[105] TreeNode[62]]
  
