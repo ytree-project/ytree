@@ -23,36 +23,36 @@ import ytree
 
 CTG = "tiny_ctrees/locations.dat"
 
-def t50(tree):
+def calc_a50(node):
     # main progenitor masses
-    pmass = tree['prog', 'mass']
+    pmass = node["prog", "mass"]
 
-    mh = 0.5 * tree['mass']
+    mh = 0.5 * node["mass"]
     m50 = pmass <= mh
 
     if not m50.any():
-        th = tree['time']
+        th = node["scale_factor"]
     else:
-        ptime = tree['prog', 'time']
+        pscale = node["prog", "scale_factor"]
         # linearly interpolate
         i = np.where(m50)[0][0]
-        slope = (ptime[i-1] - ptime[i]) / (pmass[i-1] - pmass[i])
-        th = slope * (mh - pmass[i]) + ptime[i]
+        slope = (pscale[i-1] - pscale[i]) / (pmass[i-1] - pmass[i])
+        th = slope * (mh - pmass[i]) + pscale[i]
 
-    return th
+    node["a50"] = th
 
-def get_significance(tree):
-   if tree.descendent is None:
-       dt = 0. * tree['time']
+def calc_significance(node):
+   if node.descendent is None:
+       dt = 0. * node["time"]
    else:
-       dt = tree.descendent['time'] - tree['time']
+       dt = node.descendent["time"] - node["time"]
 
-   sig = tree['mass'] * dt
-   if tree.ancestors is not None:
-       for anc in tree.ancestors:
-           sig += get_significance(anc)
+   sig = node["mass"] * dt
+   if node.ancestors is not None:
+       for anc in node.ancestors:
+           sig += calc_significance(anc)
 
-   tree['significance'] = sig
+   node["significance"] = sig
    return sig
 
 class ExampleTest(TempDirTest):
@@ -67,9 +67,18 @@ class ExampleTest(TempDirTest):
         """
 
         a = ytree.load(CTG)
-        my_tree = a[0]
-        age = t50(my_tree).to('Gyr')
-        print (age)
+        a.add_analysis_field("a50", "")
+
+        ap = ytree.AnalysisPipeline()
+        ap.add_operation(calc_a50)
+
+        trees = list(a[:])
+        for tree in trees:
+            ap.process_target(tree)
+
+        fn = a.save_arbor(filename="halo_age", trees=trees)
+        a2 = ytree.load(fn)
+        print (a2[0]["a50"])
 
     @requires_file(CTG)
     def test_significance(self):
@@ -78,13 +87,17 @@ class ExampleTest(TempDirTest):
         """
 
         a = ytree.load(CTG)
-        a.add_analysis_field('significance', 'Msun*Myr')
-        my_trees = list(a[:])
-        for tree in my_trees:
-            get_significance(tree)
+        a.add_analysis_field("significance", "Msun*Myr")
 
-        fn = a.save_arbor(filename='sig_tree', trees=my_trees)
+        ap = ytree.AnalysisPipeline()
+        ap.add_operation(calc_significance)
+
+        trees = list(a[:])
+        for tree in trees:
+            ap.process_target(tree)
+
+        fn = a.save_arbor(filename="significance", trees=trees)
         a2 = ytree.load(fn)
-        a2.set_selector('max_field_value', 'significance')
-        prog = list(a2[0]['prog'])
+        a2.set_selector("max_field_value", "significance")
+        prog = list(a2[0]["prog"])
         print (prog)
