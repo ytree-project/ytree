@@ -58,6 +58,8 @@ loop. As well, if the structure of the loops over trees or nodes is
 more complicated than the above, there is potential for the code to be
 non-trivial to digest.
 
+.. _analysis_pipeline:
+
 The AnalysisPipeline
 --------------------
 
@@ -333,4 +335,4 @@ multiple processors.
    for node in ytree.parallel_nodes(trees):
        ap.process_target(node)
 
-Off you go.
+If you need some inspiration, have a look at some :ref:`examples`.
