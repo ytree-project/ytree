@@ -162,7 +162,7 @@ class AnalysisPipeline:
         target_filter = True
         for action in self.actions:
             rval = action(target)
-            if rval in (True, False):
+            if isinstance(rval, bool):
                 target_filter = rval
             if not target_filter:
                 break
