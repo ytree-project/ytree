@@ -113,17 +113,17 @@ If you would like to also cite the specific version of `ytree` used in
 your work, include the following reference:
 
 ```
-@software{britton_smith_2021_5155536,
+@software{britton_smith_2021_5336665,
   author       = {Britton Smith and
                   Meagan Lang and
                   Juanjo Bazán},
-  title        = {ytree-project/ytree: ytree 3.0 Release},
+  title        = {ytree-project/ytree: ytree 3.1 Release},
   month        = aug,
   year         = 2021,
   publisher    = {Zenodo},
-  version      = {ytree-3.0.0},
-  doi          = {10.5281/zenodo.5155536},
-  url          = {https://doi.org/10.5281/zenodo.5155536}
+  version      = {ytree-3.1.0},
+  doi          = {10.5281/zenodo.5336665},
+  url          = {https://doi.org/10.5281/zenodo.5336665}
 }
 ```
 
