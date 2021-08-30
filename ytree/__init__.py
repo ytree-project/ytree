@@ -13,6 +13,7 @@ ytree imports
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from ytree.analysis.analysis_pipeline import AnalysisPipeline
 from ytree.data_structures.load import \
     load
 from ytree.data_structures.tree_node_selector import \
@@ -26,4 +27,4 @@ from ytree.utilities.parallel import \
     parallel_tree_nodes, \
     parallel_nodes
 
-__version__ = '3.1.dev1'
+__version__ = '3.1.dev2'
