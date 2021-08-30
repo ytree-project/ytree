@@ -13,6 +13,20 @@ The `CREDITS file
 contains the most up-to-date list of everyone who has contributed to the
 ``ytree`` source code.
 
+Version 3.1
+-----------
+
+Release date: *August 30, 2021*
+
+New Featues
+^^^^^^^^^^^
+
+ * Add AnalysisPipeline
+   (`PR #113 <https://github.com/ytree-project/ytree/pull/113>`__)
+
+ * Add Parallel Iterators
+   (`PR #112 <https://github.com/ytree-project/ytree/pull/112>`__)
+
 Version 3.0
 -----------
 
