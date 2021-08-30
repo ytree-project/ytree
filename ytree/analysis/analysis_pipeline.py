@@ -5,6 +5,7 @@ AnalysisPipeline class and member functions
 
 """
 
+import numpy as np
 import os
 
 from yt.utilities.parallel_tools.parallel_analysis_interface import parallel_root_only
@@ -162,7 +163,9 @@ class AnalysisPipeline:
         target_filter = True
         for action in self.actions:
             rval = action(target)
-            if isinstance(rval, bool):
+            if isinstance(rval, bool) or \
+              (isinstance(rval, np.ndarray) and rval.size == 1 and
+               rval.dtype == bool):
                 target_filter = rval
             if not target_filter:
                 break
