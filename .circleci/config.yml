@@ -95,7 +95,8 @@ commands:
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
-            pytest --cov=ytree --junitxml=test-results/junit.xml tests
+            TESTFILES=$(circleci tests glob "tests/*.py" "tests/frontends/*.py" | circleci tests split --split-by=timings)
+            pytest --cov=ytree --junitxml=test-results/junit.xml $TESTFILES
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
                 codecov
@@ -127,6 +128,7 @@ executors:
 
 jobs:
   tests:
+    parallelism: 4
     parameters:
       tag:
         type: string
@@ -149,7 +151,7 @@ jobs:
 
       - restore_cache:
           name: "Restore dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-2021-07-09
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-aardsma
 
       - install:
           ytdev: << parameters.ytdev >>
@@ -157,7 +159,7 @@ jobs:
 
       - save_cache:
           name: "Save dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-2021-07-09
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-aardsma
           paths:
             - ~/.cache/pip
             - ~/venv
@@ -167,13 +169,13 @@ jobs:
 
       - restore_cache:
           name: "Restore test data cache."
-          key: test-data-2021-06-16
+          key: test-data-aardsma
 
       - download-test-data
 
       - save_cache:
           name: "Save test data cache."
-          key: test-data-2021-06-16
+          key: test-data-aardsma
           paths:
             - ~/ytree_test
 
@@ -185,6 +187,9 @@ jobs:
       tag:
         type: string
         default: latest
+      ytdev:
+        type: integer
+        default: 0
     executor:
       name: python
       tag: << parameters.tag >>
@@ -197,19 +202,11 @@ jobs:
 
       - restore_cache:
           name: "Restore dependencies cache."
-          key: python-<< parameters.tag >>-1-dependencies-2021-07-09
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-aardsma
 
       - install:
-          ytdev: 1
+          ytdev: << parameters.ytdev >>
       - configure-ytree
-
-      - save_cache:
-          name: "Save dependencies cache."
-          key: python-<< parameters.tag >>-1-dependencies-2021-07-09
-          paths:
-            - ~/.cache/pip
-            - ~/venv
-            - ~/yt-git
 
       - build-docs
 
@@ -229,9 +226,16 @@ workflows:
            coverage: 1
            ytdev: 1
 
+       - tests:
+           name: "Python 3.9 tests"
+           tag: "3.9.6"
+           coverage: 0
+           ytdev: 0
+
        - docs-test:
            name: "Test docs build"
            tag: "3.9.6"
+           ytdev: 0
 
    daily:
      triggers:
@@ -247,10 +251,6 @@ workflows:
            tag: "3.9.6"
            coverage: 0
            ytdev: 1
-
-       - docs-test:
-           name: "Test docs build"
-           tag: "3.9.6"
 
    weekly:
      triggers:
@@ -270,4 +270,9 @@ workflows:
            name: "Python 3.9 tests"
            tag: "3.9.6"
            coverage: 0
+           ytdev: 0
+
+       - docs-test:
+           name: "Test docs build"
+           tag: "3.9.6"
            ytdev: 0
