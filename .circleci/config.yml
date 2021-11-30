@@ -226,6 +226,12 @@ workflows:
            coverage: 1
            ytdev: 1
 
+       - tests:
+           name: "Python 3.9 tests"
+           tag: "3.9.6"
+           coverage: 0
+           ytdev: 0
+
        - docs-test:
            name: "Test docs build"
            tag: "3.9.6"
