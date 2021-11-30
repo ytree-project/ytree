@@ -20,6 +20,7 @@ from numpy.testing import \
     assert_almost_equal, \
     assert_array_equal
 import os
+import pytest
 import shutil
 import tempfile
 from unittest import \
@@ -97,9 +98,11 @@ class ArborTest:
             self._arbor = load(self.test_filename, **self.load_kwargs)
         return self._arbor
 
+    @pytest.mark.frontends
     def test_arbor_type(self):
         assert isinstance(self.arbor, self.arbor_type)
 
+    @pytest.mark.frontends
     def test_data_files(self):
         if self.num_data_files is None:
             return
@@ -107,22 +110,27 @@ class ArborTest:
             len(self.arbor.data_files), self.num_data_files,
             err_msg=f'Incorrect number of data files for {self.arbor}.')
 
+    @pytest.mark.frontends
     def test_get_root_nodes(self):
         for my_tree in get_random_trees(self.arbor, 47457, 5):
             verify_get_root_nodes(my_tree)
 
+    @pytest.mark.frontends
     def test_get_roor_nodes_nonroot(self):
         my_tree = list(self.arbor[0].ancestors)[0]
         verify_get_root_nodes(my_tree)
 
+    @pytest.mark.frontends
     def test_get_leaf_nodes(self):
         for my_tree in get_random_trees(self.arbor, 41153, 5):
             verify_get_leaf_nodes(my_tree)
 
+    @pytest.mark.frontends
     def test_get_leaf_nodes_ungrown_nonroot(self):
         my_tree = list(self.arbor[0].ancestors)[0]
         verify_get_leaf_nodes(my_tree)
 
+    @pytest.mark.frontends
     def test_get_node(self):
         for my_tree in get_random_trees(self.arbor, 47988, 5):
             verify_get_node(my_tree)
@@ -133,12 +141,14 @@ class ArborTest:
                 my_halo = my_tree.get_node("forest", ihalo)
                 verify_get_node(my_halo)
 
+    @pytest.mark.frontends
     def test_get_node_ungrown_nonroot(self):
         my_tree = list(self.arbor[0].ancestors)[0]
         my_halo = my_tree.get_node("forest", 0)
         node_list = list(my_tree["forest"])
         assert_equal(my_halo.uid, node_list[0].uid)
 
+    @pytest.mark.frontends
     def test_reset_node(self):
         t = self.arbor[0]
         ts0 = len(list(t['tree']))
@@ -165,6 +175,7 @@ class ArborTest:
                 t['tree', field], f0[field],
                 err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.")
 
+    @pytest.mark.frontends
     def test_reset_nonroot(self):
         t = self.arbor[0]
         node = list(t['tree'])[1]
@@ -183,9 +194,11 @@ class ArborTest:
                 node['tree', field], f0[field],
                 err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.")
 
+    @pytest.mark.frontends
     def test_save_and_reload(self):
         save_and_compare(self.arbor, groups=self.groups, skip=self.tree_skip)
 
+    @pytest.mark.frontends
     def test_vector_fields(self):
         a = self.arbor
         t = a[0]
