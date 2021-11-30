@@ -95,7 +95,8 @@ commands:
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
-            pytest --cov=ytree --junitxml=test-results/junit.xml tests
+            TESTFILES=$(circleci tests glob "tests/*.py" "tests/frontends/*.py" | circleci tests split --split-by=timings)
+            pytest --cov=ytree --junitxml=test-results/junit.xml $TESTFILES
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
                 codecov
@@ -127,6 +128,7 @@ executors:
 
 jobs:
   tests:
+    parallelism: 2
     parameters:
       tag:
         type: string
