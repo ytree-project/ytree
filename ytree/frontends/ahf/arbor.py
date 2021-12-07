@@ -92,14 +92,18 @@ class AHFArbor(CatalogArbor):
     @property
     def _prefix(self):
         if self._fprefix is None:
-            self._fprefix = self.filename.rsplit("_", 1)[0]
+            # Match a patten of any characters, followed by some sort of
+            # separator (e.g., "." or "_"), then a number, and eventually
+            # the suffix.
+            reg = re.search(rf"(^.+[^0-9a-zA-Z]+)\d+.+{self._suffix}$", self.filename)
+            self._fprefix = reg.groups()[0]
         return self._fprefix
 
     def _get_data_files(self):
         """
         Get all *.parameter files and sort them in reverse order.
         """
-        my_files = glob.glob(f"{self._prefix}_*{self._suffix}")
+        my_files = glob.glob(f"{self._prefix}*{self._suffix}")
         # sort by catalog number
         my_files.sort(
             key=lambda x:
@@ -116,7 +120,7 @@ class AHFArbor(CatalogArbor):
         self.data_files.reverse()
 
     def _get_file_index(self, f):
-        reg = re.search(rf"{self._prefix}_(\d+)\.", self.filename)
+        reg = re.search(rf"{self._prefix}(\d+).+{self._suffix}$", self.filename)
         if not reg:
             raise RuntimeError(
                 f"Could not locate index within file: {self.filename}.")
