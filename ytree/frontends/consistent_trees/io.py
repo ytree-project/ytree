@@ -70,11 +70,7 @@ class ConsistentTreesTreeFieldIO(TreeFieldIO):
                 dtype = my_dtypes[field]
                 field_data[field][i] = dtype(ldata[fi[field]["column"]])
 
-        for field in fields:
-            units = fi[field].get("units", "")
-            if units != "":
-                field_data[field] = \
-                  self.arbor.arr(field_data[field], units)
+        self._apply_units(fields, field_data)
 
         return field_data
 

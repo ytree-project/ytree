@@ -87,11 +87,7 @@ class LHaloTreeHDF5TreeFieldIO(TreeFieldIO):
         if close:
             data_file.close()
 
-        for field in rfields:
-            units = fi[field].get("units", "")
-            if units != "":
-                field_data[field] = \
-                  self.arbor.arr(field_data[field], units)
+        self._apply_units(rfields, field_data)
 
         return field_data
 

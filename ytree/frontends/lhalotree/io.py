@@ -109,13 +109,7 @@ class LHaloTreeTreeFieldIO(TreeFieldIO):
             data['desc_uid'] = lht.all_desc_uids[tot_idx]
         field_data = data
 
-        # apply field units
-        fi = self.arbor.field_info
-        for field in fields:
-            units = fi[field].get("units", "")
-            if units != "":
-                field_data[field] = \
-                  self.arbor.arr(field_data[field], units)
+        self._apply_units(fields, field_data)
 
         return field_data
 
@@ -127,16 +121,10 @@ class LHaloTreeRootFieldIO(FieldIO):
             dtypes = {}
         my_dtypes = self._determine_dtypes(fields, override_dict=dtypes)
 
-        fi = self.arbor.field_info
+        field_data = {field: np.empty(self.arbor.size, dtype=my_dtypes[field])
+                      for field in fields}
 
-        # Consolidate root field data
-        field_data = {}
-        for field in fields:
-            units = fi[field].get("units", "")
-            field_data[field] = np.empty(self.arbor.size,
-                                         dtype=my_dtypes[field])
-            if units:
-                field_data[field] = self.arbor.arr(field_data[field], units)
+        self._apply_units(fields, field_data)
 
         ntrees_prev = 0
         for lht in self.arbor._lhtfiles:
