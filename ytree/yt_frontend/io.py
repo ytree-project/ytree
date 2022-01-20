@@ -31,7 +31,7 @@ class IOHandlerYTreeHDF5(BaseIOHandler):
     def _read_particle_coords(self, chunks, ptf):
         for data_file in self._yield_data_files(chunks):
             x, y, z = data_file._get_particle_positions(_ptype)
-            yield _ptype, (x, y, z)
+            yield _ptype, (x, y, z), 0.0
 
     def _read_particle_fields(self, chunks, ptf, selector):
         for data_file in self._yield_data_files(chunks):
