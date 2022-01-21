@@ -159,9 +159,8 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
             dtype = my_dtypes.get(field, fi[field].get("dtype", None))
             if dtype is not None:
                 field_data[field] = field_data[field].astype(dtype)
-            units = fi[field].get("units", "")
-            if units != "":
-                field_data[field] = self.arbor.arr(field_data[field], units)
+
+        self._apply_units(fields, field_data)
 
         return field_data
 
@@ -236,16 +235,14 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
         pbar.finish()
 
         field_data = {}
-        fi = self.arbor.field_info
         for field in fields:
             data = np.concatenate(rdata[field])
             dtype = my_dtypes.get(field)
             if dtype is not None:
                 data = data.astype(dtype)
-            units = fi[field].get("units", "")
-            if units != "":
-                data = self.arbor.arr(data, units)
             field_data[field] = data
+
+        self._apply_units(fields, field_data)
 
         return field_data
 

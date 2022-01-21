@@ -112,10 +112,9 @@ class YTreeRootFieldIO(DefaultRootFieldIO):
             dtype = dtypes.get(field)
             if dtype is not None:
                 data = data.astype(dtype)
-            units = fi[field].get("units", "")
-            if units != "":
-                data = self.arbor.arr(data, units)
             field_data[field] = data
+
+        self._apply_units(fields, field_data)
 
         fh.close()
         if self.arbor.analysis_filename is not None:

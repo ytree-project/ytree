@@ -35,6 +35,18 @@ class FieldIO:
         self.arbor = weakref.proxy(arbor)
         self.default_dtype = default_dtype
 
+    def _apply_units(self, fields, field_data):
+        """
+        Apply units to data that's just been read in.
+        """
+
+        fi = self.arbor.field_info
+        for field in fields:
+            units = fi[field].get("units", "")
+            if units != "":
+                field_data[field] = \
+                  self.arbor.arr(field_data[field], units)
+
     def _initialize_analysis_field(self, storage_object, name):
         """
         Initialize an empty field array to be filled in later.
@@ -217,12 +229,7 @@ class TreeFieldIO(FieldIO):
                 for i, node in enumerate(nodes):
                     field_data[field][node.tree_id] = my_data[field][i]
 
-        fi = self.arbor.field_info
-        for field in fields:
-            units = fi[field].get("units", "")
-            if units != "":
-                field_data[field] = \
-                  self.arbor.arr(field_data[field], units)
+        self._apply_units(fields, field_data)
 
         return field_data
 

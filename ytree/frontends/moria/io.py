@@ -114,11 +114,7 @@ class MoriaTreeFieldIO(TreeFieldIO):
         if close:
             data_file.close()
 
-        for field in rfields:
-            units = fi[field].get("units", "")
-            if units != "":
-                field_data[field] = \
-                  self.arbor.arr(field_data[field], units)
+        self._apply_units(rfields, field_data)
 
         return field_data
 
@@ -188,10 +184,9 @@ class MoriaRootFieldIO(DefaultRootFieldIO):
             dtype = dtypes.get(field)
             if dtype is not None:
                 data = data.astype(dtype)
-            units = fi[field].get("units", "")
-            if units != "":
-                data = self.arbor.arr(data, units)
             field_data[field] = data
+
+        self._apply_units(rfields, field_data)
 
         if afields:
             field_data.update(self._get_arbor_fields(
