@@ -22,18 +22,26 @@ from yt.utilities.parallel_tools.parallel_analysis_interface import \
 
 from ytree.data_structures.load import load as ytree_load
 
-def regenerate_node(arbor, node):
+def regenerate_node(arbor, node, new_index=None):
     """
     Regenerate the TreeNode using the provided arbor.
 
     This is to be used when the original arbor associated with the
     TreeNode no longer exists.
+
+    If new_index is None, assume the arbor has the same structure
+    as it did before. If new_index is not None, assume the node
+    is now a root.
     """
 
-    if node.is_root:
-        return arbor[node._arbor_index]
-    root_node = node.root
-    return root_node.get_node("forest", node.tree_id)
+    if new_index is None:
+        root_node = node.find_root()
+        new_node = root_node.get_node("forest", node.tree_id)
+    else:
+        root_node = arbor[new_index]
+        new_node = root_node
+
+    return new_node
 
 def _get_analysis_fields(arbor):
     fi = arbor.field_info
@@ -123,9 +131,19 @@ def parallel_trees(trees, save_every=None,
             yield my_tree
 
             if is_root():
-                tree_store.result_id = my_tree._arbor_index
-                tree_store.result = {field: my_tree["forest", field]
+                my_root = my_tree.find_root()
+                tree_store.result_id = (my_root._arbor_index, my_tree.tree_id)
+
+                # If the tree is not a root, only save the "tree" selection
+                # as we could overwrite other trees in the forest.
+                if my_tree.is_root:
+                    selection = "forest"
+                else:
+                    selection = "tree"
+
+                tree_store.result = {field: my_tree[selection, field]
                                      for field in afields}
+
             else:
                 tree_store.result_id = None
 
@@ -133,14 +151,23 @@ def parallel_trees(trees, save_every=None,
         if is_root():
             for itree in range(start, end):
                 my_tree = trees[itree]
-                data = arbor_storage[itree]
+                my_root = my_tree.find_root()
+                key = (my_root._arbor_index, my_tree.tree_id)
+                data = arbor_storage[key]
+
+                if my_tree.is_root:
+                    indices = slice(None)
+                else:
+                    indices = [my_tree._tree_field_indices]
+
                 for field in afields:
-                    my_tree.field_data[field] = data[field]
+                    my_root.field_data[field][indices] = data[field]
 
             if save:
                 fn = arbor.save_arbor(trees=trees)
                 arbor = ytree_load(fn)
-                trees = [regenerate_node(arbor, tree) for tree in trees]
+                trees = [regenerate_node(arbor, tree, new_index=i)
+                         for i, tree in enumerate(trees)]
 
 def parallel_tree_nodes(tree, group="forest",
                         njobs=0, dynamic=False):
