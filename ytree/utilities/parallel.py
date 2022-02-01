@@ -161,6 +161,8 @@ def parallel_trees(trees, save_every=None,
                     indices = [my_tree._tree_field_indices]
 
                 for field in afields:
+                    if field not in my_root.field_data:
+                        arbor._node_io._initialize_analysis_field(my_root, field)
                     my_root.field_data[field][indices] = data[field]
 
             if save:
