@@ -21,9 +21,10 @@ from numpy.testing import \
     assert_array_equal
 import os
 import shutil
+import sys
 import tempfile
 from unittest import \
-    TestCase
+    skipIf, TestCase
 from yt.funcs import \
     get_pbar
 
@@ -35,6 +36,11 @@ from ytree.utilities.loading import \
     get_path
 from ytree.utilities.logger import \
     ytreeLogger as mylog
+
+try:
+    from mpi4py import MPI
+except ModuleNotFoundError:
+    MPI = None
 
 generate_results = \
   int(os.environ.get("YTREE_GENERATE_TEST_RESULTS", 0)) == 1
@@ -70,9 +76,35 @@ class TempDirTest(TestCase):
         os.chdir(self.curdir)
         shutil.rmtree(self.tmpdir)
 
+class ParallelTest:
+    base_filename = "tiny_ctrees/locations.dat"
+    test_filename = "test_arbor/test_arbor.h5"
+    test_script = None
+    ncores = 4
+
+    def check_values(self, arbor, my_args):
+        group = my_args[1]
+        assert_array_equal(arbor["test_field"], 2 * arbor["mass"])
+        for tree in arbor:
+            assert_array_equal(tree[group, "test_field"], 2 * tree[group, "mass"])
+
+    @skipIf(MPI is None, "mpi4py not installed")
+    def test_parallel(self):
+
+        for i, my_args in enumerate(self.arg_sets):
+            with self.subTest(i=i):
+
+                args = [self.test_script, self.base_filename, self.test_filename] + \
+                    [str(arg) for arg in my_args]
+                comm = MPI.COMM_SELF.Spawn(sys.executable, args=args, maxprocs=self.ncores)
+                comm.Disconnect()
+
+                test_arbor = load(self.test_filename)
+                self.check_values(test_arbor, my_args)
+
 class ArborTest:
     """
-    Do some standard tests on an arbor.
+    A battery of tests for all frontends.
     """
 
     arbor_type = None
@@ -212,6 +244,21 @@ class ArborTest:
                         t[group, f"{field}_{ax}"], t[group, field][:, i],
                         err_msg=(f"{group} vector field {field} does not match "
                                  f"in dimension {i}."))
+
+def get_tree_split(arbor):
+    """
+    Get a few separate ancestors from a tree.
+    """
+    ancs = None
+    for tree in arbor:
+        for halo in tree["tree"]:
+            ancs = list(halo.ancestors)
+            if len(ancs) > 1:
+                break
+
+    if ancs is None:
+        raise RuntimeError("Could not find nodes to test with.")
+    return ancs
 
 def get_random_trees(arbor, seed, n):
     """

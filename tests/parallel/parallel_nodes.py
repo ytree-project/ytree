@@ -17,27 +17,33 @@ from mpi4py import MPI
 import sys
 import yt
 yt.enable_parallelism()
+from ytree.utilities.testing import get_tree_split
 import ytree
 
 def run():
-    fn = sys.argv[1]
-    group = sys.argv[2]
-    njobs = tuple([int(arg) for arg in sys.argv[3:5]])
-    dynamic = tuple([bool(int(arg)) for arg in sys.argv[5:7]])
-    if len(sys.argv) > 7:
-        save_every = int(sys.argv[7])
+    input_fn, output_fn, selection, group = sys.argv[1:5]
+    njobs = tuple([int(arg) for arg in sys.argv[5:7]])
+    dynamic = tuple([bool(int(arg)) for arg in sys.argv[7:9]])
+    if len(sys.argv) > 9:
+        save_every = int(sys.argv[9])
     else:
         save_every = None
 
-    a = ytree.load(fn)
+    a = ytree.load(input_fn)
     if "test_field" not in a.field_list:
         a.add_analysis_field("test_field", default=-1, units="Msun")
 
-    trees = list(a[:])
+    if selection == "all":
+        trees = list(a[:8])
+    elif selection == "nonroot":
+        trees = get_tree_split(a)
+    else:
+        print (f"Bad selection: {selection}.")
+        sys.exit(1)
 
     for node in ytree.parallel_nodes(trees, group=group,
                                      njobs=njobs, dynamic=dynamic,
-                                     save_every=save_every):
+                                     save_every=save_every, filename=output_fn):
         root = node.root
         yt.mylog.info(f"Doing {node.tree_id}/{root.tree_size} of {root._arbor_index}")
         node["test_field"] = 2 * node["mass"]

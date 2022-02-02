@@ -20,16 +20,15 @@ yt.enable_parallelism()
 import ytree
 
 def run():
-    fn = sys.argv[1]
-    group = sys.argv[2]
-    njobs = int(sys.argv[3])
-    dynamic = bool(int(sys.argv[4]))
+    input_fn, output_fn, selection, group = sys.argv[1:5]
+    njobs = int(sys.argv[5])
+    dynamic = bool(int(sys.argv[6]))
 
-    a = ytree.load(fn)
+    a = ytree.load(input_fn)
     if "test_field" not in a.field_list:
         a.add_analysis_field("test_field", default=-1, units="Msun")
 
-    trees = list(a[:])
+    trees = list(a[:8])
 
     for tree in trees:
         for node in ytree.parallel_tree_nodes(tree, group=group,
@@ -39,7 +38,7 @@ def run():
             node["test_field"] = 2 * node["mass"]
 
     if yt.is_root():
-        a.save_arbor(trees=trees)
+        a.save_arbor(filename=output_fn, trees=trees)
 
 
 if __name__ == "__main__":
