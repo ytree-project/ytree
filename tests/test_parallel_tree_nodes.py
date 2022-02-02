@@ -1,5 +1,5 @@
 """
-tests for parallel_nodes iterator
+tests for parallel_tree_nodes iterator
 
 
 
@@ -19,14 +19,12 @@ from ytree.utilities.testing import ParallelTest, TempDirTest
 
 script_path = os.path.dirname(__file__)
 
-class ParallelNodesTest(TempDirTest, ParallelTest):
-    test_script = os.path.join(script_path, "parallel/parallel_nodes.py")
+class ParallelTreeNodesTest(TempDirTest, ParallelTest):
+    test_script = os.path.join(script_path, "parallel/parallel_tree_nodes.py")
     arg_sets = (
-        ("forest", 1, 0, 0, 0, 4),
-        ("tree",   1, 0, 0, 0, 4),
-        ("prog",   1, 0, 0, 0, 4),
-        ("forest", 0, 1, 0, 0, 4),
-        ("forest", 1, 0, 0, 0,  ), # sets save_every to None
-        ("forest", 1, 0, 0, 1, 4),
-        ("forest", 0, 1, 1, 0, 4),
+        ("forest", 0, 0),
+        ("tree",   0, 0),
+        ("prog",   0, 0),
+        ("forest", 2, 0),
+        ("forest", 0, 1),
     )
