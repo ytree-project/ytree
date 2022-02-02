@@ -17,16 +17,15 @@ from mpi4py import MPI
 import sys
 import yt
 yt.enable_parallelism()
+from ytree.utilities.testing import get_tree_split
 import ytree
 
 def run():
-    input_fn = sys.argv[1]
-    output_fn = sys.argv[2]
-    group = sys.argv[3]
-    njobs = tuple([int(arg) for arg in sys.argv[4:6]])
-    dynamic = tuple([bool(int(arg)) for arg in sys.argv[6:8]])
-    if len(sys.argv) > 8:
-        save_every = int(sys.argv[8])
+    input_fn, output_fn, selection, group = sys.argv[1:5]
+    njobs = tuple([int(arg) for arg in sys.argv[5:7]])
+    dynamic = tuple([bool(int(arg)) for arg in sys.argv[7:9]])
+    if len(sys.argv) > 9:
+        save_every = int(sys.argv[9])
     else:
         save_every = None
 
@@ -34,7 +33,13 @@ def run():
     if "test_field" not in a.field_list:
         a.add_analysis_field("test_field", default=-1, units="Msun")
 
-    trees = list(a[:8])
+    if selection == "all":
+        trees = list(a[:8])
+    elif selection == "nonroot":
+        trees = get_tree_split(a)
+    else:
+        print (f"Bad selection: {selection}.")
+        sys.exit(1)
 
     for node in ytree.parallel_nodes(trees, group=group,
                                      njobs=njobs, dynamic=dynamic,

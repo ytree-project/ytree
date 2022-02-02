@@ -22,10 +22,16 @@ script_path = os.path.dirname(__file__)
 class ParallelTreesTest(TempDirTest, ParallelTest):
     test_script = os.path.join(script_path, "parallel/parallel_trees.py")
     arg_sets = (
-        ("forest", 0, 0, 4),
-        ("tree",   0, 0, 4),
-        ("prog",   0, 0, 4),
-        ("forest", 0, 0,  ), # sets save_every to None
-        ("forest", 2, 0, 4),
-        ("forest", 0, 1, 4),
+        ("all", "forest", 0, 0, 4),
+        ("all", "tree",   0, 0, 4),
+        ("all", "prog",   0, 0, 4),
+        ("all", "forest", 0, 0,  ), # sets save_every to None
+        ("all", "forest", 2, 0, 4),
+        ("all", "forest", 0, 1, 4),
+    )
+
+class NonRootParallelTreesTest(ParallelTreesTest):
+    ncores = 2
+    arg_sets = (
+        ("nonroot", "tree", 0, 0, ), # sets save_every to None
     )

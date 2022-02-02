@@ -20,11 +20,9 @@ yt.enable_parallelism()
 import ytree
 
 def run():
-    input_fn = sys.argv[1]
-    output_fn = sys.argv[2]
-    group = sys.argv[3]
-    njobs = int(sys.argv[4])
-    dynamic = bool(int(sys.argv[5]))
+    input_fn, output_fn, selection, group = sys.argv[1:5]
+    njobs = int(sys.argv[5])
+    dynamic = bool(int(sys.argv[6]))
 
     a = ytree.load(input_fn)
     if "test_field" not in a.field_list:

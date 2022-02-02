@@ -83,7 +83,7 @@ class ParallelTest:
     ncores = 4
 
     def check_values(self, arbor, my_args):
-        group = my_args[0]
+        group = my_args[1]
         assert_array_equal(arbor["test_field"], 2 * arbor["mass"])
         for tree in arbor:
             assert_array_equal(tree[group, "test_field"], 2 * tree[group, "mass"])
@@ -94,7 +94,6 @@ class ParallelTest:
         for i, my_args in enumerate(self.arg_sets):
             with self.subTest(i=i):
 
-                # test_data_path = self.prepare_data()
                 args = [self.test_script, self.base_filename, self.test_filename] + \
                     [str(arg) for arg in my_args]
                 comm = MPI.COMM_SELF.Spawn(sys.executable, args=args, maxprocs=self.ncores)
@@ -245,6 +244,21 @@ class ArborTest:
                         t[group, f"{field}_{ax}"], t[group, field][:, i],
                         err_msg=(f"{group} vector field {field} does not match "
                                  f"in dimension {i}."))
+
+def get_tree_split(arbor):
+    """
+    Get a few separate ancestors from a tree.
+    """
+    ancs = None
+    for tree in arbor:
+        for halo in tree["tree"]:
+            ancs = list(halo.ancestors)
+            if len(ancs) > 1:
+                break
+
+    if ancs is None:
+        raise RuntimeError("Could not find nodes to test with.")
+    return ancs
 
 def get_random_trees(arbor, seed, n):
     """
