@@ -20,24 +20,25 @@ yt.enable_parallelism()
 import ytree
 
 def run():
-    fn = sys.argv[1]
-    group = sys.argv[2]
-    njobs = tuple([int(arg) for arg in sys.argv[3:5]])
-    dynamic = tuple([bool(int(arg)) for arg in sys.argv[5:7]])
-    if len(sys.argv) > 7:
-        save_every = int(sys.argv[7])
+    input_fn = sys.argv[1]
+    output_fn = sys.argv[2]
+    group = sys.argv[3]
+    njobs = tuple([int(arg) for arg in sys.argv[4:6]])
+    dynamic = tuple([bool(int(arg)) for arg in sys.argv[6:8]])
+    if len(sys.argv) > 8:
+        save_every = int(sys.argv[8])
     else:
         save_every = None
 
-    a = ytree.load(fn)
+    a = ytree.load(input_fn)
     if "test_field" not in a.field_list:
         a.add_analysis_field("test_field", default=-1, units="Msun")
 
-    trees = list(a[:])
+    trees = list(a[:8])
 
     for node in ytree.parallel_nodes(trees, group=group,
                                      njobs=njobs, dynamic=dynamic,
-                                     save_every=save_every):
+                                     save_every=save_every, filename=output_fn):
         root = node.root
         yt.mylog.info(f"Doing {node.tree_id}/{root.tree_size} of {root._arbor_index}")
         node["test_field"] = 2 * node["mass"]

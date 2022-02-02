@@ -27,9 +27,20 @@ except ModuleNotFoundError:
     MPI = None
 
 class ParallelTest:
-    test_filename = "tiny_ctrees/locations.dat"
+    base_filename = "tiny_ctrees/locations.dat"
+    test_filename = "test_arbor/test_arbor.h5"
     test_script = None
-    ncores = None
+    ncores = 4
+
+    @property
+    def test_script_path(self):
+        return os.path.join(os.path.dirname(__file__), self.test_script)
+
+    def check_values(self, arbor, my_args):
+        group = my_args[0]
+        assert_array_equal(arbor["test_field"], 2 * arbor["mass"])
+        for tree in arbor:
+            assert_array_equal(tree[group, "test_field"], 2 * tree[group, "mass"])
 
     @unittest.skipIf(MPI is None, "mpi4py not installed")
     def test_parallel(self):
@@ -37,20 +48,14 @@ class ParallelTest:
         for i, my_args in enumerate(self.arg_sets):
             with self.subTest(i=i):
 
-                a = ytree.load(self.test_filename)
-                fn = a.save_arbor(trees=a[:8])
-
-                filename = os.path.join(os.path.dirname(__file__), self.test_script)
-
-                group = my_args[0]
-                args = [filename, fn] + [str(arg) for arg in my_args]
-                comm = MPI.COMM_SELF.Spawn(sys.executable, args=args, maxprocs=4)
+                # test_data_path = self.prepare_data()
+                args = [self.test_script_path, self.base_filename, self.test_filename] + \
+                    [str(arg) for arg in my_args]
+                comm = MPI.COMM_SELF.Spawn(sys.executable, args=args, maxprocs=self.ncores)
                 comm.Disconnect()
 
-                a2 = ytree.load(fn)
-                assert_array_equal(a2["test_field"], 2 * a2["mass"])
-                for tree in a2:
-                    assert_array_equal(tree[group, "test_field"], 2 * tree[group, "mass"])
+                test_arbor = ytree.load(self.test_filename)
+                self.check_values(test_arbor, my_args)
 
 class ParallelTreesTest(TempDirTest, ParallelTest):
     test_script = "parallel/parallel_trees.py"
