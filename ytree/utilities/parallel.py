@@ -48,7 +48,7 @@ def _get_analysis_fields(arbor):
     return [field for field in fi
             if fi[field].get("type") in ("analysis", "analysis_saved")]
 
-def parallel_trees(trees, save_every=None,
+def parallel_trees(trees, save_every=None, filename=None,
                    njobs=0, dynamic=False):
     """
     Iterate over a list of trees in parallel.
@@ -72,6 +72,11 @@ def parallel_trees(trees, save_every=None,
         used to save intermediate results in case scripts need to be restarted.
         If None, save will only occur after iterating over all trees. If False,
         no saving will be done.
+        Default: None
+    filename : optional, string
+        The name of the new arbor to be saved. If None, the naming convention
+        will follow the filename keyword of the
+        :func:`~ytree.data_structures.arbor.Arbor.save_arbor` function.
         Default: None
     njobs : optional, int
         The number of process groups for parallel iteration. Set to 0 to make
@@ -166,7 +171,7 @@ def parallel_trees(trees, save_every=None,
                     my_root.field_data[field][indices] = data[field]
 
             if save:
-                fn = arbor.save_arbor(trees=trees)
+                fn = arbor.save_arbor(filename=filename, trees=trees)
                 arbor = ytree_load(fn)
                 trees = [regenerate_node(arbor, tree, new_index=i)
                          for i, tree in enumerate(trees)]
@@ -260,7 +265,7 @@ def parallel_tree_nodes(tree, group="forest",
                 my_halo[field] = value
 
 def parallel_nodes(trees, group="forest", save_every=None,
-                   njobs=None, dynamic=None):
+                   filename=None, njobs=None, dynamic=None):
     """
     Iterate over all nodes in a list of trees in parallel.
 
@@ -289,6 +294,11 @@ def parallel_nodes(trees, group="forest", save_every=None,
         used to save intermediate results in case scripts need to be restarted.
         If None, save will only occur after iterating over all trees. If False,
         no saving will be done.
+        Default: None
+    filename : optional, string
+        The name of the new arbor to be saved. If None, the naming convention
+        will follow the filename keyword of the
+        :func:`~ytree.data_structures.arbor.Arbor.save_arbor` function.
         Default: None
     njobs : optional, tuple of ints
         The number of process groups for parallel iteration over trees and
@@ -348,7 +358,7 @@ def parallel_nodes(trees, group="forest", save_every=None,
             raise ValueError(f"dynamic must be a tuple of length 2: {dynamic}.")
 
     for tree in parallel_trees(
-            trees, save_every=save_every,
+            trees, save_every=save_every, filename=filename,
             njobs=njobs[0], dynamic=dynamic[0]):
 
         for node in parallel_tree_nodes(
