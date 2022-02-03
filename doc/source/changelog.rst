@@ -13,6 +13,34 @@ The `CREDITS file
 contains the most up-to-date list of everyone who has contributed to the
 ``ytree`` source code.
 
+Version 3.1.1
+-------------
+
+Release date: *February 3, 2022*
+
+Bugfixes
+^^^^^^^^
+
+ * Allow parallel_trees to work with non-root trees.
+   (`PR #123 <https://github.com/ytree-project/ytree/pull/123>`__)
+
+ * Use smarter regexes to get AHF naming scheme.
+   (`PR #118 <https://github.com/ytree-project/ytree/pull/118>`__)
+
+ * Add return value to comply with yt.
+   (`PR #121 <https://github.com/ytree-project/ytree/pull/121>`__)
+
+Infrastructure Updates
+^^^^^^^^^^^^^^^^^^^^^^
+ * Implement _apply_units method.
+   (`PR #122 <https://github.com/ytree-project/ytree/pull/122>`__)
+
+ * Enable parallelism on circleci.
+   (`PR #120 <https://github.com/ytree-project/ytree/pull/120>`__)
+
+ * Create pypi upload action.
+   (`PR #124 <https://github.com/ytree-project/ytree/pull/124>`__)
+
 Version 3.1
 -----------
 
