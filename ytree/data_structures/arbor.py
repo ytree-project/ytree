@@ -71,7 +71,7 @@ class Arbor(metaclass=RegisteredArbor):
     """
     Base class for all Arbor classes.
 
-    Loads a merger-tree output file or a series of halo catalogs
+    Loads a merger tree output file or a series of halo catalogs
     and create trees, stored in an array in
     :func:`~ytree.data_structures.arbor.Arbor.trees`.
     Arbors can be saved in a universal format with
