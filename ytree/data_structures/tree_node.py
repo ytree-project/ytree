@@ -220,15 +220,21 @@ class TreeNode:
         Set analysis field value for this node.
         """
 
-        ftype = self.arbor.field_info[key].get('type')
+        fi = self.arbor.field_info[key]
+        ftype = fi.get('type')
         if ftype not in ['analysis', 'analysis_saved']:
             raise ArborUnsettableField(key, self.arbor)
+
+        vector_fieldname = fi.get("vector_fieldname", None)
+        has_vector_field = vector_fieldname is not None
 
         if self.is_root:
             root = self
             tree_id = 0
             # if root, set the value in the arbor field storage
             self.arbor[key][self._arbor_index] = value
+            if has_vector_field and vector_fieldname in self.arbor.field_data:
+                del self.arbor.field_data[vector_fieldname]
         else:
             root = self.root
             tree_id = self.tree_id
@@ -236,6 +242,8 @@ class TreeNode:
                                        root_only=False)
         data = root.field_data[key]
         data[tree_id] = value
+        if has_vector_field and vector_fieldname in root.field_data:
+            del root.field_data[vector_fieldname]
 
     def __getitem__(self, key):
         """

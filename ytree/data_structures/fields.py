@@ -220,11 +220,15 @@ Check the TypeError exception above for more details.
         x/y/z components.
         """
 
-        exists = all([f"{fieldname}_{ax}" in self for ax in "xyz"])
+        cfields = [f"{fieldname}_{ax}" for ax in "xyz"]
+        exists = all([field in self for field in cfields])
         if not exists:
             return None
 
-        units = self[f"{fieldname}_x"].get("units", None)
+        for field in cfields:
+            self[field]["vector_fieldname"] = fieldname
+
+        units = self[cfields[0]].get("units", None)
         self.arbor.add_derived_field(
             fieldname, _vector_func, vector_field=True, units=units)
         self.arbor.add_derived_field(
