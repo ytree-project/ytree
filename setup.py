@@ -25,13 +25,13 @@ dev_requirements = [
 
 setup(name="ytree",
       version=VERSION,
-      description="An extension of yt for working with merger-tree data.",
+      description="An extension of yt for working with merger tree data.",
       long_description=long_description,
       long_description_content_type='text/markdown',
       author="Britton Smith",
       author_email="brittonsmith@gmail.com",
       license="BSD 3-Clause",
-      keywords=["simulation", "merger-tree", "astronomy", "astrophysics"],
+      keywords=["simulation", "merger tree", "astronomy", "astrophysics"],
       url="https://github.com/ytree-project/ytree",
       project_urls={
           'Homepage': 'https://github.com/ytree-project/ytree',
@@ -54,6 +54,7 @@ setup(name="ytree",
           "Programming Language :: Python :: 3.7",
           "Programming Language :: Python :: 3.8",
           "Programming Language :: Python :: 3.9",
+          "Programming Language :: Python :: 3.10",
       ],
       install_requires=[
           'configparser',
