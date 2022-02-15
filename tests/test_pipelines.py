@@ -14,7 +14,7 @@ tests for analysis pipeline
 #-----------------------------------------------------------------------------
 
 import numpy as np
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_equal
 import os
 import ytree
 
@@ -26,9 +26,13 @@ def set_test_field(node, output_dir=None):
 def minimum_mass_filter(node, value):
     return node["mass"] > value
 
+def set_always(node):
+    node["test_always"] = 1
+
 def my_recipe(ap):
     ap.add_operation(minimum_mass_filter, 3e11)
     ap.add_operation(set_test_field, output_dir="my_analysis")
+    ap.add_operation(set_always, always_do=True)
 
 class AnalysisPipelineTest(TempDirTest):
     test_filename = "tiny_ctrees/locations.dat"
@@ -41,6 +45,7 @@ class AnalysisPipelineTest(TempDirTest):
         a = ytree.load(fn)
         if "test_field" not in a.field_list:
             a.add_analysis_field("test_field", default=-1, units="Msun")
+            a.add_analysis_field("test_always", dtype=int, default=0, units="")
 
         ap = ytree.AnalysisPipeline(output_dir="analysis")
         ap.add_recipe(my_recipe)
@@ -58,6 +63,7 @@ class AnalysisPipelineTest(TempDirTest):
         mf = a2["mass"] > 3e11
         assert_array_equal(a2["test_field"][mf], 2 * a2["mass"][mf])
         assert_array_equal(a2["test_field"][~mf], -np.ones((~mf).sum()))
+        assert_equal(a2["test_always"].sum(), a2.size)
         
         for tree in a2:
             mf = tree["forest", "mass"] > 3e11
