@@ -44,12 +44,16 @@ class AnalysisPipeline:
     >>> def my_recipe(pipeline):
     ...     pipeline.add_operation(my_analysis)
     >>>
+    >>> def do_cleanup(node):
+    ...     print (f"End of analysis for {node}.")
+    >>>
     >>> a = ytree.load("arbor/arbor.h5")
     >>>
     >>> ap = AnalysisPipeline()
     >>> # don't analyze halos below 3e11 Msun
     >>> ap.add_operation(minimum_mass, 3e11)
     >>> ap.add_recipe(my_recipe)
+    >>> ap.add_recipe(do_cleanup, always_do=True)
     >>>
     >>> trees = list(a[:])
     >>> for tree in trees:
@@ -66,7 +70,7 @@ class AnalysisPipeline:
         self.output_dir = ensure_dir(output_dir)
         self._preprocessed = False
 
-    def add_operation(self, function, *args, **kwargs):
+    def add_operation(self, function, *args, always_do=False, **kwargs):
         """
         Add an operation to the AnalysisPipeline.
 
@@ -85,6 +89,11 @@ class AnalysisPipeline:
             The function to be called for each node/halo.
         *args : positional arguments
             Any additional positional arguments to be provided to the funciton.
+        always_do: optional, bool
+            If True, always perform this operation even if a prior filter has
+            returned False. This can be used to add house cleaning operations
+            that should always be run.
+            Default: False
         **kwargs : keyword arguments
             Any keyword arguments to be provided to the function.
         """
@@ -92,7 +101,7 @@ class AnalysisPipeline:
         if not callable(function):
             raise ValueError("function argument must be a callable function.")
 
-        operation = AnalysisOperation(function, *args, **kwargs)
+        operation = AnalysisOperation(function, *args, always_do=always_do, **kwargs)
         self.actions.append(operation)
 
     def add_recipe(self, function, *args, **kwargs):
@@ -162,10 +171,9 @@ class AnalysisPipeline:
         self._preprocess()
         target_filter = True
         for action in self.actions:
-            rval = action(target)
-            if rval is not None:
-                target_filter = bool(rval)
-            if not target_filter:
-                break
+            if target_filter or action.always_do:
+                rval = action(target)
+                if rval is not None:
+                    target_filter &= bool(rval)
 
         return target_filter

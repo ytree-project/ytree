@@ -20,8 +20,9 @@ class AnalysisOperation:
         :class:`~ytree.data_structures.tree_node.TreeNode` object. The
         function may also accept additional positional and keyword arguments.
     """
-    def __init__(self, function, *args, **kwargs):
+    def __init__(self, function, *args, always_do=False, **kwargs):
         self.function = function
+        self.always_do = always_do
         self.args = args
         self.kwargs = kwargs
 
