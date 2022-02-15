@@ -181,6 +181,8 @@ function will be appended to that. Following the examples here, the
 resulting directory would be "my_analysis/images", and the code above
 will correctly save to that location.
 
+.. _operation-as-filter:
+
 Using a Function as a Filter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -196,6 +198,33 @@ performed. For example, we might create a mass filter like this:
 
    # later, in the pipeline
    ap.add_operation(minimum_mass, a.quan(1e11, "Msun"))
+
+The pipeline will interpret any return value from an operation that is
+not ``None`` in a boolean context to use as a filter.
+
+.. _operation-always-do:
+
+Adding Operations that Always Run
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As discussed above in :ref:`operation-as-filter`, returning ``False``
+from an operation will prevent all further operations in the pipeline
+from being performed on that node. However, there may be operations
+that you want to always run, regardless of previous filters. For
+example, there may be clean up operations, like freeing up memory,
+that should run for every node, no matter what. To accomplish this,
+the ``always_do`` keyword can be set to ``True`` in the call to
+:func:`~ytree.analysis.analysis_pipeline.AnalysisPipeline.add_operation`.
+
+.. code-block:: python
+
+   def delete_attributes(node, attributes):
+       for attr in attributes:
+           if hasattr(node, attr):
+               delattr(node, attr)
+
+   # later, in the pipeline
+   ap.add_operation(delete_attributes, ["ds", "sphere"], always_do=True)
 
 Modifying a Node
 ^^^^^^^^^^^^^^^^
@@ -240,10 +269,14 @@ add it to the end of the pipeline.
 
    def delete_attributes(node, attributes):
        for attr in attributes:
-           delattr(node, attr)
+           if hasattr(node, attr):
+               delattr(node, attr)
 
    # later, in the pipeline
-   ap.add_operation(delete_attributes, ["ds", "sphere"])
+   ap.add_operation(delete_attributes, ["ds", "sphere"], always_do=True)
+
+See :ref:`operation-always-do` for a discussion of the ``always_do``
+option.
 
 Running the Pipeline
 ^^^^^^^^^^^^^^^^^^^^
