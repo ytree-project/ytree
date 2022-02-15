@@ -5,7 +5,6 @@ AnalysisPipeline class and member functions
 
 """
 
-import numpy as np
 import os
 
 from yt.utilities.parallel_tools.parallel_analysis_interface import parallel_root_only
