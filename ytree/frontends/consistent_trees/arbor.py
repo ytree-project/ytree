@@ -144,7 +144,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         if not line:
             raise ArborDataFileEmpty(self.filename)
 
-        fn = os.path.join(self.directory, line.split()[-1])
+        fn = os.path.join(self.directory, line.split()[3])
         super()._parse_parameter_file(filename=fn, ntrees_in_file=False)
 
     def _plant_trees(self):
