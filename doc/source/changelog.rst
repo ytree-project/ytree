@@ -13,6 +13,35 @@ The `CREDITS file
 contains the most up-to-date list of everyone who has contributed to the
 ``ytree`` source code.
 
+Version 3.1.2
+-------------
+
+Release date: *March 11, 2022*
+
+Minor Enhancements
+^^^^^^^^^^^^^^^^^^
+
+ * Add always_do option to AnalysisPipeline operations.
+   (`PR #129 <https://github.com/ytree-project/ytree/pull/129>`__)
+
+Bugfixes
+^^^^^^^^
+
+ * Make sure to refresh vector analysis fields after setting values.
+   (`PR #127 <https://github.com/ytree-project/ytree/pull/127>`__)
+
+ * Fix analysis pipeline operation filtering.
+   (`PR #129 <https://github.com/ytree-project/ytree/pull/129>`__)
+
+ * Get filename from correct part of line in consistent-trees format.
+   (`PR #131 <https://github.com/ytree-project/ytree/pull/131>`__)
+
+Infrastructure Updates
+^^^^^^^^^^^^^^^^^^^^^^
+
+ * Officially support and start testing Python 3.10.
+   (`PR #128 <https://github.com/ytree-project/ytree/pull/128>`__)
+
 Version 3.1.1
 -------------
 
