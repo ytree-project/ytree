@@ -142,10 +142,16 @@ class AnalysisPipeline:
 
     @parallel_root_only
     def _preprocess(self):
-        "Create output directories and do any other preliminary steps."
+        """
+        Create output directories and do any other preliminary steps.
+
+        Run any preprocess functions associated with operation functions.
+        """
 
         if self._preprocessed:
             return
+
+        pre_run = []
 
         for action in self.actions:
             my_output_dir = action.kwargs.get("output_dir")
@@ -153,6 +159,11 @@ class AnalysisPipeline:
                 new_output_dir = ensure_dir(
                     os.path.join(self.output_dir, my_output_dir))
                 action.kwargs["output_dir"] = new_output_dir
+
+            pre_func = getattr(action.function, "preprocess", None)
+            if pre_func is not None and pre_func not in pre_run:
+                pre_func()
+                pre_run.append(pre_func)
 
         self._preprocessed = True
 
