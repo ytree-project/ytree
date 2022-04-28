@@ -64,6 +64,8 @@ pip install ytree
 conda install -c conda-forge ytree
 ```
 
+### source installation
+
 To get the development version, clone this repository and install like this:
 
 ```
