@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/gh/ytree-project/ytree/branch/main/graph/badge.svg)](https://codecov.io/gh/ytree-project/ytree)
 [![Documentation Status](https://readthedocs.org/projects/ytree/badge/?version=latest)](http://ytree.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/ytree.svg)](https://badge.fury.io/py/ytree)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/ytree/badges/version.svg)](https://anaconda.org/conda-forge/ytree)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.01881/status.svg)](https://doi.org/10.21105/joss.01881)
 [![yt-project](https://img.shields.io/static/v1?label="works%20with"&message="yt"&color="blueviolet")](https://yt-project.org)
 
@@ -49,11 +50,21 @@ descendent can be supported.
 
 ## Installation
 
-`ytree` can be installed with pip:
+`ytree` can be installed with pip or conda:
+
+### pip installation
 
 ```
 pip install ytree
 ```
+
+### conda installation
+
+```
+conda install -c conda-forge ytree
+```
+
+### source installation
 
 To get the development version, clone this repository and install like this:
 
