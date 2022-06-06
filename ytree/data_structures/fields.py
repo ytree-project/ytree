@@ -13,7 +13,9 @@ Arbor field-related classes
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from collections import defaultdict
 import numpy as np
+import re
 import weakref
 
 from ytree.data_structures.detection import FieldDetector
@@ -245,8 +247,22 @@ Check the TypeError exception above for more details.
         Add vector and magnitude fields.
         """
 
+        vfields = set()
+        candidates = defaultdict(set)
+        vreg = re.compile(r"^(.+)_[xyz]$")
+
+        for field in self:
+            match = vreg.match(field)
+            if match is None:
+                continue
+
+            vfield = match.groups()[0]
+            candidates[vfield].add(field)
+            if len(candidates[vfield]) == 3:
+                vfields.add(vfield)
+
         added_fields = []
-        for field in self.vector_fields:
+        for field in vfields.union(self.vector_fields):
             field = self.add_vector_field(field)
             if field is None:
                 continue
