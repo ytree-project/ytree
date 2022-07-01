@@ -17,7 +17,6 @@ import numpy as np
 from numpy.testing import \
     assert_array_equal, \
     assert_equal
-import os
 
 from ytree.utilities.testing import \
     requires_file, \

@@ -18,7 +18,6 @@ from numpy.testing import \
     assert_array_equal, \
     assert_equal, \
     assert_raises
-import os
 
 from ytree.utilities.exceptions import \
     ArborFieldAlreadyExists, \
@@ -42,7 +41,7 @@ class AnalysisFieldTest(TempDirTest):
         fake_bears = np.zeros(a.size)
         assert_array_equal(fake_bears, a['bears'])
 
-        all_trees = a[:]
+        all_trees = list(a[:])
         my_tree = all_trees[0]
         my_tree['bears'] = 9
         fake_bears[0] = 9
@@ -77,7 +76,7 @@ class AnalysisFieldTest(TempDirTest):
         fake_bears = np.zeros(a.size)
         assert_array_equal(fake_bears, a['bears'])
 
-        all_trees = a[:]
+        all_trees = list(a[:])
         my_tree = all_trees[0]
         my_tree['bears'] = 9
         fake_bears[0] = 9
@@ -134,3 +133,20 @@ class AnalysisFieldTest(TempDirTest):
 
         data_mag = np.sqrt((data**2).sum(axis=1))
         assert_array_equal(a2['thing_magnitude'], data_mag)
+
+    @requires_file(CT)
+    def test_alter_vector_field(self):
+        a = ytree.load(CT)
+
+        for i, ax in enumerate('xyz'):
+            a.add_analysis_field(f'thing_{ax}', '', default=i, dtype=np.float64)
+
+        fn = a.save_arbor()
+        a2 = ytree.load(fn)
+        a2.add_vector_field('thing')
+
+        t = a2[0]
+        for i, ax in enumerate('xyz'):
+            t[f'thing_{ax}'] += 1
+            assert_array_equal(t['forest', f'thing_{ax}'], t['forest', 'thing'][:, i])
+            assert_array_equal(a2[f'thing_{ax}'], a2['thing'][:, i])

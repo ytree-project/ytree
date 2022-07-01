@@ -1,32 +1,36 @@
 Welcome to ytree.
 =================
 
-``ytree`` is a tool for working with merger-tree data from multiple sources.
-``ytree`` is an extension of the `yt <https://yt-project.org/>`_ analysis toolkit
-and provides a similar interface for merger-tree data that includes universal
-field names, derived fields, and symbolic units. ``ytree`` is able to load in
-merger-tree from the following formats:
+``ytree`` is a tool for working with merger tree data from multiple
+sources. ``ytree`` is an extension of the `yt
+<https://yt-project.org/>`_ analysis toolkit and provides a similar
+interface for merger tree data that includes universal field names,
+derived fields, symbolic units, parallel functionality, and a
+framework for performing complex analysis. ``ytree`` is able to load
+in merger tree from the following formats:
 
-- `Amiga Halo Finder <http://popia.ft.uam.es/AHF/Download.html>`__
-- `Consistent-Trees <https://bitbucket.org/pbehroozi/consistent-trees>`__
-- `Consistent-Trees-HDF5 <https://github.com/uchuuproject/uchuutools>`__
-- `LHaloTree <https://ui.adsabs.harvard.edu/abs/2005MNRAS.364.1105S>`__
-- `Rockstar <https://bitbucket.org/gfcstanford/rockstar>`__ halo catalogs
-  without consistent-trees
-- `treefarm <https://treefarm.readthedocs.io/>`__
+- :ref:`load-ahf`
+- :ref:`load-ctrees`
+- :ref:`load-ctrees-hdf5`
+- :ref:`load-lhalotree`
+- :ref:`load-lhalotree-hdf5`
+- :ref:`load-moria`
+- :ref:`load-rockstar`
+- :ref:`load-treefarm`
+- :ref:`load-treefrog`
 
 See :ref:`loading` for instructions specific to each format.
 All formats can be :ref:`resaved with a universal format <saving-trees>` that
-can be reloaded with ``ytree``.  Individual trees for single halos can also be
-saved.
+can be :ref:`reloaded with ytree <load-ytree>`. Individual trees for single
+halos can also be saved.
 
-I want to make merger-trees!
+I want to make merger trees!
 ============================
 
 If you have halo catalog data that can be loaded by
 `yt <https://yt-project.org/>`_, then you can use the
 `treefarm <https://treefarm.readthedocs.io/>`_ package to create
-merger-trees. `treefarm <https://treefarm.readthedocs.io/>`_ was
+merger trees. `treefarm <https://treefarm.readthedocs.io/>`_ was
 once a part of ``ytree``, but is now its own thing.
 
 Table of Contents
@@ -37,9 +41,12 @@ Table of Contents
 
    Installation.rst
    Data.rst
+   Frames.rst
    Arbor.rst
    Fields.rst
    Plotting.rst
+   Parallelism.rst
+   Analysis.rst
    Examples.rst
    Conduct.rst
    Contributing.rst
@@ -54,4 +61,3 @@ Search
 ======
 
 * :ref:`search`
-

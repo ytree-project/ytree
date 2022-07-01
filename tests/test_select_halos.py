@@ -1,5 +1,5 @@
 """
-miscellaneous utility tests
+tests for select_halos function
 
 
 
@@ -13,11 +13,12 @@ miscellaneous utility tests
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import os
+from numpy.testing import assert_raises
+
 import ytree
 
-from ytree.utilities.testing import \
-    requires_file
+from ytree.utilities.exceptions import ArborFieldNotFound
+from ytree.utilities.testing import requires_file
 
 CT = "consistent_trees/tree_0_0_0.dat"
 
@@ -29,18 +30,17 @@ def test_select_halos():
     hids = a.arr([h["Orig_halo_ID"] for h in halos])
     assert (hids == 0).all()
 
-    halos = a.select_halos('tree["prog", "Orig_halo_ID"] == 0',
-                           select_from="prog")
+    halos = a.select_halos('tree["prog", "Orig_halo_ID"] == 0')
     hids = a.arr([h["Orig_halo_ID"] for h in halos])
     assert (hids == 0).all()
 
-    # test that we catch criteria/select_from mismatch
-    try:
-        halos = a.select_halos('tree["tree", "Orig_halo_ID"] == 0',
-                               select_from="prog")
-    except RuntimeError:
-        pass
-    except BaseException:
-        assert False
-    else:
-        assert False
+@requires_file(CT)
+def test_select_halos_bad_input():
+    a = ytree.load(CT)
+
+    with assert_raises(ArborFieldNotFound):
+        list(a.select_halos("(tree['forest', 'not_a_field'].to('Msun') > 1e13)"))
+
+    with assert_raises(ValueError):
+        list(a.select_halos("(tree['flock', 'mass'].to('Msun') > 1e13)"))
+        list(a.select_halos("(tree['forest', 'mass'].to('Msun') > 1e13) & (tree['tree', 'redshift'] < 0.5)"))

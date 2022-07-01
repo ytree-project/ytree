@@ -70,17 +70,13 @@ class ConsistentTreesTreeFieldIO(TreeFieldIO):
                 dtype = my_dtypes[field]
                 field_data[field][i] = dtype(ldata[fi[field]["column"]])
 
-        for field in fields:
-            units = fi[field].get("units", "")
-            if units != "":
-                field_data[field] = \
-                  self.arbor.arr(field_data[field], units)
+        self._apply_units(fields, field_data)
 
         return field_data
 
 class ConsistentTreesHlistDataFile(RockstarDataFile):
     def _parse_header(self):
-        super(ConsistentTreesHlistDataFile, self)._parse_header()
+        super()._parse_header()
 
         prefix = os.path.join(os.path.dirname(self.filename), "hlist_")
         suffix = ".list"

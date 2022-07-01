@@ -13,8 +13,6 @@ tests for plotting
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import os
-
 from ytree.utilities.testing import \
     requires_file, \
     TempDirTest
@@ -59,7 +57,7 @@ class TreePlotTest(TempDirTest):
     @requires_file(CT)
     def test_node_function(self):
         def my_func(halo):
-            label = "%d" % halo['uid']
+            label = f"{halo['uid']}"
             return {"label": label}
         a = ytree.load(CT)
         p = ytree.TreePlot(a[0], node_function=my_func)

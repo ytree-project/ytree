@@ -4,7 +4,9 @@
 [![codecov](https://codecov.io/gh/ytree-project/ytree/branch/main/graph/badge.svg)](https://codecov.io/gh/ytree-project/ytree)
 [![Documentation Status](https://readthedocs.org/projects/ytree/badge/?version=latest)](http://ytree.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/ytree.svg)](https://badge.fury.io/py/ytree)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/ytree/badges/version.svg)](https://anaconda.org/conda-forge/ytree)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.01881/status.svg)](https://doi.org/10.21105/joss.01881)
+[![yt-project](https://img.shields.io/static/v1?label="works%20with"&message="yt"&color="blueviolet")](https://yt-project.org)
 
 This is `ytree`, a [yt](https://github.com/yt-project/yt) extension for
 working with merger tree data.
@@ -48,11 +50,21 @@ descendent can be supported.
 
 ## Installation
 
-`ytree` can be installed with pip:
+`ytree` can be installed with pip or conda:
+
+### pip installation
 
 ```
 pip install ytree
 ```
+
+### conda installation
+
+```
+conda install -c conda-forge ytree
+```
+
+### source installation
 
 To get the development version, clone this repository and install like this:
 
@@ -64,10 +76,9 @@ pip install -e .
 
 ## Getting Started
 
-Below is a notebook that demonstrates how to use `ytree` with merger tree data.  For
-more information, see the full [ytree documentation](https://ytree.readthedocs.io).
-
- * [Introduction](https://github.com/ytree-project/ytree/blob/main/doc/source/notebooks/Intro_to_ytree.ipynb)
+The [ytree documentation](https://ytree.readthedocs.io) will walk you
+through installation, get you started analyzing merger trees, and help
+you become a contributor to the project. Have a look!
 
 ## Sample Data
 
@@ -113,17 +124,18 @@ If you would like to also cite the specific version of `ytree` used in
 your work, include the following reference:
 
 ```
-  @software{ytree_2_3,
-    author       = {Britton Smith and
-                    Meagan Lang},
-    title        = {ytree: A Python package for analyzing merger trees},
-    month        = dec,
-    year         = 2019,
-    publisher    = {Zenodo},
-    version      = {ytree-2.3.0},
-    doi          = {10.5281/zenodo.3580978},
-    url          = {https://doi.org/10.5281/zenodo.3580978}
-  }
+@software{britton_smith_2022_5959655,
+  author       = {Britton Smith and
+                  Meagan Lang and
+                  Juanjo Bazán},
+  title        = {ytree-project/ytree: ytree 3.1.1 Release},
+  month        = feb,
+  year         = 2022,
+  publisher    = {Zenodo},
+  version      = {ytree-3.1.1},
+  doi          = {10.5281/zenodo.5959655},
+  url          = {https://doi.org/10.5281/zenodo.5959655}
+}
 ```
 
 ## Resources

@@ -22,7 +22,7 @@ commands:
           no_output_timeout: 20m
           command: |
             sudo apt-get update
-            sudo apt-get install -y graphviz
+            sudo apt-get install -y graphviz libopenmpi-dev openmpi-bin
             if [ ! -d $HOME/venv ]; then
                 python3 -m venv $HOME/venv
             fi
@@ -32,6 +32,7 @@ commands:
             pip install --upgrade wheel
             pip install --upgrade setuptools
             pip install Cython numpy
+            pip install 'click<8.0'
             pip install girder-client
             export MAX_BUILD_CORES=2
             if [ << parameters.ytdev >> == 1 ]; then
@@ -44,7 +45,7 @@ commands:
                 pip install -e .
                 popd
             fi
-            pip install -e .[dev]
+            pip install -e .[dev,parallel]
 
   configure-ytree:
     description: "Configure ytree."
@@ -78,7 +79,7 @@ commands:
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
-            flake8 ytree
+            flake8 tests ytree
 
   run-tests:
     description: "Build ytree and run tests."
@@ -90,14 +91,20 @@ commands:
     steps:
       - run:
           name: "Build ytree and run tests."
+          no_output_timeout: 30m
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
-            pytest --cov=ytree tests
+            TESTFILES=$(circleci tests glob "tests/*.py" "tests/frontends/*.py" | circleci tests split --split-by=timings)
+            pytest --cov=ytree --junitxml=test-results/junit.xml $TESTFILES
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
                 codecov
             fi
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
 
   build-docs:
     description: "Test the docs build."
@@ -117,10 +124,11 @@ executors:
         type: string
         default: latest
     docker:
-      - image: circleci/python:<< parameters.tag >>
+      - image: cimg/python:<< parameters.tag >>
 
 jobs:
   tests:
+    parallelism: 4
     parameters:
       tag:
         type: string
@@ -143,7 +151,7 @@ jobs:
 
       - restore_cache:
           name: "Restore dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-v7
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-abbey
 
       - install:
           ytdev: << parameters.ytdev >>
@@ -151,7 +159,7 @@ jobs:
 
       - save_cache:
           name: "Save dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-v7
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-abbey
           paths:
             - ~/.cache/pip
             - ~/venv
@@ -161,13 +169,13 @@ jobs:
 
       - restore_cache:
           name: "Restore test data cache."
-          key: test-data-v3
+          key: test-data-aardsma
 
       - download-test-data
 
       - save_cache:
           name: "Save test data cache."
-          key: test-data-v3
+          key: test-data-aardsma
           paths:
             - ~/ytree_test
 
@@ -179,6 +187,9 @@ jobs:
       tag:
         type: string
         default: latest
+      ytdev:
+        type: integer
+        default: 0
     executor:
       name: python
       tag: << parameters.tag >>
@@ -191,19 +202,11 @@ jobs:
 
       - restore_cache:
           name: "Restore dependencies cache."
-          key: python-<< parameters.tag >>-1-dependencies-v7
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-abbey
 
       - install:
-          ytdev: 1
+          ytdev: << parameters.ytdev >>
       - configure-ytree
-
-      - save_cache:
-          name: "Save dependencies cache."
-          key: python-<< parameters.tag >>-1-dependencies-v7
-          paths:
-            - ~/.cache/pip
-            - ~/venv
-            - ~/yt-git
 
       - build-docs
 
@@ -213,19 +216,26 @@ workflows:
    normal-tests:
      jobs:
        - tests:
-           name: "Python 3.6 tests"
-           tag: "3.6.12"
+           name: "Python 3.7 tests"
+           tag: "3.7.12"
            ytdev: 1
 
        - tests:
-           name: "Python 3.9 tests"
-           tag: "3.9.1"
+           name: "Python 3.10 tests"
+           tag: "3.10.2"
            coverage: 1
            ytdev: 1
 
+       - tests:
+           name: "Python 3.10 tests"
+           tag: "3.10.2"
+           coverage: 0
+           ytdev: 0
+
        - docs-test:
            name: "Test docs build"
-           tag: "3.9.1"
+           tag: "3.10.2"
+           ytdev: 0
 
    daily:
      triggers:
@@ -237,14 +247,10 @@ workflows:
                 - main
      jobs:
        - tests:
-           name: "Python 3.9 tests with yt-dev"
-           tag: "3.9.1"
+           name: "Python 3.10 tests"
+           tag: "3.10.2"
            coverage: 0
            ytdev: 1
-
-       - docs-test:
-           name: "Test docs build"
-           tag: "3.9.1"
 
    weekly:
      triggers:
@@ -257,10 +263,27 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.7 tests"
-           tag: "3.7.9"
+           tag: "3.7.12"
            ytdev: 1
 
        - tests:
            name: "Python 3.8 tests"
-           tag: "3.8.7"
+           tag: "3.8.12"
            ytdev: 1
+
+       - tests:
+           name: "Python 3.9 tests"
+           tag: "3.9.9"
+           coverage: 0
+           ytdev: 1
+
+       - tests:
+           name: "Python 3.10 tests"
+           tag: "3.10.2"
+           coverage: 0
+           ytdev: 1
+
+       - docs-test:
+           name: "Test docs build"
+           tag: "3.10.2"
+           ytdev: 0

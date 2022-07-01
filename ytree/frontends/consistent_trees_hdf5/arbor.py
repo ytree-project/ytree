@@ -21,10 +21,7 @@ from yt.funcs import \
     get_pbar
 
 from ytree.data_structures.arbor import \
-    Arbor
-
-from ytree.frontends.consistent_trees.arbor import \
-    ConsistentTreesGroupArbor
+    SegmentedArbor
 from ytree.frontends.consistent_trees.utilities import \
     parse_ctrees_header
 from ytree.frontends.consistent_trees_hdf5.fields import \
@@ -55,7 +52,7 @@ _access_names = {
                'host_attr' : 'forest_id'}
 }
 
-class ConsistentTreesHDF5Arbor(Arbor):
+class ConsistentTreesHDF5Arbor(SegmentedArbor):
     """
     Arbors loaded from consistent-trees data converted into HDF5.
     """
@@ -70,20 +67,13 @@ class ConsistentTreesHDF5Arbor(Arbor):
     def __init__(self, filename, access='tree'):
         if access not in _access_names:
             raise ValueError(
-                ('Invalid access value: %s. '
-                 'Valid options are: %s.') % (access, _access_names))
+                f"Invalid access value: {access}. Valid options are: {_access_names}.")
         self.access = access
         self._node_io_attrs += (_access_names[access]['host_attr'],)
-        super(ConsistentTreesHDF5Arbor, self).__init__(filename)
-
-    _node_io_loop_prepare = ConsistentTreesGroupArbor._node_io_loop_prepare
-
-    def _node_io_loop_start(self, data_file):
-        data_file._field_cache = {}
-        data_file.open()
+        super().__init__(filename)
 
     def _node_io_loop_finish(self, data_file):
-        data_file._field_cache = {}
+        data_file._field_cache.reset()
         data_file.close()
 
     @property
@@ -124,7 +114,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
 
         if 'halos' in fgroup['Forests']:
             # array of structs layout
-            mylog.warn(
+            mylog.warning(
                 "This dataset was written in array of structs format. "
                 "Field access will be significantly slower than struct "
                 "of arrays format.")
@@ -184,7 +174,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
 
         c = 0
         file_offsets = self._file_count.cumsum() - self._file_count
-        pbar = get_pbar('Planting %ss' % self.access, self._size)
+        pbar = get_pbar(f'Planting {self.access}s', self._size)
         for idf, data_file in enumerate(self.data_files):
             data_file.open()
             hostids = data_file.fh[groupname][hostname][()]
@@ -198,6 +188,7 @@ class ConsistentTreesHDF5Arbor(Arbor):
             self._node_info['_fi'][istart:iend] = idf
             self._node_info['_si'][istart:iend] = offsets
             self._node_info['_ei'][istart:iend] = offsets + tree_sizes
+            self._node_info['_tree_size'][istart:iend] = tree_sizes
             c += offsets.size
             pbar.update(c)
         pbar.finish()

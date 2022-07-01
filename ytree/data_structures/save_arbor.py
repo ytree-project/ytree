@@ -8,14 +8,12 @@ save_arbor supporting functions
 import json
 import numpy as np
 import os
+import types
 from unyt import uconcatenate
 
-from yt.funcs import \
-    ensure_dir
-from yt.frontends.ytdata.utilities import \
-    save_as_dataset
-from ytree.utilities.logger import \
-    ytreeLogger as mylog
+from yt.frontends.ytdata.utilities import save_as_dataset
+from ytree.utilities.io import ensure_dir
+from ytree.utilities.logger import ytreeLogger as mylog
 
 #-----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
@@ -33,6 +31,9 @@ def save_arbor(arbor, filename=None, fields=None, trees=None,
     This is the internal function called by Arbor.save_arbor.
     """
 
+    if isinstance(trees, types.GeneratorType):
+        trees = list(trees)
+
     arbor._plant_trees()
     update, filename = determine_save_state(
         arbor, filename, fields, trees)
@@ -40,7 +41,7 @@ def save_arbor(arbor, filename=None, fields=None, trees=None,
     fields = determine_field_list(arbor, fields, update)
 
     if not fields:
-        mylog.warn(
+        mylog.warning(
             "No action will be taken for the following reasons:\n"
             " - This dataset is already a YTreeArbor.\n"
             " - No filename has been given.\n"
@@ -50,7 +51,7 @@ def save_arbor(arbor, filename=None, fields=None, trees=None,
 
     group_nnodes, group_ntrees, root_field_data = \
       save_data_files(arbor, filename, fields, trees,
-                      max_file_size)
+                      max_file_size, update)
 
     header_filename = save_header_file(
         arbor, filename, fields, root_field_data,
@@ -137,12 +138,15 @@ def get_output_fieldnames(fields):
     return [field.replace("/", "_") for field in fields]
 
 def save_data_files(arbor, filename, fields, trees,
-                    max_file_size):
+                    max_file_size, update):
     """
     Write all data files by grouping trees together.
 
     Return arrays of number of nodes and trees written to each file
     as well as a dictionary of root fields.
+
+    If update is True, use the file layout of the arbor instead of
+    calculating from max_file_size.
     """
 
     if trees is None:
@@ -169,13 +173,18 @@ def save_data_files(arbor, filename, fields, trees,
             np.array(current_group), root_field_data,
             cg_number, total_guess)
 
+    if update:
+        file_sizes = np.diff(arbor._node_io._ei, prepend=0)
+
     i = 1
     for tree in trees:
         current_group.append(tree)
         cg_nnodes += tree.tree_size
         cg_ntrees += 1
 
-        if cg_nnodes > max_file_size:
+        # if updating, use file sizes of loaded arbor
+        if (update and len(current_group) == file_sizes[i-1]) or \
+          cg_nnodes > max_file_size:
             my_save(i, cg_nnodes, cg_ntrees)
             current_group = []
             cg_nnodes = 0
@@ -201,7 +210,7 @@ def save_data_file(arbor, filename, fields, tree_group,
 
     arbor._node_io_loop(
         arbor._node_io.get_fields,
-        pbar="Getting fields [%d / ~%d]" % (current_iteration, total_guess),
+        pbar=f"Getting fields [{current_iteration} / ~{total_guess}]",
         root_nodes=tree_group, fields=fields, root_only=False)
 
     main_fdata  = {}
@@ -225,7 +234,7 @@ def save_data_file(arbor, filename, fields, tree_group,
 
         my_ftypes[fieldname] = "data"
         my_fdata[fieldname]  = uconcatenate(
-            [node._field_data[field] if node.is_root else node["tree", field]
+            [node.field_data[field] if node.is_root else node["tree", field]
              for node in tree_group])
         root_field_data[field].append(my_fdata[fieldname][my_tree_start])
 
@@ -264,7 +273,7 @@ def save_header_file(arbor, filename, fields, root_field_data,
     for attr in ["hubble_constant",
                  "omega_matter",
                  "omega_lambda"]:
-        if hasattr(arbor, attr):
+        if getattr(arbor, attr, None) is not None:
             ds[attr] = getattr(arbor, attr)
 
     # Data structures for disk fields.
@@ -308,9 +317,11 @@ def save_header_file(arbor, filename, fields, root_field_data,
         tree_start_index = tree_end_index - group_ntrees
 
         extra_attrs = {
-            "box_size": arbor.box_size,
             "arbor_type": "YTreeArbor",
-            "unit_registry_json": arbor.unit_registry.to_json()}
+            "unit_registry_json": arbor.unit_registry.to_json(),
+            "unit_system_name": arbor.unit_registry.unit_system.name}
+        if arbor.box_size is not None:
+            extra_attrs["box_size"] = arbor.box_size
         extra_attrs["field_info"] = json.dumps(main_fi)
         extra_attrs["total_files"] = group_nnodes.size
         extra_attrs["total_trees"] = group_ntrees.sum()

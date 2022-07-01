@@ -13,11 +13,10 @@ Arbor field-related classes
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from collections import \
-    defaultdict
 import numpy as np
 import weakref
 
+from ytree.data_structures.detection import FieldDetector
 from ytree.utilities.exceptions import \
     ArborFieldAlreadyExists, \
     ArborFieldCircularDependency, \
@@ -25,6 +24,23 @@ from ytree.utilities.exceptions import \
     ArborFieldNotFound
 from ytree.utilities.logger import \
     ytreeLogger as mylog
+
+def _redshift(field, data):
+    return 1. / data["scale_factor"] - 1.
+
+def _time(field, data):
+    return data.arbor.cosmology.t_from_z(data["redshift"])
+
+def _vector_func(field, data):
+    name = field["name"]
+    field_data = data.arbor.arr([data[f"{name}_{ax}"]
+                                 for ax in "xyz"])
+    field_data = np.rollaxis(field_data, 1)
+    return field_data
+
+def _magnitude_func(field, data):
+    name = field["name"][:-len("_magnitude")]
+    return np.sqrt((data[name]**2).sum(axis=1))
 
 class FieldInfoContainer(dict):
     """
@@ -82,9 +98,9 @@ class FieldInfoContainer(dict):
                     fl = self.arbor.derived_field_list
                 else:
                     fl = self.arbor.field_list
-                mylog.warn(
-                    ("Overriding field \"%s\" that already " +
-                     "exists as %s field.") % (alias, ftype))
+                mylog.warning(
+                    f"Overriding field \"{alias}\" that already "
+                    f"exists as {ftype} field.")
                 fl.pop(fl.index(alias))
             else:
                 return
@@ -140,9 +156,9 @@ class FieldInfoContainer(dict):
                     fl = self.arbor.derived_field_list
                 else:
                     fl = self.arbor.field_list
-                mylog.warn(
-                    ("Overriding field \"%s\" that already " +
-                     "exists as %s field.") % (name, ftype))
+                mylog.warning(
+                    f"Overriding field \"{name}\" that already "
+                    f"exists as {ftype} field.")
                 fl.pop(fl.index(name))
             else:
                 return
@@ -159,7 +175,7 @@ class FieldInfoContainer(dict):
                 "vector_field": vector_field,
                 "description": description}
 
-        fc = FakeFieldContainer(self.arbor, name=name)
+        fc = FieldDetector(self.arbor, name=name)
         try:
             rv = function(info, fc)
         except TypeError as e:
@@ -191,15 +207,12 @@ Check the TypeError exception above for more details.
         """
         Add stock derived fields.
         """
-        def _redshift(field, data):
-            return 1. / data["scale_factor"] - 1.
         self.arbor.add_derived_field(
             "redshift", _redshift, units="", force_add=False)
 
-        def _time(field, data):
-            return data.arbor.cosmology.t_from_z(data["redshift"])
-        self.arbor.add_derived_field(
-            "time", _time, units="Myr", force_add=False)
+        if hasattr(self.arbor, "cosmology"):
+            self.arbor.add_derived_field(
+                "time", _time, units="Myr", force_add=False)
 
     def add_vector_field(self, fieldname):
         """
@@ -207,23 +220,15 @@ Check the TypeError exception above for more details.
         x/y/z components.
         """
 
-        def _vector_func(field, data):
-            name = field["name"]
-            field_data = data.arbor.arr([data["%s_%s" % (name, ax)]
-                                         for ax in axes])
-            field_data = np.rollaxis(field_data, 1)
-            return field_data
-
-        def _magnitude_func(field, data):
-            name = field["name"][:-len("_magnitude")]
-            return np.sqrt((data[name]**2).sum(axis=1))
-
-        axes = "xyz"
-        exists = all([f"{fieldname}_{ax}" in self for ax in axes])
+        cfields = [f"{fieldname}_{ax}" for ax in "xyz"]
+        exists = all([field in self for field in cfields])
         if not exists:
             return None
 
-        units = self[f"{fieldname}_x"].get("units", None)
+        for field in cfields:
+            self[field]["vector_fieldname"] = fieldname
+
+        units = self[cfields[0]].get("units", None)
         self.arbor.add_derived_field(
             fieldname, _vector_func, vector_field=True, units=units)
         self.arbor.add_derived_field(
@@ -260,7 +265,7 @@ Check the TypeError exception above for more details.
                 # Check that the field array is the size we want.
                 # It might not be if it was previously gotten just
                 # for the root and now we want it for the whole tree.
-                if fsize is None or fcache[field].size == fsize:
+                if fsize is None or fcache[field].shape[0] == fsize:
                     continue
                 del fcache[field]
 
@@ -291,24 +296,3 @@ class FieldContainer(dict):
     """
     def __init__(self, arbor):
         self.arbor = weakref.proxy(arbor)
-
-class FakeFieldContainer(defaultdict):
-    """
-    A fake field data container used to calculate dependencies.
-    """
-    def __init__(self, arbor, name=None):
-        self.arbor = arbor
-        self.name = name
-
-    def __missing__(self, key):
-        if key not in self.arbor.field_info:
-            raise ArborFieldDependencyNotFound(
-                self.name, key, self.arbor)
-        fi = self.arbor.field_info[key]
-        units = fi.get("units", "")
-        if fi.get("vector_field", False):
-            data = np.ones((1, 3))
-        else:
-            data = np.ones(1)
-        self[key] = self.arbor.arr(data, units)
-        return self[key]

@@ -1,16 +1,18 @@
 .. _arbor:
 
-Working with Merger-Trees
+Working with Merger Trees
 =========================
 
 The :class:`~ytree.data_structures.arbor.Arbor` class is responsible for loading
-and providing access to merger-tree data.  Below, we demonstrate how
-to load data and what can be done with it.
+and providing access to merger tree data. In this document, a loaded merger tree
+dataset is referred to as an **arbor**. ``ytree`` provides several different
+ways to navigate, query, and analyze merger trees. It is recommended that you
+read this entire section to identify the way that is best for what you want to do.
 
-Loading Merger-Tree Data
-------------------------
+Loading Data
+------------
 
-``ytree`` can load merger-tree data from multiple sources using
+``ytree`` can load merger tree data from multiple sources using
 the :func:`~ytree.data_structures.load.load` command.
 
 .. code-block:: python
@@ -19,18 +21,18 @@ the :func:`~ytree.data_structures.load.load` command.
    >>> a = ytree.load("consistent_trees/tree_0_0_0.dat")
 
 This command will determine the correct format and read in the data
-accordingly.  For examples of loading each format, see below.
+accordingly. For examples of loading each format, see below.
 
 .. toctree::
    :maxdepth: 2
 
    Loading
 
-Working with Merger-Tree Data
------------------------------
+Getting Started with Merger Trees
+---------------------------------
 
-Very little happens immediately after a dataset has been loaded.  All tree
-construction and data access occurs only on demand.  After loading,
+Very little happens immediately after a dataset has been loaded. All tree
+construction and data access occurs only on demand. After loading,
 information such as the simulation box size, cosmological parameters, and
 the available fields can be accessed.
 
@@ -45,7 +47,7 @@ the available fields can be accessed.
 
 Similar to `yt <http://yt-project.org/docs/dev/analyzing/fields.html>`__,
 ``ytree`` supports accessing fields by their native names as well as generalized
-aliases.  For more information on fields in ``ytree``, see :ref:`fields`.
+aliases. For more information on fields in ``ytree``, see :ref:`fields`.
 
 How many trees are there?
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -64,7 +66,8 @@ required for generating the root nodes of every tree.
 Root Fields
 ^^^^^^^^^^^
 
-Field data for all tree roots is accessed by querying the ``Arbor`` in a
+Field data for all tree roots is accessed by querying the
+:class:`~ytree.data_structures.arbor.Arbor` in a
 dictionary-like manner.
 
 .. code-block:: python
@@ -84,22 +87,23 @@ on NumPy arrays.
      0.173696  0.173696  0.173696  0.173696  0.173696] Mpc/h
 
 When dealing with cosmological simulations, care must be taken to distinguish
-between comoving and proper reference frames.  Please read :ref:`frames` before
+between comoving and proper reference frames. Please read :ref:`frames` before
 your magical ``ytree`` journey begins.
 
 Accessing Individual Trees
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Individual trees can be accessed by indexing the ``Arbor`` object.
+Individual trees can be accessed by indexing the
+:class:`~ytree.data_structures.arbor.Arbor` object.
 
 .. code-block:: python
 
    >>> print (a[0])
    TreeNode[12900]
 
-A :class:`~ytree.data_structures.tree_node.TreeNode` is one halo in a merger-tree.
-The number is the universal identifier associated with halo.  It is unique
-to the whole arbor.  Fields can be accessed for any given
+A :class:`~ytree.data_structures.tree_node.TreeNode` is one halo in a merger tree.
+The number is the universal identifier associated with halo. It is unique
+to the whole arbor. Fields can be accessed for any given
 :class:`~ytree.data_structures.tree_node.TreeNode` in the same dictionary-like
 fashion.
 
@@ -110,12 +114,13 @@ fashion.
    657410071942446.1 Msun
 
 Array slicing can also be used to select multiple
-:class:`~ytree.data_structures.tree_node.TreeNode` objects.
+:class:`~ytree.data_structures.tree_node.TreeNode` objects. This will return a
+generator that can be iterated over or cast to a list.
 
 .. code-block:: python
 
-   >>> all_trees = a[:]
-   >>> print (all_trees[0]["mass"])
+   >>> every_second_tree = list(a[::2])
+   >>> print (every_second_tree[0]["mass"])
    657410071942446.1 Msun
 
 Note, the :class:`~ytree.data_structures.arbor.Arbor` object does not
@@ -158,11 +163,20 @@ Accessing the Nodes in a Tree or Forest
 A node is defined as a single halo at a single time in a merger tree.
 Throughout these docs, the words halo and node are used interchangeably.
 Nodes in a given tree can be accessed in three different ways: by
-:ref:`tree-access`, :Ref:`forest-access`, or :ref:`progenitor-access`.
+:ref:`tree-access`, :ref:`forest-access`, or :ref:`progenitor-access`.
 Each of these will return a generator of
 :class:`~ytree.data_structures.tree_node.TreeNode` objects or field
 values for all :class:`~ytree.data_structures.tree_node.TreeNode` objects
-in the tree, forest, or progenitor line.
+in the tree, forest, or progenitor line. To get a specific node from a
+tree, see :ref:`single-node-access`.
+
+.. note:: Access by forest is supported even for datasets that do not
+   group trees by forest. If you have no requirement for the order in
+   which nodes are to be returned, then access by forest is recommended
+   as it will be considerably faster than access by tree. Access by tree
+   is effectively a depth-first walk through the tree. This requires
+   additional data structures to be built, whereas forest access does
+   not.
 
 .. _tree-access:
 
@@ -170,7 +184,7 @@ Accessing All Nodes in a Tree
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The full lineage of the tree can be accessed by querying any
-:class:`~ytree.data_structures.tree_node.TreeNode` with the `tree` keyword.
+:class:`~ytree.data_structures.tree_node.TreeNode` with the ``tree`` keyword.
 As of ``ytree`` version 3.0, this returns a generator that can be used
 to loop through all nodes in the tree.
 
@@ -221,9 +235,10 @@ The full tree leading up to any given halo can be accessed in the same way.
 Accessing All Nodes in a Forest
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :ref:`ctrees-hdf5` and :ref:`lhalotree` formats provide access to halos
-grouped by forest. A forest is a group of trees with halos that interact in
-a non-merging way through processes like fly-bys.
+The :ref:`load-ctrees-hdf5`, :ref:`load-lhalotree`, :ref:`load-lhalotree-hdf5`,
+:ref:`load-moria`, :ref:`load-treefrog` formats provide access to halos grouped
+by forest. A forest is a group of trees with halos that interact in a non-merging
+way through processes like fly-bys.
 
 .. code-block:: python
 
@@ -240,19 +255,8 @@ a non-merging way through processes like fly-bys.
    [3.38352524e+11 3.34071450e+11 3.34071450e+11 3.31709477e+11 ...
     7.24092117e+09 4.34455270e+09] Msun
 
-To find all of the roots in that forest, i.e., the start
-of all individual trees contained, one can do:
-
-.. code-block:: python
-
-   >>> my_forest = a[0]
-   >>> roots = [node for node in f["forest"] if node["desc_uid"] == -1]
-   >>> print (roots)
-   [TreeNode[90049568], TreeNode[89739051]]
-   >>> # all halos in second tree
-   >>> print (list(roots[1]["tree"]))
-   [TreeNode[89739051], TreeNode[87886920], TreeNode[85984854], ...
-    TreeNode[9272027], TreeNode[7435733], TreeNode[5768880]]
+To find all the roots in that forest, i.e., the roots of all individual trees
+contained, see :ref:`getting_root_nodes`.
 
 Accessing a Halo's Ancestors and Descendent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -279,7 +283,7 @@ A halo's descendent can be accessed in a similar fashion.
 Accessing the Progenitor Lineage of a Tree
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Similar to the `tree` keyword, the `prog` keyword can be used to access
+Similar to the ``tree`` keyword, the ``prog`` keyword can be used to access
 the line of main progenitors. Just as above, this returns a generator
 of :class:`~ytree.data_structures.tree_node.TreeNode` objects.
 
@@ -315,14 +319,14 @@ Customizing the Progenitor Line
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default, the progenitor line is defined as the line of the most
-massive ancestors.  This can be changed by  calling the
+massive ancestors. This can be changed by calling the
 :func:`~ytree.data_structures.arbor.Arbor.set_selector`.
 
 .. code-block:: python
 
    >>> a.set_selector("max_field_value", "virial_radius")
 
-New selector functions can also be supplied.  These functions should
+New selector functions can also be supplied. These functions should
 minimally accept a list of ancestors and return a single
 :class:`~ytree.data_structures.tree_node.TreeNode`.
 
@@ -338,25 +342,65 @@ minimally accept a list of ancestors and return a single
    >>> my_tree = a[0]
    >>> print (list(my_tree["prog"]))
 
-Searching for Halos
--------------------
+.. _single-node-access:
 
-The :func:`~ytree.data_structures.arbor.Arbor.select_halos` function can be used to
-search the ``Arbor`` for halos matching a specific set of criteria.
-This is similar to the type of selection done with a relational database.
+Accessing a Single Node in a Tree
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :func:`~ytree.data_structures.tree_node.TreeNode.get_node` functions can be
+used to retrieve a single node from the forest, tree, or progenitor lists.
 
 .. code-block:: python
 
-   >>> halos = a.select_halos('tree["tree", "redshift"] > 1',
-   ...                        fields=["redshift"])
-   >>> print (halos)
-   [TreeNode[8987], TreeNode[6713], TreeNode[6091], TreeNode[448], ...,
-    TreeNode[9683], TreeNode[8316], TreeNode[10788]]
+   >>> my_tree = a[0]
+   >>> my_node = my_tree.get_node("forest", 5)
 
-The selection criteria string should be designed to ``eval`` correctly
-with a :class:`~ytree.data_structures.tree_node.TreeNode` object named,
-"tree".  The ``fields`` keyword can
-be used to specify a list of fields to preload for speeding up selection.
+This function can be called for any node in a tree. For selection by "tree" or
+"prog", the index of the node returned will be relative to the calling node,
+i.e., calling with 0 will return the original node. For selection by "forest",
+the index is the absolute index within the entire forest and not relative to
+the calling node.
+
+Accessing the Leaf Nodes of a Tree
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The leaf nodes of a tree are the nodes with no ancestors. These are the very first
+halos to form. Accessing them for any tree can be useful for semi-analytical
+models or any framework where you want to start at the origins of a halo and work
+forward in time. The :func:`~ytree.data_structures.tree_node.TreeNode.get_leaf_nodes`
+function will return a generator of all leaf nodes of a tree's forest, tree, or
+progenitor lists.
+
+.. code-block:: python
+
+   >>> my_tree = a[0]
+   >>> my_leaves = my_tree.get_leaf_nodes(selector="forest")
+   >>> for my_leaf in my_leaves:
+   ...     print (my_leaf)
+
+Similar to the :func:`~ytree.data_structures.tree_node.TreeNode.get_node`
+function, calling :func:`~ytree.data_structures.tree_node.TreeNode.get_leaf_nodes`
+with ``selector`` set to "tree" or "prog" will return only leaf nodes from the
+tree for which the calling node is the head. With ``selector`` set to "forest",
+the resulting leaf nodes will be all the leaf nodes in the forest, regardless of
+the calling node.
+
+.. _getting_root_nodes:
+
+Accessing the Root Nodes of a Forest
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A forest can have multiple root nodes, i.e., nodes that have no descendent. The
+:func:`~ytree.data_structures.tree_node.TreeNode.get_root_nodes` function will
+return a generator of all the root nodes in the forest. This function can be called
+from any tree within a forest.
+
+.. code-block:: python
+
+   >>> my_tree = a[0]
+   >>> my_roots = my_tree.get_root_nodes()
+   >>> for my_root in my_roots:
+   ...     print (my_root)
 
 .. _saving-trees:
 
@@ -364,8 +408,8 @@ Saving Arbors and Trees
 -----------------------
 
 ``Arbors`` of any type can be saved to a universal file format with the
-:func:`~ytree.data_structures.arbor.Arbor.save_arbor` function.  These can be
-reloaded with the :func:`~ytree.data_structures.load.load` command.  This
+:func:`~ytree.data_structures.arbor.Arbor.save_arbor` function. These can be
+reloaded with the :func:`~ytree.data_structures.load.load` command. This
 format is optimized for fast tree-building and field-access and so is
 recommended for most situations.
 
@@ -390,32 +434,174 @@ For convenience, individual trees can also be saved by calling
    Creating field arrays [1/1]: 100%|████| 4897/4897 [00:00<00:00, 13711286.17it/s]
    >>> a2 = ytree.load(fn)
 
-.. _frames:
+Searching Through Merger Trees (Accessing Like a Database)
+----------------------------------------------------------
 
-An Important Note on Comoving and Proper Units
-==============================================
+There are a couple different ways to search through a merger tree dataset to find
+halos meeting various criteria, similar to the type of selection done with a
+relational database. The method discussed in :ref:`select-halos` can be used with
+all data loadable with ``ytree``, while the one described in :ref:`select-halos-yt`
+is only available for :ref:`load-ytree`.
 
-Users of ``yt`` are likely familiar with conversion from proper to comoving
-reference frames by adding "cm" to a unit.  For example, proper "Mpc"
-becomes comoving with "Mpccm".  This conversion relies on all the data
-being associated with a single redshift.  This is not possible here
-because the dataset has values for multiple redshifts.  To account for
-this, the proper and comoving unit systems are set to be equal to each
-other.
+.. _select-halos:
 
-.. code-block:: python
+Select Halos
+^^^^^^^^^^^^
 
-   >>> print (a.box_size)
-   100.0 Mpc/h
-   >>> print (a.box_size.to("Mpccm/h"))
-   100.0 Mpccm/h
-
-Data should be assumed to be in the reference frame in which it
-was saved.  For length scales, this is typically the comoving frame.
-When in doubt, the safest unit to use for lengths is "unitary", which
-a system normalized to the box size.
+The :func:`~ytree.data_structures.arbor.Arbor.select_halos` function can be used to
+search the :class:`~ytree.data_structures.arbor.Arbor` for halos matching a specific
+set of criteria.
 
 .. code-block:: python
 
-   >>> print (a.box_size.to("unitary"))
-   1.0 unitary
+   >>> halos = list(a.select_halos("tree['forest', 'mass'].to('Msun') > 5e11"))
+   Selecting halos (found 3): 100%|███████████████| 32/32 [00:00<00:00, 107.70it/s]
+   >>> print (halos)
+   [TreeNode[1457223360], TreeNode[1457381406], TreeNode[1420495006]]
+
+The :func:`~ytree.data_structures.arbor.Arbor.select_halos` function will return a
+generator of :class:`~ytree.data_structures.tree_node.TreeNode` objects that can be
+iterated over or cast to a list, as above. The function will return halos as they
+are found so the user does not have to wait until the end to begin working with
+them. The progress bar will continually update to report the number of matches
+found.
+
+The selection criteria string should be designed to ``eval`` correctly
+with a :class:`~ytree.data_structures.tree_node.TreeNode` object, named
+"tree". More complex criteria can be supplied using \& and \|.
+
+.. code-block:: python
+
+   >>> for halo in a.select_halos("(tree['tree', 'mass'].to('Msun') > 2e11) & (tree['tree', 'redshift'] < 0.2)"):
+   ...     progenitor_pos = halo["prog", "position"]
+   Selecting halos (found 69): 100%|███████████████| 32/32 [00:01<00:00, 22.50it/s]
+
+.. _select-halos-yt:
+
+Select Halos with yt
+^^^^^^^^^^^^^^^^^^^^
+
+.. note:: This functionality only works with :ref:`load-ytree`. You will need to
+   :ref:`save your data in the ytree format <saving-trees>`.
+
+The :func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_yt_selection` function
+provides enhanced functionality beyond the capabilities of
+:func:`~ytree.data_structures.arbor.Arbor.select_halos` by loading the dataset
+into `yt <https://yt-project.org/>`__. Given search criteria,
+:func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_yt_selection` will return a
+:class:`~yt.data_objects.selection_objects.cut_region.YTCutRegion` data container
+that can then be queried to get the value of any field for all halos meeting the
+criteria. This :class:`~yt.data_objects.selection_objects.cut_region.YTCutRegion`
+can then be used to :ref:`generate tree nodes <halos-from-selection>` or
+:ref:`query fields <yt-data-containers>`.
+
+Creating the Selection
+^^^^^^^^^^^^^^^^^^^^^^
+
+Search criteria can be provided using a series of keywords: ``above``, ``below``,
+``equal``, and ``about``.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("arbor/arbor.h5")
+   >>> selection = a.get_yt_selection(,
+   ...     above=[("mass", 1e13, "Msun"),
+   ...            ("redshift", 0.5)])
+
+An individual criterion should be expressed as a tuple
+(e.g., ``(field, value, <units>)``), and the above keywords accept a list of those
+tuples. The criteria keywords can be given together and the halos must meet all
+criteria, i.e., the criteria are combined with an AND operator.
+
+.. code-block:: python
+
+   >>> selection = a.get_yt_selection(
+   ...     below=[("mass", 1e13, "Msun")],
+   ...     above=[("redshift", 1)])
+
+For more complex search criteria, a cut region conditional string can be
+provided instead. These should be of the form described in :ref:`cut-regions`.
+These cannot not be given with any of the previously mentioned keywords.
+
+.. code-block:: python
+
+    >>> selection = a.get_yt_selection(
+    ...     conditionals=['obj["halos", "mass"] > 1e12'])
+
+Querying the Selection
+^^^^^^^^^^^^^^^^^^^^^^
+
+The selection object returned by
+:func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_yt_selection` can then be
+queried to get field values for all matching halos. Fields should be queried
+as ``("halos", <field name>)``.
+
+.. code-block:: python
+
+   >>> # halos with masses of 1e14 Msun +/- 5%
+   >>> selection = a.get_yt_selection(
+           about=[("mass", 1e14, "Msun", 0.05)])
+
+   >>> print (selection["halos", "redshift"])
+   [0.82939091 0.97172537 1.02453741 0.31893065 0.74571856 0.97172537 ...
+    0.50455122 0.53499009 0.18907477 0.29567248 0.31893065] dimensionless
+
+.. _halos-from-selection:
+
+Getting Halos from the Selection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_nodes_from_selection`
+function will return a generator of
+:class:`~ytree.data_structures.tree_node.TreeNode` objects for all halos
+contained within the selection.
+
+.. code-block:: python
+
+   >>> # halos with masses of 1e14 Msun +/- 5%
+   >>> selection = a.get_yt_selection(
+           about=[("mass", 1e14, "Msun", 0.05)])
+
+   >>> for node in a.get_nodes_from_selection(selector):
+   ...     print (node["prog", "mass"])
+
+This function can generate :class:`~ytree.data_structures.tree_node.TreeNode`
+objects for :ref:`any yt data container <yt-data-containers>`.
+
+.. _yt-data-containers:
+
+Halos and Fields from yt Data Containers
+----------------------------------------
+
+.. note:: This functionality only works with :ref:`load-ytree`. You will need to
+   :ref:`save your data in the ytree format <saving-trees>`.
+
+For merger tree data in the :ref:`ytree format <load-ytree>`, the
+:attr:`~ytree.frontends.ytree.arbor.YTreeArbor.ytds` attribute provides access
+to the data as a `yt <https://yt-project.org/>`__ dataset. This allows one to
+analyze the entire dataset using the full range of functionality provided by
+``yt``. In this way, a merger tree dataset is very much like any particle dataset,
+where each particle represent a halo at a single time. For example, this makes it
+possible to select halos within :ref:`geometric data containers <data-objects>`,
+like spheres or regions.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("arbor/arbor.h5")
+
+   >>> ds = a.ytds
+   >>> sphere = ds.sphere(ds.domain_center, (5, "Mpc"))
+   >>> print (sphere["halos", "mass"])
+
+These data containers can then be given to the
+:func:`~ytree.frontends.ytree.arbor.YTreeArbor.get_nodes_from_selection` function to
+:ref:`get the tree nodes <halos-from-selection>` for all halos within the
+container.
+
+.. code-block:: python
+
+   >>> sphere = ds.sphere(ds.domain_center, (5, "Mpc"))
+   >>> for node in a.get_nodes_from_selection(sphere):
+   ...     print (node["position"])

@@ -1,6 +1,7 @@
-include README* CREDITS COPYING.txt CHANGELOG CONTRIBUTING.rst CITATION.rst
+include CITATION.rst CODE_OF_CONDUCT.md CONTRIBUTING.rst COPYING.txt CREDITS LICENSE README*
 recursive-include ytree *.py *.txt
 recursive-include doc *.rst *.py *.png
+recursive-include paper *.bib *.md *.png
 include doc/README
 include doc/Makefile
 prune doc/build

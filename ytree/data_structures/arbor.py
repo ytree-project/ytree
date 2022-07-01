@@ -18,6 +18,7 @@ from collections import \
 import functools
 import numpy as np
 import os
+
 from unyt import \
     unyt_array, \
     unyt_quantity
@@ -33,6 +34,8 @@ from unyt.unit_registry import \
 from yt.utilities.cosmology import \
     Cosmology
 
+from ytree.data_structures.detection import \
+    SelectionDetector
 from ytree.data_structures.fields import \
     FieldContainer, \
     FieldInfoContainer
@@ -48,6 +51,7 @@ from ytree.data_structures.tree_node import \
 from ytree.data_structures.tree_node_selector import \
     tree_node_selector_registry
 from ytree.utilities.logger import \
+    ytreeLogger, \
     fake_pbar
 
 arbor_registry = {}
@@ -67,7 +71,7 @@ class Arbor(metaclass=RegisteredArbor):
     """
     Base class for all Arbor classes.
 
-    Loads a merger-tree output file or a series of halo catalogs
+    Loads a merger tree output file or a series of halo catalogs
     and create trees, stored in an array in
     :func:`~ytree.data_structures.arbor.Arbor.trees`.
     Arbors can be saved in a universal format with
@@ -99,6 +103,10 @@ class Arbor(metaclass=RegisteredArbor):
     _reset_attrs = ("_tfi", "_pfi")
     _setup_attrs = ("_desc_uids", "_uids")
     _grow_attrs = ("_link_storage", "_link")
+
+    omega_matter = None
+    omega_lambda = None
+    omega_radiation = 0
 
     def __init__(self, filename):
         """
@@ -142,16 +150,28 @@ class Arbor(metaclass=RegisteredArbor):
         we are dealing with data at multiple redshifts.
         """
         for my_unit in ["m", "pc", "AU"]:
-            new_unit = "%scm" % my_unit
-            self._unit_registry.add(
-                new_unit, self._unit_registry.lut[my_unit][0],
-                length, self._unit_registry.lut[my_unit][3])
+            new_unit = f"{my_unit}cm"
+            self.unit_registry.add(
+                new_unit, self.unit_registry.lut[my_unit][0],
+                length, self.unit_registry.lut[my_unit][3])
 
-        self.cosmology = Cosmology(
-            hubble_constant=self.hubble_constant,
-            omega_matter=self.omega_matter,
-            omega_lambda=self.omega_lambda,
-            unit_registry=self.unit_registry)
+        setup = True
+        for attr in ["hubble_constant",
+                     "omega_matter",
+                     "omega_lambda"]:
+            if getattr(self, attr) is None:
+                setup = False
+                ytreeLogger.warning(
+                    f"{attr} missing from data. "
+                    "Arbor will have no cosmology calculator.")
+
+        if setup:
+            self.cosmology = Cosmology(
+                hubble_constant=self.hubble_constant,
+                omega_matter=self.omega_matter,
+                omega_lambda=self.omega_lambda,
+                omega_radiation=self.omega_radiation,
+                unit_registry=self.unit_registry)
 
     def _setup_io(self):
         """
@@ -173,7 +193,7 @@ class Arbor(metaclass=RegisteredArbor):
         """
         Setup field containers and definitions.
         """
-        self._field_data = FieldContainer(self)
+        self.field_data = FieldContainer(self)
         self.derived_field_list = []
         self.analysis_field_list = []
         self.field_info.setup_known_fields()
@@ -209,6 +229,13 @@ class Arbor(metaclass=RegisteredArbor):
 
         if self._node_info_storage is not None:
             return self._node_info_storage
+        self._initialize_node_info()
+        return self._node_info_storage
+
+    def _initialize_node_info(self):
+        """
+        Initialize the node_info arrays.
+        """
 
         attrs = self._node_con_attrs + \
           self._node_io_attrs
@@ -220,8 +247,6 @@ class Arbor(metaclass=RegisteredArbor):
         self._node_info_storage.update(
             dict((attr, -np.ones(self._size, dtype=np.int64))
                 for attr in self._node_too_attrs))
-
-        return self._node_info_storage
 
     def is_setup(self, tree_node):
         """
@@ -242,16 +267,21 @@ class Arbor(metaclass=RegisteredArbor):
         if self.is_setup(tree_node):
             return
 
-        idtype      = np.int64
+        idtype = np.int64
         fields, _ = \
           self.field_info.resolve_field_dependencies(["uid", "desc_uid"])
         halo_id_f, desc_id_f = fields
-        dtypes      = {halo_id_f: idtype, desc_id_f: idtype}
+        dtypes = {halo_id_f: idtype, desc_id_f: idtype}
+        # Note to self, we call _read_fields and not _get_fields to
+        # avoid recursion issues.
         field_data  = self._node_io._read_fields(tree_node, fields,
                                                  dtypes=dtypes, **kwargs)
+
         tree_node._uids      = field_data[halo_id_f]
         tree_node._desc_uids = field_data[desc_id_f]
         tree_node._tree_size = tree_node._uids.size
+        tree_node.field_data["uid"] = tree_node._uids
+        tree_node.field_data["desc_uid"] = tree_node._desc_uids
 
     def is_grown(self, tree_node):
         """
@@ -274,7 +304,7 @@ class Arbor(metaclass=RegisteredArbor):
         size      = tree_node.tree_size
         uids      = tree_node.uids
         desc_uids = tree_node.desc_uids
-        links     = np.empty(size, dtype=np.object)
+        links     = np.empty(size, dtype=object)
 
         # Make a dict mapping uids to index of storage array.
         # First, try to get indices out as the dict is constructed
@@ -345,6 +375,12 @@ class Arbor(metaclass=RegisteredArbor):
 
         for attr in attrs:
             setattr(tree_node, attr, None)
+
+    @property
+    def ytds(self):
+        raise NotImplementedError(
+            "Only ytree data can be loaded with yt. "
+            "Save data with save_arbor and then reload.")
 
     def _node_io_loop(self, func, *args, **kwargs):
         """
@@ -494,7 +530,7 @@ class Arbor(metaclass=RegisteredArbor):
             if key in ("tree", "prog"):
                 raise SyntaxError("Argument must be a field or integer.")
             self._root_io.get_fields(self, fields=[key])
-            return self._field_data[key]
+            return self.field_data[key]
         return self._generate_root_nodes(key)
 
     def _generate_root_nodes(self, key):
@@ -507,8 +543,7 @@ class Arbor(metaclass=RegisteredArbor):
             return self._generate_root_node(key)
         elif isinstance(key, slice) or isinstance(key, np.ndarray):
             indices = np.arange(self.size)[key]
-            return np.array(
-                [node for node in self._yield_root_nodes(indices)])
+            return self._yield_root_nodes(indices)
         else:
             raise ValueError('Cannot generate nodes from argument: ', key)
 
@@ -519,7 +554,7 @@ class Arbor(metaclass=RegisteredArbor):
 
         # If we've been given an array of TreeNodes,
         # just yield them back.
-        if getattr(indices, 'dtype', None) == np.object:
+        if getattr(indices, 'dtype', None) == object:
             for index in indices:
                 yield index
             return
@@ -624,6 +659,8 @@ class Arbor(metaclass=RegisteredArbor):
     @hubble_constant.setter
     def hubble_constant(self, value):
         self._hubble_constant = value
+        if value is None:
+            return
         # reset the unit registry lut while preserving other changes
         self.unit_registry = UnitRegistry.from_json(
             self.unit_registry.to_json())
@@ -699,87 +736,89 @@ class Arbor(metaclass=RegisteredArbor):
                                        registry=self.unit_registry)
         return self._quan
 
-    def select_halos(self, criteria, trees=None, select_from="tree",
-                     fields=None):
+    def select_halos(self, criteria, trees=None,
+                     select_from=None, fields=None):
         """
         Select halos from the arbor based on a set of criteria given as a string.
 
+        Halos matching the criteria will be returned through a generator. Matches
+        are returned as soon as they are found, allowing you to begin working
+        with them before the search has completed. The progress bar will update
+        to report the number of matches found as the search progresses.
 
         Parameters
         ----------
 
-        criteria: string
+        criteria : string
             A string that will eval to a Numpy-like selection operation
             performed on a TreeNode object called "tree".
             Example: 'tree["tree", "redshift"] > 1'
         trees : optional, list or array of TreeNodes
             A list or array of TreeNode objects in which to search. If none given,
             the search is performed over the full arbor.
-        select_from : optional, "tree", "forest", or "prog"
-            Determines whether to perform the search over the full tree or just
-            the main progenitors. Note, the value given must be consistent with
-            what appears in the criteria string. For example, a criteria
-            string of 'tree["tree", "redshift"] > 1' cannot be used when setting
-            select_from to "prog".
-            Default: "tree".
-        fields : optional, list of strings
-            Use to provide a list of fields required by the criteria evaluation.
-            If given, fields will be preloaded in an optimized way and the search
-            will go faster.
-            Default: None.
+        select_from : deprecated, do not use
+            This keyword is no longer required and using it does nothing.
+        fields : deprecated, do not use
+            This keyword is no longer required and using it does nothing.
 
         Returns
         -------
 
-        halos : array of TreeNodes
-            A flat array of all TreeNodes meeting the criteria.
+        halos : :class:`~ytree.data_structures.tree_node.TreeNode` generator
+            A generator yielding all TreeNodes meeting the criteria.
 
         Examples
         --------
 
         >>> import ytree
         >>> a = ytree.load("tree_0_0_0.dat")
-        >>> halos = a.select_halos('tree["tree", "redshift"] > 1',
-        ...                        fields=["redshift"])
+        >>> for halo in a.select_halos('tree["tree", "redshift"] > 1'):
+        ...     print (halo["mass"])
         >>>
-        >>> halos = a.select_halos('tree["prog", "mass"].to("Msun") >= 1e10',
-        ...                        select_from="prog", fields=["mass"])
+        >>> halos = list(a.select_halos('tree["prog", "mass"].to("Msun") >= 1e10'))
+        >>> print (len(halos))
 
         """
 
-        if select_from not in ["tree", "forest", "prog"]:
-            raise SyntaxError(
-                "Keyword \"select_from\" must be \"tree\", \"forest\", or \"prog\".")
+        if select_from is not None:
+            import warnings
+            from numpy import VisibleDeprecationWarning
+            warnings.warn(
+                "The \"select_from\" keyword is deprecated and no longer does anything.",
+                VisibleDeprecationWarning, stacklevel=2)
+
+        if fields is not None:
+            import warnings
+            from numpy import VisibleDeprecationWarning
+            warnings.warn(
+                "The \"fields\" keyword is deprecated and no longer does anything.",
+                VisibleDeprecationWarning, stacklevel=2)
+
+        tree = SelectionDetector(self)
+        eval(criteria)
+        if len(tree.selectors) > 1:
+            raise ValueError(
+                f"Selection criteria must only use one selector: \"{criteria}\".\n"
+                f"    Selection criteria uses {len(tree.selectors)} selectors: "
+                f"{tree.selectors}.")
+        selector = tree.selectors[0]
 
         if trees is None:
-            trees = self[:]
+            trees = self
 
-        if fields is None:
-            fields = []
-
-        self._node_io_loop(self._setup_tree, root_nodes=trees,
-                           pbar="Setting up trees")
-        if fields:
-            self._node_io_loop(
-                self._node_io.get_fields,
-                pbar="Getting fields",
-                root_nodes=trees, fields=fields, root_only=False)
-
-
-        halos = []
-        pbar = get_pbar("Selecting halos", trees.size)
+        found = 0
+        pbar = get_pbar(f"Selecting halos ({found} found)", trees.size)
         for i, tree in enumerate(trees):
-            my_filter = np.asarray(eval(criteria))
-            select_group = np.asarray(list(tree[select_from]))
-            if my_filter.size != select_group.size:
-                raise RuntimeError(
-                    ("Filter array and tree array sizes do not match. " +
-                     "Make sure select_from (\"%s\") matches criteria (\"%s\").") %
-                    (select_from, criteria))
-            halos.extend(select_group[my_filter])
+            imatches = np.where(eval(criteria))[0]
+            if imatches.size > 0:
+                found += imatches.size
+                pbar._pbar.set_description_str(f"Selecting halos (found {found})")
             pbar.update(i+1)
+
+            for imatch in imatches:
+                yield tree.get_node(selector, imatch)
+
         pbar.finish()
-        return np.array(halos)
 
     def add_analysis_field(self, name, units, dtype=None, default=0):
         r"""
@@ -926,6 +965,16 @@ class Arbor(metaclass=RegisteredArbor):
 
         self.field_info.add_vector_field(name)
 
+    def get_yt_selection(self, *args, **kwargs):
+        raise NotImplementedError(
+            "This function is only implemented for ytree arbors."
+            "Use save_arbor to save your data in the correct format.")
+
+    def get_nodes_from_selection(self, *args, **kwargs):
+        raise NotImplementedError(
+            "This function is only implemented for ytree arbors."
+            "Use save_arbor to save your data in the correct format.")
+
     @classmethod
     def _is_valid(cls, *args, **kwargs):
         """
@@ -978,6 +1027,53 @@ class Arbor(metaclass=RegisteredArbor):
         fn = save_arbor(self, **kwargs)
         return fn
 
+class SegmentedArbor(Arbor):
+    """
+    Arbor subclass for multi-file datasets where an entire merger tree
+    is contained within a file (i.e., no overlap). This permits the
+    definition of a useful _node_io_loop_prepare function.
+    """
+
+    # Data formats organized similar to below can use this class.
+    # _fi - file index, i.e., which data file is it in
+    # _si - start index, the array index where this tree starts
+    _node_io_attrs = ('_fi', '_si')
+
+    def _node_io_loop_start(self, data_file):
+        data_file.open()
+
+    def _node_io_loop_finish(self, data_file):
+        data_file.close()
+
+    def _node_io_loop_prepare(self, nodes):
+        if nodes is None:
+            nodes = np.arange(self.size)
+            fi = self._node_info['_fi']
+            si = self._node_info['_si']
+        elif nodes.dtype == object:
+            fi = np.array(
+                [node._fi if node.is_root else node.root._fi
+                 for node in nodes])
+            si = np.array(
+                [node._si if node.is_root else node.root._si
+                 for node in nodes])
+        else: # assume an array of indices
+            fi = self._node_info['_fi'][nodes]
+            si = self._node_info['_si'][nodes]
+
+        # the order they will be processed
+        io_order = np.lexsort((si, fi))
+        fi = fi[io_order]
+        # array to return them to original order
+        return_order = np.empty_like(io_order)
+        return_order[io_order] = np.arange(io_order.size)
+
+        ufi = np.unique(fi)
+        data_files = [self.data_files[i] for i in ufi]
+        index_list = [io_order[fi == i] for i in ufi]
+
+        return data_files, index_list, return_order
+
 class CatalogArbor(Arbor):
     """
     Base class for Arbors created from a series of halo catalog
@@ -1000,11 +1096,11 @@ class CatalogArbor(Arbor):
 
     # Don't reset _ancestors or descendents because we won't be able to
     # rebuild trees without calling _plant_trees again.
-    _setup_attrs = ("_desc_uids", "_uids", "_nodes")
+    _setup_attrs = ("_desc_uids", "_uids", "_nodes", "_link_storage")
     _grow_attrs = ()
 
     def __init__(self, filename):
-        super(CatalogArbor, self).__init__(filename)
+        super().__init__(filename)
         if not self._has_uids:
             if "uid" not in self.field_list:
                 for field in "uid", "desc_uid":
@@ -1075,7 +1171,7 @@ class CatalogArbor(Arbor):
             for data_file in dfl:
                 data = data_file._read_fields(fields, dtypes=dtypes)
                 nhalos = len(data[halo_id_f])
-                batch = np.empty(nhalos, dtype=np.object)
+                batch = np.empty(nhalos, dtype=object)
 
                 for it in range(nhalos):
                     descid = data[desc_id_f][it]
@@ -1112,7 +1208,7 @@ class CatalogArbor(Arbor):
                         ancestor._descendent = descendent
 
             if i < nfiles - 1:
-                descs = np.empty(sum(bsize), dtype=np.object)
+                descs = np.empty(sum(bsize), dtype=object)
                 lastids = np.empty(descs.size, dtype=np.int64)
                 ib = 0
                 for batch, hid, bs in zip(batches, hids, bsize):
@@ -1138,22 +1234,30 @@ class CatalogArbor(Arbor):
         nodes     = []
         uids      = []
         desc_uids = [-1]
+        # This is redundant, but enables functionality that uses
+        # the link storage, like TreeNode.get_node.
+        links     = []
         for i, node in enumerate(tree_node._tree_nodes):
             node._tree_id = i
             node.root     = tree_node
             nodes.append(node)
             uids.append(node.uid)
+            link = NodeLink(i)
+            links.append(link)
             if i > 0:
                 desc_uids.append(node.descendent.uid)
+                desc_link = links[node.descendent.tree_id]
+                desc_link.add_ancestor(link)
         tree_node._nodes     = np.array(nodes)
         tree_node._uids      = np.array(uids)
         tree_node._desc_uids = np.array(desc_uids)
         tree_node._tree_size = tree_node._uids.size
+        tree_node._link_storage = np.array(links)
         # This should bypass any attempt to get this field in
         # the conventional way.
         if self.field_info["uid"].get("source") == "arbor":
-            tree_node._field_data["uid"] = tree_node._uids
-            tree_node._field_data["desc_uid"] = tree_node._desc_uids
+            tree_node.field_data["uid"] = tree_node._uids
+            tree_node.field_data["desc_uid"] = tree_node._desc_uids
 
     def _grow_tree(self, tree_node):
         """

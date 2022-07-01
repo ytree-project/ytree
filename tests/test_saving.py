@@ -13,8 +13,6 @@ tests for saving arbors and trees
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import os
-
 from ytree.utilities.testing import \
     compare_trees, \
     requires_file, \

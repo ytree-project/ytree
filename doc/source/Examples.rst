@@ -5,47 +5,57 @@ Example Applications
 
 Below are some examples of things one might want to do with merger
 trees that demonstrate various ``ytree`` functions. If you have made
-something interesting, please consider contributing it.
+something interesting, please add it!
 
-Halo Age
---------
+Halo Age (a50)
+--------------
 
-One way to define the age of a halo is by calculating the time
-when it reached 50% of its current mass. In the example below,
-this time is calculated by linearly interpolating from the mass
-of the main progenitor as a function of time.
+One way to define the age of a halo is by calculating the scale factor
+when it reached 50% of its current mass. This is often referred to as
+"a50". In the example below, this is calculated by linearly
+interpolating from the mass of the main progenitor.
 
 .. code-block:: python
 
-    import numpy as np
+   import numpy as np
 
-    def t50(tree):
-        # main progenitor masses
-        pmass = tree['prog', 'mass']
+   def calc_a50(node):
+       # main progenitor masses
+       pmass = node["prog", "mass"]
 
-        mh = 0.5 * tree['mass']
-        m50 = pmass <= mh
+       mh = 0.5 * node["mass"]
+       m50 = pmass <= mh
 
-        if not m50.any():
-            th = tree['time']
-        else:
-            ptime = tree['prog', 'time']
-            # linearly interpolate
-            i = np.where(m50)[0][0]
-            slope = (ptime[i-1] - ptime[i]) / (pmass[i-1] - pmass[i])
-            th = slope * (mh - pmass[i]) + ptime[i]
+       if not m50.any():
+           ah = node["scale_factor"]
+       else:
+           pscale = node["prog", "scale_factor"]
+           # linearly interpolate
+           i = np.where(m50)[0][0]
+           slope = (pscale[i-1] - pscale[i]) / (pmass[i-1] - pmass[i])
+           ah = slope * (mh - pmass[i]) + pscale[i]
 
-        return th
+       node["a50"] = ah
 
-Now we'll run it on the first tree in the data set.
+Now we'll run it using the :ref:`analysis_pipeline`.
 
 .. code-block:: python
 
    >>> import ytree
-   >>> a = ytree.load('consistent_trees/tree_0_0_0.dat')
-   >>> my_tree = a[0]
-   >>> print (t50(my_tree).to('Gyr'))
-   7.2325572094782515 Gyr
+   >>> a = ytree.load("consistent_trees/tree_0_0_0.dat")
+   >>> a.add_analysis_field("a50", "")
+
+   >>> ap = ytree.AnalysisPipeline()
+   >>> ap.add_operation(calc_a50)
+
+   >>> trees = list(a[:])
+   >>> for tree in trees:
+   ...     ap.process_target(tree)
+
+   >>> fn = a.save_arbor(filename="halo_age", trees=trees)
+   >>> a2 = ytree.load(fn)
+   >>> print (a2[0]["a50"])
+   0.57977664
 
 Significance
 ------------
@@ -62,43 +72,42 @@ for every halo in a single tree.
 
 .. code-block:: python
 
-   def get_significance(tree):
-       if tree.descendent is None:
-           dt = 0. * tree['time']
-       else:
-           dt = tree.descendent['time'] - tree['time']
+   def calc_significance(node):
+      if node.descendent is None:
+          dt = 0. * node["time"]
+      else:
+          dt = node.descendent["time"] - node["time"]
 
-       sig = tree['mass'] * dt
-       if tree.ancestors is not None:
-           for anc in tree.ancestors:
-               sig += get_significance(anc)
+      sig = node["mass"] * dt
+      if node.ancestors is not None:
+          for anc in node.ancestors:
+              sig += calc_significance(anc)
 
-       tree['significance'] = sig
-       return sig
+      node["significance"] = sig
+      return sig
 
-We now add a new analysis field to save the significance values
-for all trees. Then, we will save the arbor with the newly added
-significance field.
-
-.. code-block:: python
-
-   >>> import ytree
-   >>> a = ytree.load('consistent_trees/tree_0_0_0.dat')
-   >>> a.add_analysis_field('significance', 'Msun*Myr')
-   >>> my_trees = a[:]
-   >>> for tree in my_trees:
-           get_significance(tree)
-   >>> a.save_arbor(filename='sig_tree', trees=my_trees)
-
-Finally, we can load the new data set and use the significance
-field to select the main progenitors.
+Now, we'll use the :ref:`analysis_pipeline` to calculate the
+significance for all trees and save a new dataset. After loading the
+new arbor, we use the
+:func:`~ytree.data_structures.arbor.Arbor.set_selector` function to
+use the new significance field to determine the progenitor line.
 
 .. code-block:: python
 
-   >>> import ytree
-   >>> a = ytree.load('sig_tree/sig_tree.h5')
-   >>> a.set_selector('max_field_value', 'significance')
-   >>> print (a[0]['prog'])
-   [TreeNode[12900] TreeNode[12539] TreeNode[12166] TreeNode[11796] ...
-    TreeNode[105] TreeNode[62]]
- 
+   >>> a = ytree.load("tiny_ctrees/locations.dat")
+   >>> a.add_analysis_field("significance", "Msun*Myr")
+
+   >>> ap = ytree.AnalysisPipeline()
+   >>> ap.add_operation(calc_significance)
+
+   >>> trees = list(a[:])
+   >>> for tree in trees:
+   ...     ap.process_target(tree)
+
+   >>> fn = a.save_arbor(filename="significance", trees=trees)
+   >>> a2 = ytree.load(fn)
+   >>> a2.set_selector("max_field_value", "significance")
+   >>> prog = list(a2[0]["prog"])
+   >>> print (prog)
+   [TreeNode[1457223360], TreeNode[1452164856], TreeNode[1447024182], ...
+    TreeNode[6063823], TreeNode[5544219], TreeNode[5057761]]

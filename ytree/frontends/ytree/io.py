@@ -23,7 +23,7 @@ from ytree.data_structures.io import \
 
 class YTreeDataFile(DataFile):
     def __init__(self, filename):
-        super(YTreeDataFile, self).__init__(filename)
+        super().__init__(filename)
         self._field_cache = None
         self._start_index = None
         self._end_index = None
@@ -59,9 +59,9 @@ class YTreeTreeFieldIO(TreeFieldIO):
 
         # get start_index and end_index
         for itype in ["start", "end"]:
-            if getattr(data_file, "_%s_index" % itype) is None:
-                setattr(data_file, "_%s_index" % itype,
-                        data_file.fh["index/tree_%s_index" % itype][()])
+            if getattr(data_file, f"_{itype}_index") is None:
+                setattr(data_file, f"_{itype}_index",
+                        data_file.fh[f"index/tree_{itype}_index"][()])
         ii = root_node._ai - self._si[dfi]
 
         field_data = {}
@@ -72,7 +72,7 @@ class YTreeTreeFieldIO(TreeFieldIO):
                     fh = data_file.analysis_fh
                 else:
                     fh = data_file.fh
-                fdata = fh["data/%s" % field][()]
+                fdata = fh[f"data/{field}"][()]
 
                 dtype = dtypes.get(field)
                 if dtype is not None:
@@ -108,14 +108,13 @@ class YTreeRootFieldIO(DefaultRootFieldIO):
                 my_fh = analysis_fh
             else:
                 my_fh = fh
-            data = my_fh["data/%s" % field][()]
+            data = my_fh[f"data/{field}"][()]
             dtype = dtypes.get(field)
             if dtype is not None:
                 data = data.astype(dtype)
-            units = fi[field].get("units", "")
-            if units != "":
-                data = self.arbor.arr(data, units)
             field_data[field] = data
+
+        self._apply_units(fields, field_data)
 
         fh.close()
         if self.arbor.analysis_filename is not None:

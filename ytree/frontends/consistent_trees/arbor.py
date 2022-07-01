@@ -22,7 +22,7 @@ from yt.funcs import \
     get_pbar
 
 from ytree.data_structures.arbor import \
-    Arbor
+    SegmentedArbor
 
 from ytree.frontends.consistent_trees.fields import \
     ConsistentTreesFieldInfo
@@ -40,7 +40,7 @@ from ytree.utilities.exceptions import \
 from ytree.utilities.io import \
     f_text_block
 
-class ConsistentTreesArbor(Arbor):
+class ConsistentTreesArbor(SegmentedArbor):
     """
     Arbors loaded from consistent-trees tree_*.dat files.
     """
@@ -49,16 +49,6 @@ class ConsistentTreesArbor(Arbor):
     _tree_field_io_class = ConsistentTreesTreeFieldIO
     _default_dtype = np.float32
     _node_io_attrs = ('_fi', '_si', '_ei')
-
-    def _node_io_loop_start(self, data_file):
-        if data_file is None:
-            data_file = self.data_files[0]
-        data_file.open()
-
-    def _node_io_loop_finish(self, data_file):
-        if data_file is None:
-            data_file = self.data_files[0]
-        data_file.close()
 
     def _get_data_files(self):
         self.data_files = [ConsistentTreesDataFile(self.filename)]
@@ -143,30 +133,6 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
     Arbors loaded from consistent-trees locations.dat files.
     """
 
-    def _node_io_loop_prepare(self, nodes):
-        if nodes is None:
-            nodes = np.arange(self.size)
-            fi = self._node_info['_fi']
-        elif nodes.dtype == np.object:
-            fi = np.array(
-                [node._fi if node.is_root else node.root._fi
-                 for node in nodes])
-        else: # assume an array of indices
-            fi = self._node_info['_fi'][nodes]
-
-        # the order they will be processed
-        io_order = np.argsort(fi)
-        fi = fi[io_order]
-        # array to return them to original order
-        return_order = np.empty_like(io_order)
-        return_order[io_order] = np.arange(io_order.size)
-
-        ufi = np.unique(fi)
-        data_files = [self.data_files[i] for i in ufi]
-        index_list = [io_order[fi == i] for i in ufi]
-
-        return data_files, index_list, return_order
-
     def _get_data_files(self):
         pass
 
@@ -178,9 +144,8 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         if not line:
             raise ArborDataFileEmpty(self.filename)
 
-        fn = os.path.join(self.directory, line.split()[-1])
-        super(ConsistentTreesGroupArbor, self)._parse_parameter_file(
-            filename=fn, ntrees_in_file=False)
+        fn = os.path.join(self.directory, line.split()[3])
+        super()._parse_parameter_file(filename=fn, ntrees_in_file=False)
 
     def _plant_trees(self):
         if self.is_planted:
@@ -284,7 +249,7 @@ class ConsistentTreesHlistArbor(RockstarArbor):
         """
         prefix = os.path.join(os.path.dirname(self.filename), "hlist_")
         suffix = ".list"
-        my_files = glob.glob("%s*%s" % (prefix, suffix))
+        my_files = glob.glob(f"{prefix}*{suffix}")
 
         # sort by catalog number
         my_files.sort(

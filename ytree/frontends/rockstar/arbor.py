@@ -40,7 +40,7 @@ class RockstarArbor(CatalogArbor):
 
     def _parse_parameter_file(self):
         fgroups = setup_field_groups()
-        rems = ["%s%s%s" % (s[0], t, s[1])
+        rems = [f"{s[0]}{t}{s[1]}"
                 for s in [("(", ")"), ("", "")]
                 for t in ["physical, peculiar",
                           "comoving", "physical"]]
@@ -106,7 +106,7 @@ class RockstarArbor(CatalogArbor):
         prefix = self.basename[:reg.start()+1]
         suffix = self.basename[reg.end()-1:]
 
-        freg = re.compile(r"%s\d+%s" % (prefix, suffix))
+        freg = re.compile(rf"{prefix}\d+{suffix}")
         my_files = [os.path.join(self.directory, f)
                     for f in os.listdir(self.directory)
                     if freg.match(f)]

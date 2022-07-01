@@ -21,11 +21,12 @@ import ytree
 from ytree.utilities.loading import \
     test_data_dir
 from ytree.utilities.testing import \
+    ArborTest, \
+    TempDirTest, \
     requires_file
 from ytree.frontends.lhalotree import \
+    LHaloTreeArbor, \
     utils as lhtutils
-from ytree.frontends.lhalotree.arbor import \
-    LHaloTreeArbor
 
 
 MMT = os.path.join(test_data_dir, 'lhalotree', 'trees_063.0')
@@ -33,6 +34,11 @@ SMT = os.path.join(test_data_dir, 'lhalotree', 'small_trees_063.0')
 MMP = os.path.join(test_data_dir, 'lhalotree', 'millennium.param')
 CTT = os.path.join(test_data_dir, 'consistent_trees', 'tree_0_0_0.dat')
 
+class LHaloTreeArborTest(TempDirTest, ArborTest):
+    arbor_type = LHaloTreeArbor
+    test_filename = "lhalotree/trees_063.0"
+    groups = ("forest", "tree", "prog")
+    tree_skip = 100
 
 @requires_file(MMT)
 def make_small_example(ntrees_per_file=None):
@@ -46,7 +52,7 @@ def make_small_example(ntrees_per_file=None):
     fname_base = os.path.splitext(SMT)[0]
     prev_halos = 0
     for i in range(len(ntrees_per_file)):
-        ifile = '%s.%d' % (fname_base, i)
+        ifile = f"{fname_base}.{i}"
         start_tree = ntrees_before_file[i]
         stop_tree = start_tree + ntrees_per_file[i]
         nhalos_per_tree1 = nhalos_per_tree0[start_tree:stop_tree]

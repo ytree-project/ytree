@@ -4,7 +4,8 @@ Fields in ytree
 ===============
 
 ``ytree`` supports multiple types of fields, each representing numerical
-values associated with each halo in the ``Arbor``.  These include the
+values associated with each halo in the
+:class:`~ytree.data_structures.arbor.Arbor`. These include the
 :ref:`native fields <native-fields>` stored on disk, :ref:`alias fields
 <alias-fields>`, :ref:`derived fields <derived-fields>`, and
 :ref:`analysis fields <analysis-fields>`.
@@ -14,7 +15,7 @@ The Field Info Container
 
 Each :class:`~ytree.data_structures.arbor.Arbor` contains a dictionary,
 called :func:`~ytree.data_structures.arbor.Arbor.field_info`,
-with relevant information for each available field.  This information
+with relevant information for each available field. This information
 can include the units, type of field, any dependencies or aliases, and
 things relevant to reading the data from disk.
 
@@ -34,7 +35,8 @@ Fields on Disk
 --------------
 
 Every field stored in the dataset's files should be available within
-the ``Arbor``.  The ``field_list`` contains a list of all fields on disk
+the :class:`~ytree.data_structures.arbor.Arbor`. The ``field_list``
+contains a list of all fields on disk
 with their native names.
 
 .. code-block:: python
@@ -48,10 +50,10 @@ Alias Fields
 ------------
 
 Because the various dataset formats use different naming conventions for
-similar fields, ``ytree`` allows fields to be referred to by aliases.  This
-allows for a universal set of names for the most common fields.  Many are
+similar fields, ``ytree`` allows fields to be referred to by aliases. This
+allows for a universal set of names for the most common fields. Many are
 added by default, including "mass", "virial_radius", "position_<xyz>",
-and "velocity_<xyz>".  The list of available alias and derived fields
+and "velocity_<xyz>". The list of available alias and derived fields
 can be found in the ``derived_field_list``.
 
 .. code-block:: python
@@ -75,7 +77,7 @@ Derived Fields
 --------------
 
 Derived fields are functions of existing fields, including other
-derived and alias fields.  New derived fields are created by
+derived and alias fields. New derived fields are created by
 providing a defining function and calling
 :func:`~ytree.data_structures.arbor.Arbor.add_derived_field`.
 
@@ -93,10 +95,10 @@ Field functions should take two arguments. The first is a dictionary
 that will contain basic information about the field, such as its name.
 The second argument represents the data container for which the field
 will be defined. It can be used to access field data for any other
-available field.  This argument will also have access to the parent
-``Arbor`` as ``data.arbor``.
+available field. This argument will also have access to the parent
+:class:`~ytree.data_structures.arbor.Arbor` as ``data.arbor``.
 
-.. _analysis-fields:
+.. _vector-fields:
 
 Vector Fields
 -------------
@@ -134,7 +136,7 @@ quadrature sum of the components.
      200.74057711  166.13782652  529.7336846 ] km/s
 
 Only specifically registered fields will be available as vector fields.
-For example, saved :ref:`analysis_fields` with x,y,z components will
+For example, saved :ref:`analysis-fields` with x,y,z components will
 not automatically be available. However, vector fields can be created
 with the :func:`~ytree.data_structures.arbor.Arbor.add_vector_field`
 function.
@@ -146,16 +148,17 @@ function.
 The above example assumes that fields named "thing_x", "thing_y",
 and "thing_z" already exist.
 
-.. _analysis_fields:
+.. _analysis-fields:
 
 Analysis Fields
 ---------------
 
 Analysis fields provide a means for saving the results of complicated
-analysis for any halo in the ``Arbor``.  This would be operations
-beyond derived fields, for example, things that might require loading
-the original simulation snapshots.  New analysis fields are created
-with :func:`~ytree.data_structures.arbor.Arbor.add_analysis_field` and are
+analysis for any halo in the :class:`~ytree.data_structures.arbor.Arbor`.
+This would be operations beyond derived fields, for example, things that
+might require loading the original simulation snapshots. New analysis
+fields are created with
+:func:`~ytree.data_structures.arbor.Arbor.add_analysis_field` and are
 initialized to zero.
 
 .. code-block:: python
@@ -180,14 +183,16 @@ or :func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.
 
 .. code-block:: python
 
-   >>> my_trees = a[:] # all trees
+   >>> my_trees = list(a[:]) # all trees
    >>> for my_tree in my_trees:
    ...     # do analysis...
    >>> a.save_arbor(trees=my_trees)
 
-.. note:: Trees with altered analysis fields must be provided explicitly to
-   :func:`~ytree.data_structures.arbor.Arbor.save_arbor` in order for fields
-   to be saved properly.
+Note that we do ``my_trees = list(a[:])`` and not just ``my_trees =
+a[:]``. This is because ``a[:]`` is a generator that will return a new
+set of trees each time. The newly generated trees will not retain
+changes made to any analysis fields. Thus, we must use ``list(a[:])``
+to explicitly store a list of trees.
 
 Re-saving Analysis Fields
 ^^^^^^^^^^^^^^^^^^^^^^^^^

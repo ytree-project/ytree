@@ -43,7 +43,7 @@ class TreeNode:
         self.arbor = weakref.proxy(arbor)
         if root:
             self.root = -1
-            self._field_data = FieldContainer(arbor)
+            self.field_data = FieldContainer(arbor)
         else:
             self.root = None
 
@@ -108,7 +108,7 @@ class TreeNode:
 
         if not self.is_root:
             return
-        self._field_data.clear()
+        self.field_data.clear()
 
     _descendent = None # used by CatalogArbor
     @property
@@ -126,6 +126,8 @@ class TreeNode:
 
         # conventional Arbor object
         desc_link = self._link.descendent
+        if desc_link is None:
+            return None
         return self.arbor._generate_tree_node(self.root, desc_link)
 
     _ancestors = None # used by CatalogArbor
@@ -143,9 +145,17 @@ class TreeNode:
                 yield self.arbor._generate_tree_node(self.root, link)
             return
 
+        # If tree is not setup yet, the ancestor nodes will not have
+        # root pointers yet.
+        need_root = not self.arbor.is_setup(self)
+        if need_root:
+            root = self.walk_to_root()
+
         # set in CatalogArbor._plant_trees
         if self._ancestors is not None:
             for ancestor in self._ancestors:
+                if need_root:
+                    ancestor.root = root
                 yield ancestor
             return
         return None
@@ -210,22 +220,30 @@ class TreeNode:
         Set analysis field value for this node.
         """
 
-        ftype = self.arbor.field_info[key].get('type')
+        fi = self.arbor.field_info[key]
+        ftype = fi.get('type')
         if ftype not in ['analysis', 'analysis_saved']:
             raise ArborUnsettableField(key, self.arbor)
+
+        vector_fieldname = fi.get("vector_fieldname", None)
+        has_vector_field = vector_fieldname is not None
 
         if self.is_root:
             root = self
             tree_id = 0
             # if root, set the value in the arbor field storage
             self.arbor[key][self._arbor_index] = value
+            if has_vector_field and vector_fieldname in self.arbor.field_data:
+                del self.arbor.field_data[vector_fieldname]
         else:
             root = self.root
             tree_id = self.tree_id
         self.arbor._node_io.get_fields(self, fields=[key],
                                        root_only=False)
-        data = root._field_data[key]
+        data = root.field_data[key]
         data[tree_id] = value
+        if has_vector_field and vector_fieldname in root.field_data:
+            del root.field_data[vector_fieldname]
 
     def __getitem__(self, key):
         """
@@ -281,15 +299,15 @@ class TreeNode:
             ftype, field = key
             if ftype not in arr_types:
                 raise SyntaxError(
-                    "First argument must be one of %s." % str(arr_types))
+                    f"First argument must be one of {str(arr_types)}.")
             if not isinstance(field, str):
                 raise SyntaxError("Second argument must be a string.")
 
             self.arbor._node_io.get_fields(self, fields=[field], root_only=False)
-            indices = getattr(self, "_%s_field_indices" % ftype)
+            indices = getattr(self, f"_{ftype}_field_indices")
 
             data_object = self.find_root()
-            return data_object._field_data[field][indices]
+            return data_object.field_data[field][indices]
 
         else:
             if not isinstance(key, str):
@@ -298,19 +316,131 @@ class TreeNode:
             # return the progenitor list or tree nodes in a list
             if key in arr_types:
                 self.arbor._setup_tree(self)
-                return getattr(self, "_%s_nodes" % key)
+                return getattr(self, f"_{key}_nodes")
 
             # return field value for this node
             self.arbor._node_io.get_fields(self, fields=[key],
                                            root_only=self.is_root)
             data_object = self.find_root()
-            return data_object._field_data[key][self.tree_id]
+            return data_object.field_data[key][self.tree_id]
 
     def __repr__(self):
         """
         Call me TreeNode.
         """
-        return "TreeNode[%d]" % self.uid
+        return f"TreeNode[{self.uid}]"
+
+    def get_node(self, selector, index):
+        """
+        Get a single TreeNode from a tree.
+
+        Use this to get the nth TreeNode from a forest, tree, or
+        progenitor list for which the calling TreeNode is the head.
+
+        Parameters
+        ----------
+        selector : str ("forest", "tree", or "prog")
+            The tree selector from which to get the TreeNode. This
+            should be "forest", "tree", or "prog".
+        index : int
+            The index of the desired TreeNode in the forest, tree,
+            or progenitor list.
+
+        Returns
+        -------
+        node: :class:`~ytree.data_structures.tree_node.TreeNode`
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("tiny_ctrees/locations.dat")
+        >>> my_tree = a[0]
+        >>> # get 6th TreeNode in the progenitor list
+        >>> my_node = my_tree.get_node('prog', 5)
+
+        """
+
+        self.arbor._setup_tree(self)
+        self.arbor._grow_tree(self)
+        indices = getattr(self, f"_{selector}_field_indices", None)
+        if indices is None:
+            raise RuntimeError("Bad selector.")
+
+        my_link = self.root._links[indices][index]
+        return self.arbor._generate_tree_node(self.root, my_link)
+
+    def get_leaf_nodes(self, selector=None):
+        """
+        Get all leaf nodes from the tree of which this is the head.
+
+        This returns a generator of all leaf nodes belonging to this
+        tree. A leaf node is a node that has no ancestors.
+
+        Parameters
+        ----------
+        selector : optional, str ("forest", "tree", or "prog")
+            The tree selector from which leaf nodes will be found.
+            If none given, this will be set to "forest" if the
+            calling node is a root node and "tree" otherwise.
+
+        Returns
+        -------
+        leaf_nodes : a generator of
+            :class:`~ytree.data_structures.tree_node.TreeNode` objects.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("tiny_ctrees/locations.dat")
+        >>> my_tree = a[0]
+        >>> for leaf in my_tree.get_leaf_nodes():
+        ...     print (leaf["mass"])
+
+        """
+
+        if selector is None:
+            if self.is_root:
+                selector = "forest"
+            else:
+                selector = "tree"
+
+        uids = self[selector, "uid"]
+        desc_uids = self[selector, "desc_uid"]
+        lids = np.where(~np.in1d(uids, desc_uids))[0]
+        for lid in lids:
+            yield self.get_node(selector, lid)
+
+    def get_root_nodes(self):
+        """
+        Get all root nodes from the forest to which this node belongs.
+
+        This returns a generator of all root nodes in the forest. A root
+        node is a node that has no descendents.
+
+        Returns
+        -------
+        root_nodes : a generator of
+            :class:`~ytree.data_structures.tree_node.TreeNode` objects.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("consistent_trees_hdf5/soa/forest.h5",
+        ...                access="forest")
+        >>> my_tree = a[0]
+        >>> for root in my_tree.get_root_nodes():
+        ...     print (root["mass"])
+
+        """
+
+        selector = "forest"
+        desc_uids = self[selector, "desc_uid"]
+        rids = np.where(desc_uids == -1)[0]
+        for rid in rids:
+            yield self.get_node(selector, rid)
 
     _ffi = slice(None)
     @property
@@ -455,7 +585,7 @@ class TreeNode:
         """
 
         if filename is None:
-            filename = "tree_%d" % self.uid
+            filename = f"tree_{self.uid}"
 
         return self.arbor.save_arbor(
             filename=filename, fields=fields,
