@@ -20,9 +20,8 @@ from ytree.data_structures.fields import \
 
 m_unit = "1e10 * Msun/h"
 p_unit = "Mpc/h"
-r_unit = "kpc/h"
 v_unit = "km/s"
-j_unit = "kpc * km/s"
+j_unit = f"{p_unit} * {v_unit}"
 
 def _redshift(field, data):
     isn = data["SnapNum"].astype(int)
@@ -44,17 +43,14 @@ class Gadget4FieldInfo(FieldInfoContainer):
 
     known_fields = (
         ("Group_M_Crit200", m_unit),
-        ("Group_M_Mean200", m_unit),
-        ("Group_M_TopHat200", m_unit),
-        ("SubhaloHalfmassRad", r_unit),
-        ("SubhaloHalfmassRadType", r_unit),
-        ("SubhaloMassInRadType", m_unit),
-        ("SubhaloMassType", m_unit),
-        ("SubhaloPos", r_unit),
-        ("SubhaloSpin", "kpc/h * km/s"),
-        ("SubhaloVMax", v_unit),
+        ("SubhaloHalfmassRad", p_unit),
+        ("SubhaloMass", m_unit),
+        ("SubhaloPos", p_unit),
+        ("SubhaloSpin", j_unit),
         ("SubhaloVel", v_unit),
         ("SubhaloVelDisp", v_unit),
+        ("SubhaloVmax", v_unit),
+        ("SubhaloVmaxRad", p_unit),
     )
 
     def setup_known_fields(self):

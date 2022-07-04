@@ -75,8 +75,6 @@ class Gadget4Arbor(SegmentedArbor):
 
         self.field_list = field_list
         fi = dict((field, {"source": "TreeHalos"}) for field in field_list)
-        self.field_list.append("TreeID")
-        fi["TreeID"] = {"Source": "TreeTable"}
         self.field_info.update(fi)
 
     def _plant_trees(self):
