@@ -13,10 +13,7 @@ Gadget4Arbor class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import glob
 import h5py
-import numpy as np
-import re
 
 from yt.funcs import \
     get_pbar
