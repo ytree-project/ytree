@@ -22,12 +22,37 @@ from ytree.data_structures.io import \
     TreeFieldIO
 
 class Gadget4DataFile(DataFile):
-    def __init__(self, filename, linkname):
-        super().__init__(filename)
-
+    def _load_properties(self):
         self.open()
-        self._size = self.fh["Header"].attrs["Ntrees_ThisFile"]
+        self._size = int(self.fh["Header"].attrs["Ntrees_ThisFile"])
+        self._file_count = self.fh["TreeTable/Length"][()]
+        self._file_offsets = self.fh["TreeTable/StartOffset"][()]
+        self._uids = self.fh["TreeTable/TreeID"][()]
         self.close()
+
+    _size = None
+    @property
+    def size(self):
+        if self._size is not None:
+            return self._size
+        self._load_properties()
+        return self._size
+
+    _file_offsets = None
+    @property
+    def file_offsets(self):
+        if self._file_offsets is not None:
+            return self._file_offsets
+        self._load_properties()
+        return self._file_offsets
+
+    _file_count = None
+    @property
+    def file_count(self):
+        if self._file_count is not None:
+            return self._file_count
+        self._load_properties()
+        return self._file_count
 
     def open(self):
         self.fh = h5py.File(self.filename, mode="r")

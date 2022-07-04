@@ -42,7 +42,7 @@ class Gadget4Arbor(SegmentedArbor):
 
     def _get_data_files(self):
         files = [self.parameter_filename]
-        self.data_files = [self._data_file_class(f, self) for f in files]
+        self.data_files = [self._data_file_class(f) for f in files]
 
     def _parse_parameter_file(self):
         f = h5py.File(self.parameter_filename, mode='r')
@@ -74,11 +74,9 @@ class Gadget4Arbor(SegmentedArbor):
                     [f"{d}_{i}" for i in range(dshape[1])])
 
         self.field_list = field_list
-        fi = dict((field, {}) for field in field_list)
-        # for field in ["uid", "desc_uid"]:
-        #     self.field_list.append(field)
-        #     fi[field] = {"units": "", "source": "arbor"}
-        # fi["desc_uid"]["dependencies"] = ["Descendant"]
+        fi = dict((field, {"source": "TreeHalos"}) for field in field_list)
+        self.field_list.append("TreeID")
+        fi["TreeID"] = {"Source": "TreeTable"}
         self.field_info.update(fi)
 
     def _plant_trees(self):
@@ -86,25 +84,19 @@ class Gadget4Arbor(SegmentedArbor):
             return
 
         c = 0
-        file_offsets = self._file_count.cumsum() - self._file_count
         pbar = get_pbar('Planting trees', self._size)
         for idf, data_file in enumerate(self.data_files):
-            data_file.open()
-            tree_size = data_file.fh["Header"]["TreeNHalos"][()]
-            data_file.close()
-
-            size = data_file._size
-            istart = file_offsets[idf]
+            size = data_file.size
+            istart = c
             iend = istart + size
 
             self._node_info['_fi'][istart:iend] = idf
-            self._node_info['_si'][istart:iend] = np.arange(size)
-            self._node_info['_tree_size'][istart:iend] = tree_size
+            self._node_info['_si'][istart:iend] = data_file._file_offsets
+            self._node_info['_tree_size'][istart:iend] = data_file._file_count
+            self._node_info['uid'][istart:iend] = data_file._uids
             c += size
             pbar.update(c)
         pbar.finish()
-        uids = self._node_info['_tree_size']
-        self._node_info['uid'] = uids.cumsum() - uids
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
