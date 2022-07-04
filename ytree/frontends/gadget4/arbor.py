@@ -45,7 +45,7 @@ class Gadget4Arbor(SegmentedArbor):
         f = h5py.File(self.parameter_filename, mode='r')
 
         g = f["Header"]
-        self._size = g.attrs["Ntrees_Total"]
+        self._size = int(g.attrs["Ntrees_Total"])
 
         g = f["Parameters"]
         self.hubble_constant = g.attrs["HubbleParam"]
