@@ -84,17 +84,18 @@ class Gadget4TreeFieldIO(TreeFieldIO):
             close = True
             data_file.open()
         fh = data_file.fh
-        g = fh[f"Tree{root_node._si}"]
 
+        _si = root_node._si
         if root_only:
-            index = slice(0, 1)
+            index = slice(_si, _si + 1)
         else:
-            index = ()
+            index = slice(_si, _si + root_node._tree_size)
 
         field_cache = {}
         field_data = {}
         freg = re.compile(r"(^.+)_(\d+$)")
         for field in rfields:
+            g = fh[fi[field]["source"]]
             fs = freg.search(field)
             if fs and fs.groups()[0] in g:
                 fieldname, ifield = fs.groups()
