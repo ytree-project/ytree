@@ -29,6 +29,8 @@ def _redshift(field, data):
 
 class Gadget4FieldInfo(FieldInfoContainer):
     alias_fields = (
+        ("group_mass", "Group_M_Crit200", m_unit),
+        ("mass", "SubhaloMass", m_unit),
         ("position_x", "SubhaloPos_0", p_unit),
         ("position_y", "SubhaloPos_1", p_unit),
         ("position_z", "SubhaloPos_2", p_unit),

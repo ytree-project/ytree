@@ -27,7 +27,6 @@ class Gadget4DataFile(DataFile):
         self._size = int(self.fh["Header"].attrs["Ntrees_ThisFile"])
         self._file_count = self.fh["TreeTable/Length"][()]
         self._file_offsets = self.fh["TreeTable/StartOffset"][()]
-        self._uids = self.fh["TreeTable/TreeID"][()]
         self.close()
 
     _size = None
@@ -133,10 +132,10 @@ class Gadget4TreeFieldIO(TreeFieldIO):
                   np.arange(root_node._tree_size)
 
         if "desc_uid" in afields:
-            if "Descendant" in fields:
-                desc_uids = field_data["Descendant"].copy()
+            if "TreeDescendant" in fields:
+                desc_uids = field_data["TreeDescendant"].copy()
             else:
-                desc_uids = field_data.pop("Descendant")
+                desc_uids = field_data.pop("TreeDescendant")
             desc_uids[desc_uids != -1] += root_node.uid
             adata["desc_uid"] = desc_uids
 
