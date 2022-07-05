@@ -1,4 +1,3 @@
-from ytree.data_structures.load import load as ytree_load
 from ytree.frontends.gadget4 import \
     Gadget4Arbor
 from ytree.utilities.testing import \
