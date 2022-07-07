@@ -195,7 +195,9 @@ class Arbor(metaclass=RegisteredArbor):
         """
         self.field_data = FieldContainer(self)
         self.derived_field_list = []
-        self.analysis_field_list = []
+        # This may already be created by ytree frontend.
+        if not hasattr(self, "analysis_field_list"):
+            self.analysis_field_list = []
         self.field_info.setup_known_fields()
         self.field_info.setup_aliases()
         self.field_info.setup_derived_fields()

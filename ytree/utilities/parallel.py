@@ -43,11 +43,6 @@ def regenerate_node(arbor, node, new_index=None):
 
     return new_node
 
-def _get_analysis_fields(arbor):
-    fi = arbor.field_info
-    return [field for field in fi
-            if fi[field].get("type") in ("analysis", "analysis_saved")]
-
 def parallel_trees(trees, save_every=None, filename=None,
                    njobs=0, dynamic=False):
     """
@@ -112,7 +107,7 @@ def parallel_trees(trees, save_every=None, filename=None,
     """
 
     arbor = trees[0].arbor
-    afields = _get_analysis_fields(arbor)
+    afields = arbor.analysis_field_list
 
     nt = len(trees)
     save = True
@@ -236,7 +231,7 @@ def parallel_tree_nodes(tree, group="forest",
 
     """
 
-    afields = _get_analysis_fields(tree.arbor)
+    afields = tree.arbor.analysis_field_list
 
     my_halos = list(tree[group])
 
