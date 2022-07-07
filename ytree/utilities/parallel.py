@@ -173,7 +173,7 @@ def parallel_trees(trees, save_every=None, save_in_place=False,
                     my_root.field_data[field][indices] = data[field]
 
             if save:
-                fn = arbor.save_arbor(filename=filename, trees=treesm
+                fn = arbor.save_arbor(filename=filename, trees=trees,
                                       save_in_place=save_in_place)
                 arbor = ytree_load(fn)
                 trees = [regenerate_node(arbor, tree, new_index=i)
