@@ -1004,6 +1004,13 @@ class Arbor(metaclass=RegisteredArbor):
         trees : optional, list or array of TreeNodes
             If given, only save trees stemming from these nodes.
             If not provide, all trees will be saved.
+        save_in_place : optional, bool
+            If True, analysis fields will be saved to the original
+            arbor, even if only a subset of all trees is provided
+            with the trees keyword. If False and only a subset of
+            all trees is provided, a new arbor will be created
+            containing only the trees provided.
+            Default: False
         max_file_size : optional, float
             The maximum number of nodes saved to a single file.
             Smaller numbers will result in more files. Performance

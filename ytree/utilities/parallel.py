@@ -43,8 +43,8 @@ def regenerate_node(arbor, node, new_index=None):
 
     return new_node
 
-def parallel_trees(trees, save_every=None, filename=None,
-                   njobs=0, dynamic=False):
+def parallel_trees(trees, save_every=None, save_in_place=False,
+                   filename=None, njobs=0, dynamic=False):
     """
     Iterate over a list of trees in parallel.
 
@@ -68,6 +68,13 @@ def parallel_trees(trees, save_every=None, filename=None,
         If None, save will only occur after iterating over all trees. If False,
         no saving will be done.
         Default: None
+    save_in_place : optional, bool
+        If True, analysis fields will be saved to the original
+        arbor, even if only a subset of all trees is provided
+        with the trees keyword. If False and only a subset of
+        all trees is provided, a new arbor will be created
+        containing only the trees provided.
+        Default: False
     filename : optional, string
         The name of the new arbor to be saved. If None, the naming convention
         will follow the filename keyword of the
@@ -166,7 +173,8 @@ def parallel_trees(trees, save_every=None, filename=None,
                     my_root.field_data[field][indices] = data[field]
 
             if save:
-                fn = arbor.save_arbor(filename=filename, trees=trees)
+                fn = arbor.save_arbor(filename=filename, trees=treesm
+                                      save_in_place=save_in_place)
                 arbor = ytree_load(fn)
                 trees = [regenerate_node(arbor, tree, new_index=i)
                          for i, tree in enumerate(trees)]
@@ -260,7 +268,8 @@ def parallel_tree_nodes(tree, group="forest",
                 my_halo[field] = value
 
 def parallel_nodes(trees, group="forest", save_every=None,
-                   filename=None, njobs=None, dynamic=None):
+                   save_in_place=False, filename=None,
+                   njobs=None, dynamic=None):
     """
     Iterate over all nodes in a list of trees in parallel.
 
@@ -290,6 +299,13 @@ def parallel_nodes(trees, group="forest", save_every=None,
         If None, save will only occur after iterating over all trees. If False,
         no saving will be done.
         Default: None
+    save_in_place : optional, bool
+        If True, analysis fields will be saved to the original
+        arbor, even if only a subset of all trees is provided
+        with the trees keyword. If False and only a subset of
+        all trees is provided, a new arbor will be created
+        containing only the trees provided.
+        Default: False
     filename : optional, string
         The name of the new arbor to be saved. If None, the naming convention
         will follow the filename keyword of the
@@ -353,8 +369,8 @@ def parallel_nodes(trees, group="forest", save_every=None,
             raise ValueError(f"dynamic must be a tuple of length 2: {dynamic}.")
 
     for tree in parallel_trees(
-            trees, save_every=save_every, filename=filename,
-            njobs=njobs[0], dynamic=dynamic[0]):
+            trees, save_every=save_every, save_in_place=save_in_place,
+            filename=filename, njobs=njobs[0], dynamic=dynamic[0]):
 
         for node in parallel_tree_nodes(
                 tree, group=group,
