@@ -14,6 +14,8 @@ Gadget4Arbor class and member functions
 #-----------------------------------------------------------------------------
 
 import h5py
+import numpy as np
+import re
 
 from yt.funcs import \
     get_pbar
@@ -29,16 +31,27 @@ from ytree.frontends.gadget4.io import \
 
 class Gadget4Arbor(SegmentedArbor):
     """
-    Arbors loaded from consistent-trees data converted into HDF5.
+    Gadget4 inline merger tree format.
     """
 
     _suffix = ".hdf5"
     _data_file_class = Gadget4DataFile
     _field_info_class = Gadget4FieldInfo
     _tree_field_io_class = Gadget4TreeFieldIO
+    _node_io_attrs = ("_fi", "_si", "_fei", "_ei")
 
     def _get_data_files(self):
-        files = [self.parameter_filename]
+        if self._nfiles == 1:
+            files = [self.parameter_filename]
+        else:
+            suffix = self._suffix
+            reg = re.search(rf"^(.+\D)\d+{suffix}$", self.parameter_filename)
+            if reg is None:
+                raise RuntimeError(
+                    f"Cannot determine numbering system for {self.filename}.")
+            prefix = reg.groups()[0]
+            files = [f"{prefix}{i}{suffix}" for i in range(self._nfiles)]
+
         self.data_files = [self._data_file_class(f) for f in files]
 
     def _parse_parameter_file(self):
@@ -46,6 +59,7 @@ class Gadget4Arbor(SegmentedArbor):
 
         g = f["Header"]
         self._size = int(g.attrs["Ntrees_Total"])
+        self._nfiles = int(g.attrs["NumFiles"])
 
         g = f["Parameters"]
         self.hubble_constant = g.attrs["HubbleParam"]
@@ -82,19 +96,35 @@ class Gadget4Arbor(SegmentedArbor):
         if self.is_planted or self._size == 0:
             return
 
-        c = 0
+        istart = 0
+        file_sizes = np.empty(len(self.data_files), dtype=int)
+        offset = np.empty(self._size, dtype=int)
         pbar = get_pbar('Planting trees', self._size)
         for idf, data_file in enumerate(self.data_files):
-            size = data_file.size
-            istart = c
-            iend = istart + size
+            file_sizes[idf] = data_file.nnodes
+            ntrees = data_file.ntrees
+            iend = istart + ntrees
+            my_slice = slice(istart, iend)
 
-            self._node_info['_fi'][istart:iend] = idf
-            self._node_info['_si'][istart:iend] = data_file._file_offsets
-            self._node_info['_tree_size'][istart:iend] = data_file._file_count
-            c += size
-            pbar.update(c)
-        self._node_info['uid'] = self._node_info['_si']
+            if ntrees > 0:
+                self._node_info['_fi'][my_slice] = idf
+                self._node_info['_tree_size'][my_slice] = data_file.tree_sizes
+                offset[my_slice] = data_file.offsets
+
+            istart += ntrees
+            pbar.update(iend)
+
+        file_end_offset = file_sizes.cumsum()
+        file_start_offset = file_end_offset - file_sizes
+        tree_size = self._node_info["_tree_size"]
+        file_start_index = np.digitize(offset, file_end_offset)
+        file_end_index = np.digitize(offset+tree_size, file_end_offset, right=True)
+
+        self._node_info["_fi"] = file_start_index
+        self._node_info["_fei"] = file_end_index
+        self._node_info["_si"] = offset - file_start_offset[file_start_index]
+        self._node_info["_ei"] = offset + tree_size - file_start_offset[file_end_index]
+        self._node_info["uid"] = np.arange(self._size)
         pbar.finish()
 
     @classmethod
@@ -108,7 +138,8 @@ class Gadget4Arbor(SegmentedArbor):
             return False
 
         attrs = ["Nhalos_ThisFile", "Nhalos_Total",
-                 "Ntrees_ThisFile", "Ntrees_Total"]
+                 "Ntrees_ThisFile", "Ntrees_Total",
+                 "NumFiles"]
         groups = ["TreeHalos", "TreeTable", "TreeTimes"]
 
         with h5py.File(fn, mode='r') as f:
