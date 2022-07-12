@@ -17,6 +17,8 @@ import h5py
 import numpy as np
 import re
 
+from unyt import uconcatenate
+
 from ytree.data_structures.io import \
     DataFile, \
     TreeFieldIO
@@ -65,40 +67,59 @@ class Gadget4TreeFieldIO(TreeFieldIO):
                 [dfield for dfield in fi[afield].get("dependencies", [])
                  if dfield not in rfields])
 
-        data_file = self.arbor.data_files[root_node._fi]
-        close = False
-        if data_file.fh is None:
-            close = True
-            data_file.open()
-        fh = data_file.fh
-        g = fh["TreeHalos"]
-
-        _si = root_node._si
         if root_only:
-            index = slice(_si, _si + 1)
+            fei = root_node._fi
         else:
-            index = slice(_si, _si + root_node._tree_size)
+            fei = root_node._fei
 
-        field_cache = {}
-        field_data = {}
         freg = re.compile(r"(^.+)_(\d+$)")
-        for field in rfields:
-            fs = freg.search(field)
-            if fs and fs.groups()[0] in g:
-                fieldname, ifield = fs.groups()
-                ifield = int(ifield)
-                if fieldname not in field_cache:
-                    field_cache[fieldname] = g[fieldname][index]
-                field_data[field] = field_cache[fieldname][:, ifield]
+        field_data = {field: [] for field in rfields}
+        for dfi in range(root_node._fi, fei+1):
+            data_file = self.arbor.data_files[dfi]
+            close = False
+            if data_file.fh is None:
+                close = True
+                data_file.open()
+            fh = data_file.fh
+            g = fh["TreeHalos"]
+
+            si = root_node._si
+            if root_only:
+                my_slice = slice(si, si+1)
             else:
-                field_data[field] = g[field][index]
+                if dfi == root_node._fi:
+                    my_start = si
+                else:
+                    my_start = None
+
+                if dfi == fei:
+                    my_end = root_node._ei
+                else:
+                    my_end = None
+
+                my_slice = slice(my_start, my_end)
+
+            field_cache = {}
+            for field in rfields:
+                fs = freg.search(field)
+                if fs and fs.groups()[0] in g:
+                    fieldname, ifield = fs.groups()
+                    ifield = int(ifield)
+                    if fieldname not in field_cache:
+                        field_cache[fieldname] = g[fieldname][my_slice]
+                    field_data[field].append(field_cache[fieldname][:, ifield])
+                else:
+                    field_data[field].append(g[field][my_slice])
+
+            if close:
+                data_file.close()
+
+        for field in field_data:
+            field_data[field] = uconcatenate(field_data[field])
 
         if afields:
             field_data.update(self._get_arbor_fields(
                 root_node, field_data, fields, afields, root_only))
-
-        if close:
-            data_file.close()
 
         self._apply_units(rfields, field_data)
 
