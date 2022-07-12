@@ -55,7 +55,7 @@ class Gadget4Arbor(SegmentedArbor):
         self.data_files = [self._data_file_class(f) for f in files]
 
     def _parse_parameter_file(self):
-        f = h5py.File(self.parameter_filename, mode='r')
+        f = h5py.File(self.parameter_filename, mode="r")
 
         g = f["Header"]
         self._size = int(g.attrs["Ntrees_Total"])
@@ -99,7 +99,7 @@ class Gadget4Arbor(SegmentedArbor):
         istart = 0
         file_sizes = np.empty(len(self.data_files), dtype=int)
         offset = np.empty(self._size, dtype=int)
-        pbar = get_pbar('Planting trees', self._size)
+        pbar = get_pbar("Planting trees", self._size)
         for idf, data_file in enumerate(self.data_files):
             file_sizes[idf] = data_file.nnodes
             ntrees = data_file.ntrees
@@ -107,8 +107,8 @@ class Gadget4Arbor(SegmentedArbor):
             my_slice = slice(istart, iend)
 
             if ntrees > 0:
-                self._node_info['_fi'][my_slice] = idf
-                self._node_info['_tree_size'][my_slice] = data_file.tree_sizes
+                self._node_info["_fi"][my_slice] = idf
+                self._node_info["_tree_size"][my_slice] = data_file.tree_sizes
                 offset[my_slice] = data_file.offsets
 
             istart += ntrees
@@ -124,7 +124,7 @@ class Gadget4Arbor(SegmentedArbor):
         self._node_info["_fei"] = file_end_index
         self._node_info["_si"] = offset - file_start_offset[file_start_index]
         self._node_info["_ei"] = offset + tree_size - file_start_offset[file_end_index]
-        self._node_info["uid"] = np.arange(self._size)
+        self._node_info["uid"] = offset
         pbar.finish()
 
     @classmethod
@@ -142,7 +142,7 @@ class Gadget4Arbor(SegmentedArbor):
                  "NumFiles"]
         groups = ["TreeHalos", "TreeTable", "TreeTimes"]
 
-        with h5py.File(fn, mode='r') as f:
+        with h5py.File(fn, mode="r") as f:
             g = f["Header"]
             for attr in attrs:
                 if attr not in g.attrs:
