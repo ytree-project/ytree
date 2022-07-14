@@ -42,7 +42,7 @@ class YTreeDataFile(DataFile):
 
 class YTreeTreeFieldIO(TreeFieldIO):
     def _read_fields(self, root_node, fields, dtypes=None, root_only=False):
-        dfi = np.digitize(root_node._ai, self._ei)
+        dfi = np.digitize(root_node._fi, self._ei)
         data_file = self.arbor.data_files[dfi]
 
         if dtypes is None:
@@ -62,7 +62,7 @@ class YTreeTreeFieldIO(TreeFieldIO):
             if getattr(data_file, f"_{itype}_index") is None:
                 setattr(data_file, f"_{itype}_index",
                         data_file.fh[f"index/tree_{itype}_index"][()])
-        ii = root_node._ai - self._si[dfi]
+        ii = root_node._fi - self._si[dfi]
 
         field_data = {}
         fi = self.arbor.field_info

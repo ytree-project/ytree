@@ -27,7 +27,7 @@ from yt.utilities.logger import \
     ytLogger
 
 from ytree.data_structures.arbor import \
-    Arbor
+    SegmentedArbor
 from ytree.frontends.ytree.io import \
     YTreeDataFile, \
     YTreeRootFieldIO, \
@@ -43,7 +43,7 @@ from ytree.utilities.logger import \
 from ytree.yt_frontend import \
     YTreeDataset
 
-class YTreeArbor(Arbor):
+class YTreeArbor(SegmentedArbor):
     """
     Class for Arbors created from the
     :func:`~ytree.data_structures.arbor.Arbor.save_arbor`
@@ -52,32 +52,6 @@ class YTreeArbor(Arbor):
     _root_field_io_class = YTreeRootFieldIO
     _tree_field_io_class = YTreeTreeFieldIO
     _suffix = ".h5"
-    _node_io_attrs = ('_ai',)
-
-    def _node_io_loop_prepare(self, nodes):
-        if nodes is None:
-            nodes = np.arange(self.size)
-            ai = self._node_info['_ai']
-        elif nodes.dtype == object:
-            ai = np.array(
-                [node._ai if node.is_root else node.root._ai
-                 for node in nodes])
-        else: # assume an array of indices
-            ai = self._node_info['_ai'][nodes]
-
-        # the order they will be processed
-        io_order = np.argsort(ai)
-        ai = ai[io_order]
-        # array to return them to original order
-        return_order = np.empty_like(io_order)
-        return_order[io_order] = np.arange(io_order.size)
-
-        dfi = np.digitize(ai, self._node_io._ei)
-        udfi = np.unique(dfi)
-        data_files = [self.data_files[i] for i in udfi]
-        index_list = [io_order[dfi == i] for i in udfi]
-
-        return data_files, index_list, return_order
 
     def _node_io_loop_start(self, data_file):
         data_file._field_cache = {}
@@ -133,7 +107,7 @@ class YTreeArbor(Arbor):
         self._node_io._ei = fh["index"]["tree_end_index"][()]
         fh.close()
 
-        self._node_info['_ai'][:] = np.arange(self.size)
+        self._node_info['_fi'][:] = np.arange(self.size)
         self.data_files = \
           [YTreeDataFile(f"{self._prefix}_{i:04d}{self._suffix}")
            for i in range(self._node_io._si.size)]
