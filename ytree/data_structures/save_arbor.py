@@ -9,7 +9,7 @@ import json
 import numpy as np
 import os
 import types
-from unyt import uconcatenate
+from unyt import uconcatenate, uhstack
 
 from yt.frontends.ytdata.utilities import save_as_dataset
 from yt.funcs import get_pbar
@@ -198,7 +198,7 @@ def save_data_files(arbor, filename, fields, trees,
         if not save_all and cg_number not in save_files:
             for field in fields:
                 root_field_data[field].append(
-                    uconcatenate([[node[field] for node in current_group]]))
+                    uhstack([node[field] for node in current_group]))
 
         else:
             save_data_file(
