@@ -1011,6 +1011,11 @@ class Arbor(metaclass=RegisteredArbor):
             all trees is provided, a new arbor will be created
             containing only the trees provided.
             Default: False
+        save_nodes_only : optional, bool
+            If True, only field values of each node are saved.
+            If False, field data for the entire tree stemming
+            from that node are saved.
+            Default:  False.
         max_file_size : optional, float
             The maximum number of nodes saved to a single file.
             Smaller numbers will result in more files. Performance

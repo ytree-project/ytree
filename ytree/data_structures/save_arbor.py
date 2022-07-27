@@ -25,7 +25,8 @@ from ytree.utilities.logger import ytreeLogger as mylog
 #-----------------------------------------------------------------------------
 
 def save_arbor(arbor, filename=None, fields=None, trees=None,
-               save_in_place=False, max_file_size=524288):
+               save_in_place=False, save_nodes_only=False,
+               max_file_size=524288):
     """
     Save the arbor to a file.
 
@@ -52,7 +53,7 @@ def save_arbor(arbor, filename=None, fields=None, trees=None,
 
     group_nnodes, group_ntrees, root_field_data = \
       save_data_files(arbor, filename, fields, trees,
-                      max_file_size, update)
+                      max_file_size, update, save_nodes_only)
 
     header_filename = save_header_file(
         arbor, filename, fields, root_field_data,
@@ -144,7 +145,7 @@ def get_output_fieldnames(fields):
     return [field.replace("/", "_") for field in fields]
 
 def save_data_files(arbor, filename, fields, trees,
-                    max_file_size, update):
+                    max_file_size, update, nodes_only):
     """
     Write all data files by grouping trees together.
 
@@ -167,7 +168,8 @@ def save_data_files(arbor, filename, fields, trees,
 
     if update:
         # Transplant field data onto tree roots.
-        save_roots = transplant_analysis_fields(arbor, save_trees)
+        save_roots = transplant_analysis_fields(
+            arbor, save_trees, nodes_only)
         # If we have new analysis fields, they must be written for
         # the entire arbor.
         save_all = any([arbor.field_info[field]["type"] == "analysis"
@@ -392,7 +394,7 @@ def save_header_file(arbor, filename, fields, root_field_data,
 
     return header_filename
 
-def transplant_analysis_fields(arbor, old_trees):
+def transplant_analysis_fields(arbor, old_trees, nodes_only):
     """
     Copy analysis field data from one set of trees to another.
 
@@ -413,7 +415,9 @@ def transplant_analysis_fields(arbor, old_trees):
             new_root = arbor[ai]
             root_ids[ai] = new_root
 
-        if old_tree.is_root:
+        if nodes_only:
+            indices = old_tree.tree_id
+        elif old_tree.is_root:
             indices = slice(None)
         else:
             indices = (old_tree._tree_field_indices)
@@ -421,7 +425,12 @@ def transplant_analysis_fields(arbor, old_trees):
         for field in arbor.analysis_field_list:
             if field not in new_root.field_data:
                 arbor._node_io._initialize_analysis_field(new_root, field)
-            new_root.field_data[field][indices] = old_tree["tree", field]
+
+            if nodes_only:
+                my_field = field
+            else:
+                my_field = ("tree", field)
+            new_root.field_data[field][indices] = old_tree[my_field]
 
         pbar.update(i+1)
     pbar.finish()
