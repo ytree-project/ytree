@@ -176,12 +176,22 @@ To load single-file data, load with the path to that file.
    >>> a = ytree.load("gadget4/trees/trees.hdf5")
 
 To load a dataset consisting of multiple files, provide the path to
-the zeroth path.
+the zeroth file.
 
 .. code-block:: python
 
    >>> import ytree
    >>> a = ytree.load("gadget4/treedata/trees.0.hdf5")
+
+For multi-file datasets, all data files must be present for the
+dataset to be loaded. It is not possible to load a subseta
+multi-file dataset. Because data for any given tree is only loaded
+when needed, there is little benefit to trying to load a subset of
+the full data. However, if you really want to limit your dataset to
+a selection of the full data, your best bet is to save just the
+trees you want to a new dataset using the
+:func:`~ytree.data_structures.arbor.Arbor.save_arbor` function.
+See :ref:`saving-trees` for more information.
 
 .. _load-lhalotree:
 
