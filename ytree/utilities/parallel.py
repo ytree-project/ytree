@@ -44,7 +44,8 @@ def regenerate_node(arbor, node, new_index=None):
     return new_node
 
 def parallel_trees(trees, save_every=None, save_in_place=False,
-                   filename=None, njobs=0, dynamic=False):
+                   save_nodes_only=False, filename=None,
+                   njobs=0, dynamic=False):
     """
     Iterate over a list of trees in parallel.
 
@@ -75,6 +76,11 @@ def parallel_trees(trees, save_every=None, save_in_place=False,
         all trees is provided, a new arbor will be created
         containing only the trees provided.
         Default: False
+    save_nodes_only : optional, bool
+        If True, only field values of each node are saved.
+        If False, field data for the entire tree stemming
+        from that node are saved.
+        Default:  False.
     filename : optional, string
         The name of the new arbor to be saved. If None, the naming convention
         will follow the filename keyword of the
@@ -143,13 +149,19 @@ def parallel_trees(trees, save_every=None, save_in_place=False,
 
                 # If the tree is not a root, only save the "tree" selection
                 # as we could overwrite other trees in the forest.
-                if my_tree.is_root:
+                if save_nodes_only:
+                    pass
+                elif my_tree.is_root:
                     selection = "forest"
                 else:
                     selection = "tree"
 
-                tree_store.result = {field: my_tree[selection, field]
-                                     for field in afields}
+                if save_nodes_only:
+                    tree_store.result = {field: my_tree[field]
+                                         for field in afields}
+                else:
+                    tree_store.result = {field: my_tree[selection, field]
+                                         for field in afields}
 
             else:
                 tree_store.result_id = None
@@ -162,7 +174,9 @@ def parallel_trees(trees, save_every=None, save_in_place=False,
                 key = (my_root._arbor_index, my_tree.tree_id)
                 data = arbor_storage[key]
 
-                if my_tree.is_root:
+                if save_nodes_only:
+                    indices = my_tree.tree_id
+                elif my_tree.is_root:
                     indices = slice(None)
                 else:
                     indices = [my_tree._tree_field_indices]
@@ -170,11 +184,13 @@ def parallel_trees(trees, save_every=None, save_in_place=False,
                 for field in afields:
                     if field not in my_root.field_data:
                         arbor._node_io._initialize_analysis_field(my_root, field)
+
                     my_root.field_data[field][indices] = data[field]
 
             if save:
                 fn = arbor.save_arbor(filename=filename, trees=trees,
-                                      save_in_place=save_in_place)
+                                      save_in_place=save_in_place,
+                                      save_nodes_only=save_nodes_only)
                 arbor = ytree_load(fn)
                 trees = [regenerate_node(arbor, tree, new_index=i)
                          for i, tree in enumerate(trees)]
