@@ -37,8 +37,11 @@ extensions = [
     'sphinx.ext.viewcode',
 ]
 
-intersphinx_mapping = \
-  {'yt': ('http://yt-project.org/docs/dev/', None),}
+intersphinx_mapping = {
+    'numpy': ("http://docs.scipy.org/doc/numpy/", None),
+    'unyt': ("https://unyt.readthedocs.io/en/stable/", None),
+    'yt': ('http://yt-project.org/docs/dev/', None),
+}
 
 autosummary_generate = glob.glob("api_reference.rst")
 

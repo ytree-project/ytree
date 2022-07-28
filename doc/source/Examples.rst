@@ -7,6 +7,36 @@ Below are some examples of things one might want to do with merger
 trees that demonstrate various ``ytree`` functions. If you have made
 something interesting, please add it!
 
+Plot the Tree of the Most Massive Halo
+--------------------------------------
+
+Below we make a plot of the most massive halo in the arbor. We use the
+NumPy :func:`argmax <numpy.argmax>` function to get the index within
+the arbor of the most massive halo.
+
+.. literalinclude :: examples/plot_most_massive.py
+   :language: python
+
+We use the :attr:`~ytree.visualization.tree_plot.TreePlot.min_mass_ratio`
+attribute to plot only halos with masses of at least 10\ :sup:`-3` of the
+main halo.
+
+Plot the Tree with the Most Halos
+---------------------------------
+
+Similar to above, it is often useful to find the tree containing the
+most halos. To do this, we make an array containing the sizes of all
+trees using the
+:attr:`~ytree.data_structures.tree_node.TreeNode.tree_size` attribute
+of the :class:`~ytree.data_structures.tree_node.TreeNode` class. The
+:class:`~ytree.data_structures.arbor.Arbor` class's
+:attr:`~ytree.data_structures.arbor.Arbor.arr` method is useful for
+creating :class:`unyt_array <unyt.array.unyt_array>` objects with
+the unit system of the dataset.
+
+.. literalinclude :: examples/plot_most_halos.py
+   :language: python
+
 Halo Age (a50)
 --------------
 

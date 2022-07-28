@@ -9,6 +9,12 @@ dataset is referred to as an **arbor**. ``ytree`` provides several different
 ways to navigate, query, and analyze merger trees. It is recommended that you
 read this entire section to identify the way that is best for what you want to do.
 
+Example Applications
+--------------------
+
+Not sure how to get started with something? Check out :ref:`examples` for
+demonstrations of more complex analysis.
+
 Loading Data
 ------------
 
