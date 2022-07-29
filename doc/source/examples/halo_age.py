@@ -1,3 +1,10 @@
+"""
+Calculate halo age for each halo in the dataset.
+
+Halo ago is defined as the scale factor at which the
+halo has reached half of its current mass.
+"""
+
 import numpy as np
 import yt
 yt.enable_parallelism()

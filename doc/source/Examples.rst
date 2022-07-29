@@ -3,9 +3,11 @@
 Example Applications
 ====================
 
-Below are some examples of things one might want to do with merger
-trees that demonstrate various ``ytree`` functions. If you have made
-something interesting, please add it!
+Below are some examples demonstrating interesting combinations of
+``ytree`` functionality. Each of the scripts shown below can be
+found in the ``doc/source/examples`` directory. If you have made
+something not seen here, please considering :ref:`adding it to this
+document <developing>`.
 
 Plot the Tree of the Most Massive Halo
 --------------------------------------
@@ -39,53 +41,25 @@ the unit system of the dataset.
 
 Halo Age (a50)
 --------------
+Script: `halo_age.py <_static/halo_age.py>`__
 
 One way to define the age of a halo is by calculating the scale factor
 when it reached 50% of its current mass. This is often referred to as
 "a50". In the example below, this is calculated by linearly
 interpolating from the mass of the main progenitor.
 
-.. code-block:: python
+.. literalinclude :: examples/halo_age.py
+   :language: python
+   :lines: 8,12-29
 
-   import numpy as np
+Then, we setup an :ref:`Analysis Pipeline <analysis>` including this
+function and use :func:`~ytree.utilities.parallel.parallel_nodes`
+to loop over all halos in the dataset in parallel. Finally, we
+reload the saved data and print the age of the first halo.
 
-   def calc_a50(node):
-       # main progenitor masses
-       pmass = node["prog", "mass"]
-
-       mh = 0.5 * node["mass"]
-       m50 = pmass <= mh
-
-       if not m50.any():
-           ah = node["scale_factor"]
-       else:
-           pscale = node["prog", "scale_factor"]
-           # linearly interpolate
-           i = np.where(m50)[0][0]
-           slope = (pscale[i-1] - pscale[i]) / (pmass[i-1] - pmass[i])
-           ah = slope * (mh - pmass[i]) + pscale[i]
-
-       node["a50"] = ah
-
-Now we'll run it using the :ref:`analysis_pipeline`.
-
-.. code-block:: python
-
-   >>> import ytree
-   >>> a = ytree.load("consistent_trees/tree_0_0_0.dat")
-   >>> a.add_analysis_field("a50", "")
-
-   >>> ap = ytree.AnalysisPipeline()
-   >>> ap.add_operation(calc_a50)
-
-   >>> trees = list(a[:])
-   >>> for tree in trees:
-   ...     ap.process_target(tree)
-
-   >>> fn = a.save_arbor(filename="halo_age", trees=trees)
-   >>> a2 = ytree.load(fn)
-   >>> print (a2[0]["a50"])
-   0.57977664
+.. literalinclude :: examples/halo_age.py
+   :language: python
+   :lines: 9-11,31-
 
 Significance
 ------------
