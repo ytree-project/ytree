@@ -104,6 +104,15 @@ class ParallelTest:
                 test_arbor = load(self.test_filename)
                 self.check_values(test_arbor, my_args)
 
+def run_mpi_command(args, ncores):
+    try:
+        comm = MPI.COMM_SELF.Spawn(sys.executable, args=args, maxprocs=ncores)
+        comm.Disconnect()
+        success = True
+    except BaseException:
+        success = False
+    return success
+
 def run_command(command, timeout=None):
     try:
         proc = subprocess.run(command, shell=True, timeout=timeout)
@@ -128,6 +137,7 @@ class ExampleScriptTest:
     input_filename = None
     timeout = 60
     output_files = ()
+    ncores = 1
 
     def test_example(self):
         if self.script_filename is None:
@@ -143,8 +153,11 @@ class ExampleScriptTest:
         script_path = os.path.join(
             source_dir, "doc", "source", "examples", self.script_filename)
 
-        command = f"python {script_path}"
-        assert run_command(command, timeout=self.timeout)
+        if self.ncores == 1:
+            command = f"{sys.executable} {script_path}"
+            assert run_command(command, timeout=self.timeout)
+        else:
+            assert run_mpi_command([script_path], self.ncores)
 
         for fn in self.output_files:
             assert os.path.exists(fn)

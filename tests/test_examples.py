@@ -28,6 +28,7 @@ class TestPlotMostHalos(TempDirTest, ExampleScriptTest):
     output_files = ("most_halos.png",)
 
 class TestHaloAge(TempDirTest, ExampleScriptTest):
+    ncores = 2
     script_filename = "halo_age.py"
     input_filename = "tiny_ctrees/locations.dat"
     output_files = (
