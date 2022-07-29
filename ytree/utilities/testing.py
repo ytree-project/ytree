@@ -32,7 +32,7 @@ from yt.funcs import \
 from ytree.data_structures.load import load
 from ytree.frontends.ytree import YTreeArbor
 from ytree.utilities.io import dirname
-from ytree.utilities.loading import get_path
+from ytree.utilities.loading import check_path, get_path
 from ytree.utilities.logger import ytreeLogger as mylog
 
 try:
@@ -124,13 +124,20 @@ class ExampleScriptTest:
     Tests for the code examples.
     """
 
-    sript_filename = None
-    timeout = None
+    script_filename = None
+    input_filename = None
+    timeout = 60
     output_files = ()
 
     def test_example(self):
         if self.script_filename is None:
             return
+
+        if self.input_filename is not None:
+            try:
+                check_path(self.input_filename)
+            except IOError:
+                self.skipTest("test file missing")
 
         source_dir = dirname(__file__, level=3)
         script_path = os.path.join(
