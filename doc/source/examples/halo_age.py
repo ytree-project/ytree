@@ -29,7 +29,7 @@ ap = ytree.AnalysisPipeline()
 ap.add_operation(calc_a50)
 
 trees = list(a[:])
-for tree in ytree.parallel_trees(trees, filename="halo_age"):
+for tree in ytree.parallel_nodes(trees, filename="halo_age"):
     yt.mylog.info(f"Processing {tree}.")
     ap.process_target(tree)
 
