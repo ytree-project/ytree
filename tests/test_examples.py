@@ -39,6 +39,7 @@ class TestHaloAge(TempDirTest, ExampleScriptTest):
     )
 
 class TestHaloSignificance(TempDirTest, ExampleScriptTest):
+    ncores = 2
     script_filename = "halo_significance.py"
     input_filename = "tiny_ctrees/locations.dat"
     output_files = (
