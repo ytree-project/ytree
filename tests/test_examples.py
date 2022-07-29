@@ -17,6 +17,7 @@ import numpy as np
 
 from ytree.utilities.testing import \
     requires_file, \
+    ExampleScriptTest, \
     TempDirTest
 
 import ytree
@@ -101,3 +102,13 @@ class ExampleTest(TempDirTest):
         a2.set_selector("max_field_value", "significance")
         prog = list(a2[0]["prog"])
         print (prog)
+
+class TestPlotMostMassive(TempDirTest, ExampleScriptTest):
+    script_filename = "plot_most_massive.py"
+    timeout = 60
+    output_files = ("most_massive.png",)
+
+class TestPlotMostHalos(TempDirTest, ExampleScriptTest):
+    script_filename = "plot_most_halos.py"
+    timeout = 60
+    output_files = ("most_halos.png",)
