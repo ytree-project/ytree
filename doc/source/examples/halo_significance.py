@@ -1,3 +1,8 @@
+"""
+Calculate a halo's significance, defined as the time
+integrated mass of all a halo's progenitors.
+"""
+
 import yt
 yt.enable_parallelism()
 import ytree
