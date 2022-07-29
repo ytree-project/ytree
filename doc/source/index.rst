@@ -50,7 +50,7 @@ Table of Contents
    Parallelism.rst
    Analysis.rst
    Examples.rst
-   API_Reference.rst
+   api_reference.rst
    Conduct.rst
    Contributing.rst
    Developing.rst
