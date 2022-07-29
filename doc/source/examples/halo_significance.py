@@ -1,3 +1,5 @@
+import yt
+yt.enable_parallelism()
 import ytree
 
 def calc_significance(node):
@@ -22,11 +24,12 @@ ap = ytree.AnalysisPipeline()
 ap.add_operation(calc_significance)
 
 trees = list(a[:])
-for tree in trees:
+for tree in ytree.parallel_trees(trees, filename="halo_significance"):
+    yt.mylog.info(f"Processing {tree}.")
     ap.process_target(tree)
 
-fn = a.save_arbor(filename="halo_significance", trees=trees)
-a2 = ytree.load(fn)
-a2.set_selector("max_field_value", "significance")
-prog = list(a2[0]["prog"])
-print (prog)
+if yt.is_root():
+    a2 = ytree.load("halo_significance/halo_significance.h5")
+    a2.set_selector("max_field_value", "significance")
+    prog = list(a2[0]["prog"])
+    print (prog)
