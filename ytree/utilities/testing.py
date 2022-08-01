@@ -144,11 +144,15 @@ class ExampleScriptTest:
         script_path = os.path.join(
             source_dir, "doc", "source", "examples", self.script_filename)
 
-        command = f"{sys.executable} {script_path}"
         if self.ncores > 1:
-            command = f"mpirun -np {self.ncores} {command}"
-
-        assert run_command(command, timeout=self.timeout)
+            if MPI is None:
+                self.skipTest("mpi4py not installed")
+            comm = MPI.COMM_SELF.Spawn(sys.executable, args=[script_path],
+                                       maxprocs=self.ncores)
+            comm.Disconnect()
+        else:
+            command = f"{sys.executable} {script_path}"
+            assert run_command(command, timeout=self.timeout)
 
         for fn in self.output_files:
             assert os.path.exists(fn)
