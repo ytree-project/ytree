@@ -39,6 +39,8 @@ Table of Contents
 .. toctree::
    :maxdepth: 2
 
+   Help.rst
+   Citing.rst
    Installation.rst
    Data.rst
    Frames.rst
@@ -48,12 +50,11 @@ Table of Contents
    Parallelism.rst
    Analysis.rst
    Examples.rst
+   api_reference.rst
    Conduct.rst
    Contributing.rst
    Developing.rst
-   Help.rst
-   Citing.rst
-   reference.rst
+   Changelog.rst
 
 .. include:: ../../CITATION.rst
 
