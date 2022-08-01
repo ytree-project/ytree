@@ -50,6 +50,10 @@ Halo Age (a50)
 
 Script: `halo_age.py <_static/halo_age.py>`__
 
+.. note:: This script includes extra code to make it run within the
+   test suite. To run conventionally, remove the lines indicated in
+   the header of script.
+
 One way to define the age of a halo is by calculating the scale factor
 when it reached 50% of its current mass. This is often referred to as
 "a50". In the example below, this is calculated by linearly
@@ -57,7 +61,7 @@ interpolating from the mass of the main progenitor.
 
 .. literalinclude :: examples/halo_age.py
    :language: python
-   :lines: 8,12-29
+   :lines: 22,26-43
 
 Then, we setup an :ref:`Analysis Pipeline <analysis>` including this
 function and use :func:`~ytree.utilities.parallel.parallel_nodes`
@@ -65,13 +69,13 @@ to loop over all halos in the dataset in parallel.
 
 .. literalinclude :: examples/halo_age.py
    :language: python
-   :lines: 9-11,31-41
+   :lines: 23-26,52-61
 
 Finally, we reload the saved data and print the age of the first halo.
 
 .. literalinclude :: examples/halo_age.py
    :language: python
-   :lines: 43-
+   :lines: 63-65
 
 Do the following to run the script on two processors:
 
@@ -83,6 +87,10 @@ Significance
 ------------
 
 Script: `halo_significance.py <_static/halo_significance.py>`__
+
+.. note:: This script includes extra code to make it run within the
+   test suite. To run conventionally, remove the lines indicated in
+   the header of script.
 
 Brought to you by John Wise, a halo's significance is calculated by
 recursively summing over all ancestors the mass multiplied by the time
@@ -96,7 +104,7 @@ for every halo in a single tree.
 
 .. literalinclude :: examples/halo_significance.py
    :language: python
-   :lines: 10-22
+   :lines: 24-36
 
 Then, we use the :ref:`analysis_pipeline` to calculate the
 significance for all trees and save a new dataset. Because the
@@ -107,7 +115,7 @@ tree to each processor using the
 
 .. literalinclude :: examples/halo_significance.py
    :language: python
-   :lines: 6-9,25-34
+   :lines: 20-23,45-54
 
 After loading the new arbor, we use the
 :func:`~ytree.data_structures.arbor.Arbor.set_selector` function to
@@ -115,7 +123,7 @@ use the new significance field to determine the progenitor line.
 
 .. literalinclude :: examples/halo_significance.py
    :language: python
-   :lines: 36-
+   :lines: 56-60
 
 Do the following to run the script on two processors:
 
