@@ -95,7 +95,7 @@ commands:
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
-            TESTFILES=$(circleci tests glob "tests/*.py" "tests/frontends/*.py" | circleci tests split --split-by=timings)
+            TESTFILES=$(circleci tests glob "tests/*.py" "tests/frontends/*.py" | circleci tests split --time-default=60s --split-by=timings)
             pytest --cov=ytree --junitxml=test-results/junit.xml $TESTFILES
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
