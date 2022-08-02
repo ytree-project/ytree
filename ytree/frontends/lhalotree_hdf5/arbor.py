@@ -32,7 +32,7 @@ from ytree.frontends.lhalotree_hdf5.io import \
 
 class LHaloTreeHDF5Arbor(SegmentedArbor):
     """
-    Arbors loaded from consistent-trees data converted into HDF5.
+    IllustrisTNG format.
     """
 
     _suffix = ".hdf5"
