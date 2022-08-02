@@ -128,7 +128,7 @@ executors:
 
 jobs:
   tests:
-    parallelism: 1
+    parallelism: 4
     parameters:
       tag:
         type: string
