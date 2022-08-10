@@ -180,7 +180,7 @@ def save_data_files(arbor, filename, fields, trees,
 
     # This is the set of files we need to save.
     if not save_all:
-        save_files = set([tree._ai for tree in save_roots.values()])
+        save_files = set(np.digitize([tree._ai for tree in save_roots.values()], arbor._node_io._ei))
 
     root_field_data = {field: [] for field in fields}
 
@@ -198,9 +198,12 @@ def save_data_files(arbor, filename, fields, trees,
 
         # If we don't need to save the data file, just gather root fields.
         if not save_all and cg_number not in save_files:
+
+            mylog.info(f"[{cg_number+1}] / [~{total_guess}]: Compiling root fields.")
+            cg_start = current_group[0]._arbor_index
+            cg_end = current_group[-1]._arbor_index + 1
             for field in fields:
-                root_field_data[field].append(
-                    uhstack([node[field] for node in current_group]))
+                root_field_data[field].append(arbor[field][cg_start:cg_end])
 
         else:
             save_data_file(
