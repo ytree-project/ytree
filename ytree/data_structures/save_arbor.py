@@ -425,12 +425,12 @@ def transplant_analysis_fields(arbor, old_trees, nodes_only):
         else:
             indices = (old_tree._tree_field_indices)
 
+        arbor._node_io.get_fields(new_root, fields=arbor.analysis_field_list)
         for field in arbor.analysis_field_list:
-            if field not in new_root.field_data:
-                arbor._node_io._initialize_analysis_field(new_root, field)
-
             if nodes_only:
                 my_field = field
+            elif old_tree.is_root:
+                my_field = ("forest", field)
             else:
                 my_field = ("tree", field)
             new_root.field_data[field][indices] = old_tree[my_field]
