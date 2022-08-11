@@ -9,7 +9,7 @@ import json
 import numpy as np
 import os
 import types
-from unyt import uconcatenate, uhstack
+from unyt import uconcatenate
 
 from yt.frontends.ytdata.utilities import save_as_dataset
 from yt.funcs import get_pbar
