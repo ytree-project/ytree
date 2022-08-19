@@ -28,6 +28,7 @@ from yt.utilities.logger import \
 
 from ytree.data_structures.arbor import \
     Arbor
+from ytree.data_structures.load import load as ytree_load
 from ytree.frontends.ytree.io import \
     YTreeDataFile, \
     YTreeRootFieldIO, \
@@ -371,6 +372,26 @@ class YTreeArbor(Arbor):
                 yield root_node
             else:
                 yield root_node.get_node("forest", ti)
+
+    def reload_arbor(self):
+        """
+        Reload the arbor and setup existing derived fields.
+
+        This can be useful to do after saving a bunch of analysis fields.
+        """
+
+        new_arbor = ytree_load(self.filename)
+
+        add_fields = set(self.derived_field_list).difference(
+            new_arbor.derived_field_list)
+        for field in add_fields:
+            fi = self.field_info[field].copy()
+            name = fi.pop("name")
+            function = fi.pop("function")
+            del fi["type"], fi["dependencies"]
+            new_arbor.add_derived_field(name, function, **fi)
+
+        return new_arbor
 
     _ytds = None
     @property
