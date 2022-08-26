@@ -133,7 +133,7 @@ def parallel_trees(trees, base_trees=None,
     """
 
     comm = _get_comm(())
-    is_root = comm.comm.rank == 0
+    is_root = comm.comm is None or comm.comm.rank == 0
 
     if dynamic:
         if is_root:
