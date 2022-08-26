@@ -15,7 +15,7 @@ parallel utilities
 
 import numpy as np
 
-from yt.funcs import is_root
+from yt.funcs import is_root as yt_is_root
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm, \
     parallel_objects
@@ -43,8 +43,17 @@ def regenerate_node(arbor, node, new_index=None):
 
     return new_node
 
-def parallel_trees(trees, save_every=None, save_in_place=None,
-                   save_roots_only=False, filename=None,
+def make_node(iter_trees, base_trees, node_id):
+    if isinstance(node_id, tuple):
+        ai, ti = node_id
+        root_node = base_trees[ai]
+        return root_node.get_node("forest", ti)
+    else:
+        return iter_trees[node_id]
+
+def parallel_trees(trees, base_trees=None,
+                   save_every=None, save_in_place=False,
+                   save_nodes_only=False, filename=None,
                    njobs=0, dynamic=False):
     """
     Iterate over a list of trees in parallel.
@@ -123,10 +132,31 @@ def parallel_trees(trees, save_every=None, save_in_place=None,
 
     """
 
-    arbor = trees[0].arbor
+    comm = _get_comm(())
+    is_root = comm.comm.rank == 0
+
+    if dynamic:
+        if is_root:
+            nt = len(trees)
+        else:
+            nt = None
+        nt = comm.mpi_bcast(nt, root=0)
+    else:
+        nt = len(trees)
+
+    if nt < 1:
+        return
+
+    deconstructed = trees is None or isinstance(trees[0], tuple)
+    if deconstructed:
+        if base_trees is None:
+            raise ValueError("Cannot provide deconstructed trees without base_trees.")
+        else:
+            arbor = base_trees[0].arbor
+    else:
+        arbor = trees[0].arbor
     afields = arbor.analysis_field_list
 
-    nt = len(trees)
     save = True
     if save_every is None:
         save_every = nt
@@ -139,15 +169,22 @@ def parallel_trees(trees, save_every=None, save_in_place=None,
         start = ib * save_every
         end = min(start + save_every, nt)
 
+        if is_root and deconstructed:
+            my_items = trees[start:end]
+        else:
+            my_items = range(start, end)
+
         arbor_storage = {}
-        for tree_store, itree in parallel_objects(
-                range(start, end), storage=arbor_storage,
+        for tree_store, my_item in parallel_objects(
+                my_items, storage=arbor_storage,
                 njobs=njobs, dynamic=dynamic):
 
-            my_tree = trees[itree]
+            my_tree = make_node(trees, base_trees, my_item)
             yield my_tree
 
-            if is_root():
+            # We use yt_is_root here because we want the root of this
+            # workgroup running this iteration, not the global root.
+            if yt_is_root():
                 my_root = my_tree.find_root()
                 tree_store.result_id = (my_root._arbor_index, my_tree.tree_id)
 
@@ -170,11 +207,12 @@ def parallel_trees(trees, save_every=None, save_in_place=None,
             else:
                 tree_store.result_id = None
 
-        # combine results for all trees
-        comm = _get_comm(())
-        if is_root():
-            for itree in range(start, end):
-                my_tree = trees[itree]
+        # Use the global root to combine all results.
+        if is_root:
+            my_trees = []
+            for my_item in my_items:
+                my_tree = make_node(trees, base_trees, my_item)
+                my_trees.append(my_tree)
                 my_root = my_tree.find_root()
                 key = (my_root._arbor_index, my_tree.tree_id)
                 data = arbor_storage[key]
@@ -194,7 +232,7 @@ def parallel_trees(trees, save_every=None, save_in_place=None,
 
             if save:
                 if save_in_place:
-                    save_trees = trees[start:end]
+                    save_trees = my_trees
                 else:
                     save_trees = trees
 
@@ -303,7 +341,7 @@ def parallel_tree_nodes(tree, group="forest", nodes=None,
 
         my_halo = my_halos[ihalo]
         yield my_halo
-        if is_root():
+        if yt_is_root():
             halo_store.result_id = my_halo.tree_id
             halo_store.result = {field: my_halo[field]
                                  for field in afields}
@@ -311,7 +349,7 @@ def parallel_tree_nodes(tree, group="forest", nodes=None,
             halo_store.result_id = -1
 
     # combine results for this tree
-    if is_root():
+    if yt_is_root():
         for tree_id, result in sorted(tree_storage.items()):
             if tree_id == -1:
                 continue

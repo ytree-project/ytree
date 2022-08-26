@@ -310,7 +310,8 @@ class YTreeArbor(Arbor):
         cr = data_source.cut_region(conditionals)
         return cr
 
-    def get_nodes_from_selection(self, container, trees=None):
+    def get_nodes_from_selection(self, container, trees=None,
+                                 deconstructed=False):
         """
         Generate TreeNodes from a yt data container.
 
@@ -363,15 +364,16 @@ class YTreeArbor(Arbor):
         arbor_index = self._node_io._si[file_number] + file_root_index
 
         for ai, ti in zip(arbor_index, tree_index):
+            if deconstructed:
+                yield (ai, ti)
+                continue
+
             if trees is None:
                 root_node = self._generate_root_node(ai)
             else:
                 root_node = trees[ai]
 
-            if ti == 0:
-                yield root_node
-            else:
-                yield root_node.get_node("forest", ti)
+            yield root_node.get_node("forest", ti)
 
     def reload_arbor(self):
         """
