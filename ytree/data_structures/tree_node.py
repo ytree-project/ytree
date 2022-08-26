@@ -361,6 +361,9 @@ class TreeNode:
 
         """
 
+        if index == 0:
+            return self
+
         self.arbor._setup_tree(self)
         self.arbor._grow_tree(self)
         indices = getattr(self, f"_{selector}_field_indices", None)
