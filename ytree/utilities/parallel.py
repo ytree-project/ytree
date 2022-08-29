@@ -15,7 +15,9 @@ parallel utilities
 
 import numpy as np
 
-from yt.funcs import is_root as yt_is_root
+from yt.funcs import \
+    get_pbar, \
+    is_root as yt_is_root
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm, \
     parallel_objects
@@ -210,7 +212,8 @@ def parallel_trees(trees, base_trees=None,
         # Use the global root to combine all results.
         if is_root:
             my_trees = []
-            for my_item in my_items:
+            pbar = get_pbar("Combining results", len(my_items))
+            for i, my_item in enumerate(my_items):
                 my_tree = make_node(trees, base_trees, my_item)
                 my_trees.append(my_tree)
                 my_root = my_tree.find_root()
@@ -229,6 +232,8 @@ def parallel_trees(trees, base_trees=None,
                         arbor._node_io._initialize_analysis_field(my_root, field)
 
                     my_root.field_data[field][indices] = data[field]
+                pbar.update(i+1)
+            pbar.finish()
 
             if save:
                 if save_in_place:
