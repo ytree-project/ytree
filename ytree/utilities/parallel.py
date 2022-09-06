@@ -171,7 +171,7 @@ def parallel_trees(trees, base_trees=None,
         start = ib * save_every
         end = min(start + save_every, nt)
 
-        if is_root and deconstructed:
+        if (is_root or not dynamic) and deconstructed:
             my_items = trees[start:end]
         else:
             my_items = range(start, end)

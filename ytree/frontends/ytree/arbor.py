@@ -25,6 +25,8 @@ from yt.data_objects.data_containers import \
     YTDataContainer
 from yt.utilities.logger import \
     ytLogger
+from yt.utilities.parallel_tools.parallel_analysis_interface import \
+    parallel_objects
 
 from ytree.data_structures.arbor import \
     Arbor
@@ -358,22 +360,33 @@ class YTreeArbor(Arbor):
                             ('halos', 'file_root_index'),
                             ('halos', 'tree_index')])
 
-        file_number = container['halos', 'file_number'].d.astype(int)
-        file_root_index = container['halos', 'file_root_index'].d.astype(int)
-        tree_index = container['halos', 'tree_index'].d.astype(int)
-        arbor_index = self._node_io._si[file_number] + file_root_index
+        all_storage = {}
+        for my_store, my_chunk in parallel_objects(container.chunks([], "io"),
+                                                   storage=all_storage):
+            file_number = my_chunk['halos', 'file_number'].d.astype(int)
+            file_root_index = my_chunk['halos', 'file_root_index'].d.astype(int)
+            tree_index = my_chunk['halos', 'tree_index'].d.astype(int)
+            arbor_index = self._node_io._si[file_number] + file_root_index
+            my_store.result = (arbor_index, tree_index)
 
-        for ai, ti in zip(arbor_index, tree_index):
+        all_ai = []
+        all_ti = []
+        for my_i, my_values in sorted(all_storage.items()):
+            all_ai.append(my_values[0])
+            all_ti.append(my_values[1])
+        all_ai = np.concatenate(all_ai).astype(int)
+        all_ti = np.concatenate(all_ti).astype(int)
+
+        for ai, ti in zip(all_ai, all_ti):
             if deconstructed:
                 yield (ai, ti)
-                continue
 
-            if trees is None:
-                root_node = self._generate_root_node(ai)
             else:
-                root_node = trees[ai]
-
-            yield root_node.get_node("forest", ti)
+                if trees is None:
+                    root_node = self._generate_root_node(ai)
+                else:
+                    root_node = trees[ai]
+                yield root_node.get_node("forest", ti)
 
     def reload_arbor(self):
         """
