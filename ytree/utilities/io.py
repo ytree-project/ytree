@@ -25,6 +25,17 @@ from yt.funcs import \
 from ytree.utilities.logger import \
     fake_pbar
 
+def dirname(path, level=1):
+    """
+    Multi-level version of os.path.dirname.
+    """
+    if not isinstance(level, int) or level < 1:
+        raise ValueError(
+            f"level must be a positive integer: {level}.")
+    for i in range(level):
+        path = os.path.dirname(path)
+    return path
+
 def ensure_dir(path):
     r"""Parallel safe directory maker."""
     if os.path.exists(path):

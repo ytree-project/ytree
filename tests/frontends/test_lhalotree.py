@@ -110,7 +110,7 @@ def test_io_trees_default():
         data1 = lhtutils.read_trees_default(tmp.name)
         os.remove(tmp.name)
     for k in data0.keys():
-        assert(k in data1)
+        assert (k in data1)
         np.testing.assert_array_equal(data1[k], data0[k])
 
 
@@ -138,7 +138,7 @@ def test_LHaloTreeReader():
 
 @requires_file(CTT)
 def test_fail_load():
-    assert(not LHaloTreeArbor._is_valid(CTT))
+    assert (not LHaloTreeArbor._is_valid(CTT))
 
         
 @requires_file(SMT)

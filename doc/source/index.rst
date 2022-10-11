@@ -12,6 +12,7 @@ in merger tree from the following formats:
 - :ref:`load-ahf`
 - :ref:`load-ctrees`
 - :ref:`load-ctrees-hdf5`
+- :ref:`load-gadget4`
 - :ref:`load-lhalotree`
 - :ref:`load-lhalotree-hdf5`
 - :ref:`load-moria`
@@ -39,6 +40,8 @@ Table of Contents
 .. toctree::
    :maxdepth: 2
 
+   Help.rst
+   Citing.rst
    Installation.rst
    Data.rst
    Frames.rst
@@ -48,12 +51,11 @@ Table of Contents
    Parallelism.rst
    Analysis.rst
    Examples.rst
+   api_reference.rst
    Conduct.rst
    Contributing.rst
    Developing.rst
-   Help.rst
-   Citing.rst
-   reference.rst
+   Changelog.rst
 
 .. include:: ../../CITATION.rst
 

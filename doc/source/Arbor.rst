@@ -9,6 +9,12 @@ dataset is referred to as an **arbor**. ``ytree`` provides several different
 ways to navigate, query, and analyze merger trees. It is recommended that you
 read this entire section to identify the way that is best for what you want to do.
 
+Example Applications
+--------------------
+
+Not sure how to get started with something? Check out :ref:`examples` for
+demonstrations of more complex analysis.
+
 Loading Data
 ------------
 
@@ -157,6 +163,8 @@ for large trees.
    print (new_tree.tree_size) # retrieved from a cache
    691
 
+.. _tree-or-forest:
+
 Accessing the Nodes in a Tree or Forest
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -235,10 +243,11 @@ The full tree leading up to any given halo can be accessed in the same way.
 Accessing All Nodes in a Forest
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :ref:`load-ctrees-hdf5`, :ref:`load-lhalotree`, :ref:`load-lhalotree-hdf5`,
-:ref:`load-moria`, :ref:`load-treefrog` formats provide access to halos grouped
-by forest. A forest is a group of trees with halos that interact in a non-merging
-way through processes like fly-bys.
+Several formats provide access to halos grouped by forest. A forest is a group
+of trees with halos that interact in a non-merging way through processes like
+fly-bys. A forest can contain multiple distinct trees ending in halos with no
+descendent. See :ref:`forest-support` for a list of frontends which use
+forests.
 
 .. code-block:: python
 
@@ -257,6 +266,42 @@ way through processes like fly-bys.
 
 To find all the roots in that forest, i.e., the roots of all individual trees
 contained, see :ref:`getting_root_nodes`.
+
+.. _forest-support:
+
+Frontends that Support Forests
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Below is table illustrating which frontends make use of forests. Note, all
+frontends can be used with forest access (see :ref:`tree-or-forest`), but
+only the ones listed below contain forests with multiple distinct trees.
+
+.. list-table:: Frontends Using Forests
+   :widths: 25 25
+   :header-rows: 1
+
+   * - Frontend
+     - Supports Forests?
+   * - :ref:`load-ahf`
+     - no
+   * - :ref:`load-ctrees`
+     - no
+   * - :ref:`load-ctrees-hdf5`
+     - yes
+   * - :ref:`load-gadget4`
+     - yes
+   * - :ref:`load-lhalotree`
+     - yes
+   * - :ref:`load-lhalotree-hdf5`
+     - yes
+   * - :ref:`load-moria`
+     - yes
+   * - :ref:`load-rockstar`
+     - no
+   * - :ref:`load-treefarm`
+     - no
+   * - :ref:`load-treefrog`
+     - yes
 
 Accessing a Halo's Ancestors and Descendent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

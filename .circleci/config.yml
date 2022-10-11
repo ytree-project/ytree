@@ -79,7 +79,7 @@ commands:
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
-            flake8 tests ytree
+            flake8 tests ytree doc/source/examples
 
   run-tests:
     description: "Build ytree and run tests."
@@ -169,13 +169,13 @@ jobs:
 
       - restore_cache:
           name: "Restore test data cache."
-          key: test-data-aardsma
+          key: test-data-abbey
 
       - download-test-data
 
       - save_cache:
           name: "Save test data cache."
-          key: test-data-aardsma
+          key: test-data-abbey
           paths:
             - ~/ytree_test
 

@@ -73,8 +73,8 @@ def read_header_default(filename):
     nhalos = x1['totnhalos'][0]
     dtype2 = np.dtype('i4')
     x2 = np.fromfile(fd, dtype=dtype2, count=ntrees)
-    assert(len(x2) == ntrees)
-    assert(np.sum(x2) == nhalos)
+    assert (len(x2) == ntrees)
+    assert (np.sum(x2) == nhalos)
     header_size = dtype1.itemsize + ntrees*dtype2.itemsize
     # Close
     if close:
@@ -763,11 +763,11 @@ class LHaloTreeReader:
         """
         nhalos = len(tree['SnapNum'])
         if treenum == -1:
-            assert(nhalos == self.totnhalos)
-            assert(halonum is None)
+            assert (nhalos == self.totnhalos)
+            assert (halonum is None)
         elif nhalos != self.nhalos_per_tree[treenum]:
-            assert(nhalos == 1)
-            assert(halonum is not None)
+            assert (nhalos == 1)
+            assert (halonum is not None)
         else:
             halonum = None
         # Unique ID for each halo and descendant in tree
@@ -830,10 +830,10 @@ class LHaloTreeReader:
                 nhalos = self.nhalos_per_tree[treenum]
         fields = list(tree.keys())
         for k in fields:
-            assert(len(tree[k]) == nhalos)
+            assert (len(tree[k]) == nhalos)
         # Check fields
         for k in self.raw_fields:
-            assert(k in fields)
+            assert (k in fields)
         # Don't check tree indices for a single halo
         if halonum is not None:
             return
@@ -843,23 +843,23 @@ class LHaloTreeReader:
             nhalos = self.nhalos_per_tree[treenum_arr]
         # Check that halos are within tree
         for k in halo_fields:
-            assert((tree[k] < nhalos).all())
+            assert ((tree[k] < nhalos).all())
         # Check FOF central exists and all subs in one snapshot
         central = tree['FirstHaloInFOFgroup']
-        assert((central >= 0).all())
+        assert ((central >= 0).all())
         if treenum == -1:
             central = self.get_total_index(treenum_arr, central)
-        assert((tree['SnapNum'] == tree['SnapNum'][central]).all())
+        assert ((tree['SnapNum'] == tree['SnapNum'][central]).all())
         # Check that progenitors/descendants are back/forward in time
         descend = tree['Descendant'].astype('i4')
         has_descend = (descend >= 0)
         not_descend = np.logical_not(has_descend)
         # Not strictly True
-        # assert((tree['SnapNum'][not_descend] ==
+        # assert ((tree['SnapNum'][not_descend] ==
         #         (len(self.scale_factors) - 1)).all())
         if treenum == -1:
             descend = self.get_total_index(treenum_arr, descend)
-        assert((tree['SnapNum'][descend[has_descend]] >
+        assert ((tree['SnapNum'][descend[has_descend]] >
                 tree['SnapNum'][has_descend]).all())
         # Check progenitors are back in time
         descend[not_descend] = np.where(not_descend)[0]
@@ -870,9 +870,9 @@ class LHaloTreeReader:
         if treenum == -1:
             progen1 = self.get_total_index(treenum_arr, progen1)
             progen2 = self.get_total_index(treenum_arr, progen2)
-        assert((tree['SnapNum'][progen1[has_progen1]] <=
+        assert ((tree['SnapNum'][progen1[has_progen1]] <=
                 tree['SnapNum'][descend[has_progen1]]).all())
-        assert((tree['SnapNum'][progen2[has_progen2]] <=
+        assert ((tree['SnapNum'][progen2[has_progen2]] <=
                 tree['SnapNum'][descend[has_progen2]]).all())
 
     def validate_fields(self, tree):
@@ -888,4 +888,4 @@ class LHaloTreeReader:
         # Check fields
         fields = list(tree.keys())
         for k in self.fields:
-            assert(k in fields)
+            assert (k in fields)
