@@ -13,6 +13,20 @@ AHFArbor miscellany
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import os
+import re
+
+def get_crm_filename(filename, suffix):
+    # Searching for <keyword>.something.<suffix>
+    res = re.search(f"([^\.]+)\.[^\.]+{suffix}$", filename)
+    if not res:
+        return None
+
+    filekey = res.groups()[0]
+    ddir = os.path.dirname(filekey)
+    bname = os.path.basename(filekey)
+    return os.path.join(ddir, f"MergerTree_{bname}.txt-CRMratio2")
+
 def parse_AHF_file(filename, pars, sep=None):
     """
     Parse an AHF log or parameter file.

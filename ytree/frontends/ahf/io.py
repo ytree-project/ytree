@@ -25,9 +25,11 @@ from ytree.data_structures.io import \
     CatalogDataFile
 from ytree.utilities.io import \
     f_text_block
+from ytree.utilities.misc import fround
 
 class AHFDataFile(CatalogDataFile):
     _redshift_precision = 3
+    _data_suffix = ".AHF_halos"
 
     def __init__(self, filename, arbor):
         self.filename = filename
@@ -40,12 +42,17 @@ class AHFDataFile(CatalogDataFile):
         if res:
             self.data_filekey = self.filekey[:res.end()]
         else:
-            minz = 10**-rprec
-            if abs(self.redshift) < minz:
-                self.redshift = 0
             zfmt = f".0{rprec}f"
-            my_z = format(self.redshift, zfmt)
-            self.data_filekey = f"{self.filekey}.z{my_z}"
+            for inc in [0, -10**-rprec]:
+                my_z = format(fround(self.redshift, decimals=rprec) + inc, zfmt)
+                fkey = f"{self.filekey}.z{my_z}"
+                if os.path.exists(fkey + self._data_suffix):
+                    self.data_filekey = fkey
+                    break
+
+            if not hasattr(self, "data_filekey"):
+                raise FileNotFoundError(
+                    f"Cannot find data file: {fkey + self._data_suffix}.")
 
         self.halos_filename = self.data_filekey + ".AHF_halos"
         self.mtree_filename = self.data_filekey + ".AHF_mtree"

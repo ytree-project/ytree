@@ -24,6 +24,7 @@ from ytree.frontends.ahf.fields import \
 from ytree.frontends.ahf.io import \
     AHFDataFile
 from ytree.frontends.ahf.misc import \
+    get_crm_filename, \
     parse_AHF_file
 from unyt.unit_registry import \
     UnitRegistry
@@ -135,4 +136,30 @@ class AHFArbor(CatalogArbor):
         fn = args[0]
         if not fn.endswith(self._suffix):
             return False
+
+        mtree_fn = get_crm_filename(fn)
+        if mtree_fn is not None and os.path.exists(mtree_fn):
+            return False
+
+        return True
+
+class AHFNewArbor(AHFArbor):
+    """
+    Arbor for a newer version of Amiga Halo Finder data.
+    """
+
+    @classmethod
+    def _is_valid(self, *args, **kwargs):
+        """
+        File must end in .AHF_halos and have an associated
+        .parameter file.
+        """
+        fn = args[0]
+        if not fn.endswith(self._suffix):
+            return False
+
+        mtree_fn = get_crm_filename(fn, self._suffix)
+        if mtree_fn is None or not os.path.exists(mtree_fn):
+            return False
+
         return True
