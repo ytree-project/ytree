@@ -51,7 +51,6 @@ setup(name="ytree",
           "Operating System :: POSIX :: Linux",
           "Operating System :: Unix",
           "Natural Language :: English",
-          "Programming Language :: Python :: 3.7",
           "Programming Language :: Python :: 3.8",
           "Programming Language :: Python :: 3.9",
           "Programming Language :: Python :: 3.10",
@@ -69,5 +68,5 @@ setup(name="ytree",
           'rtd': [pkg for pkg in dev_requirements if 'sphinx' not in pkg],
           'parallel': ['mpi4py'],
       },
-      python_requires='>=3.7'
+      python_requires='>=3.8'
 )
