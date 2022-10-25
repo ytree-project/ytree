@@ -55,9 +55,17 @@ class AHFArbor(CatalogArbor):
         pars = {"simu.omega0": "omega_matter",
                 "simu.lambda0": "omega_lambda",
                 "simu.boxsize": "box_size"}
-        log_filename = self.log_filename \
-          if self.log_filename is not None else df.filekey + ".log"
-        if os.path.exists(log_filename):
+
+        if self.log_filename is None:
+            fns = glob.glob(df.filekey + "*.log")
+            if fns:
+                log_filename = fns[0]
+            else:
+                log_filename = None
+        else:
+            log_filename = self.log_filename
+
+        if log_filename is not None and os.path.exists(log_filename):
             vals = parse_AHF_file(log_filename, pars, sep=":")
             for attr in ["omega_matter",
                          "omega_lambda"]:
