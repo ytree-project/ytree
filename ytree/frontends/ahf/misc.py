@@ -13,8 +13,11 @@ AHFArbor miscellany
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import numpy as np
 import os
 import re
+
+from ytree.utilities.io import f_text_block
 
 def get_crm_filename(filename, suffix):
     # Searching for <keyword>.something.<suffix>
@@ -26,6 +29,32 @@ def get_crm_filename(filename, suffix):
     ddir = os.path.dirname(filekey)
     bname = os.path.basename(filekey)
     return os.path.join(ddir, f"MergerTree_{bname}.txt-CRMratio2")
+
+def get_crm_table_value(f, index, table):
+    if index in table:
+        return table[index]
+
+    indices = np.array(list(table.keys()))
+    istart = min(indices[indices > index])
+    if table[istart] is None:
+        table[index] = None
+        return table[index]
+
+    f.seek(table[istart])
+    current_cid = istart
+    for line, loc in f_text_block(f):
+        if line.startswith("END"):
+            table[index] = None
+            return table[index]
+        online = line.split()
+        thing = online[0]
+        if len(online) == 2:
+                cid = int(thing[:-12])
+                if cid < current_cid:
+                    table[cid] = loc
+                    current_cid = cid
+                    if cid == index:
+                        return table[index]
 
 def parse_AHF_file(filename, pars, sep=None):
     """

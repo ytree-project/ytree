@@ -70,3 +70,23 @@ class AHFFieldInfo(FieldInfoContainer):
         ('uid', id_type),
         ('desc_uid', id_type)
     )
+
+class AHFNewFieldInfo(AHFFieldInfo):
+    alias_fields = (
+        ("halo_id", "ID", None),
+        ("uid", "ID", None),
+        ("desc_uid", "desc_id", None),
+        ("mass", "Mvir", m_unit),
+        ("virial_mass", "Mvir", m_unit),
+        ("position_x", "Xc", p_unit),
+        ("position_y", "Yc", p_unit),
+        ("position_z", "Zc", p_unit),
+        ("velocity_x", "VXc", v_unit),
+        ("velocity_y", "VYc", v_unit),
+        ("velocity_z", "VZc", v_unit),
+        ("virial_radius", "Rvir", p_unit),
+        ("velocity_dispersion", "sigV", v_unit),
+        ("spin_parameter", "lambda", None),
+        ("kinetic_energy", "Ekin", "Msun/h * (km/s)**2"),
+        ("potential_energy", "Epot", "Msun/h * (km/s)**2"),
+    )

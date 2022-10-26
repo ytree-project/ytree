@@ -20,6 +20,7 @@ import re
 import weakref
 
 from ytree.frontends.ahf.misc import \
+    get_crm_table_value, \
     parse_AHF_file
 from ytree.data_structures.io import \
     CatalogDataFile
@@ -33,6 +34,7 @@ class AHFDataFile(CatalogDataFile):
 
     def __init__(self, filename, arbor):
         self.filename = filename
+        self._catalog_index = arbor._get_file_index(filename)
         self.filekey = self.filename[:self.filename.rfind(".parameter")]
         self._parse_header()
 
@@ -298,3 +300,44 @@ class AHFDataFile(CatalogDataFile):
         self._get_mtree_fields(tfields, dtypes, field_data)
 
         return field_data
+
+class AHFNewDataFile(AHFDataFile):
+    def _get_mtree_fields(self, tfields, dtypes, field_data):
+        if not tfields:
+            return
+
+        descids = np.full(
+            len(field_data["ID"]), -1,
+            dtype=dtypes['desc_id'])
+        field_data["desc_id"] = descids
+
+        if self._catalog_index == self.arbor._crm_max:
+            return
+
+        ci = self._catalog_index + 1
+        ct = self.arbor._crm_table
+        cistr = str(ci)
+        f = open(self.arbor._crm_filename, mode="r")
+        loc = get_crm_table_value(f, ci, ct)
+        if loc is None:
+            return
+
+        f.seek(loc)
+        for line, loc in f_text_block(f):
+            if line.startswith("END"):
+                break
+            online = line.split()
+            thing = online[0]
+            if len(online) == 2:
+                cid = int(thing[:-12])
+                if cid < ci:
+                    ct[cid] = loc
+                    break
+                my_descid = int(thing)
+                continue
+
+            # Assume the ID field is in order and there are none missing.
+            # That is, assume we can use the uid to get the array index.
+            my_id = int(thing[-12:]) - 1
+            descids[my_id] = my_descid
+        f.close()

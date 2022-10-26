@@ -20,9 +20,11 @@ import re
 from ytree.data_structures.arbor import \
     CatalogArbor
 from ytree.frontends.ahf.fields import \
-    AHFFieldInfo
+    AHFFieldInfo, \
+    AHFNewFieldInfo
 from ytree.frontends.ahf.io import \
-    AHFDataFile
+    AHFDataFile, \
+    AHFNewDataFile
 from ytree.frontends.ahf.misc import \
     get_crm_filename, \
     parse_AHF_file
@@ -114,9 +116,7 @@ class AHFArbor(CatalogArbor):
         """
         my_files = glob.glob(f"{self._prefix}*{self._suffix}")
         # sort by catalog number
-        my_files.sort(
-            key=lambda x:
-            self._get_file_index(x))
+        my_files.sort(key=self._get_file_index)
         self.data_files = \
           [self._data_file_class(f, self) for f in my_files]
 
@@ -145,7 +145,7 @@ class AHFArbor(CatalogArbor):
         if not fn.endswith(self._suffix):
             return False
 
-        mtree_fn = get_crm_filename(fn)
+        mtree_fn = get_crm_filename(fn, self._suffix)
         if mtree_fn is not None and os.path.exists(mtree_fn):
             return False
 
@@ -155,6 +155,23 @@ class AHFNewArbor(AHFArbor):
     """
     Arbor for a newer version of Amiga Halo Finder data.
     """
+
+    _has_uids = True
+    _field_info_class = AHFNewFieldInfo
+    _data_file_class = AHFNewDataFile
+
+    def _parse_parameter_file(self):
+        super()._parse_parameter_file()
+        self._initialize_crm_table()
+
+    def _initialize_crm_table(self):
+        self._crm_filename = get_crm_filename(self.filename, self._suffix)
+        self._crm_table = {}
+        with open(self._crm_filename, mode="r") as f:
+            for i in range(3):
+                line = f.readline()
+            self._crm_max = int(line.split()[2])
+            self._crm_table[self._crm_max] = f.tell()
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
