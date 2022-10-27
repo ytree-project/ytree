@@ -316,7 +316,6 @@ class AHFNewDataFile(AHFDataFile):
 
         ci = self._catalog_index + 1
         ct = self.arbor._crm_table
-        cistr = str(ci)
         f = open(self.arbor._crm_filename, mode="r")
         loc = get_crm_table_value(f, ci, ct)
         if loc is None:

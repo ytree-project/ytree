@@ -21,7 +21,7 @@ from ytree.utilities.io import f_text_block
 
 def get_crm_filename(filename, suffix):
     # Searching for <keyword>.something.<suffix>
-    res = re.search(f"([^\.]+)\.[^\.]+{suffix}$", filename)
+    res = re.search(rf"([^\.]+)\.[^\.]+{suffix}$", filename)
     if not res:
         return None
 
@@ -49,12 +49,12 @@ def get_crm_table_value(f, index, table):
         online = line.split()
         thing = online[0]
         if len(online) == 2:
-                cid = int(thing[:-12])
-                if cid < current_cid:
-                    table[cid] = loc
-                    current_cid = cid
-                    if cid == index:
-                        return table[index]
+            cid = int(thing[:-12])
+            if cid < current_cid:
+                table[cid] = loc
+                current_cid = cid
+                if cid == index:
+                    return table[index]
 
 def parse_AHF_file(filename, pars, sep=None):
     """
