@@ -302,15 +302,12 @@ class AHFDataFile(CatalogDataFile):
         return field_data
 
 class AHFNewDataFile(AHFDataFile):
-    def _get_mtree_fields(self, tfields, dtypes, field_data):
-        if not tfields:
-            return
+    def _compute_links(self):
+        """
+        Read the CRMratio2 file.
+        """
 
-        descids = np.full(
-            len(field_data["ID"]), -1,
-            dtype=dtypes['desc_id'])
-        field_data["desc_id"] = descids
-
+        self._links = desc_dict = {}
         if self._catalog_index == self.arbor._crm_max:
             return
 
@@ -337,6 +334,20 @@ class AHFNewDataFile(AHFDataFile):
 
             # Assume the ID field is in order and there are none missing.
             # That is, assume we can use the uid to get the array index.
-            my_id = int(thing[-12:]) - 1
-            descids[my_id] = my_descid
+            my_id = int(thing)
+            desc_dict[my_id] = my_descid
         f.close()
+
+    def _get_mtree_fields(self, tfields, dtypes, field_data):
+        if not tfields:
+            return
+
+        my_ids = field_data["ID"]
+        field_data["desc_id"] = descids = np.full(
+            len(my_ids), -1, dtype=dtypes["desc_id"])
+
+        if not self.links:
+            return
+
+        for i in range(descids.size):
+            descids[i] = self.links.get(my_ids[i], -1)
