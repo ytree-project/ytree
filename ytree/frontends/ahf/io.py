@@ -20,7 +20,6 @@ import re
 import weakref
 
 from ytree.frontends.ahf.misc import \
-    get_crm_table_value, \
     parse_AHF_file
 from ytree.data_structures.io import \
     CatalogDataFile
