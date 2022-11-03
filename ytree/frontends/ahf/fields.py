@@ -48,7 +48,7 @@ class AHFFieldInfo(FieldInfoContainer):
     )
 
     alias_fields = (
-        ("halo_id", "ID", None),
+        ("halo_id", "ID", ""),
         ("mass", "Mvir", m_unit),
         ("virial_mass", "Mvir", m_unit),
         ("position_x", "Xc", p_unit),
@@ -59,7 +59,7 @@ class AHFFieldInfo(FieldInfoContainer):
         ("velocity_z", "VZc", v_unit),
         ("virial_radius", "Rvir", p_unit),
         ("velocity_dispersion", "sigV", v_unit),
-        ("spin_parameter", "lambda", None),
+        ("spin_parameter", "lambda", ""),
         ("kinetic_energy", "Ekin", "Msun/h * (km/s)**2"),
         ("potential_energy", "Epot", "Msun/h * (km/s)**2"),
     )
@@ -73,8 +73,8 @@ class AHFFieldInfo(FieldInfoContainer):
 
 class AHFNewFieldInfo(AHFFieldInfo):
     alias_fields = (
-        ("uid", "ID", None),
-        ("desc_uid", "desc_id", None),
+        ("uid", "ID", ""),
+        ("desc_uid", "desc_id", ""),
         ("mass", "Mvir", m_unit),
         ("virial_mass", "Mvir", m_unit),
         ("position_x", "Xc", p_unit),
@@ -85,7 +85,7 @@ class AHFNewFieldInfo(AHFFieldInfo):
         ("velocity_z", "VZc", v_unit),
         ("virial_radius", "Rvir", p_unit),
         ("velocity_dispersion", "sigV", v_unit),
-        ("spin_parameter", "lambda", None),
+        ("spin_parameter", "lambda", ""),
         ("kinetic_energy", "Ekin", "Msun/h * (km/s)**2"),
         ("potential_energy", "Epot", "Msun/h * (km/s)**2"),
     )

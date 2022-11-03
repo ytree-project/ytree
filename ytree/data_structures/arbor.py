@@ -1204,7 +1204,7 @@ class CatalogArbor(Arbor):
                     tree_node.data_file = data_file
                     batch[it] = tree_node
 
-                    if collect_missed_connections:
+                    if self._has_uids:
                         all_dict[my_uid] = tree_node
 
                     if root:
@@ -1241,13 +1241,16 @@ class CatalogArbor(Arbor):
         pbar.finish()
 
         if self._has_uids:
-            for mcon in missed_connections:
-                my_desc_uid = mcon._desc_uid
-                my_root = all_dict[my_desc_uid]
-                delattr(mcon, "_desc_uid")
-                if my_root._ancestors is None:
-                    my_root._ancestors = []
-                my_root._ancestors.append(mcon)
+            for node in missed_connections:
+                my_desc_uid = node._desc_uid
+                my_desc = all_dict[my_desc_uid]
+                delattr(node, "_desc_uid")
+
+                node._descendent = my_desc
+                node.root = my_desc.root
+                if my_desc._ancestors is None:
+                    my_desc._ancestors = []
+                my_desc._ancestors.append(node)
 
         self._trees = np.array(trees)
         self._size = self._trees.size
