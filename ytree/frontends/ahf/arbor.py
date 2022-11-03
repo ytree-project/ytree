@@ -27,7 +27,6 @@ from ytree.frontends.ahf.io import \
     AHFDataFile, \
     AHFNewDataFile
 from ytree.frontends.ahf.misc import \
-    get_crm_filename, \
     parse_AHF_file
 from unyt.unit_registry import \
     UnitRegistry
@@ -40,6 +39,8 @@ class AHFArbor(CatalogArbor):
     """
 
     _suffix = ".parameter"
+    _crm_prefix = "MergerTree_"
+    _crm_suffix = ".txt-CRMratio2"
     _field_info_class = AHFFieldInfo
     _data_file_class = AHFDataFile
 
@@ -53,6 +54,17 @@ class AHFArbor(CatalogArbor):
         self.omega_lambda = omega_lambda
         self._box_size_user = box_size
         super().__init__(filename)
+
+    def _get_crm_filename(self, filename):
+        # Searching for <keyword>.something.<suffix>
+        res = re.search(rf"([^\.]+)\.[^\.]+{self._suffix}$", filename)
+        if not res:
+            return None
+
+        filekey = res.groups()[0]
+        ddir = os.path.dirname(filekey)
+        bname = os.path.basename(filekey)
+        return os.path.join(ddir, f"{self._crm_prefix}{bname}{self._crm_suffix}")
 
     def _parse_parameter_file(self):
         df = AHFDataFile(self.filename, self)
@@ -148,7 +160,7 @@ class AHFArbor(CatalogArbor):
         if not fn.endswith(self._suffix):
             return False
 
-        mtree_fn = get_crm_filename(fn, self._suffix)
+        mtree_fn = self._get_crm_filename(self, fn)
         if mtree_fn is not None and os.path.exists(mtree_fn):
             return False
 
@@ -163,9 +175,9 @@ class AHFNewArbor(AHFArbor):
     _field_info_class = AHFNewFieldInfo
     _data_file_class = AHFNewDataFile
 
-    def _parse_parameter_file(self):
-        super()._parse_parameter_file()
-        self._crm_filename = get_crm_filename(self.filename, self._suffix)
+    def _set_paths(self, filename):
+        super()._set_paths(filename)
+        self._crm_filename = self._get_crm_filename(self.filename)
 
     def _plant_trees(self):
         if self.is_planted:
@@ -211,10 +223,14 @@ class AHFNewArbor(AHFArbor):
         .parameter file.
         """
         fn = args[0]
+        if os.path.basename(fn).startswith(self._crm_prefix) and \
+          fn.endswith(self._crm_suffix):
+            return True
+
         if not fn.endswith(self._suffix):
             return False
 
-        mtree_fn = get_crm_filename(fn, self._suffix)
+        mtree_fn = self._get_crm_filename(self, fn)
         if mtree_fn is None or not os.path.exists(mtree_fn):
             return False
 
