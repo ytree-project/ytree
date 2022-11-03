@@ -165,16 +165,7 @@ class AHFNewArbor(AHFArbor):
 
     def _parse_parameter_file(self):
         super()._parse_parameter_file()
-        self._initialize_crm_table()
-
-    def _initialize_crm_table(self):
         self._crm_filename = get_crm_filename(self.filename, self._suffix)
-        self._crm_table = {}
-        with open(self._crm_filename, mode="r") as f:
-            for i in range(3):
-                line = f.readline()
-            self._crm_max = int(line.split()[2])
-            self._crm_table[self._crm_max] = f.tell()
 
     def _plant_trees(self):
         if self.is_planted:
