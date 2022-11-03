@@ -307,36 +307,8 @@ class AHFNewDataFile(AHFDataFile):
         Read the CRMratio2 file.
         """
 
-        self._links = desc_dict = {}
-        if self._catalog_index == self.arbor._crm_max:
-            return
-
-        ci = self._catalog_index + 1
-        ct = self.arbor._crm_table
-        f = open(self.arbor._crm_filename, mode="r")
-        loc = get_crm_table_value(f, ci, ct)
-        if loc is None:
-            return
-
-        f.seek(loc)
-        for line, loc in f_text_block(f):
-            if line.startswith("END"):
-                break
-            online = line.split()
-            thing = online[0]
-            if len(online) == 2:
-                cid = int(thing[:-12])
-                if cid < ci:
-                    ct[cid] = loc
-                    break
-                my_descid = int(thing)
-                continue
-
-            # Assume the ID field is in order and there are none missing.
-            # That is, assume we can use the uid to get the array index.
-            my_id = int(thing)
-            desc_dict[my_id] = my_descid
-        f.close()
+    def _compute_links(self):
+        self.arbor._compute_links()
 
     def _get_mtree_fields(self, tfields, dtypes, field_data):
         if not tfields:

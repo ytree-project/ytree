@@ -73,7 +73,6 @@ class AHFFieldInfo(FieldInfoContainer):
 
 class AHFNewFieldInfo(AHFFieldInfo):
     alias_fields = (
-        ("halo_id", "ID", None),
         ("uid", "ID", None),
         ("desc_uid", "desc_id", None),
         ("mass", "Mvir", m_unit),

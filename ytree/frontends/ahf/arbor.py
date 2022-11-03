@@ -13,6 +13,7 @@ AHFArbor class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from collections import defaultdict
 import glob
 import os
 import re
@@ -30,6 +31,8 @@ from ytree.frontends.ahf.misc import \
     parse_AHF_file
 from unyt.unit_registry import \
     UnitRegistry
+from ytree.utilities.io import \
+    f_text_block
 
 class AHFArbor(CatalogArbor):
     """
@@ -172,6 +175,43 @@ class AHFNewArbor(AHFArbor):
                 line = f.readline()
             self._crm_max = int(line.split()[2])
             self._crm_table[self._crm_max] = f.tell()
+
+    def _plant_trees(self):
+        if self.is_planted:
+            return
+
+        self._compute_links()
+        super()._plant_trees()
+
+    def _compute_links(self):
+        """
+        Read the CRMratio2 file and hand out a dictionary of
+        uid: desc_uid for each data file.
+        """
+
+        links = defaultdict(dict)
+
+        f = open(self._crm_filename, mode="r")
+        for i in range(3):
+            f.readline()
+
+        for line, loc in f_text_block(f, pbar_string="Computing links"):
+            if line.startswith("END"):
+                break
+
+            online = line.split()
+            thing = online[0]
+            if len(online) == 2:
+                my_descid = int(thing)
+                continue
+
+            my_id = int(thing)
+            cid = int(thing[:-12])
+            links[cid][my_id] = my_descid
+        f.close()
+
+        for df in self.data_files:
+            df._links = links[df._catalog_index]
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
