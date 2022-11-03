@@ -1144,6 +1144,14 @@ class CatalogArbor(Arbor):
         if self.is_planted:
             return
 
+        # This is a somewhat hacky way of catching halos with links
+        # spanning more than one data set. That said, dict access
+        # is much faster than I thought and perhaps this whole
+        # routine needs to be refactored.
+        if self._has_uids:
+            all_dict = {}
+            missed_connections = []
+
         # this can be called once with the list, but fields are
         # not guaranteed to be returned in order.
         if self._has_uids:
@@ -1182,15 +1190,29 @@ class CatalogArbor(Arbor):
                     root = i == 0 or descid == -1
                     # The data says a descendent exists, but it's not there.
                     # This shouldn't happen, but it does sometimes.
+                    # This can also happen when a descendent is more than
+                    # one snapshot removed.
+                    mcollect = False
                     if not root and descid not in lastids:
                         root = True
+                        my_descid = descid
                         descid = data[desc_id_f][it] = -1
+                        if self._has_uids:
+                            mcollect = True
                     tree_node = TreeNode(my_uid, arbor=self, root=root)
                     tree_node._fi = it
                     tree_node.data_file = data_file
                     batch[it] = tree_node
+
+                    if collect_missed_connections:
+                        all_dict[my_uid] = tree_node
+
                     if root:
-                        trees.append(tree_node)
+                        if mcollect:
+                            tree_node._desc_uid = my_descid
+                            missed_connections.append(tree_node)
+                        else:
+                            trees.append(tree_node)
                     else:
                         ancs[descid].append(tree_node)
                     uid += 1
@@ -1217,6 +1239,15 @@ class CatalogArbor(Arbor):
                     ib += bs
             pbar.update(i+1)
         pbar.finish()
+
+        if self._has_uids:
+            for mcon in missed_connections:
+                my_desc_uid = mcon._desc_uid
+                my_root = all_dict[my_desc_uid]
+                delattr(mcon, "_desc_uid")
+                if my_root._ancestors is None:
+                    my_root._ancestors = []
+                my_root._ancestors.append(mcon)
 
         self._trees = np.array(trees)
         self._size = self._trees.size
