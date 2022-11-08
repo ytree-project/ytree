@@ -27,16 +27,25 @@ from ytree.utilities.io import \
     f_text_block
 
 class AHFDataFile(CatalogDataFile):
+    _redshift_precision = 3
+
     def __init__(self, filename, arbor):
         self.filename = filename
         self.filekey = self.filename[:self.filename.rfind(".parameter")]
         self._parse_header()
 
-        res = re.search(r"\.z\d\.\d{3}", self.filekey)
+        rprec = self._redshift_precision
+        rstr = r"\.z\d\.\d\{%d\}" % rprec
+        res = re.search(rstr, self.filekey)
         if res:
             self.data_filekey = self.filekey[:res.end()]
         else:
-            self.data_filekey = f"{self.filekey}.z{self.redshift:.03f}"
+            minz = 10**-rprec
+            if abs(self.redshift) < minz:
+                self.redshift = 0
+            zfmt = f".0{rprec}f"
+            my_z = format(self.redshift, zfmt)
+            self.data_filekey = f"{self.filekey}.z{my_z}"
 
         self.halos_filename = self.data_filekey + ".AHF_halos"
         self.mtree_filename = self.data_filekey + ".AHF_mtree"
