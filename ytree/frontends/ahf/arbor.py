@@ -38,7 +38,9 @@ class AHFArbor(CatalogArbor):
     Arbor for Amiga Halo Finder data.
     """
 
-    _suffix = ".parameter"
+    _data_suffix = ".AHF_halos"
+    _mtree_suffix = ".AHF_mtree"
+    _par_suffix = ".parameter"
     _crm_prefix = "MergerTree_"
     _crm_suffix = ".txt-CRMratio2"
     _field_info_class = AHFFieldInfo
@@ -53,11 +55,17 @@ class AHFArbor(CatalogArbor):
         self.omega_matter = omega_matter
         self.omega_lambda = omega_lambda
         self._box_size_user = box_size
+        self._file_pattern = re.compile(
+            rf"(^.+[^0-9a-zA-Z]+)(\d+).*{self._par_suffix}$")
         super().__init__(filename)
+
+    def _is_crm_file(self, filename):
+        return os.path.basename(filename).startswith(self._crm_prefix) and \
+          filename.endswith(self._crm_suffix)
 
     def _get_crm_filename(self, filename):
         # Searching for <keyword>.something.<suffix>
-        res = re.search(rf"([^\.]+)\.[^\.]+{self._suffix}$", filename)
+        res = re.search(rf"([^\.]+)\.[^\.]+{self._par_suffix}$", filename)
         if not res:
             return None
 
@@ -94,7 +102,7 @@ class AHFArbor(CatalogArbor):
             self.box_size = self.quan(self._box_size_user, "Mpc/h")
 
         # fields from from the .AHF_halos files
-        f = open(f"{df.data_filekey}.AHF_halos")
+        f = open(f"{df.data_filekey}{self._data_suffix}")
         line = f.readline()
         f.close()
 
@@ -121,7 +129,7 @@ class AHFArbor(CatalogArbor):
             # Match a patten of any characters, followed by some sort of
             # separator (e.g., "." or "_"), then a number, and eventually
             # the suffix.
-            reg = re.search(rf"(^.+[^0-9a-zA-Z]+)\d+.+{self._suffix}$", self.filename)
+            reg = self._file_pattern.search(self.filename)
             self._fprefix = reg.groups()[0]
         return self._fprefix
 
@@ -129,7 +137,7 @@ class AHFArbor(CatalogArbor):
         """
         Get all *.parameter files and sort them in reverse order.
         """
-        my_files = glob.glob(f"{self._prefix}*{self._suffix}")
+        my_files = glob.glob(f"{self._prefix}*{self._par_suffix}")
         # sort by catalog number
         my_files.sort(key=self._get_file_index)
         self.data_files = \
@@ -144,20 +152,19 @@ class AHFArbor(CatalogArbor):
         self.data_files.reverse()
 
     def _get_file_index(self, f):
-        reg = re.search(rf"{self._prefix}(\d+){self._suffix}$", f)
+        reg = self._file_pattern.search(f)
         if not reg:
             raise RuntimeError(
                 f"Could not locate index within file: {f}.")
-        return int(reg.groups()[0])
+        return int(reg.groups()[1])
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
         """
-        File must end in .AHF_halos and have an associated
-        .parameter file.
+        File mush end in .parameter.
         """
         fn = args[0]
-        if not fn.endswith(self._suffix):
+        if not fn.endswith(self._par_suffix):
             return False
 
         mtree_fn = self._get_crm_filename(self, fn)
@@ -177,6 +184,13 @@ class AHFNewArbor(AHFArbor):
 
     def _set_paths(self, filename):
         super()._set_paths(filename)
+        if self._is_crm_file(filename):
+            basename = os.path.basename(filename)
+            filekey = basename[len(self._crm_prefix):-len(self._crm_suffix)]
+            pfns = glob.glob(os.path.join(self.directory, filekey) +
+                             f"*{self._par_suffix}")
+            pfns.sort(key=self._get_file_index)
+            self.filename = pfns[-1]
         self._crm_filename = self._get_crm_filename(self.filename)
 
     def _plant_trees(self):
@@ -219,15 +233,14 @@ class AHFNewArbor(AHFArbor):
     @classmethod
     def _is_valid(self, *args, **kwargs):
         """
-        File must end in .AHF_halos and have an associated
-        .parameter file.
+        Filename must end in .parameter or match the CRM naming
+        convention.
         """
         fn = args[0]
-        if os.path.basename(fn).startswith(self._crm_prefix) and \
-          fn.endswith(self._crm_suffix):
+        if self._is_crm_file(self, fn):
             return True
 
-        if not fn.endswith(self._suffix):
+        if not fn.endswith(self._par_suffix):
             return False
 
         mtree_fn = self._get_crm_filename(self, fn)

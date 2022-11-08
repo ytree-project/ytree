@@ -29,12 +29,12 @@ from ytree.utilities.misc import fround
 
 class AHFDataFile(CatalogDataFile):
     _redshift_precision = 3
-    _data_suffix = ".AHF_halos"
 
     def __init__(self, filename, arbor):
+        self.arbor = weakref.proxy(arbor)
         self.filename = filename
         self._catalog_index = arbor._get_file_index(filename)
-        self.filekey = self.filename[:self.filename.rfind(".parameter")]
+        self.filekey = self.filename[:self.filename.rfind(self.arbor._par_suffix)]
         self._parse_header()
 
         rprec = self._redshift_precision
@@ -47,22 +47,21 @@ class AHFDataFile(CatalogDataFile):
             for inc in [0, -10**-rprec]:
                 my_z = format(fround(self.redshift, decimals=rprec) + inc, zfmt)
                 fkey = f"{self.filekey}.z{my_z}"
-                if os.path.exists(fkey + self._data_suffix):
+                if os.path.exists(fkey + self.arbor._data_suffix):
                     self.data_filekey = fkey
                     break
 
             if not hasattr(self, "data_filekey"):
                 raise FileNotFoundError(
-                    f"Cannot find data file: {fkey + self._data_suffix}.")
+                    f"Cannot find data file: {fkey + self.arbor._data_suffix}.")
 
-        self.halos_filename = self.data_filekey + ".AHF_halos"
-        self.mtree_filename = self.data_filekey + ".AHF_mtree"
+        self.halos_filename = self.data_filekey + self.arbor._data_suffix
+        self.mtree_filename = self.data_filekey + self.arbor._mtree_suffix
         if not os.path.exists(self.mtree_filename):
             self.mtree_filename = None
         self.fh = None
         self._parse_data_header()
         self.offsets = None
-        self.arbor = weakref.proxy(arbor)
 
     def _parse_data_header(self):
         """
