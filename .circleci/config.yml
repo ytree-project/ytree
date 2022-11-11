@@ -97,6 +97,7 @@ commands:
             source $HOME/venv/bin/activate
             TESTFILES=$(circleci tests glob "tests/*.py" "tests/frontends/*.py" | circleci tests split --split-by=timings)
             pytest --cov=ytree --junitxml=test-results/junit.xml $TESTFILES
+            python fix-junit.py test-results/junit.xml
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
                 codecov
