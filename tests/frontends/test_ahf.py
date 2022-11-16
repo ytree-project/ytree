@@ -15,4 +15,4 @@ class AHFNewArborTest(TempDirTest, ArborTest):
     arbor_type = AHFNewArbor
     test_filename = "AHF_100_tiny/GIZMO-NewMDCLUSTER_0047.snap_128.parameter"
     num_data_files = 5
-    tree_skip = 10
+    tree_skip = 100
