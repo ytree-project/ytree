@@ -11,11 +11,15 @@ use the freely available :ref:`sample-data`.
 Amiga Halo Finder
 -----------------
 
-The `Amiga Halo Finder <http://popia.ft.uam.es/AHF/Download.html>`__ format
-stores data in a series of files, with one each per snapshot.  Parameters
-are stored in ".parameters" and ".log" files, halo information in
-".AHF_halos" files, and descendent/ancestor links are stored in ".AHF_mtree"
-files.  Make sure to keep all of these together.  To load, provide the name
+There are a couple data formats associated with the `Amiga Halo Finder
+<http://popia.ft.uam.es/AHF/Download.html>`__. Both formats save a
+series of files associated with each snapshot. Parameters are stored
+in ".parameters" and ".log" files and halo properties in ".AHF_halos"
+files. In the older format, descendent/ancestor links are stored in
+several ".AHF_mtree" files, one per snapshot. In the newer format, all
+halo linking information is stored in a single file beginning with
+"MergerTree\_" and ending with "-CRMratio2". Make sure to keep all
+these files together in the same directory. To load, provide the name
 of the first ".parameter" file.
 
 .. code-block:: python
@@ -23,6 +27,14 @@ of the first ".parameter" file.
    >>> import ytree
    >>> a = ytree.load("ahf_halos/snap_N64L16_000.parameter",
    ...                hubble_constant=0.7)
+
+Alternatively, the "MergerTree\_" file can also be provided for the
+newer format.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("AHF_100_tiny/MergerTree_GIZMO-NewMDCLUSTER_0047.txt-CRMratio2")
 
 .. note:: Four important notes about loading AHF data:
 
