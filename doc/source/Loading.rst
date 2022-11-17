@@ -12,12 +12,12 @@ Amiga Halo Finder
 -----------------
 
 There are a couple data formats associated with the `Amiga Halo Finder
-<http://popia.ft.uam.es/AHF/Download.html>`__. Both formats save a
-series of files associated with each snapshot. Parameters are stored
-in ".parameters" and ".log" files and halo properties in ".AHF_halos"
-files. In the older format, descendent/ancestor links are stored in
-several ".AHF_mtree" files, one per snapshot. In the newer format, all
-halo linking information is stored in a single file beginning with
+<http://popia.ft.uam.es/AHF/>`__. Both formats save a series of files
+associated with each snapshot. Parameters are stored in ".parameters"
+and ".log" files and halo properties in ".AHF_halos" files. In the
+older format, descendent/ancestor links are stored in several
+".AHF_mtree" files, one per snapshot. In the newer format, all halo
+linking information is stored in a single file beginning with
 "MergerTree\_" and ending with "-CRMratio2". Make sure to keep all
 these files together in the same directory. To load, provide the name
 of the first ".parameter" file.
