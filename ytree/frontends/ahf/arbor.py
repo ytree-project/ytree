@@ -13,6 +13,7 @@ AHFArbor class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from collections import defaultdict
 import glob
 import os
 import re
@@ -20,20 +21,28 @@ import re
 from ytree.data_structures.arbor import \
     CatalogArbor
 from ytree.frontends.ahf.fields import \
-    AHFFieldInfo
+    AHFFieldInfo, \
+    AHFNewFieldInfo
 from ytree.frontends.ahf.io import \
-    AHFDataFile
+    AHFDataFile, \
+    AHFNewDataFile
 from ytree.frontends.ahf.misc import \
     parse_AHF_file
 from unyt.unit_registry import \
     UnitRegistry
+from ytree.utilities.io import \
+    f_text_block
 
 class AHFArbor(CatalogArbor):
     """
     Arbor for Amiga Halo Finder data.
     """
 
-    _suffix = ".parameter"
+    _data_suffix = ".AHF_halos"
+    _mtree_suffix = ".AHF_mtree"
+    _par_suffix = ".parameter"
+    _crm_prefix = "MergerTree_"
+    _crm_suffix = ".txt-CRMratio2"
     _field_info_class = AHFFieldInfo
     _data_file_class = AHFDataFile
 
@@ -46,7 +55,24 @@ class AHFArbor(CatalogArbor):
         self.omega_matter = omega_matter
         self.omega_lambda = omega_lambda
         self._box_size_user = box_size
+        self._file_pattern = re.compile(
+            rf"(^.+[^0-9a-zA-Z]+)(\d+).*{self._par_suffix}$")
         super().__init__(filename)
+
+    def _is_crm_file(self, filename):
+        return os.path.basename(filename).startswith(self._crm_prefix) and \
+          filename.endswith(self._crm_suffix)
+
+    def _get_crm_filename(self, filename):
+        # Searching for <keyword>.something.<suffix>
+        res = re.search(rf"([^\.]+)\.[^\.]+{self._par_suffix}$", filename)
+        if not res:
+            return None
+
+        filekey = res.groups()[0]
+        ddir = os.path.dirname(filekey)
+        bname = os.path.basename(filekey)
+        return os.path.join(ddir, f"{self._crm_prefix}{bname}{self._crm_suffix}")
 
     def _parse_parameter_file(self):
         df = AHFDataFile(self.filename, self)
@@ -54,9 +80,17 @@ class AHFArbor(CatalogArbor):
         pars = {"simu.omega0": "omega_matter",
                 "simu.lambda0": "omega_lambda",
                 "simu.boxsize": "box_size"}
-        log_filename = self.log_filename \
-          if self.log_filename is not None else df.filekey + ".log"
-        if os.path.exists(log_filename):
+
+        if self.log_filename is None:
+            fns = glob.glob(df.filekey + "*.log")
+            if fns:
+                log_filename = fns[0]
+            else:
+                log_filename = None
+        else:
+            log_filename = self.log_filename
+
+        if log_filename is not None and os.path.exists(log_filename):
             vals = parse_AHF_file(log_filename, pars, sep=":")
             for attr in ["omega_matter",
                          "omega_lambda"]:
@@ -68,7 +102,7 @@ class AHFArbor(CatalogArbor):
             self.box_size = self.quan(self._box_size_user, "Mpc/h")
 
         # fields from from the .AHF_halos files
-        f = open(f"{df.data_filekey}.AHF_halos")
+        f = open(f"{df.data_filekey}{self._data_suffix}")
         line = f.readline()
         f.close()
 
@@ -95,7 +129,7 @@ class AHFArbor(CatalogArbor):
             # Match a patten of any characters, followed by some sort of
             # separator (e.g., "." or "_"), then a number, and eventually
             # the suffix.
-            reg = re.search(rf"(^.+[^0-9a-zA-Z]+)\d+.+{self._suffix}$", self.filename)
+            reg = self._file_pattern.search(self.filename)
             self._fprefix = reg.groups()[0]
         return self._fprefix
 
@@ -103,11 +137,9 @@ class AHFArbor(CatalogArbor):
         """
         Get all *.parameter files and sort them in reverse order.
         """
-        my_files = glob.glob(f"{self._prefix}*{self._suffix}")
+        my_files = glob.glob(f"{self._prefix}*{self._par_suffix}")
         # sort by catalog number
-        my_files.sort(
-            key=lambda x:
-            self._get_file_index(x))
+        my_files.sort(key=self._get_file_index)
         self.data_files = \
           [self._data_file_class(f, self) for f in my_files]
 
@@ -120,19 +152,99 @@ class AHFArbor(CatalogArbor):
         self.data_files.reverse()
 
     def _get_file_index(self, f):
-        reg = re.search(rf"{self._prefix}(\d+){self._suffix}$", f)
+        reg = self._file_pattern.search(f)
         if not reg:
             raise RuntimeError(
                 f"Could not locate index within file: {f}.")
-        return int(reg.groups()[0])
+        return int(reg.groups()[1])
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
         """
-        File must end in .AHF_halos and have an associated
-        .parameter file.
+        File mush end in .parameter.
         """
         fn = args[0]
-        if not fn.endswith(self._suffix):
+        if not fn.endswith(self._par_suffix):
             return False
+
+        mtree_fn = self._get_crm_filename(self, fn)
+        if mtree_fn is not None and os.path.exists(mtree_fn):
+            return False
+
+        return True
+
+class AHFNewArbor(AHFArbor):
+    """
+    Arbor for a newer version of Amiga Halo Finder data.
+    """
+
+    _has_uids = True
+    _field_info_class = AHFNewFieldInfo
+    _data_file_class = AHFNewDataFile
+
+    def _set_paths(self, filename):
+        super()._set_paths(filename)
+        if self._is_crm_file(filename):
+            basename = os.path.basename(filename)
+            filekey = basename[len(self._crm_prefix):-len(self._crm_suffix)]
+            pfns = glob.glob(os.path.join(self.directory, filekey) +
+                             f"*{self._par_suffix}")
+            pfns.sort(key=self._get_file_index)
+            self.filename = pfns[-1]
+        self._crm_filename = self._get_crm_filename(self.filename)
+
+    def _plant_trees(self):
+        if self.is_planted:
+            return
+
+        self._compute_links()
+        super()._plant_trees()
+
+    def _compute_links(self):
+        """
+        Read the CRMratio2 file and hand out a dictionary of
+        uid: desc_uid for each data file.
+        """
+
+        links = defaultdict(dict)
+
+        f = open(self._crm_filename, mode="r")
+        for i in range(3):
+            f.readline()
+
+        for line, loc in f_text_block(f, pbar_string="Computing links"):
+            if line.startswith("END"):
+                break
+
+            online = line.split()
+            thing = online[0]
+            if len(online) == 2:
+                my_descid = int(thing)
+                continue
+
+            my_id = int(thing)
+            cid = int(thing[:-12])
+            links[cid][my_id] = my_descid
+        f.close()
+
+        for df in self.data_files:
+            df._links = links[df._catalog_index]
+
+    @classmethod
+    def _is_valid(self, *args, **kwargs):
+        """
+        Filename must end in .parameter or match the CRM naming
+        convention.
+        """
+        fn = args[0]
+        if self._is_crm_file(self, fn):
+            return True
+
+        if not fn.endswith(self._par_suffix):
+            return False
+
+        mtree_fn = self._get_crm_filename(self, fn)
+        if mtree_fn is None or not os.path.exists(mtree_fn):
+            return False
+
         return True

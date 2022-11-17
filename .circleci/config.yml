@@ -170,13 +170,13 @@ jobs:
 
       - restore_cache:
           name: "Restore test data cache."
-          key: test-data-abbey
+          key: test-data-abernathy
 
       - download-test-data
 
       - save_cache:
           name: "Save test data cache."
-          key: test-data-abbey
+          key: test-data-abernathy
           paths:
             - ~/ytree_test
 

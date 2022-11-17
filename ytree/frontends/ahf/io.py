@@ -25,13 +25,16 @@ from ytree.data_structures.io import \
     CatalogDataFile
 from ytree.utilities.io import \
     f_text_block
+from ytree.utilities.misc import fround
 
 class AHFDataFile(CatalogDataFile):
     _redshift_precision = 3
 
     def __init__(self, filename, arbor):
+        self.arbor = weakref.proxy(arbor)
         self.filename = filename
-        self.filekey = self.filename[:self.filename.rfind(".parameter")]
+        self._catalog_index = arbor._get_file_index(filename)
+        self.filekey = self.filename[:self.filename.rfind(self.arbor._par_suffix)]
         self._parse_header()
 
         rprec = self._redshift_precision
@@ -40,21 +43,25 @@ class AHFDataFile(CatalogDataFile):
         if res:
             self.data_filekey = self.filekey[:res.end()]
         else:
-            minz = 10**-rprec
-            if abs(self.redshift) < minz:
-                self.redshift = 0
             zfmt = f".0{rprec}f"
-            my_z = format(self.redshift, zfmt)
-            self.data_filekey = f"{self.filekey}.z{my_z}"
+            for inc in [0, -10**-rprec]:
+                my_z = format(fround(self.redshift, decimals=rprec) + inc, zfmt)
+                fkey = f"{self.filekey}.z{my_z}"
+                if os.path.exists(fkey + self.arbor._data_suffix):
+                    self.data_filekey = fkey
+                    break
 
-        self.halos_filename = self.data_filekey + ".AHF_halos"
-        self.mtree_filename = self.data_filekey + ".AHF_mtree"
+            if not hasattr(self, "data_filekey"):
+                raise FileNotFoundError(
+                    f"Cannot find data file: {fkey + self.arbor._data_suffix}.")
+
+        self.halos_filename = self.data_filekey + self.arbor._data_suffix
+        self.mtree_filename = self.data_filekey + self.arbor._mtree_suffix
         if not os.path.exists(self.mtree_filename):
             self.mtree_filename = None
         self.fh = None
         self._parse_data_header()
         self.offsets = None
-        self.arbor = weakref.proxy(arbor)
 
     def _parse_data_header(self):
         """
@@ -291,3 +298,26 @@ class AHFDataFile(CatalogDataFile):
         self._get_mtree_fields(tfields, dtypes, field_data)
 
         return field_data
+
+class AHFNewDataFile(AHFDataFile):
+    def _compute_links(self):
+        """
+        Read the CRMratio2 file.
+        """
+
+    def _compute_links(self):
+        self.arbor._compute_links()
+
+    def _get_mtree_fields(self, tfields, dtypes, field_data):
+        if not tfields:
+            return
+
+        my_ids = field_data["ID"]
+        field_data["desc_id"] = descids = np.full(
+            len(my_ids), -1, dtype=dtypes["desc_id"])
+
+        if not self.links:
+            return
+
+        for i in range(descids.size):
+            descids[i] = self.links.get(my_ids[i], -1)
