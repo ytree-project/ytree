@@ -13,6 +13,43 @@ The `CREDITS file
 contains the most up-to-date list of everyone who has contributed to the
 ``ytree`` source code.
 
+Version 3.2.0
+-------------
+
+Release date: *November 18, 2022*
+
+New Features
+^^^^^^^^^^^^
+
+ * Add Gadget4 frontend. (`PR #138
+   <https://github.com/ytree-project/ytree/pull/138>`__)
+ * Update AHF frontend for new format (`PR #154
+   <https://github.com/ytree-project/ytree/pull/154>`__)
+
+Minor Enhancements
+^^^^^^^^^^^^^^^^^^
+
+ * Add plotting examples and improve examples documentation. (`PR #142
+   <https://github.com/ytree-project/ytree/pull/142>`__)
+ * Update installation instructions to include conda option. (`PR #135
+   <https://github.com/ytree-project/ytree/pull/135>`__)
+
+Bugfixes
+^^^^^^^^
+
+ * Fix two AHF frontend issues. (`PR #149
+   <https://github.com/ytree-project/ytree/pull/149>`__)
+
+Infrastructure Updates
+^^^^^^^^^^^^^^^^^^^^^^
+
+ * Drop python 3.7 support and update circle images. (`PR #150
+   <https://github.com/ytree-project/ytree/pull/150>`__)
+ * Add script to fix filename in junit output. (`PR #152
+   <https://github.com/ytree-project/ytree/pull/152>`__)
+ * Fix flake8 errors. (`PR #144
+   <https://github.com/ytree-project/ytree/pull/144>`__)
+
 Version 3.1.2
 -------------
 

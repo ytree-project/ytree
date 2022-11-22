@@ -97,6 +97,7 @@ commands:
             source $HOME/venv/bin/activate
             TESTFILES=$(circleci tests glob "tests/*.py" "tests/frontends/*.py" | circleci tests split --split-by=timings)
             pytest --cov=ytree --junitxml=test-results/junit.xml $TESTFILES
+            python fix-junit.py test-results/junit.xml
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
                 codecov
@@ -169,13 +170,13 @@ jobs:
 
       - restore_cache:
           name: "Restore test data cache."
-          key: test-data-abbey
+          key: test-data-abernathy
 
       - download-test-data
 
       - save_cache:
           name: "Save test data cache."
-          key: test-data-abbey
+          key: test-data-abernathy
           paths:
             - ~/ytree_test
 
@@ -216,25 +217,25 @@ workflows:
    normal-tests:
      jobs:
        - tests:
-           name: "Python 3.7 tests"
-           tag: "3.7.12"
+           name: "Python 3.8 tests"
+           tag: "3.8.14"
            ytdev: 1
 
        - tests:
            name: "Python 3.10 tests"
-           tag: "3.10.2"
+           tag: "3.10.7"
            coverage: 1
            ytdev: 1
 
        - tests:
            name: "Python 3.10 tests"
-           tag: "3.10.2"
+           tag: "3.10.7"
            coverage: 0
            ytdev: 0
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.10.2"
+           tag: "3.10.7"
            ytdev: 0
 
    daily:
@@ -248,7 +249,7 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.10 tests"
-           tag: "3.10.2"
+           tag: "3.10.7"
            coverage: 0
            ytdev: 1
 
@@ -262,28 +263,23 @@ workflows:
                 - main
      jobs:
        - tests:
-           name: "Python 3.7 tests"
-           tag: "3.7.12"
-           ytdev: 1
-
-       - tests:
            name: "Python 3.8 tests"
-           tag: "3.8.12"
+           tag: "3.8.14"
            ytdev: 1
 
        - tests:
            name: "Python 3.9 tests"
-           tag: "3.9.9"
+           tag: "3.9.14"
            coverage: 0
            ytdev: 1
 
        - tests:
            name: "Python 3.10 tests"
-           tag: "3.10.2"
+           tag: "3.10.7"
            coverage: 0
            ytdev: 1
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.10.2"
+           tag: "3.10.7"
            ytdev: 0
