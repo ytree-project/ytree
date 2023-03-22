@@ -812,7 +812,8 @@ class Arbor(metaclass=RegisteredArbor):
             imatches = np.where(eval(criteria))[0]
             if imatches.size > 0:
                 found += imatches.size
-                pbar._pbar.set_description_str(f"Selecting halos (found {found})")
+                if isinstance(pbar, TqdmProgressBar):
+                    pbar._pbar.set_description_str(f"Selecting halos (found {found})")
             pbar.update(i+1)
 
             for imatch in imatches:
