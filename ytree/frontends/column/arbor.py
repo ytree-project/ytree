@@ -43,7 +43,7 @@ class ColumnArbor(Arbor):
 
     _tree_field_io_class = ColumnTreeFieldIO
     _default_dtype = np.float32
-    _node_io_attrs = ('_fi', '_si', '_ei')
+    _node_io_attrs = ('_si',)
 
     def __init__(self, filename, sep=","):
         self.sep = sep
@@ -62,14 +62,15 @@ class ColumnArbor(Arbor):
                 line = f.readline().strip()
                 # remove comment characters
                 ldata.append(re.search("^#+\s*(\S.*)$", line).groups()[0])
+            self._hoffset = f.tell()
 
         fields = [_.strip() for _ in ldata[0].split(self.sep)]
         dtypes = [_.strip() for _ in ldata[1].split(self.sep)]
         units  = [_.strip() for _ in ldata[2].split(self.sep)]
         fi = {}
-        for field, dtype, unit in zip(fields, dtypes, units):
+        for i, (field, dtype, unit) in enumerate(zip(fields, dtypes, units)):
             my_unit = None if unit == "None" else unit
-            fi[field] = {"units": my_unit, "dtype": eval(dtype)}
+            fi[field] = {"column": i, "units": my_unit, "dtype": eval(dtype)}
 
         try:
             fi["uid"]["dtype"] = np.int64
@@ -84,45 +85,55 @@ class ColumnArbor(Arbor):
         if self.is_planted or self._size == 0:
             return
 
-        lkey = len("tree ")+1
-        block_size = 4096
-
         data_file = self.data_files[0]
-
         data_file.open()
-        data_file.fh.seek(0, 2)
-        file_size = data_file.fh.tell()
-        pbar = get_pbar("Loading tree roots", file_size)
         data_file.fh.seek(self._hoffset)
 
-        offset = self._hoffset
         itree = 0
-        nblocks = np.ceil(float(file_size-self._hoffset) /
-                          block_size).astype(np.int64)
-        for ib in range(nblocks):
-            my_block = min(block_size, file_size - offset)
-            if my_block <= 0: break
-            buff = data_file.fh.read(my_block)
-            lihash = -1
-            for ih in range(buff.count("#")):
-                ihash = buff.find("#", lihash+1)
-                inl = buff.find("\n", ihash+1)
-                if inl < 0:
-                    buff += data_file.fh.readline()
-                    inl = len(buff)
-                uid = int(buff[ihash+lkey:inl])
-                self._node_info['uid'][itree] = uid
-                lihash = ihash
-                self._node_info['_si'][itree] = offset + inl + 1
-                self._node_info['_fi'][itree] = 0
-                if itree > 0:
-                    self._node_info['_ei'][itree-1] = offset + ihash - 1
-                itree += 1
-            offset = data_file.fh.tell()
-            pbar.update(offset)
-        self._node_info['_ei'][-1] = offset
-        data_file.close()
-        pbar.finish()
+        fi = self.field_info
+        col_uid = fi["uid"]["column"]
+        typ_uid = fi["uid"]["dtype"]
+        col_des = fi["desc_uid"]["column"]
+        typ_des = fi["desc_uid"]["dtype"]
+
+        roots = []
+        root_offsets = []
+
+        # these two are for nonroots only
+        desc_uids = {}
+        offsets = {}
+
+        for line, loc in f_text_block(
+                data_file.fh, pbar_string="Loading tree roots"):
+
+            online = line.split(self.sep)
+            uid = typ_uid(online[col_uid])
+            desc_uid = typ_des(online[col_des])
+
+            if desc_uid == -1:
+                roots.append(uid)
+                root_offsets.append(loc)
+            else:
+                desc_uids[uid] = desc_uid
+                offsets[uid] = loc
+
+        n_nonroots = len(desc_uids)
+        uids = np.array(list(desc_uids.keys()) + roots)
+        desc_uids = np.array(list(desc_uids.values()))
+        # look for any nodes with missing descendents
+        missing = np.in1d(desc_uids, uids, invert=True)
+        # need to address only up to n_nonroots since
+        # uids has everything and desc_uids has only nonroots
+        missing_uids = uids[:n_nonroots][missing]
+
+        root_uids = np.concatenate([np.array(roots), missing_uids])
+        root_offsets = np.concatenate(
+            [np.array(root_offsets),
+             np.array([offsets[uid] for uid in missing_uids])])
+
+        self._size = root_uids.size
+        self._node_info["uid"][:] = root_uids
+        self._node_info["_si"][:] = root_offsets
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
