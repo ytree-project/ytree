@@ -13,11 +13,7 @@ ColumnArbor io classes and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-import numpy as np
-import os
-
-from ytree.data_structures.io import \
-    CatalogDataFile
+from ytree.data_structures.io import CatalogDataFile
 
 class ColumnDataFile(CatalogDataFile):
     def open(self):

@@ -14,10 +14,7 @@ ColumnArbor class and member functions
 #-----------------------------------------------------------------------------
 
 from collections import defaultdict
-import glob
 import numpy as np
-import operator
-import os
 import re
 
 from yt.funcs import get_pbar
@@ -25,11 +22,8 @@ from yt.funcs import get_pbar
 from ytree.data_structures.arbor import CatalogArbor
 from ytree.data_structures.tree_node import TreeNode
 
-from ytree.frontends.column.io import \
-    ColumnDataFile
+from ytree.frontends.column.io import ColumnDataFile
 
-from ytree.utilities.exceptions import \
-    ArborDataFileEmpty
 from ytree.utilities.io import f_text_block
 
 class ColumnArbor(CatalogArbor):
@@ -59,7 +53,7 @@ class ColumnArbor(CatalogArbor):
             for i in range(3):
                 line = f.readline().strip()
                 # remove comment characters
-                ldata.append(re.search("^#+\s*(\S.*)$", line).groups()[0])
+                ldata.append(re.search(r"^#+\s*(\S.*)$", line).groups()[0])
             self._hoffset = f.tell()
 
         fields = [_.strip() for _ in ldata[0].split(self.sep)]
@@ -87,7 +81,6 @@ class ColumnArbor(CatalogArbor):
         data_file.open()
         data_file.fh.seek(self._hoffset)
 
-        itree = 0
         fi = self.field_info
         col_uid = fi["uid"]["column"]
         typ_uid = fi["uid"]["dtype"]
