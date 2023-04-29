@@ -26,10 +26,7 @@ from ytree.data_structures.arbor import CatalogArbor
 from ytree.data_structures.tree_node import TreeNode
 
 from ytree.frontends.column.io import \
-    ColumnDataFile, \
-    ColumnTreeFieldIO
-from ytree.frontends.rockstar.arbor import \
-    RockstarArbor
+    ColumnDataFile
 
 from ytree.utilities.exceptions import \
     ArborDataFileEmpty
@@ -40,7 +37,7 @@ class ColumnArbor(CatalogArbor):
     Arbors loaded from consistent-trees tree_*.dat files.
     """
 
-    _tree_field_io_class = ColumnTreeFieldIO
+    _data_file_class = ColumnDataFile
     _has_uids = True
     _default_dtype = np.float32
     _node_con_attrs = ()
@@ -51,7 +48,7 @@ class ColumnArbor(CatalogArbor):
         super().__init__(filename)
 
     def _get_data_files(self):
-        self.data_files = [ColumnDataFile(self.filename)]
+        self.data_files = [ColumnDataFile(self.filename, self)]
 
     def _parse_parameter_file(self, filename=None):
         if filename is None:
@@ -133,12 +130,14 @@ class ColumnArbor(CatalogArbor):
         for uid, offset in zip(roots, root_offsets):
             my_node = TreeNode(uid, arbor=self, root=True)
             my_node._offset = offset
+            my_node.data_file = self.data_files[0]
             trees.append(my_node)
 
         for uid in missing_uids:
             offset = offsets.pop(uid)
             my_node = TreeNode(uid, arbor=self, root=True)
             my_node._offset = offset
+            my_node.data_file = self.data_files[0]
             trees.append(my_node)
 
         self._size = len(trees)
@@ -167,6 +166,7 @@ class ColumnArbor(CatalogArbor):
         for i, (uid, desc_uid) in enumerate(desc_uids.items()):
             my_node = TreeNode(uid, arbor=self)
             my_node._offset = offsets[uid]
+            my_node.data_file = self.data_files[0]
             ancestors[desc_uid].append(my_node)
             pbar.update(i)
         pbar.finish()

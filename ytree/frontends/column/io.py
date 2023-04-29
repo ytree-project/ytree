@@ -17,57 +17,34 @@ import numpy as np
 import os
 
 from ytree.data_structures.io import \
-    DataFile, \
-    TreeFieldIO
+    CatalogDataFile
 
-class ColumnDataFile(DataFile):
+class ColumnDataFile(CatalogDataFile):
     def open(self):
-        self.fh = open(self.filename, "r")
+        self.fh = open(self.filename, mode="r")
 
-class ColumnTreeFieldIO(TreeFieldIO):
-    def _read_fields(self, root_node, fields, dtypes=None,
-                     root_only=False):
-        """
-        Read fields from disk for a single tree.
-        """
+    def _parse_header(self):
+        pass
 
-        data_file = self.arbor.data_files[root_node._fi]
+    def _read_data_select(self, rfields, tree_nodes, dtypes):
+        if not rfields:
+            return {}
 
-        if dtypes is None:
-            dtypes = {}
-        my_dtypes = self._determine_dtypes(
-            fields, override_dict=dtypes)
-
-        close = False
-        if data_file.fh is None:
-            close = True
-            data_file.open()
-        fh = data_file.fh
-        fh.seek(root_node._si)
-        if root_only:
-            data = [fh.readline()]
-        else:
-            data = fh.read(
-                root_node._ei -
-                root_node._si).split("\n")
-            if len(data[-1]) == 0:
-                data.pop()
-        if close:
-            data_file.close()
-
-        nhalos = len(data)
-        field_data = {}
         fi = self.arbor.field_info
-        for field in fields:
-            field_data[field] = np.empty(nhalos, dtype=my_dtypes[field])
+        nt = len(tree_nodes)
+        field_data = \
+          self._create_field_arrays(rfields, dtypes, size=nt)
 
-        for i, datum in enumerate(data):
-            ldata = datum.strip().split()
-            if len(ldata) == 0: continue
-            for field in fields:
-                dtype = my_dtypes[field]
-                field_data[field][i] = dtype(ldata[fi[field]["column"]])
-
-        self._apply_units(fields, field_data)
+        self.open()
+        f = self.fh
+        sep = self.arbor.sep
+        for i, tree_node in enumerate(tree_nodes):
+            f.seek(tree_node._offset)
+            line = f.readline()
+            sline = line.split(sep)
+            for field in rfields:
+                dtype = dtypes[field]
+                field_data[field][i] = dtype(sline[fi[field]["column"]])
+        self.close()
 
         return field_data
