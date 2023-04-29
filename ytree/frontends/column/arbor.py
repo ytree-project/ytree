@@ -13,17 +13,17 @@ ColumnArbor class and member functions
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+from collections import defaultdict
 import glob
 import numpy as np
 import operator
 import os
 import re
 
-from yt.funcs import \
-    get_pbar
+from yt.funcs import get_pbar
 
-from ytree.data_structures.arbor import \
-    Arbor
+from ytree.data_structures.arbor import CatalogArbor
+from ytree.data_structures.tree_node import TreeNode
 
 from ytree.frontends.column.io import \
     ColumnDataFile, \
@@ -33,17 +33,18 @@ from ytree.frontends.rockstar.arbor import \
 
 from ytree.utilities.exceptions import \
     ArborDataFileEmpty
-from ytree.utilities.io import \
-    f_text_block
+from ytree.utilities.io import f_text_block
 
-class ColumnArbor(Arbor):
+class ColumnArbor(CatalogArbor):
     """
     Arbors loaded from consistent-trees tree_*.dat files.
     """
 
     _tree_field_io_class = ColumnTreeFieldIO
+    _has_uids = True
     _default_dtype = np.float32
-    _node_io_attrs = ('_si',)
+    _node_con_attrs = ()
+    _node_io_attrs = ()
 
     def __init__(self, filename, sep=","):
         self.sep = sep
@@ -119,21 +120,73 @@ class ColumnArbor(Arbor):
 
         n_nonroots = len(desc_uids)
         uids = np.array(list(desc_uids.keys()) + roots)
-        desc_uids = np.array(list(desc_uids.values()))
+        nr_desc_uids = np.array(list(desc_uids.values()))
         # look for any nodes with missing descendents
-        missing = np.in1d(desc_uids, uids, invert=True)
+        missing = np.in1d(nr_desc_uids, uids, invert=True)
         # need to address only up to n_nonroots since
         # uids has everything and desc_uids has only nonroots
         missing_uids = uids[:n_nonroots][missing]
+        for uid in missing_uids:
+            del desc_uids[uid]
 
-        root_uids = np.concatenate([np.array(roots), missing_uids])
-        root_offsets = np.concatenate(
-            [np.array(root_offsets),
-             np.array([offsets[uid] for uid in missing_uids])])
+        trees = []
+        for uid, offset in zip(roots, root_offsets):
+            my_node = TreeNode(uid, arbor=self, root=True)
+            my_node._offset = offset
+            trees.append(my_node)
 
-        self._size = root_uids.size
-        self._node_info["uid"][:] = root_uids
-        self._node_info["_si"][:] = root_offsets
+        for uid in missing_uids:
+            offset = offsets.pop(uid)
+            my_node = TreeNode(uid, arbor=self, root=True)
+            my_node._offset = offset
+            trees.append(my_node)
+
+        self._size = len(trees)
+        self._trees = np.array(trees)
+
+        # these are for the nonroot nodes
+        # we will construct them later when they are needed
+        self._desc_uids = desc_uids
+        self._offsets = offsets
+
+    def _build_trees(self):
+        """
+        Resolve the dictionary of desc_uids into trees.
+        """
+
+        if self.size < 1:
+            return
+
+        desc_uids = getattr(self, "_desc_uids", None)
+        if desc_uids is None:
+            return
+
+        offsets = getattr(self, "_offsets")
+        ancestors = defaultdict(list)
+        pbar = get_pbar("Building trees", len(desc_uids))
+        for i, (uid, desc_uid) in enumerate(desc_uids.items()):
+            my_node = TreeNode(uid, arbor=self)
+            my_node._offset = offsets[uid]
+            ancestors[desc_uid].append(my_node)
+            pbar.update(i)
+        pbar.finish()
+
+        self._ancestors = ancestors
+        del self._desc_uids, self._offsets
+
+    def _get_ancestors(self, tree_node):
+        tree_node._ancestors = self._ancestors.pop(tree_node.uid, [])
+        for node in tree_node._ancestors:
+            node._descendent = tree_node
+            self._get_ancestors(node)
+
+    def _setup_tree(self, tree_node):
+        if self.is_setup(tree_node):
+            return
+
+        self._build_trees()
+        self._get_ancestors(tree_node)
+        super()._setup_tree(tree_node)
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
