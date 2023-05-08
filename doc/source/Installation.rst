@@ -14,12 +14,12 @@ pip
 
 .. code-block:: bash
 
-    $ pip install ytree
+   $ pip install ytree
 
 conda
 ^^^^^
 
-.. code-block: bash
+.. code-block:: bash
 
    $ conda install -c conda-forge ytree
 
