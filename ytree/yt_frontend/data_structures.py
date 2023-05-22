@@ -20,8 +20,7 @@ import json
 import os
 
 from yt.data_objects.static_output import \
-    ParticleFile, \
-    validate_index_order
+    ParticleFile
 from yt.frontends.ytdata.data_structures import \
     SavedDataset
 from yt.geometry.particle_geometry_handler import \
@@ -161,7 +160,7 @@ class YTreeDataset(SavedDataset):
                  index_order=None,
                  units_override=None, unit_system="cgs"):
         self._prefix = filename[:filename.rfind(self._suffix)]
-        self.index_order = validate_index_order(index_order)
+        self.index_order = index_order
         super().__init__(filename, dataset_type,
                          units_override=units_override,
                          unit_system=unit_system)
