@@ -217,25 +217,25 @@ workflows:
    normal-tests:
      jobs:
        - tests:
-           name: "Python 3.8 tests"
-           tag: "3.8.14"
+           name: "Python 3.9 tests"
+           tag: "3.9.18"
            ytdev: 1
 
        - tests:
-           name: "Python 3.10 tests"
-           tag: "3.10.7"
+           name: "Python 3.11 tests"
+           tag: "3.11.5"
            coverage: 1
            ytdev: 1
 
        - tests:
-           name: "Python 3.10 tests"
-           tag: "3.10.7"
+           name: "Python 3.11 tests"
+           tag: "3.11.5"
            coverage: 0
            ytdev: 0
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.10.7"
+           tag: "3.11.5"
            ytdev: 0
 
    daily:
@@ -248,8 +248,8 @@ workflows:
                 - main
      jobs:
        - tests:
-           name: "Python 3.10 tests"
-           tag: "3.10.7"
+           name: "Python 3.11 tests"
+           tag: "3.11.5"
            coverage: 0
            ytdev: 1
 
@@ -263,23 +263,23 @@ workflows:
                 - main
      jobs:
        - tests:
-           name: "Python 3.8 tests"
-           tag: "3.8.14"
-           ytdev: 1
-
-       - tests:
            name: "Python 3.9 tests"
-           tag: "3.9.14"
-           coverage: 0
+           tag: "3.9.18"
            ytdev: 1
 
        - tests:
            name: "Python 3.10 tests"
-           tag: "3.10.7"
+           tag: "3.10.13"
+           coverage: 0
+           ytdev: 1
+
+       - tests:
+           name: "Python 3.11 tests"
+           tag: "3.11.5"
            coverage: 0
            ytdev: 1
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.10.7"
+           tag: "3.11.5"
            ytdev: 0
