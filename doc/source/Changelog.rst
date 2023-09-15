@@ -13,6 +13,21 @@ The `CREDITS file
 contains the most up-to-date list of everyone who has contributed to the
 ``ytree`` source code.
 
+Version 3.2.1
+-------------
+
+Release date: *September 15, 2023*
+
+Bugfixes
+^^^^^^^^
+
+ * Parallel bug fix for progress bar in select_halos (`PR #158
+   <https://github.com/ytree-project/ytree/pull/158>`__)
+ * Fix doc syntax (`PR #161
+   <https://github.com/ytree-project/ytree/pull/161>`__)
+ * Remove validate_index_order call (`PR #162
+   <https://github.com/ytree-project/ytree/pull/162>`__)
+
 Version 3.2.0
 -------------
 
