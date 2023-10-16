@@ -111,12 +111,14 @@ class YTreeArbor(Arbor):
         # analysis fields in sidecar files
         analysis_filename = f"{self._prefix}-analysis{self._suffix}"
         if os.path.exists(analysis_filename):
+            self.analysis_field_list = []
             self.analysis_filename = analysis_filename
             fh = h5py.File(analysis_filename, mode="r")
             analysis_fi = json.loads(parse_h5_attr(fh, "field_info"))
             fh.close()
             for field in analysis_fi:
                 analysis_fi[field]["type"] = "analysis_saved"
+                self.analysis_field_list.append(field)
             self.field_info.update(analysis_fi)
         else:
             self.analysis_filename = None

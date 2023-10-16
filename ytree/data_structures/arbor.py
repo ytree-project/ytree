@@ -195,7 +195,9 @@ class Arbor(metaclass=RegisteredArbor):
         """
         self.field_data = FieldContainer(self)
         self.derived_field_list = []
-        self.analysis_field_list = []
+        # This may already be created by ytree frontend.
+        if not hasattr(self, "analysis_field_list"):
+            self.analysis_field_list = []
         self.field_info.setup_known_fields()
         self.field_info.setup_aliases()
         self.field_info.setup_derived_fields()
@@ -1003,6 +1005,18 @@ class Arbor(metaclass=RegisteredArbor):
         trees : optional, list or array of TreeNodes
             If given, only save trees stemming from these nodes.
             If not provide, all trees will be saved.
+        save_in_place : optional, bool
+            If True, analysis fields will be saved to the original
+            arbor, even if only a subset of all trees is provided
+            with the trees keyword. If False and only a subset of
+            all trees is provided, a new arbor will be created
+            containing only the trees provided.
+            Default: False
+        save_nodes_only : optional, bool
+            If True, only field values of each node are saved.
+            If False, field data for the entire tree stemming
+            from that node are saved.
+            Default:  False.
         max_file_size : optional, float
             The maximum number of nodes saved to a single file.
             Smaller numbers will result in more files. Performance
