@@ -15,7 +15,6 @@ tests for yt frontend and selection functions
 
 import numpy as np
 from numpy.testing import assert_raises
-from unyt import uconcatenate
 import ytree
 
 from ytree.utilities.testing import \
@@ -49,7 +48,7 @@ class YTSelectionTest(TempDirTest):
         for field, units in zip(["mass", "redshift"], ["Msun", ""]):
             yt_data = ad["halos", field].to(units)
             yt_data.sort()
-            ytree_data = uconcatenate([t["forest", field] for t in a])
+            ytree_data = np.concatenate([t["forest", field] for t in a])
             ytree_data.sort()
             assert_array_rel_equal(yt_data, ytree_data, decimals=5)
 
@@ -60,8 +59,8 @@ class YTSelectionTest(TempDirTest):
 
         sp = ds.sphere(0.5*ds.domain_center, (20, "Mpc/h"))
 
-        ytree_pos = uconcatenate([t["forest", "position"] for t in a])
-        ytree_mass = uconcatenate([t["forest", "mass"] for t in a])
+        ytree_pos = np.concatenate([t["forest", "position"] for t in a])
+        ytree_mass = np.concatenate([t["forest", "mass"] for t in a])
         r = a.quan(sp.radius.to("unitary"))
         c = a.arr(sp.center.to("unitary"))
         ytree_r = np.sqrt(((ytree_pos - c)**2).sum(axis=1))

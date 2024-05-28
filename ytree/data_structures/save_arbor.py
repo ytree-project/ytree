@@ -9,7 +9,6 @@ import json
 import numpy as np
 import os
 import types
-from unyt import uconcatenate
 
 from yt.frontends.ytdata.utilities import save_as_dataset
 from ytree.utilities.io import ensure_dir
@@ -233,7 +232,7 @@ def save_data_file(arbor, filename, fields, tree_group,
             my_ftypes = main_ftypes
 
         my_ftypes[fieldname] = "data"
-        my_fdata[fieldname]  = uconcatenate(
+        my_fdata[fieldname]  = np.concatenate(
             [node.field_data[field] if node.is_root else node["tree", field]
              for node in tree_group])
         root_field_data[field].append(my_fdata[fieldname][my_tree_start])
@@ -303,7 +302,7 @@ def save_header_file(arbor, filename, fields, root_field_data,
           dict((key, fi[key])
                for key in ["units", "description"]
                if key in fi)
-        my_rdata[fieldname] = uconcatenate(root_field_data[field])
+        my_rdata[fieldname] = np.concatenate(root_field_data[field])
         my_rtypes[fieldname] = "data"
 
     # all saved trees will be roots
