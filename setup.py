@@ -60,7 +60,7 @@ setup(name="ytree",
           'h5py',
           "more_itertools>=8.4",
           'numpy',
-          'unyt',
+          'unyt>=3.0.1',
           'yt>=4.2',
       ],
       extras_require={
