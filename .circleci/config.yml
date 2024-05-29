@@ -218,24 +218,24 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.9 tests"
-           tag: "3.9.18"
+           tag: "3.9.19"
            ytdev: 1
 
        - tests:
            name: "Python 3.11 tests"
-           tag: "3.11.5"
+           tag: "3.11.9"
            coverage: 1
            ytdev: 1
 
        - tests:
            name: "Python 3.11 tests"
-           tag: "3.11.5"
+           tag: "3.11.9"
            coverage: 0
            ytdev: 0
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.11.5"
+           tag: "3.11.9"
            ytdev: 0
 
    daily:
@@ -249,7 +249,7 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.11 tests"
-           tag: "3.11.5"
+           tag: "3.11.9"
            coverage: 0
            ytdev: 1
 
@@ -264,22 +264,22 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.9 tests"
-           tag: "3.9.18"
+           tag: "3.9.19"
            ytdev: 1
 
        - tests:
            name: "Python 3.10 tests"
-           tag: "3.10.13"
+           tag: "3.10.14"
            coverage: 0
            ytdev: 1
 
        - tests:
            name: "Python 3.11 tests"
-           tag: "3.11.5"
+           tag: "3.11.9"
            coverage: 0
            ytdev: 1
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.11.5"
+           tag: "3.11.9"
            ytdev: 0
