@@ -68,8 +68,10 @@ class TreeFrogDataFile(DataFile):
         # This is the easiest way I can think of to fix the
         # descendent ids of roots.
         if field == "Descendant":
-            data = self.fh[group][field][()][frange]
-            ids = self.fh[group]["ID"][()][frange]
+            # Descendant and ID fields are uint64. We need to convert them
+            # to signed ints in order to set equal to -1.
+            data = self.fh[group][field][()][frange].astype("int64")
+            ids = self.fh[group]["ID"][()][frange].astype("int64")
             data[data == ids] = -1
             return data
         return self.fh[group][field][()][frange]
