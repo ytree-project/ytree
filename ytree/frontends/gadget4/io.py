@@ -17,8 +17,6 @@ import h5py
 import numpy as np
 import re
 
-from unyt import uconcatenate
-
 from ytree.data_structures.io import \
     DataFile, \
     TreeFieldIO
@@ -115,7 +113,7 @@ class Gadget4TreeFieldIO(TreeFieldIO):
                 data_file.close()
 
         for field in field_data:
-            field_data[field] = uconcatenate(field_data[field])
+            field_data[field] = np.concatenate(field_data[field])
 
         if afields:
             field_data.update(self._get_arbor_fields(

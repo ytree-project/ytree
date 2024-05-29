@@ -16,7 +16,6 @@ FieldIO class and member functions
 from collections import defaultdict
 import numpy as np
 import os
-from unyt import uconcatenate
 import weakref
 
 from ytree.utilities.exceptions import \
@@ -264,7 +263,7 @@ class DefaultRootFieldIO(FieldIO):
             fields=fields, dtypes=my_dtypes, root_only=True)
 
         field_data = \
-          dict((field, uconcatenate([fvals[field] for fvals in rvals]))
+          dict((field, np.concatenate([fvals[field] for fvals in rvals]))
                for field in fields)
 
         return field_data
