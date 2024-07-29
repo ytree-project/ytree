@@ -32,6 +32,10 @@ def save_arbor(arbor, filename=None, fields=None, trees=None,
     This is the internal function called by Arbor.save_arbor.
     """
 
+    if not save_in_place and save_roots_only:
+        raise ValueError(
+            "Cannot have save_in_place=False with save_roots_only=True")
+
     if isinstance(trees, types.GeneratorType):
         trees = list(trees)
 
