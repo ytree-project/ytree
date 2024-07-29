@@ -40,17 +40,19 @@ Plot Modifications
 Four :class:`~ytree.visualization.tree_plot.TreePlot` attributes can be set
 to modify the default plotting behavior. These are:
 
-- *size_field*: The field to determine the size of each circle. Default:
-  'mass'.
+- :attr:`~ytree.visualization.tree_plot.TreePlot.size_field`: The field to
+  determine the size of each circle. Default: 'mass'.
 
-- *size_log*: Whether to scale circle sizes based on log of size field.
-  Default: True.
+- :attr:`~ytree.visualization.tree_plot.TreePlot.size_log`: Whether to scale
+  circle sizes based on log of size field. Default: True.
 
-- *min_mass*: The minimum halo mass to be included in the plot. If given
-  as a float, units are assumed to be Msun. Default: None.
+- :attr:`~ytree.visualization.tree_plot.TreePlot.min_mass`: The minimum
+  halo mass to be included in the plot. If given as a float, units are
+  assumed to be Msun. Default: None.
 
-- *min_mass_ratio*: The minimum ratio between a halo's mass and the mass
-  of the main halo to be included in the plot. Default: None.
+- :attr:`~ytree.visualization.tree_plot.TreePlot.min_mass_ratio`: The
+  minimum ratio between a halo's mass and the mass of the main halo to be
+  included in the plot. Default: None.
 
 .. code-block:: python
 

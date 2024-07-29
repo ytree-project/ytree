@@ -32,7 +32,6 @@ commands:
             pip install --upgrade wheel
             pip install --upgrade setuptools
             pip install Cython numpy
-            pip install 'click<8.0'
             pip install girder-client
             export MAX_BUILD_CORES=2
             if [ << parameters.ytdev >> == 1 ]; then
@@ -79,7 +78,7 @@ commands:
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
-            flake8 tests ytree
+            flake8 tests ytree doc/source/examples
 
   run-tests:
     description: "Build ytree and run tests."
@@ -97,6 +96,7 @@ commands:
             source $HOME/venv/bin/activate
             TESTFILES=$(circleci tests glob "tests/*.py" "tests/frontends/*.py" | circleci tests split --split-by=timings)
             pytest --cov=ytree --junitxml=test-results/junit.xml $TESTFILES
+            python fix-junit.py test-results/junit.xml
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
                 codecov
@@ -169,13 +169,13 @@ jobs:
 
       - restore_cache:
           name: "Restore test data cache."
-          key: test-data-aardsma
+          key: test-data-abernathy
 
       - download-test-data
 
       - save_cache:
           name: "Save test data cache."
-          key: test-data-aardsma
+          key: test-data-abernathy
           paths:
             - ~/ytree_test
 
@@ -216,25 +216,25 @@ workflows:
    normal-tests:
      jobs:
        - tests:
-           name: "Python 3.7 tests"
-           tag: "3.7.12"
+           name: "Python 3.9 tests"
+           tag: "3.9.19"
            ytdev: 1
 
        - tests:
-           name: "Python 3.10 tests"
-           tag: "3.10.2"
+           name: "Python 3.11 tests"
+           tag: "3.11.9"
            coverage: 1
            ytdev: 1
 
        - tests:
-           name: "Python 3.10 tests"
-           tag: "3.10.2"
+           name: "Python 3.11 tests"
+           tag: "3.11.9"
            coverage: 0
            ytdev: 0
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.10.2"
+           tag: "3.11.9"
            ytdev: 0
 
    daily:
@@ -247,8 +247,8 @@ workflows:
                 - main
      jobs:
        - tests:
-           name: "Python 3.10 tests"
-           tag: "3.10.2"
+           name: "Python 3.11 tests"
+           tag: "3.11.9"
            coverage: 0
            ytdev: 1
 
@@ -262,28 +262,23 @@ workflows:
                 - main
      jobs:
        - tests:
-           name: "Python 3.7 tests"
-           tag: "3.7.12"
-           ytdev: 1
-
-       - tests:
-           name: "Python 3.8 tests"
-           tag: "3.8.12"
-           ytdev: 1
-
-       - tests:
            name: "Python 3.9 tests"
-           tag: "3.9.9"
-           coverage: 0
+           tag: "3.9.19"
            ytdev: 1
 
        - tests:
            name: "Python 3.10 tests"
-           tag: "3.10.2"
+           tag: "3.10.14"
+           coverage: 0
+           ytdev: 1
+
+       - tests:
+           name: "Python 3.11 tests"
+           tag: "3.11.9"
            coverage: 0
            ytdev: 1
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.10.2"
+           tag: "3.11.9"
            ytdev: 0

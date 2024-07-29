@@ -19,6 +19,7 @@ _frontends = [
     "ahf",
     "consistent_trees",
     "consistent_trees_hdf5",
+    "gadget4",
     "lhalotree",
     "lhalotree_hdf5",
     "moria",

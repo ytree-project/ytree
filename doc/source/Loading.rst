@@ -11,11 +11,15 @@ use the freely available :ref:`sample-data`.
 Amiga Halo Finder
 -----------------
 
-The `Amiga Halo Finder <http://popia.ft.uam.es/AHF/Download.html>`__ format
-stores data in a series of files, with one each per snapshot.  Parameters
-are stored in ".parameters" and ".log" files, halo information in
-".AHF_halos" files, and descendent/ancestor links are stored in ".AHF_mtree"
-files.  Make sure to keep all of these together.  To load, provide the name
+There are a couple data formats associated with the `Amiga Halo Finder
+<http://popia.ft.uam.es/AHF/>`__. Both formats save a series of files
+associated with each snapshot. Parameters are stored in ".parameters"
+and ".log" files and halo properties in ".AHF_halos" files. In the
+older format, descendent/ancestor links are stored in several
+".AHF_mtree" files, one per snapshot. In the newer format, all halo
+linking information is stored in a single file beginning with
+"MergerTree\_" and ending with "-CRMratio2". Make sure to keep all
+these files together in the same directory. To load, provide the name
 of the first ".parameter" file.
 
 .. code-block:: python
@@ -23,6 +27,14 @@ of the first ".parameter" file.
    >>> import ytree
    >>> a = ytree.load("ahf_halos/snap_N64L16_000.parameter",
    ...                hubble_constant=0.7)
+
+Alternatively, the "MergerTree\_" file can also be provided for the
+newer format.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("AHF_100_tiny/MergerTree_GIZMO-NewMDCLUSTER_0047.txt-CRMratio2")
 
 .. note:: Four important notes about loading AHF data:
 
@@ -153,6 +165,45 @@ forest access mode, the "root" of the forest, i.e., the
 by doing ``a[N]`` will be the root of one of the trees in that
 forest. See :ref:`forest-access` for how to locate all individual
 trees in a forest.
+
+.. _load-gadget4:
+
+Gadget4
+-------
+
+The `Gadget4
+<https://wwwmpa.mpa-garching.mpg.de/gadget4/09_special_modules/#merger-trees>`__
+format consists of one or more HDF5 files. Each file contains
+information on the trees contained within as well as some or all of
+the associated field data for those trees. Field data for large trees
+can span multiple data files and the start of any file does not
+necessarily correspond to the start of field data for the trees it
+holds. This format supports :ref:`forest-access`.
+
+To load single-file data, load with the path to that file.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("gadget4/trees/trees.hdf5")
+
+To load a dataset consisting of multiple files, provide the path to
+the zeroth file.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("gadget4/treedata/trees.0.hdf5")
+
+For multi-file datasets, all data files must be present for the
+dataset to be loaded. It is not possible to load a subseta
+multi-file dataset. Because data for any given tree is only loaded
+when needed, there is little benefit to trying to load a subset of
+the full data. However, if you really want to limit your dataset to
+a selection of the full data, your best bet is to save just the
+trees you want to a new dataset using the
+:func:`~ytree.data_structures.arbor.Arbor.save_arbor` function.
+See :ref:`saving-trees` for more information.
 
 .. _load-lhalotree:
 

@@ -1,5 +1,5 @@
 """
-amiga halo finder frontend
+gadget4 frontend
 
 
 
@@ -13,6 +13,5 @@ amiga halo finder frontend
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.frontends.ahf.arbor import \
-    AHFArbor, \
-    AHFNewArbor
+from ytree.frontends.gadget4.arbor import \
+    Gadget4Arbor

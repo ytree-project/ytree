@@ -10,3 +10,4 @@ ytree.egg-info
 doc/build
 doc/source/generated/
 dist
+build/
