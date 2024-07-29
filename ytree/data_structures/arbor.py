@@ -1011,7 +1011,7 @@ class Arbor(metaclass=RegisteredArbor):
             with the trees keyword. If False and only a subset of
             all trees is provided, a new arbor will be created
             containing only the trees provided.
-            Default: False
+            Default: True
         save_nodes_only : optional, bool
             If True, only field values of each node are saved.
             If False, field data for the entire tree stemming
