@@ -188,11 +188,11 @@ or :func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.
    ...     # do analysis...
    >>> a.save_arbor(trees=my_trees)
 
-Note that we do ``my_trees = list(a[:])`` and not just ``my_trees =
-a[:]``. This is because ``a[:]`` is a generator that will return a new
-set of trees each time. The newly generated trees will not retain
-changes made to any analysis fields. Thus, we must use ``list(a[:])``
-to explicitly store a list of trees.
+.. note:: Note that we do ``my_trees = list(a[:])`` and not just ``my_trees =
+   a[:]``. This is because ``a[:]`` is a generator that will return a new
+   set of trees each time. The newly generated trees will not retain
+   changes made to any analysis fields. Thus, we must use ``list(a[:])``
+   to explicitly store a list of trees.
 
 Re-saving Analysis Fields
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -204,3 +204,28 @@ providing a new filename or custom list of fields (as in the example above),
 analysis fields will be saved in place (i.e., over-writing the "-analysis"
 files). The conventional on-disk fields will not be re-saved as they cannot
 be altered.
+
+Saving Analysis Fields "in-place"
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, when :func:`~ytree.data_structures.arbor.Arbor.save_arbor` is called
+without specifying a new output filename (or specifying the same name as was
+loaded), the new analysis fields will be saved to the existing arbor. That is,
+the arbor will be "updated" with the new values. However, this behavior can be
+changed by providing ``save_in_place=False`` to
+:func:`~ytree.data_structures.arbor.Arbor.save_arbor`. In this case, an entirely
+new arbor will be created. If the same filename is being used as was loaded,
+**then the existing arbor will be overwritten.**
+
+Updating only the Root Nodes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For large datasets, the :func:`~ytree.data_structures.arbor.Arbor.save_arbor`
+operation can be expensive as all the trees to be saved must be built. However,
+if you have only modified the field value of the root of a tree, the save
+operation can be sped up significantly by ignoring the rest of the tree. To
+only update the analysis field values for the roots of trees, specify
+``save_roots_only=True`` when calling
+:func:`~ytree.data_structures.arbor.Arbor.save_arbor`. Note,
+``save_roots_only=True`` cannot be set simultaneously with
+``save_in_place=False``.

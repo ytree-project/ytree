@@ -456,7 +456,8 @@ Saving Arbors and Trees
 :func:`~ytree.data_structures.arbor.Arbor.save_arbor` function. These can be
 reloaded with the :func:`~ytree.data_structures.load.load` command. This
 format is optimized for fast tree-building and field-access and so is
-recommended for most situations.
+recommended for most situations. It can also be used with
+:ref:`analysis-fields`.
 
 .. code-block:: python
 
