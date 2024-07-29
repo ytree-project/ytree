@@ -43,7 +43,7 @@ def regenerate_node(arbor, node, new_index=None):
 
     return new_node
 
-def parallel_trees(trees, save_every=None, save_in_place=False,
+def parallel_trees(trees, save_every=None, save_in_place=True,
                    save_roots_only=False, filename=None,
                    njobs=0, dynamic=False):
     """
@@ -75,7 +75,7 @@ def parallel_trees(trees, save_every=None, save_in_place=False,
         with the trees keyword. If False and only a subset of
         all trees is provided, a new arbor will be created
         containing only the trees provided.
-        Default: False
+        Default: True
     save_roots_only : optional, bool
         If True, only field values of each node are saved.
         If False, field data for the entire tree stemming
@@ -301,7 +301,7 @@ def parallel_tree_nodes(tree, group="forest",
                 my_halo[field] = value
 
 def parallel_nodes(trees, group="forest", save_every=None,
-                   save_in_place=False, filename=None,
+                   save_in_place=True, filename=None,
                    njobs=None, dynamic=None):
     """
     Iterate over all nodes in a list of trees in parallel.
@@ -338,7 +338,7 @@ def parallel_nodes(trees, group="forest", save_every=None,
         with the trees keyword. If False and only a subset of
         all trees is provided, a new arbor will be created
         containing only the trees provided.
-        Default: False
+        Default: True
     filename : optional, string
         The name of the new arbor to be saved. If None, the naming convention
         will follow the filename keyword of the
