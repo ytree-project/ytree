@@ -44,7 +44,7 @@ def regenerate_node(arbor, node, new_index=None):
     return new_node
 
 def parallel_trees(trees, save_every=None, save_in_place=False,
-                   save_nodes_only=False, filename=None,
+                   save_roots_only=False, filename=None,
                    njobs=0, dynamic=False):
     """
     Iterate over a list of trees in parallel.
@@ -76,7 +76,7 @@ def parallel_trees(trees, save_every=None, save_in_place=False,
         all trees is provided, a new arbor will be created
         containing only the trees provided.
         Default: False
-    save_nodes_only : optional, bool
+    save_roots_only : optional, bool
         If True, only field values of each node are saved.
         If False, field data for the entire tree stemming
         from that node are saved.
@@ -149,14 +149,14 @@ def parallel_trees(trees, save_every=None, save_in_place=False,
 
                 # If the tree is not a root, only save the "tree" selection
                 # as we could overwrite other trees in the forest.
-                if save_nodes_only:
+                if save_roots_only:
                     pass
                 elif my_tree.is_root:
                     selection = "forest"
                 else:
                     selection = "tree"
 
-                if save_nodes_only:
+                if save_roots_only:
                     tree_store.result = {field: my_tree[field]
                                          for field in afields}
                 else:
@@ -174,7 +174,7 @@ def parallel_trees(trees, save_every=None, save_in_place=False,
                 key = (my_root._arbor_index, my_tree.tree_id)
                 data = arbor_storage[key]
 
-                if save_nodes_only:
+                if save_roots_only:
                     indices = my_tree.tree_id
                 elif my_tree.is_root:
                     indices = slice(None)
@@ -195,7 +195,7 @@ def parallel_trees(trees, save_every=None, save_in_place=False,
 
                 fn = arbor.save_arbor(filename=filename, trees=save_trees,
                                       save_in_place=save_in_place,
-                                      save_nodes_only=save_nodes_only)
+                                      save_roots_only=save_roots_only)
                 new_arbor = ytree_load(fn)
 
                 add_fields = set(arbor.derived_field_list).difference(

@@ -24,7 +24,7 @@ from ytree.utilities.logger import ytreeLogger as mylog
 #-----------------------------------------------------------------------------
 
 def save_arbor(arbor, filename=None, fields=None, trees=None,
-               save_in_place=True, save_nodes_only=False,
+               save_in_place=True, save_roots_only=False,
                max_file_size=524288):
     """
     Save the arbor to a file.
@@ -52,7 +52,7 @@ def save_arbor(arbor, filename=None, fields=None, trees=None,
 
     group_nnodes, group_ntrees, root_field_data = \
       save_data_files(arbor, filename, fields, trees,
-                      max_file_size, update, save_nodes_only)
+                      max_file_size, update, save_roots_only)
 
     header_filename = save_header_file(
         arbor, filename, fields, root_field_data,

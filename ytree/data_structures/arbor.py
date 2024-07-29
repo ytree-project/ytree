@@ -1012,7 +1012,7 @@ class Arbor(metaclass=RegisteredArbor):
             all trees is provided, a new arbor will be created
             containing only the trees provided.
             Default: True
-        save_nodes_only : optional, bool
+        save_roots_only : optional, bool
             If True, only field values of each node are saved.
             If False, field data for the entire tree stemming
             from that node are saved.
