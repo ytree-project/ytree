@@ -24,13 +24,23 @@ from ytree.utilities.logger import ytreeLogger as mylog
 #-----------------------------------------------------------------------------
 
 def save_arbor(arbor, filename=None, fields=None, trees=None,
-               save_in_place=True, save_roots_only=False,
+               save_in_place=None, save_roots_only=False,
                max_file_size=524288):
     """
     Save the arbor to a file.
 
     This is the internal function called by Arbor.save_arbor.
     """
+
+    from ytree.frontends.ytree.arbor import YTreeArbor
+    is_ytree = isinstance(arbor, YTreeArbor)
+    if save_in_place is None:
+        save_in_place = is_ytree
+
+    elif save_in_place and not is_ytree:
+        raise ValueError(
+            f"Cannot do save_in_place with arbor type {type(arbor)}. "
+            "Resave full arbor first and then reload.")
 
     if not save_in_place and save_roots_only:
         raise ValueError(

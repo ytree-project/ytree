@@ -1005,13 +1005,18 @@ class Arbor(metaclass=RegisteredArbor):
         trees : optional, list or array of TreeNodes
             If given, only save trees stemming from these nodes.
             If not provide, all trees will be saved.
-        save_in_place : optional, bool
+        save_in_place : optional, bool or None
             If True, analysis fields will be saved to the original
             arbor, even if only a subset of all trees is provided
-            with the trees keyword. If False and only a subset of
+            with the trees keyword. This will essentially "update"
+            the arbor in place. If False and only a subset of
             all trees is provided, a new arbor will be created
-            containing only the trees provided.
-            Default: True
+            containing only the trees provided. If set to None,
+            behavior is determined by the type of arbor loaded.
+            If the arbor is a YTreeArbor (i.e., saved with
+            save_arbor), save_in_place will be set to True. If
+            not of this type, it will be set to False.
+            Default: None
         save_roots_only : optional, bool
             If True, only field values of each node are saved.
             If False, field data for the entire tree stemming

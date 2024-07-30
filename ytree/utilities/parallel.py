@@ -43,7 +43,7 @@ def regenerate_node(arbor, node, new_index=None):
 
     return new_node
 
-def parallel_trees(trees, save_every=None, save_in_place=True,
+def parallel_trees(trees, save_every=None, save_in_place=None,
                    save_roots_only=False, filename=None,
                    njobs=0, dynamic=False):
     """
@@ -69,13 +69,17 @@ def parallel_trees(trees, save_every=None, save_in_place=True,
         If None, save will only occur after iterating over all trees. If False,
         no saving will be done.
         Default: None
-    save_in_place : optional, bool
+    save_in_place : optional, bool or None
         If True, analysis fields will be saved to the original
         arbor, even if only a subset of all trees is provided
         with the trees keyword. If False and only a subset of
         all trees is provided, a new arbor will be created
-        containing only the trees provided.
-        Default: True
+        containing only the trees provided. If set to None,
+        behavior is determined by the type of arbor loaded.
+        If the arbor is a YTreeArbor (i.e., saved with
+        save_arbor), save_in_place will be set to True. If
+        not of this type, it will be set to False.
+        Default: None
     save_roots_only : optional, bool
         If True, only field values of each node are saved.
         If False, field data for the entire tree stemming
@@ -202,9 +206,14 @@ def parallel_trees(trees, save_every=None, save_in_place=True,
                     new_arbor.derived_field_list)
                 for field in add_fields:
                     fi = arbor.field_info[field].copy()
+                    ftype = fi.pop("type")
+                    # skip aliases as they will have been saved as the field
+                    if ftype == "alias":
+                        continue
+
                     name = fi.pop("name")
                     function = fi.pop("function")
-                    del fi["type"], fi["dependencies"]
+                    del fi["dependencies"]
                     new_arbor.add_derived_field(name, function, **fi)
 
                 arbor = new_arbor
@@ -301,7 +310,7 @@ def parallel_tree_nodes(tree, group="forest",
                 my_halo[field] = value
 
 def parallel_nodes(trees, group="forest", save_every=None,
-                   save_in_place=True, filename=None,
+                   save_in_place=None, filename=None,
                    njobs=None, dynamic=None):
     """
     Iterate over all nodes in a list of trees in parallel.
@@ -332,13 +341,18 @@ def parallel_nodes(trees, group="forest", save_every=None,
         If None, save will only occur after iterating over all trees. If False,
         no saving will be done.
         Default: None
-    save_in_place : optional, bool
+    save_in_place : optional, bool or None
         If True, analysis fields will be saved to the original
         arbor, even if only a subset of all trees is provided
-        with the trees keyword. If False and only a subset of
+        with the trees keyword. This will essentially "update"
+        the arbor in place. If False and only a subset of
         all trees is provided, a new arbor will be created
-        containing only the trees provided.
-        Default: True
+        containing only the trees provided. If set to None,
+        behavior is determined by the type of arbor loaded.
+        If the arbor is a YTreeArbor (i.e., saved with
+        save_arbor), save_in_place will be set to True. If
+        not of this type, it will be set to False.
+        Default: None
     filename : optional, string
         The name of the new arbor to be saved. If None, the naming convention
         will follow the filename keyword of the
