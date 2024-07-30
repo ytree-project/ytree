@@ -159,11 +159,12 @@ This would be operations beyond derived fields, for example, things that
 might require loading the original simulation snapshots. New analysis
 fields are created with
 :func:`~ytree.data_structures.arbor.Arbor.add_analysis_field` and are
-initialized to zero.
+initialized to zero, or to a different default value if one is given
+with the ``default`` keyword.
 
 .. code-block:: python
 
-   >>> a.add_analysis_field("saucer_sections", units="m**2")
+   >>> a.add_analysis_field("saucer_sections", units="m**2", default=0.)
    >>> my_tree = a[0]
    >>> print (my_tree["tree", "saucer_sections"])
    [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
@@ -194,28 +195,25 @@ or :func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.
    changes made to any analysis fields. Thus, we must use ``list(a[:])``
    to explicitly store a list of trees.
 
-Re-saving Analysis Fields
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Re-saving Analysis Fields and Updating Existing Arbors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 All analysis fields are saved to sidecar files with the "-analysis" keyword
 appended to them. They can be altered and the arbor re-saved as many times
-as you like. In the very specific case of re-saving all trees and not
-providing a new filename or custom list of fields (as in the example above),
-analysis fields will be saved in place (i.e., over-writing the "-analysis"
-files). The conventional on-disk fields will not be re-saved as they cannot
-be altered.
-
-Saving Analysis Fields "in-place"
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-By default, when :func:`~ytree.data_structures.arbor.Arbor.save_arbor` is called
-without specifying a new output filename (or specifying the same name as was
-loaded), the new analysis fields will be saved to the existing arbor. That is,
-the arbor will be "updated" with the new values. However, this behavior can be
-changed by providing ``save_in_place=False`` to
-:func:`~ytree.data_structures.arbor.Arbor.save_arbor`. In this case, an entirely
-new arbor will be created. If the same filename is being used as was loaded,
-**then the existing arbor will be overwritten.**
+as you like. If you are working from a standard dataset (i.e., one
+that was NOT created with
+:func:`~ytree.data_structures.arbor.Arbor.save_arbor` or
+:func:`~ytree.data_structures.arbor.Arbor.save_tree`), you must first
+re-save it with one of the above commands for this option to become
+available. It is possible to start working with analysis fields
+straight away from a standard dataset, but the first time they are
+saved will necessarily create an entirely new dataset. When working
+from a saved dataset, the option to update analysis fields in-place
+can be disabled by specifying ``save_in_place=False`` in the call to
+:func:`~ytree.data_structures.arbor.Arbor.save_arbor` or
+:func:`~ytree.data_structures.arbor.Arbor.save_tree`. If this option
+is used, the newly created dataset will only contained the trees
+provided with the ``trees`` keyword.
 
 Updating only the Root Nodes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
