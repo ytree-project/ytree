@@ -62,6 +62,7 @@ class AHFDataFile(CatalogDataFile):
         self.fh = None
         self._parse_data_header()
         self.offsets = None
+        self.mtree_format
 
     def _parse_data_header(self):
         """
@@ -127,17 +128,45 @@ class AHFDataFile(CatalogDataFile):
             self._links = -1
             return
 
-        m = data["shared"]**2 / (data["prog_part"] * data["desc_part"])
+        if self.mtree_format == 1:
+            m = data["shared"]**2 / (data["prog_part"] * data["desc_part"])
 
-        progids = np.unique(data["prog_id"])
-        descids = np.empty(progids.size, dtype=progids.dtype)
+            progids = np.unique(data["prog_id"])
+            descids = np.empty(progids.size, dtype=progids.dtype)
 
-        for i, progid in enumerate(progids):
-            prf = data["prog_id"] == progid
-            descids[i] = data["desc_id"][prf][m[prf].argmax()]
-        udata = {"prog_id": progids, "desc_id": descids}
+            for i, progid in enumerate(progids):
+                prf = data["prog_id"] == progid
+                descids[i] = data["desc_id"][prf][m[prf].argmax()]
+            udata = {"prog_id": progids, "desc_id": descids}
+
+        elif self.mtree_format == 2:
+            udata = data
 
         self._links = udata
+
+    _mtree_format = None
+    @property
+    def mtree_format(self):
+        if self._mtree_format is not None:
+            return self._mtree_format
+
+        if self.mtree_filename is None:
+            self._mtree_format = -1
+
+        with open(self.mtree_filename, "r") as f:
+            line = f.readline()
+
+        if line.startswith("#"):
+            self._mtree_format = 1
+        elif line[0].isdigit():
+            self._mtree_format = 2
+            # This format is storing uids, but we can't deal with them yet.
+            # self.arbor._has_uids = True
+        else:
+            raise RuntimeError(
+                f"Unknown mtree file format for {self.mtree_filename}.")
+
+        return self._mtree_format
 
     def _read_mtree(self):
         """
@@ -147,6 +176,16 @@ class AHFDataFile(CatalogDataFile):
         if self.mtree_filename is None:
             return None
 
+        data = getattr(self, f"_read_mtree_format_{self.mtree_format}")()
+
+        if not data:
+            return None
+
+        for field in data:
+            data[field] = np.array(data[field])
+        return data
+
+    def _read_mtree_format_1(self):
         data = defaultdict(list)
         descid = descpart = None
 
@@ -167,11 +206,26 @@ class AHFDataFile(CatalogDataFile):
                 data["desc_part"].append(descpart)
         f.close()
 
-        if not data:
-            return None
+        return data
 
-        for field in data:
-            data[field] = np.array(data[field])
+    def _read_mtree_format_2(self):
+        data = defaultdict(list)
+        descid = descpart = None
+
+        f = open(self.mtree_filename, "r")
+        f.readline()
+        for line, offset in f_text_block(f):
+            if line.startswith("#"):
+                continue
+            oline = line.split()
+            if len(oline) == 2:
+                descid = int(oline[0])
+            else:
+                oline = line.split()
+                data["prog_id"].append(int(oline[0]))
+                data["desc_id"].append(descid)
+        f.close()
+
         return data
 
     def _read_data_default(self, rfields, dtypes):
