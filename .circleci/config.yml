@@ -151,7 +151,7 @@ jobs:
 
       - restore_cache:
           name: "Restore dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-abbey
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-aberson
 
       - install:
           ytdev: << parameters.ytdev >>
@@ -159,7 +159,7 @@ jobs:
 
       - save_cache:
           name: "Save dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-abbey
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-aberson
           paths:
             - ~/.cache/pip
             - ~/venv
@@ -202,7 +202,7 @@ jobs:
 
       - restore_cache:
           name: "Restore dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-abbey
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-aberson
 
       - install:
           ytdev: << parameters.ytdev >>
@@ -217,24 +217,24 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.9 tests"
-           tag: "3.9.19"
-           ytdev: 1
+           tag: "3.9.20"
+           ytdev: 0
 
        - tests:
-           name: "Python 3.11 tests"
-           tag: "3.11.9"
+           name: "Python 3.12 tests"
+           tag: "3.12.7"
            coverage: 1
            ytdev: 1
 
        - tests:
-           name: "Python 3.11 tests"
-           tag: "3.11.9"
+           name: "Python 3.12 tests"
+           tag: "3.12.7"
            coverage: 0
            ytdev: 0
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.11.9"
+           tag: "3.12.7"
            ytdev: 0
 
    daily:
@@ -247,8 +247,8 @@ workflows:
                 - main
      jobs:
        - tests:
-           name: "Python 3.11 tests"
-           tag: "3.11.9"
+           name: "Python 3.12 tests"
+           tag: "3.12.7"
            coverage: 0
            ytdev: 1
 
@@ -263,22 +263,16 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.9 tests"
-           tag: "3.9.19"
-           ytdev: 1
+           tag: "3.9.20"
+           ytdev: 0
 
        - tests:
-           name: "Python 3.10 tests"
-           tag: "3.10.14"
-           coverage: 0
-           ytdev: 1
-
-       - tests:
-           name: "Python 3.11 tests"
-           tag: "3.11.9"
+           name: "Python 3.12 tests"
+           tag: "3.12.7"
            coverage: 0
            ytdev: 1
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.11.9"
+           tag: "3.12.7"
            ytdev: 0
