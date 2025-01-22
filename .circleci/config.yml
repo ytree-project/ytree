@@ -128,7 +128,8 @@ executors:
 
 jobs:
   tests:
-    parallelism: 4
+    resource_class: large
+    parallelism: 2
     parameters:
       tag:
         type: string
@@ -183,6 +184,7 @@ jobs:
           coverage: << parameters.coverage >>
 
   docs-test:
+    resource_class: small
     parameters:
       tag:
         type: string
@@ -236,21 +238,6 @@ workflows:
            name: "Test docs build"
            tag: "3.12.7"
            ytdev: 0
-
-   daily:
-     triggers:
-       - schedule:
-           cron: "0 0 * * *"
-           filters:
-            branches:
-              only:
-                - main
-     jobs:
-       - tests:
-           name: "Python 3.12 tests"
-           tag: "3.12.7"
-           coverage: 0
-           ytdev: 1
 
    weekly:
      triggers:

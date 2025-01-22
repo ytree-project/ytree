@@ -82,7 +82,7 @@ class ParallelTest:
     base_filename = "tiny_ctrees/locations.dat"
     test_filename = "test_arbor/test_arbor.h5"
     test_script = None
-    ncores = 4
+    ncores = 2
 
     def check_values(self, arbor, my_args):
         group = my_args[1]
