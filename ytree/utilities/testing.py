@@ -20,6 +20,7 @@ from numpy.testing import \
     assert_almost_equal, \
     assert_array_equal
 import os
+import pytest
 import shutil
 import subprocess
 import sys
@@ -91,6 +92,7 @@ class ParallelTest:
             assert_array_equal(tree[group, "test_field"], 2 * tree[group, "mass"])
 
     @skipIf(MPI is None, "mpi4py not installed")
+    @pytest.mark.parallel
     def test_parallel(self):
 
         for i, my_args in enumerate(self.arg_sets):
@@ -130,6 +132,7 @@ class ExampleScriptTest:
     output_files = ()
     ncores = 1
 
+    @pytest.mark.parallel
     def test_example(self):
         if self.script_filename is None:
             return
