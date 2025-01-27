@@ -26,10 +26,20 @@ from ytree.yt_frontend import YTreeDataset
 CTG = "tiny_ctrees/locations.dat"
 
 class YTSelectionTest(TempDirTest):
+    """
+    Test class for selecting halos with yt.
+    """
+
+    _setup = False
+    def setUp(self):
+        super().setUp()
+        self._setup = True
 
     _arbor = None
     @property
     def arbor(self):
+        if not self._setup:
+            return
         if self._arbor is not None:
             return self._arbor
 
