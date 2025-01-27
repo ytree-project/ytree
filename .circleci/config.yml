@@ -269,17 +269,6 @@ workflows:
        - tests:
            requires:
              - linting
-           name: "Python 3.12 parallel tests"
-           tag: "3.12.7"
-           coverage: 1
-           ytdev: 1
-           pytestkwargs: "--parallelonly"
-           parallelism: 1
-           resource_class: large
-
-       - tests:
-           requires:
-             - linting
            name: "Python 3.12 tests"
            tag: "3.12.7"
            coverage: 0
