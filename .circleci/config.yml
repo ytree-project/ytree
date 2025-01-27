@@ -86,6 +86,8 @@ commands:
       coverage:
         type: integer
         default: 0
+      pytestkwargs:
+        type: string
 
     steps:
       - run:
@@ -95,7 +97,7 @@ commands:
             source $BASH_ENV
             source $HOME/venv/bin/activate
             TESTFILES=$(circleci tests glob "tests/*.py" "tests/frontends/*.py" | circleci tests split --split-by=timings)
-            pytest --cov=ytree --junitxml=test-results/junit.xml $TESTFILES
+            pytest --cov=ytree --junitxml=test-results/junit.xml << parameters.pytestkwargs >> $TESTFILES
             python fix-junit.py test-results/junit.xml
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
@@ -128,8 +130,8 @@ executors:
 
 jobs:
   tests:
-    resource_class: large
-    parallelism: 2
+    resource_class: medium
+    parallelism: 4
     parameters:
       tag:
         type: string
@@ -140,6 +142,8 @@ jobs:
       coverage:
         type: integer
         default: 0
+      pytestkwargs:
+        type: string
     executor:
       name: python
       tag: << parameters.tag >>
@@ -182,6 +186,7 @@ jobs:
 
       - run-tests:
           coverage: << parameters.coverage >>
+          pytestkwargs: << parameters.pytestkwargs >>
 
   docs-test:
     resource_class: small
@@ -221,18 +226,21 @@ workflows:
            name: "Python 3.9 tests"
            tag: "3.9.20"
            ytdev: 0
+           pytestkwargs: "--serialonly"
 
        - tests:
            name: "Python 3.12 tests"
            tag: "3.12.7"
            coverage: 1
            ytdev: 1
+           pytestkwargs: "--serialonly"
 
        - tests:
            name: "Python 3.12 tests"
            tag: "3.12.7"
            coverage: 0
            ytdev: 0
+           pytestkwargs: "--serialonly"
 
        - docs-test:
            name: "Test docs build"
@@ -252,12 +260,14 @@ workflows:
            name: "Python 3.9 tests"
            tag: "3.9.20"
            ytdev: 0
+           pytestkwargs: "--serialonly"
 
        - tests:
            name: "Python 3.12 tests"
            tag: "3.12.7"
            coverage: 0
            ytdev: 1
+           pytestkwargs: "--serialonly"
 
        - docs-test:
            name: "Test docs build"
