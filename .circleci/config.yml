@@ -150,11 +150,13 @@ jobs:
 
   tests:
     resource_class: medium
-    parallelism: 4
     parameters:
       tag:
         type: string
         default: latest
+      parallelism:
+        type: integer
+        default: 4
       ytdev:
         type: integer
         default: 0
@@ -163,6 +165,7 @@ jobs:
         default: 0
       pytestkwargs:
         type: string
+    parallelism: << parameters.parallelism >>
     executor:
       name: python
       tag: << parameters.tag >>
