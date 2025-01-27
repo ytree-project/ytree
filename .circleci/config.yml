@@ -76,8 +76,12 @@ commands:
       - run:
           name: "Lint."
           command: |
+            if [ ! -d $HOME/venv ]; then
+                python3 -m venv $HOME/venv
+            fi
             source $BASH_ENV
             source $HOME/venv/bin/activate
+            pip install flake8
             flake8 tests ytree doc/source/examples
 
   run-tests:
@@ -129,6 +133,21 @@ executors:
       - image: cimg/python:<< parameters.tag >>
 
 jobs:
+  linting:
+    resource_class: small
+    parameters:
+      tag:
+        type: string
+        default: latest
+    working_directory: ~/ytree
+    steps:
+      - checkout
+      - set-env
+      - lint
+    executor:
+      name: python
+      tag: << parameters.tag >>
+
   tests:
     resource_class: medium
     parallelism: 4
@@ -169,8 +188,6 @@ jobs:
             - ~/.cache/pip
             - ~/venv
             - ~/yt-git
-
-      - lint
 
       - restore_cache:
           name: "Restore test data cache."
@@ -222,13 +239,21 @@ workflows:
 
    normal-tests:
      jobs:
+       - linting:
+           name: "linting"
+           tag: "3.12.7"
+
        - tests:
+           requires:
+             - linting
            name: "Python 3.9 tests"
            tag: "3.9.20"
            ytdev: 0
            pytestkwargs: "--serialonly"
 
        - tests:
+           requires:
+             - linting
            name: "Python 3.12 tests"
            tag: "3.12.7"
            coverage: 1
@@ -236,6 +261,8 @@ workflows:
            pytestkwargs: "--serialonly"
 
        - tests:
+           requires:
+             - linting
            name: "Python 3.12 tests"
            tag: "3.12.7"
            coverage: 0
