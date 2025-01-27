@@ -149,7 +149,6 @@ jobs:
       tag: << parameters.tag >>
 
   tests:
-    resource_class: medium
     parameters:
       tag:
         type: string
@@ -157,6 +156,9 @@ jobs:
       parallelism:
         type: integer
         default: 4
+      resource_class:
+        type: string
+        default: medium
       ytdev:
         type: integer
         default: 0
@@ -166,6 +168,7 @@ jobs:
       pytestkwargs:
         type: string
     parallelism: << parameters.parallelism >>
+    resource_class: << parameters.resource_class >>
     executor:
       name: python
       tag: << parameters.tag >>
@@ -262,6 +265,17 @@ workflows:
            coverage: 1
            ytdev: 1
            pytestkwargs: "--serialonly"
+
+       - tests:
+           requires:
+             - linting
+           name: "Python 3.12 parallel tests"
+           tag: "3.12.7"
+           coverage: 1
+           ytdev: 1
+           pytestkwargs: "--parallelonly"
+           parallelism: 1
+           resource_class: large
 
        - tests:
            requires:
