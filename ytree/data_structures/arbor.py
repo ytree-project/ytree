@@ -46,6 +46,7 @@ from ytree.data_structures.node_link import \
     NodeLink
 from ytree.data_structures.save_arbor import \
     save_arbor
+from ytree.data_structures.tree_container import TreeContainer
 from ytree.data_structures.tree_node import \
     TreeNode
 from ytree.data_structures.tree_node_selector import \
@@ -55,6 +56,7 @@ from ytree.utilities.logger import \
     fake_pbar
 
 arbor_registry = {}
+_selection_types = ("forest", "tree", "prog")
 
 class RegisteredArbor(type):
     """
@@ -529,7 +531,7 @@ class Arbor(metaclass=RegisteredArbor):
         """
 
         if isinstance(key, str):
-            if key in ("tree", "prog"):
+            if key in _selection_types:
                 raise SyntaxError("Argument must be a field or integer.")
             self._root_io.get_fields(self, fields=[key])
             return self.field_data[key]
@@ -737,6 +739,13 @@ class Arbor(metaclass=RegisteredArbor):
         self._quan = functools.partial(unyt_quantity,
                                        registry=self.unit_registry)
         return self._quan
+
+    _container = None
+    @property
+    def container(self):
+        if self._container is None:
+            self._container = functools.partial(TreeContainer, self)
+        return self._container
 
     def select_halos(self, criteria, trees=None,
                      select_from=None, fields=None):
