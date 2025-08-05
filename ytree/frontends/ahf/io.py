@@ -210,7 +210,7 @@ class AHFDataFile(CatalogDataFile):
 
     def _read_mtree_format_2(self):
         data = defaultdict(list)
-        descid = descpart = None
+        descid = None
 
         f = open(self.mtree_filename, "r")
         f.readline()
