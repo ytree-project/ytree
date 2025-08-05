@@ -76,8 +76,12 @@ commands:
       - run:
           name: "Lint."
           command: |
+            if [ ! -d $HOME/venv ]; then
+                python3 -m venv $HOME/venv
+            fi
             source $BASH_ENV
             source $HOME/venv/bin/activate
+            pip install flake8
             flake8 tests ytree doc/source/examples
 
   run-tests:
@@ -86,6 +90,8 @@ commands:
       coverage:
         type: integer
         default: 0
+      pytestkwargs:
+        type: string
 
     steps:
       - run:
@@ -95,7 +101,7 @@ commands:
             source $BASH_ENV
             source $HOME/venv/bin/activate
             TESTFILES=$(circleci tests glob "tests/*.py" "tests/frontends/*.py" | circleci tests split --split-by=timings)
-            pytest --cov=ytree --junitxml=test-results/junit.xml $TESTFILES
+            pytest --cov=ytree --junitxml=test-results/junit.xml << parameters.pytestkwargs >> $TESTFILES
             python fix-junit.py test-results/junit.xml
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
@@ -127,18 +133,42 @@ executors:
       - image: cimg/python:<< parameters.tag >>
 
 jobs:
-  tests:
-    parallelism: 4
+  linting:
+    resource_class: small
     parameters:
       tag:
         type: string
         default: latest
+    working_directory: ~/ytree
+    steps:
+      - checkout
+      - set-env
+      - lint
+    executor:
+      name: python
+      tag: << parameters.tag >>
+
+  tests:
+    parameters:
+      tag:
+        type: string
+        default: latest
+      parallelism:
+        type: integer
+        default: 4
+      resource_class:
+        type: string
+        default: medium
       ytdev:
         type: integer
         default: 0
       coverage:
         type: integer
         default: 0
+      pytestkwargs:
+        type: string
+    parallelism: << parameters.parallelism >>
+    resource_class: << parameters.resource_class >>
     executor:
       name: python
       tag: << parameters.tag >>
@@ -151,7 +181,7 @@ jobs:
 
       - restore_cache:
           name: "Restore dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-abbey
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-aberson
 
       - install:
           ytdev: << parameters.ytdev >>
@@ -159,13 +189,11 @@ jobs:
 
       - save_cache:
           name: "Save dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-abbey
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-aberson
           paths:
             - ~/.cache/pip
             - ~/venv
             - ~/yt-git
-
-      - lint
 
       - restore_cache:
           name: "Restore test data cache."
@@ -181,8 +209,10 @@ jobs:
 
       - run-tests:
           coverage: << parameters.coverage >>
+          pytestkwargs: << parameters.pytestkwargs >>
 
   docs-test:
+    resource_class: small
     parameters:
       tag:
         type: string
@@ -202,7 +232,7 @@ jobs:
 
       - restore_cache:
           name: "Restore dependencies cache."
-          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-abbey
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-aberson
 
       - install:
           ytdev: << parameters.ytdev >>
@@ -215,42 +245,40 @@ workflows:
 
    normal-tests:
      jobs:
-       - tests:
-           name: "Python 3.9 tests"
-           tag: "3.9.19"
-           ytdev: 1
+       - linting:
+           name: "linting"
+           tag: "3.12.7"
 
        - tests:
-           name: "Python 3.11 tests"
-           tag: "3.11.9"
+           requires:
+             - linting
+           name: "Python 3.9 tests"
+           tag: "3.9.20"
+           ytdev: 0
+           pytestkwargs: "--serialonly"
+
+       - tests:
+           requires:
+             - linting
+           name: "Python 3.12 tests"
+           tag: "3.12.7"
            coverage: 1
            ytdev: 1
+           pytestkwargs: "--serialonly"
 
        - tests:
-           name: "Python 3.11 tests"
-           tag: "3.11.9"
+           requires:
+             - linting
+           name: "Python 3.12 tests"
+           tag: "3.12.7"
            coverage: 0
            ytdev: 0
+           pytestkwargs: "--serialonly"
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.11.9"
+           tag: "3.12.7"
            ytdev: 0
-
-   daily:
-     triggers:
-       - schedule:
-           cron: "0 0 * * *"
-           filters:
-            branches:
-              only:
-                - main
-     jobs:
-       - tests:
-           name: "Python 3.11 tests"
-           tag: "3.11.9"
-           coverage: 0
-           ytdev: 1
 
    weekly:
      triggers:
@@ -263,22 +291,18 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.9 tests"
-           tag: "3.9.19"
-           ytdev: 1
+           tag: "3.9.20"
+           ytdev: 0
+           pytestkwargs: "--serialonly"
 
        - tests:
-           name: "Python 3.10 tests"
-           tag: "3.10.14"
+           name: "Python 3.12 tests"
+           tag: "3.12.7"
            coverage: 0
            ytdev: 1
-
-       - tests:
-           name: "Python 3.11 tests"
-           tag: "3.11.9"
-           coverage: 0
-           ytdev: 1
+           pytestkwargs: "--serialonly"
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.11.9"
+           tag: "3.12.7"
            ytdev: 0

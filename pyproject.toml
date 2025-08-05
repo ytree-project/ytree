@@ -1,0 +1,96 @@
+[build-system]
+requires = [
+  "setuptools>=61.2",
+  "setuptools_scm[toml]>=7.0.1",
+]
+
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ytree"
+description = "An extension of yt for working with merger tree data."
+authors = [
+    { name = "Britton Smith", email = "brittonsmith@gmail.clm" },
+]
+keywords = [
+    "simulation",
+    "merger tree",
+    "astronomy",
+    "astrophysics"
+]
+readme = "README.md"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Unix",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "configparser",
+    "h5py",
+    "more_itertools>=8.4",
+    "numpy",
+    "unyt>=3.0.1",
+    "yt>=4.2",
+]
+dynamic = [
+    "version",
+]
+
+[project.optional-dependencies]
+parallel = [
+    "mpi4py",
+]
+dev = [
+    "codecov",
+    "flake8",
+    "pydot",
+    "pytest>=3.6",
+    "pytest-cov",
+    "twine",
+    "wheel",
+    "sphinx",
+    "sphinx_rtd_theme",
+]
+rtd = [
+    "codecov",
+    "flake8",
+    "pydot",
+    "pytest>=3.6",
+    "pytest-cov",
+    "twine",
+    "wheel",
+    "sphinx_rtd_theme",
+]
+
+[project.urls]
+Homepage = "https://github.com/ytree-project/ytree"
+Documentation = "https://ytree.readthedocs.io/en/stable/index.html"
+Changelog = "https://ytree.readthedocs.io/en/latest/Changelog.html"
+Repository = "https://github.com/ytree-project/ytree"
+Issues = "https://github.com/ytree-project/ytree/issues"
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+license-files = [
+    "LICENSE",
+]
+
+[tool.setuptools.packages.find]
+include = [
+    "ytree",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "ytree.__version__"}
