@@ -38,6 +38,8 @@ class AHFArbor(CatalogArbor):
     Arbor for Amiga Halo Finder data.
     """
 
+    _ahf_prefix = None
+    _mtree_prefix = None
     _data_suffix = ".AHF_halos"
     _mtree_suffix = ".AHF_mtree"
     _par_suffix = ".parameter"
@@ -48,16 +50,37 @@ class AHFArbor(CatalogArbor):
 
     def __init__(self, filename, log_filename=None,
                  hubble_constant=1.0, box_size=None,
-                 omega_matter=None, omega_lambda=None):
+                 omega_matter=None, omega_lambda=None,
+                 name_config=None):
         self.unit_registry = UnitRegistry()
         self.log_filename = log_filename
         self.hubble_constant = hubble_constant
         self.omega_matter = omega_matter
         self.omega_lambda = omega_lambda
         self._box_size_user = box_size
+
+        if name_config is None:
+            name_config = {}
+        self._set_naming_conventions(name_config)
+
         self._file_pattern = re.compile(
             rf"(^.+[^0-9a-zA-Z]+)(\d+).*{self._par_suffix}$")
         super().__init__(filename)
+
+    def _set_naming_conventions(self, config):
+        """
+        Set some filename conventions.
+        """
+
+        for k, v in config.items():
+            if not re.match("\w+_(?:prefix|suffix)", k):
+                raise ValueError(
+                    f"name_config entry must end in either prefix or suffix: \"{k}\"")
+            if not hasattr(self, f"_{k}"):
+                raise ValueError(
+                    f"name_config entry not associated with a known attribute: \"{k}\"")
+
+            setattr(self, f"_{k}", v)
 
     def _is_crm_file(self, filename):
         return os.path.basename(filename).startswith(self._crm_prefix) and \

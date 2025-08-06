@@ -55,13 +55,31 @@ class AHFDataFile(CatalogDataFile):
                 raise FileNotFoundError(
                     f"Cannot find data file: {fkey + self.arbor._data_suffix}.")
 
-        self.halos_filename = self.data_filekey + self.arbor._data_suffix
-        self.mtree_filename = self.data_filekey + self.arbor._mtree_suffix
-        if not os.path.exists(self.mtree_filename):
-            self.mtree_filename = None
+        self._get_other_filenames()
         self.fh = None
         self._parse_data_header()
         self.offsets = None
+
+    def _get_other_filenames(self):
+        """
+        Figure out the various additional filenames we're going to need here.
+
+        If prefixes for the ahf and mtree files have been set, then we need to
+        look out for this and adjust.
+        """
+
+        self.halos_filename = self.data_filekey + self.arbor._data_suffix
+
+        if self.arbor._ahf_prefix is None:
+            mtree_key = self.data_filekey
+        else:
+            mtree_key = re.sub(f"^{self.arbor._ahf_prefix}",
+                               f"{self.arbor._mtree_prefix}",
+                               self.data_filekey)
+
+        self.mtree_filename = mtree_key + self.arbor._mtree_suffix
+        if not os.path.exists(self.mtree_filename):
+            self.mtree_filename = None
 
     def _parse_data_header(self):
         """
