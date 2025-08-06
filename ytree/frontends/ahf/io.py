@@ -73,9 +73,15 @@ class AHFDataFile(CatalogDataFile):
         if self.arbor._ahf_prefix is None:
             mtree_key = self.data_filekey
         else:
+            # First, strip of the directory
+            mtree_key = re.sub(f"^{self.arbor.directory}{os.path.sep}", "",
+                               self.data_filekey)
+            # Now, substitute the prefixes
             mtree_key = re.sub(f"^{self.arbor._ahf_prefix}",
                                f"{self.arbor._mtree_prefix}",
-                               self.data_filekey)
+                               mtree_key)
+            # Return the directory
+            mtree_key = os.path.join(self.arbor.directory, mtree_key)
 
         self.mtree_filename = mtree_key + self.arbor._mtree_suffix
         if not os.path.exists(self.mtree_filename):
