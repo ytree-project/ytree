@@ -73,7 +73,7 @@ class AHFArbor(CatalogArbor):
         """
 
         for k, v in config.items():
-            if not re.match("\w+_(?:prefix|suffix)", k):
+            if not re.match(r"\w+_(?:prefix|suffix)", k):
                 raise ValueError(
                     f"name_config entry must end in either prefix or suffix: \"{k}\"")
             if not hasattr(self, f"_{k}"):
