@@ -131,10 +131,17 @@ class Arbor(metaclass=RegisteredArbor):
             fn = filename[0]
         else:
             fn = filename
-        self.parameter_filename = fn
+        self._set_parameter_filename(fn)
         self.basename = os.path.basename(fn)
         dn = os.path.dirname(fn)
         self.directory = dn if dn else '.'
+
+    def _set_parameter_filename(self, filename):
+        """
+        Set the name of the file from which to get metadata.
+        """
+
+        self.parameter_filename = filename
 
     def _parse_parameter_file(self):
         """
