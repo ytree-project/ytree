@@ -22,10 +22,10 @@ from ytree.data_structures.arbor import \
     CatalogArbor
 from ytree.frontends.ahf.fields import \
     AHFFieldInfo, \
-    AHFNewFieldInfo
+    AHFCRMFieldInfo
 from ytree.frontends.ahf.io import \
     AHFDataFile, \
-    AHFNewDataFile
+    AHFCRMDataFile
 from ytree.frontends.ahf.misc import \
     parse_AHF_file
 from unyt.unit_registry import \
@@ -44,7 +44,7 @@ class AHFArbor(CatalogArbor):
     _mtree_suffix = ".AHF_mtree"
     _par_suffix = ".parameter"
     _crm_prefix = "MergerTree_"
-    _crm_suffix = ".txt-CRMratio2"
+    _crm_suffix = "-CRMratio2"
     _field_info_class = AHFFieldInfo
     _data_file_class = AHFDataFile
 
@@ -196,14 +196,14 @@ class AHFArbor(CatalogArbor):
 
         return True
 
-class AHFNewArbor(AHFArbor):
+class AHFCRMArbor(AHFArbor):
     """
     Arbor for a newer version of Amiga Halo Finder data.
     """
 
     _has_uids = True
-    _field_info_class = AHFNewFieldInfo
-    _data_file_class = AHFNewDataFile
+    _field_info_class = AHFCRMFieldInfo
+    _data_file_class = AHFCRMDataFile
 
     def _set_paths(self, filename):
         super()._set_paths(filename)

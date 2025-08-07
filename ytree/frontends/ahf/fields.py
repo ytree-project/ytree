@@ -73,7 +73,7 @@ class AHFFieldInfo(FieldInfoContainer):
         ('desc_uid', id_type)
     )
 
-class AHFNewFieldInfo(AHFFieldInfo):
+class AHFCRMFieldInfo(AHFFieldInfo):
     alias_fields = (
         ("uid", "ID", ""),
         ("desc_uid", "desc_id", ""),

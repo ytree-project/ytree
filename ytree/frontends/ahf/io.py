@@ -323,7 +323,7 @@ class AHFDataFile(CatalogDataFile):
 
         return field_data
 
-class AHFNewDataFile(AHFDataFile):
+class AHFCRMDataFile(AHFDataFile):
     def _compute_links(self):
         """
         Read the CRMratio2 file.
