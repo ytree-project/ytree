@@ -77,6 +77,7 @@ class AHFCRMFieldInfo(AHFFieldInfo):
     alias_fields = (
         ("uid", "ID", ""),
         ("desc_uid", "desc_id", ""),
+        ("mass", "Mhalo", m_unit),
         ("mass", "Mvir", m_unit),
         ("virial_mass", "Mvir", m_unit),
         ("position_x", "Xc", p_unit),
