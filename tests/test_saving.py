@@ -21,6 +21,7 @@ from ytree.utilities.testing import \
 import ytree
 
 CT = "consistent_trees/tree_0_0_0.dat"
+TCT = "tiny_ctrees/locations.dat"
 
 class SaveArborTest(TempDirTest):
     @requires_file(CT)
@@ -86,3 +87,96 @@ class SaveArborTest(TempDirTest):
         fields = a2.field_list[:]
         fields.remove("desc_uid")
         compare_trees(t, a2[0], fields=fields)
+
+    @requires_file(TCT)
+    def test_save_in_place_true(self):
+        a = ytree.load(TCT)
+
+        fn = a.save_arbor()
+        a2 = ytree.load(fn)
+        a2.add_analysis_field("test_field", "", default=-1.)
+
+        # this should be only a subset of all trees
+        trees = list(a2[a2["mass"] > 3e11])
+        for tree in trees:
+            for node in tree["forest"]:
+                node["test_field"] = 5
+
+        fn2 = a2.save_arbor(trees=trees)
+        a3 = ytree.load(fn2)
+
+        # check if the arbor size is unchanged
+        assert a3.size == a.size
+        # check if number of trees with altered field is right
+        assert (a3["test_field"] == 5).sum() == len(trees)
+
+        trees = a3[a3["mass"] > 3e11]
+        for tree in trees:
+            assert (tree["forest", "test_field"] == 5).all()
+
+    @requires_file(TCT)
+    def test_save_in_place_false(self):
+        a = ytree.load(TCT)
+
+        fn = a.save_arbor()
+        a2 = ytree.load(fn)
+        a2.add_analysis_field("test_field", "", default=-1.)
+
+        # this should be only a subset of all trees
+        trees = list(a2[a2["mass"] > 3e11])
+        for tree in trees:
+            for node in tree["forest"]:
+                node["test_field"] = 5
+
+        fn2 = a2.save_arbor(trees=trees, save_in_place=False)
+        a3 = ytree.load(fn2)
+
+        # check if the arbor size changed (it should be!)
+        assert a3.size == len(trees)
+        # check if number of trees with altered field is right
+        assert (a3["test_field"] == 5).sum() == len(trees)
+
+        trees = a3[:]
+        for tree in trees:
+            assert (tree["forest", "test_field"] == 5).all()
+
+    @requires_file(TCT)
+    def test_save_roots_only(self):
+        a = ytree.load(TCT)
+
+        fn = a.save_arbor()
+        a2 = ytree.load(fn)
+        a2.add_analysis_field("test_field", "", default=-1.)
+
+        # this should be only a subset of all trees
+        trees = list(a2[a2["mass"] > 3e11])
+        for tree in trees:
+            for node in tree["forest"]:
+                node["test_field"] = 5
+
+        fn2 = a2.save_arbor(trees=trees, save_roots_only=True)
+        a3 = ytree.load(fn2)
+
+        # check if the arbor size is unchanged
+        assert a3.size == a.size
+        # check if number of trees with altered field is right
+        assert (a3["test_field"] == 5).sum() == len(trees)
+
+        trees = a3[a3["mass"] > 3e11]
+        for tree in trees:
+            # the root should be changed, but the rest of the tree should not
+            assert tree["test_field"] == 5
+            assert (tree["forest", "test_field"][1:] == -1).all()
+
+    @requires_file(TCT)
+    def test_save_in_place_roots_only(self):
+        a = ytree.load(TCT)
+
+        fn = a.save_arbor()
+        a2 = ytree.load(fn)
+        a2.add_analysis_field("test_field", "", default=-1.)
+
+        trees = list(a2[a2["mass"] > 3e11])
+        with self.assertRaises(ValueError):
+            a2.save_arbor(trees=trees, save_in_place=False,
+                          save_roots_only=True)

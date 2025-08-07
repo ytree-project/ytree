@@ -9,9 +9,9 @@ import json
 import numpy as np
 import os
 import types
-from unyt import uconcatenate
 
 from yt.frontends.ytdata.utilities import save_as_dataset
+from yt.funcs import get_pbar
 from ytree.utilities.io import ensure_dir
 from ytree.utilities.logger import ytreeLogger as mylog
 
@@ -24,6 +24,7 @@ from ytree.utilities.logger import ytreeLogger as mylog
 #-----------------------------------------------------------------------------
 
 def save_arbor(arbor, filename=None, fields=None, trees=None,
+               save_in_place=None, save_roots_only=False,
                max_file_size=524288):
     """
     Save the arbor to a file.
@@ -31,12 +32,26 @@ def save_arbor(arbor, filename=None, fields=None, trees=None,
     This is the internal function called by Arbor.save_arbor.
     """
 
+    from ytree.frontends.ytree.arbor import YTreeArbor
+    is_ytree = isinstance(arbor, YTreeArbor)
+    if save_in_place is None:
+        save_in_place = is_ytree
+
+    elif save_in_place and not is_ytree:
+        raise ValueError(
+            f"Cannot do save_in_place with arbor type {type(arbor)}. "
+            "Resave full arbor first and then reload.")
+
+    if not save_in_place and save_roots_only:
+        raise ValueError(
+            "Cannot have save_in_place=False with save_roots_only=True")
+
     if isinstance(trees, types.GeneratorType):
         trees = list(trees)
 
     arbor._plant_trees()
     update, filename = determine_save_state(
-        arbor, filename, fields, trees)
+        arbor, filename, fields, trees, save_in_place)
     filename = determine_output_filename(filename, ".h5")
     fields = determine_field_list(arbor, fields, update)
 
@@ -51,7 +66,7 @@ def save_arbor(arbor, filename=None, fields=None, trees=None,
 
     group_nnodes, group_ntrees, root_field_data = \
       save_data_files(arbor, filename, fields, trees,
-                      max_file_size, update)
+                      max_file_size, update, save_roots_only)
 
     header_filename = save_header_file(
         arbor, filename, fields, root_field_data,
@@ -59,7 +74,7 @@ def save_arbor(arbor, filename=None, fields=None, trees=None,
 
     return header_filename
 
-def determine_save_state(arbor, filename, fields, trees):
+def determine_save_state(arbor, filename, fields, trees, in_place):
     """
     Determine if we can just output new analysis fields to
     sidecar files and skip saving the rest.
@@ -69,19 +84,27 @@ def determine_save_state(arbor, filename, fields, trees):
 
     from ytree.frontends.ytree.arbor import YTreeArbor
 
+    fstate = (False, filename)
+    tstate = (True, arbor.parameter_filename)
+
     if not isinstance(arbor, YTreeArbor):
-        return False, filename
+        return fstate
 
     if filename is not None:
-        return False, filename
+        return fstate
 
     if fields not in [None, "all"]:
-        return False, filename
+        return fstate
 
-    if trees is not None and len(trees) != arbor.size:
-        return False, filename
+    if not in_place and trees is not None:
+        if len(trees) != arbor.size:
+            return fstate
 
-    return True, arbor.parameter_filename
+        my_uids = arbor.arr([t["uid"] for t in arbor])
+        if (arbor["uid"] != my_uids).any():
+            return fstate
+
+    return tstate
 
 def determine_output_filename(path, suffix):
     """
@@ -108,15 +131,11 @@ def determine_field_list(arbor, fields, update):
 
     if fields in [None, "all"]:
         # If this is an update, don't resave disk fields.
-        field_list = arbor.analysis_field_list.copy()
+        field_list = set(arbor.analysis_field_list)
 
-        # Add in previously saved analysis fields
-        if update:
-            field_list.extend(
-                [field for field in arbor.field_list
-                 if arbor.field_info[field].get("type") == "analysis_saved"])
-        else:
-            field_list.extend(arbor.field_list)
+        # If not an update, save all the fields.
+        if not update:
+            field_list.update(arbor.field_list)
 
         # If a field has an alias, get that instead.
         fields = []
@@ -125,8 +144,9 @@ def determine_field_list(arbor, fields, update):
                 arbor.field_info[field].get("aliases", [field]))
 
     else:
-        fields.extend([f for f in ["uid", "desc_uid"]
-                       if f not in fields])
+        # If not saving all trees, add uid and desc_uid fields
+        # to make sure the tree can be built.
+        fields = list(set(fields + ["uid", "desc_uid"]))
 
     return fields
 
@@ -138,7 +158,7 @@ def get_output_fieldnames(fields):
     return [field.replace("/", "_") for field in fields]
 
 def save_data_files(arbor, filename, fields, trees,
-                    max_file_size, update):
+                    max_file_size, update, nodes_only):
     """
     Write all data files by grouping trees together.
 
@@ -149,13 +169,33 @@ def save_data_files(arbor, filename, fields, trees,
     calculating from max_file_size.
     """
 
-    if trees is None:
+    # Keep the trees we want to transplant separate.
+    if trees is not None and update:
+        save_trees = trees
+
+    if trees is None or update:
         trees = arbor._yield_root_nodes(range(arbor.size))
         save_size = arbor.size
     else:
         save_size = len(trees)
 
-    root_field_data = dict((field, []) for field in fields)
+    if update:
+        # Transplant field data onto tree roots.
+        save_roots = transplant_analysis_fields(
+            arbor, save_trees, nodes_only)
+        # If we have new analysis fields, they must be written for
+        # the entire arbor.
+        save_all = any([arbor.field_info[field]["type"] == "analysis"
+                        for field in fields])
+    else:
+        save_roots = {}
+        save_all = True
+
+    # This is the set of files we need to save.
+    if not save_all:
+        save_files = set(np.digitize([tree._ai for tree in save_roots.values()], arbor._node_io._ei))
+
+    root_field_data = {field: [] for field in fields}
 
     group_nnodes = []
     group_ntrees = []
@@ -167,23 +207,37 @@ def save_data_files(arbor, filename, fields, trees,
         group_nnodes.append(cg_nnodes)
         group_ntrees.append(cg_ntrees)
 
-        total_guess = int(np.round(save_size * cg_number / sum(group_ntrees)))
-        save_data_file(
-            arbor, filename, fields,
-            np.array(current_group), root_field_data,
-            cg_number, total_guess)
+        total_guess = int(np.round(save_size * (cg_number+1) / sum(group_ntrees)))
+
+        # If we don't need to save the data file, just gather root fields.
+        if not save_all and cg_number not in save_files:
+
+            mylog.info(f"[{cg_number+1}] / [~{total_guess}]: Compiling root fields.")
+            cg_start = current_group[0]._arbor_index
+            cg_end = current_group[-1]._arbor_index + 1
+            for field in fields:
+                root_field_data[field].append(arbor[field][cg_start:cg_end])
+
+        else:
+            save_data_file(
+                arbor, filename, fields,
+                np.array(current_group), root_field_data,
+                cg_number, total_guess)
 
     if update:
         file_sizes = np.diff(arbor._node_io._ei, prepend=0)
 
-    i = 1
+    i = 0
     for tree in trees:
+        if update:
+            tree = save_roots.get(tree._arbor_index, tree)
+
         current_group.append(tree)
         cg_nnodes += tree.tree_size
         cg_ntrees += 1
 
         # if updating, use file sizes of loaded arbor
-        if (update and len(current_group) == file_sizes[i-1]) or \
+        if (update and len(current_group) == file_sizes[i]) or \
           cg_nnodes > max_file_size:
             my_save(i, cg_nnodes, cg_ntrees)
             current_group = []
@@ -210,7 +264,7 @@ def save_data_file(arbor, filename, fields, tree_group,
 
     arbor._node_io_loop(
         arbor._node_io.get_fields,
-        pbar=f"Getting fields [{current_iteration} / ~{total_guess}]",
+        pbar=f"Getting fields [{current_iteration+1} / ~{total_guess}]",
         root_nodes=tree_group, fields=fields, root_only=False)
 
     main_fdata  = {}
@@ -233,7 +287,7 @@ def save_data_file(arbor, filename, fields, tree_group,
             my_ftypes = main_ftypes
 
         my_ftypes[fieldname] = "data"
-        my_fdata[fieldname]  = uconcatenate(
+        my_fdata[fieldname]  = np.concatenate(
             [node.field_data[field] if node.is_root else node["tree", field]
              for node in tree_group])
         root_field_data[field].append(my_fdata[fieldname][my_tree_start])
@@ -254,12 +308,12 @@ def save_data_file(arbor, filename, fields, tree_group,
                    "tree_end_index",
                    "tree_size"]:
             main_ftypes[ft] = "index"
-        my_filename = f"{filename}_{current_iteration-1:04d}.h5"
+        my_filename = f"{filename}_{current_iteration:04d}.h5"
         save_as_dataset({}, my_filename, main_fdata,
                         field_types=main_ftypes)
 
     if analysis_fdata:
-        my_filename = f"{filename}_{current_iteration-1:04d}-analysis.h5"
+        my_filename = f"{filename}_{current_iteration:04d}-analysis.h5"
         save_as_dataset({}, my_filename, analysis_fdata,
                         field_types=analysis_ftypes)
 
@@ -303,7 +357,7 @@ def save_header_file(arbor, filename, fields, root_field_data,
           dict((key, fi[key])
                for key in ["units", "description"]
                if key in fi)
-        my_rdata[fieldname] = uconcatenate(root_field_data[field])
+        my_rdata[fieldname] = np.concatenate(root_field_data[field])
         my_rtypes[fieldname] = "data"
 
     # all saved trees will be roots
@@ -355,3 +409,46 @@ def save_header_file(arbor, filename, fields, root_field_data,
         del hdata
 
     return header_filename
+
+def transplant_analysis_fields(arbor, old_trees, nodes_only):
+    """
+    Copy analysis field data from one set of trees to another.
+
+    The new tree list is likely to be the list of all trees in the arbor.
+    The purpose of this is to allow saving in place of a subset of trees
+    (including non-rootes) back into the original arbor.
+    """
+
+    root_ids = {}
+
+    pbar = get_pbar("Transplanting analysis fields", len(old_trees))
+    for i, old_tree in enumerate(old_trees):
+        old_root = old_tree.find_root()
+        ai = old_root._arbor_index
+        if ai in root_ids:
+            new_root = root_ids[ai]
+        else:
+            new_root = arbor[ai]
+            root_ids[ai] = new_root
+
+        if nodes_only:
+            indices = old_tree.tree_id
+        elif old_tree.is_root:
+            indices = slice(None)
+        else:
+            indices = (old_tree._tree_field_indices)
+
+        arbor._node_io.get_fields(new_root, fields=arbor.analysis_field_list)
+        for field in arbor.analysis_field_list:
+            if nodes_only:
+                my_field = field
+            elif old_tree.is_root:
+                my_field = ("forest", field)
+            else:
+                my_field = ("tree", field)
+            new_root.field_data[field][indices] = old_tree[my_field]
+
+        pbar.update(i+1)
+    pbar.finish()
+
+    return root_ids

@@ -124,18 +124,19 @@ If you would like to also cite the specific version of `ytree` used in
 your work, include the following reference:
 
 ```
-@software{britton_smith_2022_7335683,
-  author       = {Britton Smith and
-                  Meagan Lang and
-                  Juanjo Bazán},
-  title        = {ytree-project/ytree: ytree 3.2.0 Release},
-  month        = nov,
-  year         = 2022,
-  publisher    = {Zenodo},
-  version      = {ytree-3.2.0},
-  doi          = {10.5281/zenodo.7335683},
-  url          = {https://doi.org/10.5281/zenodo.7335683}
-}
+  @software{britton_smith_2023_8349044,
+    author       = {Britton Smith and
+                    Meagan Lang and
+                    John Wise and
+                    Juanjo Bazán},
+    title        = {ytree-project/ytree: ytree 3.2.1 Release},
+    month        = sep,
+    year         = 2023,
+    publisher    = {Zenodo},
+    version      = {ytree-3.2.1},
+    doi          = {10.5281/zenodo.8349044},
+    url          = {https://doi.org/10.5281/zenodo.8349044}
+  }
 ```
 
 ## Resources

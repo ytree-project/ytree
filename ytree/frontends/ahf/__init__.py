@@ -15,4 +15,4 @@ amiga halo finder frontend
 
 from ytree.frontends.ahf.arbor import \
     AHFArbor, \
-    AHFNewArbor
+    AHFCRMArbor

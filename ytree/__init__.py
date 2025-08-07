@@ -27,4 +27,4 @@ from ytree.utilities.parallel import \
     parallel_tree_nodes, \
     parallel_nodes
 
-__version__ = '3.3.dev0'
+__version__ = '3.3.dev1'
