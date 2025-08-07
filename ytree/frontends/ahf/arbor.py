@@ -271,7 +271,7 @@ class AHFCRMArbor(AHFArbor):
         else:
             if not os.path.exists(self.crm_filename):
                 raise RuntimeError(
-                    f"Specified crm_filename does not exist: ",
+                    "Specified crm_filename does not exist: ",
                     self.crm_filename)
 
         if self.crm_filename is None:
@@ -283,7 +283,7 @@ class AHFCRMArbor(AHFArbor):
         else:
             if not os.path.exists(self.parameter_filename):
                 raise RuntimeError(
-                    f"Specified parameter_filename does not exist: ",
+                    "Specified parameter_filename does not exist: ",
                     self.parameter_filename)
 
         if self.parameter_filename is None:
