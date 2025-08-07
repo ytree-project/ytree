@@ -15,12 +15,13 @@ There are two main ways that the `Amiga Halo Finder
 <http://popia.ft.uam.es/AHF/>`__ will output merger tree information.
 Most AHF outputs will contain a series of files (one per snapshot) linking
 a halo in that snapshot with its progenitors. These usually, but not always,
-have file names ending in ".AHF_mtree". *See below if these files have
-different names in your data.* The second way is to create a single file
-containing descendent/ancestor links for all halos from all snapshots. This
-file usually starts with "MergerTree\_" and ends with "-CRMratio2". As long as
-your data contains one of the above, everything should be fine even if the
-naming conventions are slightly different.
+have file names ending in ".AHF_mtree". See :ref:`ahf-naming` if these
+files have different names in your data. The second way is to create
+a single file containing descendent/ancestor links for all halos from
+all snapshots. This file usually starts with "MergerTree\_" and ends
+with "-CRMratio2". As long as your data contains one of the above,
+everything should be fine even if the naming conventions are slightly
+different.
 
 Both formats save a series of files associated with each
 snapshot. Parameters are stored in ".parameters" and ".log" files and
@@ -28,18 +29,18 @@ halo properties (i.e., all the fields) in ".AHF_halos" files. Make
 sure to keep all these files together in the same directory.
 
 If you have the one big file starting with "MergerTree\_" and ending
-with "-CRMratio2, use that to load the data.
+with "-CRMratio2", use that to load the data.
 
 .. code-block:: python
 
    >>> import ytree
    >>> a = ytree.load("AHF_100_tiny/MergerTree_GIZMO-NewMDCLUSTER_0047.txt-CRMratio2")
 
-`ytree` will then try to guess the naming convention for the parameter
-files based on the name of the one big file or on the available files
-ending in ".parameter." An exception will be raised if neither of
-these methods are able to locate a parameter file. If this is the
-case, provide one using the `parameter_filename` keyword.
+``ytree`` will then try to guess the naming convention for the
+parameter files based on the name of the one big file or on the
+available files ending in ".parameter". An exception will be raised if
+neither of these methods are able to locate a parameter file. If this
+is the case, provide one using the `parameter_filename` keyword.
 
 .. code-block:: python
 
@@ -55,6 +56,8 @@ If you don't have the one big file, then provide the name of the first
    >>> import ytree
    >>> a = ytree.load("ahf_halos/snap_N64L16_000.parameter",
    ...                hubble_constant=0.7)
+
+.. _ahf-naming:
 
 AHF data with different naming conventions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -120,7 +123,7 @@ like those described here.
              calculated instead of the tree. However, even in this case,
              only the tree is preserved in ``ytree``. See the `Amiga Halo
              Finder Documentation
-             <http://popia.ft.uam.es/AHF/Documentation.html>`_
+             <http://popia.ft.uam.es/AHF/files/AHF.pdf>`_
              for a discussion of the difference between graphs and trees.
 
 .. _load-ctrees:
