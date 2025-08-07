@@ -26,6 +26,7 @@ id_type = np.int64
 
 class AHFFieldInfo(FieldInfoContainer):
     known_fields = (
+        ("Mhalo", m_unit),
         ("Mvir", m_unit),
         ("Xc", p_unit),
         ("Yc", p_unit),
@@ -49,6 +50,7 @@ class AHFFieldInfo(FieldInfoContainer):
 
     alias_fields = (
         ("halo_id", "ID", ""),
+        ("mass", "Mhalo", m_unit),
         ("mass", "Mvir", m_unit),
         ("virial_mass", "Mvir", m_unit),
         ("position_x", "Xc", p_unit),
@@ -71,10 +73,11 @@ class AHFFieldInfo(FieldInfoContainer):
         ('desc_uid', id_type)
     )
 
-class AHFNewFieldInfo(AHFFieldInfo):
+class AHFCRMFieldInfo(AHFFieldInfo):
     alias_fields = (
         ("uid", "ID", ""),
         ("desc_uid", "desc_id", ""),
+        ("mass", "Mhalo", m_unit),
         ("mass", "Mvir", m_unit),
         ("virial_mass", "Mvir", m_unit),
         ("position_x", "Xc", p_unit),

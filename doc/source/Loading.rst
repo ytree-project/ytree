@@ -11,16 +11,45 @@ use the freely available :ref:`sample-data`.
 Amiga Halo Finder
 -----------------
 
-There are a couple data formats associated with the `Amiga Halo Finder
-<http://popia.ft.uam.es/AHF/>`__. Both formats save a series of files
-associated with each snapshot. Parameters are stored in ".parameters"
-and ".log" files and halo properties in ".AHF_halos" files. In the
-older format, descendent/ancestor links are stored in several
-".AHF_mtree" files, one per snapshot. In the newer format, all halo
-linking information is stored in a single file beginning with
-"MergerTree\_" and ending with "-CRMratio2". Make sure to keep all
-these files together in the same directory. To load, provide the name
-of the first ".parameter" file.
+There are two main ways that the `Amiga Halo Finder
+<http://popia.ft.uam.es/AHF/>`__ will output merger tree information.
+Most AHF outputs will contain a series of files (one per snapshot) linking
+a halo in that snapshot with its progenitors. These usually, but not always,
+have file names ending in ".AHF_mtree". See :ref:`ahf-naming` if these
+files have different names in your data. The second way is to create
+a single file containing descendent/ancestor links for all halos from
+all snapshots. This file usually starts with "MergerTree\_" and ends
+with "-CRMratio2". As long as your data contains one of the above,
+everything should be fine even if the naming conventions are slightly
+different.
+
+Both formats save a series of files associated with each
+snapshot. Parameters are stored in ".parameters" and ".log" files and
+halo properties (i.e., all the fields) in ".AHF_halos" files. Make
+sure to keep all these files together in the same directory.
+
+If you have the one big file starting with "MergerTree\_" and ending
+with "-CRMratio2", use that to load the data.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("AHF_100_tiny/MergerTree_GIZMO-NewMDCLUSTER_0047.txt-CRMratio2")
+
+``ytree`` will then try to guess the naming convention for the
+parameter files based on the name of the one big file or on the
+available files ending in ".parameter". An exception will be raised if
+neither of these methods are able to locate a parameter file. If this
+is the case, provide one using the `parameter_filename` keyword.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("AHF_100_tiny/MergerTree_GIZMO-NewMDCLUSTER_0047.txt-CRMratio2",
+                      parameter_filename="AHF_100_tiny/GIZMO-NewMDCLUSTER_0047.snap_128.parameter")
+
+If you don't have the one big file, then provide the name of the first
+".parameter" file.
 
 .. code-block:: python
 
@@ -28,13 +57,51 @@ of the first ".parameter" file.
    >>> a = ytree.load("ahf_halos/snap_N64L16_000.parameter",
    ...                hubble_constant=0.7)
 
-Alternatively, the "MergerTree\_" file can also be provided for the
-newer format.
+.. _ahf-naming:
+
+AHF data with different naming conventions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Occasionally, the naming conventions for various files will differ
+from the above. Sometimes, the arbor will appear to load correctly,
+but all the trees will appear as singular objects with no descendents
+or ancestors. Other times, you may see an error the first time you try
+to query a tree. Two known variations are:
+
+#. Different file prefixes for the halo catalog and merger tree
+   files. For example, one set of files starting with "AHF" and the
+   other starting with "MTREE".
+#. The mtree data in files not ending in ".AHF_mtree". In this case,
+   there still may be files with this suffix, but they may not contain
+   the data that ``ytree`` is looking for. The files needed for this
+   should look something like below:
+
+.. code-block::
+
+   #   HaloID(1)   HaloPart(2)  NumProgenitors(3)
+   #      SharedPart(1)    HaloID(2)   HaloPart(3)
+   0  29769  12
+     29221  0  29918
+     1652  17  1652
+     362  90  362
+
+In the example below, this data is located in files ending with
+".AHF_croco". The `name_config` keyword can be used to specify a
+dictionary of naming conventions:
 
 .. code-block:: python
 
    >>> import ytree
-   >>> a = ytree.load("AHF_100_tiny/MergerTree_GIZMO-NewMDCLUSTER_0047.txt-CRMratio2")
+   >>> a = ytree.load(
+   >>>     "B25_N256_CDM_1LPT/AHF.B25_N256_CDM_1LPT.snap_055.parameter",
+   >>>     name_config={"ahf_prefix": "AHF.B25_N256_CDM_1LPT",
+   >>>                  "mtree_prefix": "MTREE.B25_N256_CDM_1LPT.z39_adapt",
+   >>>                  "mtree_suffix": ".AHF_croco"})
+
+Valid entries for the `name_config` dictionary are "ahf\_prefix",
+"mtree\_prefix", and "mtree\_suffix". When using AHF to create merger
+trees, it is advisable to use settings that result in file layouts
+like those described here.
 
 .. note:: Four important notes about loading AHF data:
 
@@ -56,7 +123,7 @@ newer format.
              calculated instead of the tree. However, even in this case,
              only the tree is preserved in ``ytree``. See the `Amiga Halo
              Finder Documentation
-             <http://popia.ft.uam.es/AHF/Documentation.html>`_
+             <http://popia.ft.uam.es/AHF/files/AHF.pdf>`_
              for a discussion of the difference between graphs and trees.
 
 .. _load-ctrees:

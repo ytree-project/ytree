@@ -197,13 +197,13 @@ jobs:
 
       - restore_cache:
           name: "Restore test data cache."
-          key: test-data-abernathy
+          key: test-data-abrego
 
       - download-test-data
 
       - save_cache:
           name: "Save test data cache."
-          key: test-data-abernathy
+          key: test-data-abrego
           paths:
             - ~/ytree_test
 
