@@ -44,6 +44,7 @@ class CSVArbor(CatalogArbor):
     _default_dtype = np.float32
     _node_con_attrs = ()
     _node_io_attrs = ()
+    _ancestors = None
 
     def __init__(self, filename, sep=","):
         self.sep = sep
@@ -156,6 +157,10 @@ class CSVArbor(CatalogArbor):
         Resolve the dictionary of desc_uids into trees.
         """
 
+        # If we have already done this, get out of here.
+        if self._ancestors is not None:
+            return
+
         if self.size < 1:
             return
 
@@ -171,14 +176,32 @@ class CSVArbor(CatalogArbor):
             my_node._offset = offsets[uid]
             my_node.data_file = self.data_files[0]
             ancestors[desc_uid].append(my_node)
-            pbar.update(i)
+            pbar.update(i+1)
         pbar.finish()
 
         self._ancestors = ancestors
         del self._desc_uids, self._offsets
 
+    def _grow_tree(self, tree_node):
+        """
+        We don't actually attach the tree's _ancestors during planting,
+        so do it here.
+        """
+
+        self._get_ancestors(tree_node)
+
     def _get_ancestors(self, tree_node):
-        tree_node._ancestors = self._ancestors.pop(tree_node.uid, [])
+        """
+        Get this tree's ancestors from the main ancestor dictionary.
+
+        This arbor stores every tree's ancestors in a dictionary.
+        When we finally need it, grab it from the arbor and attach
+        it to the tree.
+        """
+
+        self._build_trees()
+        if tree_node._ancestors is None:
+            tree_node._ancestors = self._ancestors.pop(tree_node.uid, [])
         for node in tree_node._ancestors:
             node._descendent = tree_node
             self._get_ancestors(node)
@@ -187,7 +210,6 @@ class CSVArbor(CatalogArbor):
         if self.is_setup(tree_node):
             return
 
-        self._build_trees()
         self._get_ancestors(tree_node)
         super()._setup_tree(tree_node)
 

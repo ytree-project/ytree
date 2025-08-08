@@ -26,6 +26,10 @@ class CSVDataFile(CatalogDataFile):
         if not rfields:
             return {}
 
+        # We want to support nodes with missing descendents,
+        # but this requires we manually reset their desc_uid to -1.
+        reset_desc_uid = "desc_uid" in rfields
+
         fi = self.arbor.field_info
         nt = len(tree_nodes)
         field_data = \
@@ -40,6 +44,9 @@ class CSVDataFile(CatalogDataFile):
             sline = line.split(sep)
             for field in rfields:
                 field_data[field][i] = sline[fi[field]["column"]]
+
+            if reset_desc_uid and tree_node.is_root:
+                field_data["desc_uid"][i] = -1
         self.close()
 
         return field_data

@@ -168,6 +168,7 @@ class ArborTest:
     arbor_type = None
     test_filename = None
     load_kwargs = None
+    load_callback = None
     groups = ("tree", "prog")
     num_data_files = None
     tree_skip = 1
@@ -185,6 +186,8 @@ class ArborTest:
                 self.load_kwargs = {}
 
             self._arbor = load(self.test_filename, **self.load_kwargs)
+            if self.load_callback is not None:
+                self.load_callback(self._arbor)
         return self._arbor
 
     def test_arbor_type(self):
@@ -491,7 +494,10 @@ def verify_get_root_nodes(my_tree):
 
     root_nodes1 = list(my_tree.get_root_nodes())
     for root_node in root_nodes1:
-        assert_equal(root_node["desc_uid"], -1)
+        assert_equal(
+            root_node["desc_uid"], -1,
+            err_msg=f"In {my_tree.arbor}: {root_node} has " + \
+                    f"desc_uid={root_node['desc_uid']}, but expected -1.")
 
     root_nodes2 = [node for node in my_tree["forest"]
                     if node.descendent is None]
