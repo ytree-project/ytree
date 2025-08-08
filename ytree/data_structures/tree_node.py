@@ -408,7 +408,7 @@ class TreeNode:
 
         uids = self[selector, "uid"]
         desc_uids = self[selector, "desc_uid"]
-        lids = np.where(~np.in1d(uids, desc_uids))[0]
+        lids = np.where(~np.isin(uids, desc_uids))[0]
         for lid in lids:
             yield self.get_node(selector, lid)
 
