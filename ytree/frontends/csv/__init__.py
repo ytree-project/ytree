@@ -1,5 +1,5 @@
 """
-column frontend
+csv frontend
 
 
 
@@ -13,5 +13,5 @@ column frontend
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
-from ytree.frontends.column.arbor import \
-    ColumnArbor
+from ytree.frontends.csv.arbor import \
+    CSVArbor

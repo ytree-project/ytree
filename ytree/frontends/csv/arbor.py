@@ -1,5 +1,5 @@
 """
-ColumnArbor class and member functions
+CSVArbor class and member functions
 
 
 
@@ -22,16 +22,24 @@ from yt.funcs import get_pbar
 from ytree.data_structures.arbor import CatalogArbor
 from ytree.data_structures.tree_node import TreeNode
 
-from ytree.frontends.column.io import ColumnDataFile
+from ytree.frontends.csv.io import CSVDataFile
 
 from ytree.utilities.io import f_text_block
 
-class ColumnArbor(CatalogArbor):
+from numpy.dtypes import StringDType
+
+field_data_types = {
+    "FLOAT": float,
+    "INT": int,
+    "STR": StringDType,
+}
+
+class CSVArbor(CatalogArbor):
     """
     Arbors loaded from consistent-trees tree_*.dat files.
     """
 
-    _data_file_class = ColumnDataFile
+    _data_file_class = CSVDataFile
     _has_uids = True
     _default_dtype = np.float32
     _node_con_attrs = ()
@@ -42,7 +50,7 @@ class ColumnArbor(CatalogArbor):
         super().__init__(filename)
 
     def _get_data_files(self):
-        self.data_files = [ColumnDataFile(self.filename, self)]
+        self.data_files = [CSVDataFile(self.filename, self)]
 
     def _parse_parameter_file(self, filename=None):
         if filename is None:
@@ -51,18 +59,20 @@ class ColumnArbor(CatalogArbor):
         with open(filename, mode="r") as f:
             ldata = []
             for i in range(3):
-                line = f.readline().strip()
-                # remove comment characters
-                ldata.append(re.search(r"^#+\s*(\S.*)$", line).groups()[0])
+                ldata.append(f.readline().strip()[1:].split(self.sep))
             self._hoffset = f.tell()
 
-        fields = [_.strip() for _ in ldata[0].split(self.sep)]
-        dtypes = [_.strip() for _ in ldata[1].split(self.sep)]
-        units  = [_.strip() for _ in ldata[2].split(self.sep)]
+        lens = [len(l) for l in ldata]
+        if min(lens) != max(lens):
+            raise RuntimeError(
+                "Header lines must have same number of values.")
+
+        fields, dtypes, units = ldata
         fi = {}
         for i, (field, dtype, unit) in enumerate(zip(fields, dtypes, units)):
             my_unit = None if unit == "None" else unit
-            fi[field] = {"column": i, "units": my_unit, "dtype": eval(dtype)}
+            fi[field] = {"column": i, "units": my_unit,
+                         "dtype": field_data_types[dtype]}
 
         try:
             fi["uid"]["dtype"] = np.int64
@@ -184,20 +194,20 @@ class ColumnArbor(CatalogArbor):
     @classmethod
     def _is_valid(self, *args, **kwargs):
         """
-        File should end in .col and start with three lines of the
-        following format:
-        # <fieldname><sep><fieldname><sep><fieldname>...
-        # <type><sep><type><sep><type>
-        # <units><sep><units><sep><units>
+        File should end in .csv and start with three lines of the
+        following format.
+        #<fieldname>,<fieldname>,<fieldname>
+        #<type>,<type>,<type>
+        #<units>,<units>,<units>
 
-        For example, if sep=",":
-        # uid, desc_uid, mass, redshift
-        # int, int, float, float
-        # "", "", "Msun", ""
+        For example:
+        #uid,desc_uid,mass,redshift
+        #int,int,float,float
+        #None,None,"Msun",None
         """
         fn = args[0]
         sep = kwargs.get("sep", ",")
-        if not fn.endswith(".col"):
+        if not fn.endswith(".csv"):
             return False
         with open(fn, "r") as f:
             for i in range(3):

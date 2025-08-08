@@ -1,5 +1,5 @@
 """
-ColumnArbor io classes and member functions
+CSVArbor io classes and member functions
 
 
 
@@ -15,7 +15,7 @@ ColumnArbor io classes and member functions
 
 from ytree.data_structures.io import CatalogDataFile
 
-class ColumnDataFile(CatalogDataFile):
+class CSVDataFile(CatalogDataFile):
     def open(self):
         self.fh = open(self.filename, mode="r")
 
@@ -39,8 +39,7 @@ class ColumnDataFile(CatalogDataFile):
             line = f.readline()
             sline = line.split(sep)
             for field in rfields:
-                dtype = dtypes[field]
-                field_data[field][i] = dtype(sline[fi[field]["column"]])
+                field_data[field][i] = sline[fi[field]["column"]]
         self.close()
 
         return field_data
