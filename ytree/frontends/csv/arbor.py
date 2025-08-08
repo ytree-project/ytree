@@ -122,7 +122,7 @@ class CSVArbor(CatalogArbor):
         uids = np.array(list(desc_uids.keys()) + roots)
         nr_desc_uids = np.array(list(desc_uids.values()))
         # look for any nodes with missing descendents
-        missing = np.in1d(nr_desc_uids, uids, invert=True)
+        missing = np.isin(nr_desc_uids, uids, invert=True)
         # need to address only up to n_nonroots since
         # uids has everything and desc_uids has only nonroots
         missing_uids = uids[:n_nonroots][missing]
