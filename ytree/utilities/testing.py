@@ -281,7 +281,7 @@ class ArborTest:
     def test_save_and_reload(self):
         skip = self.tree_skip
         if skip > 1:
-            trees = list(arbor[::skip])
+            trees = list(self.arbor[::skip])
         else:
             trees = None
 

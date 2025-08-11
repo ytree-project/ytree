@@ -15,7 +15,6 @@ CSVArbor class and member functions
 
 from collections import defaultdict
 import numpy as np
-import re
 
 from yt.funcs import get_pbar
 
@@ -63,7 +62,7 @@ class CSVArbor(CatalogArbor):
                 ldata.append(f.readline().strip()[1:].split(self.sep))
             self._hoffset = f.tell()
 
-        lens = [len(l) for l in ldata]
+        lens = [len(_) for _ in ldata]
         if min(lens) != max(lens):
             raise RuntimeError(
                 "Header lines must have same number of values.")
