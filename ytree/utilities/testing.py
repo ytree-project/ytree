@@ -349,11 +349,17 @@ def get_random_trees(arbor, seed, n):
 
 def get_stringsafe_compare_arrays(arr1, arr2):
     """
-    Check for string type and convert both to that.
+    Convert to stringy arrays to a common type for comparison.
     """
 
     if StringDType() in (arr1.dtype, arr2.dtype):
+        # Python 3.9 and earlier require this. Otherwise, you end up
+        # with  "b'Alexander'" instead of 'Alexander'.
+        if arr1.dtype != StringDType():
+            arr1 = arr1.astype(str)
         arr1 = arr1.astype(StringDType())
+        if arr2.dtype != StringDType():
+            arr2 = arr2.astype(str)
         arr2 = arr2.astype(StringDType())
 
     return arr1, arr2
