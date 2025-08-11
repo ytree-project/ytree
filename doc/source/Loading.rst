@@ -272,6 +272,55 @@ trees you want to a new dataset using the
 :func:`~ytree.data_structures.arbor.Arbor.save_arbor` function.
 See :ref:`saving-trees` for more information.
 
+.. _load-csv:
+
+Generic CSV Data
+----------------
+
+``ytree`` can load tree data from a `CSV
+<https://en.wikipedia.org/wiki/Comma-separated_values>`__ file
+provided that the file defines two fields:
+
+#. "uid" - a universal ID of an item
+#. "desc_uid" - the uid of the item's direct descendent
+
+The CSV file must have a specific format in which the first three
+lines start with the "#" character and define the field names, data
+types, and units. As in standard CSV behavior, spaces are interpreted
+literally in the case of non-numeric data (i.e., a line with "...,
+something,..." will result in a value of " something" and not "something").
+
+.. code-block:: bash
+
+   #uid,desc_uid,name,time,charisma
+   #INT,INT,STR,FLOAT,FLOAT
+   #None,None,None,yr,G
+   1,4,Jen-Luc,2305,144.70137425
+   2,4,William,2335,98.73156766
+   3,4,Beverly,2324,127.979825
+   4,6,Deanna,2336,131.83806431
+   5,6,Thomas,2335,172.14870662
+   6,-1,Tasha,2337,80.64762619
+   7,9,Lwaxana,2305,120.59923579
+
+The supported data types are:
+
+* FLOAT: float
+* INT: integer
+* STR: string
+
+All `units supported by the unyt package
+<https://unyt.readthedocs.io/en/stable/unit_listing.html>`__
+are valid. The word "None" can be used to denote unitless
+fields. *String fields must be unitless.* Also note, if the data does
+not include a "mass" field, another field must be specified for
+progenitor identification (see :ref:`custom-progenitor`).
+
+.. code-block:: python
+
+   >>> a = ytree.load("csv/trees.csv")
+   >>> a.set_selector("max_field_value", "charisma")
+
 .. _load-lhalotree:
 
 LHaloTree
