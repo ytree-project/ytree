@@ -11,4 +11,8 @@ be posted to the `yt users mailing list
 Bugs and feature requests can also be posted on the `ytree issues
 page <https://github.com/ytree-project/ytree/issues>`__.
 
+Please note, issues or queries posted during the academic year
+(roughly September to June) may take quite a bit longer to see a
+response. Hang in there; we do care!
+
 See you out there!
