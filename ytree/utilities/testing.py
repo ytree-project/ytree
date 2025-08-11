@@ -30,6 +30,8 @@ from unittest import \
 from yt.funcs import \
     get_pbar
 
+from numpy.dtypes import StringDType
+
 from ytree.data_structures.load import load
 from ytree.frontends.ytree import YTreeArbor
 from ytree.utilities.io import dirname
@@ -168,6 +170,7 @@ class ArborTest:
     arbor_type = None
     test_filename = None
     load_kwargs = None
+    load_callback = None
     groups = ("tree", "prog")
     num_data_files = None
     tree_skip = 1
@@ -185,6 +188,8 @@ class ArborTest:
                 self.load_kwargs = {}
 
             self._arbor = load(self.test_filename, **self.load_kwargs)
+            if self.load_callback is not None:
+                self.load_callback(self._arbor)
         return self._arbor
 
     def test_arbor_type(self):
@@ -275,7 +280,20 @@ class ArborTest:
                 err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.")
 
     def test_save_and_reload(self):
-        save_and_compare(self.arbor, groups=self.groups, skip=self.tree_skip)
+        skip = self.tree_skip
+        if skip > 1:
+            trees = list(self.arbor[::skip])
+        else:
+            trees = None
+
+        fn = self.arbor.save_arbor(trees=trees)
+
+        save_arbor = load(fn)
+        if self.load_callback is not None:
+            self.load_callback(save_arbor)
+
+        assert isinstance(save_arbor, YTreeArbor)
+        compare_arbors(save_arbor, self.arbor, groups=self.groups, skip2=skip)
 
     def test_vector_fields(self):
         a = self.arbor
@@ -330,20 +348,22 @@ def get_random_trees(arbor, seed, n):
     for itree in itrees[:5]:
         yield arbor[itree]
 
-def save_and_compare(arbor, skip=1, groups=None):
+def get_stringsafe_compare_arrays(arr1, arr2):
     """
-    Check that arbor saves correctly.
+    Convert to stringy arrays to a common type for comparison.
     """
 
-    if skip > 1:
-        trees = list(arbor[::skip])
-    else:
-        trees = None
+    if StringDType() in (arr1.dtype, arr2.dtype):
+        # Python 3.9 and earlier require this. Otherwise, you end up
+        # with  "b'Alexander'" instead of 'Alexander'.
+        if arr1.dtype != StringDType():
+            arr1 = arr1.astype(str)
+        arr1 = arr1.astype(StringDType())
+        if arr2.dtype != StringDType():
+            arr2 = arr2.astype(str)
+        arr2 = arr2.astype(StringDType())
 
-    fn = arbor.save_arbor(trees=trees)
-    save_arbor = load(fn)
-    assert isinstance(save_arbor, YTreeArbor)
-    compare_arbors(save_arbor, arbor, groups=groups, skip2=skip)
+    return arr1, arr2
 
 def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
     """
@@ -357,8 +377,10 @@ def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
         fields = a1.field_list
 
     for i, field in enumerate(fields):
+        c1, c2 = get_stringsafe_compare_arrays(
+            a1[field][::skip1], a2[field][::skip2])
         mylog.info(f"Comparing arbor field: {field} ({i+1}/{len(fields)}).")
-        assert_array_equal(a1[field][::skip1], a2[field][::skip2],
+        assert_array_equal(c1, c2,
                            err_msg=f"Arbor field mismatch: {a1, a2, field}.")
 
     trees1 = list(a1[::skip1])
@@ -384,8 +406,10 @@ def compare_trees(t1, t2, groups=None, fields=None):
 
     for field in fields:
         for group in groups:
+            c1, c2 = get_stringsafe_compare_arrays(
+                t1[group, field], t2[group, field])
             assert_array_equal(
-                t1[group, field], t2[group, field],
+                c1, c2,
                 err_msg=f"Tree comparison failed for {group} field: {field}.")
     t1.arbor.reset_node(t1)
     t2.arbor.reset_node(t2)
@@ -493,7 +517,10 @@ def verify_get_root_nodes(my_tree):
 
     root_nodes1 = list(my_tree.get_root_nodes())
     for root_node in root_nodes1:
-        assert_equal(root_node["desc_uid"], -1)
+        assert_equal(
+            root_node["desc_uid"], -1,
+            err_msg=f"In {my_tree.arbor}: {root_node} has " + \
+                    f"desc_uid={root_node['desc_uid']}, but expected -1.")
 
     root_nodes2 = [node for node in my_tree["forest"]
                     if node.descendent is None]

@@ -360,6 +360,8 @@ Progenitor lists and fields can be accessed for any halo in the tree.
    >>> print (my_halo["prog", "virial_radius"])
    [1404.1354 1381.4087 1392.2404 1363.2145 1310.3842 1258.0159] kpc
 
+.. _custom-progenitor:
+
 Customizing the Progenitor Line
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

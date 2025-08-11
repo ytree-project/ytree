@@ -13,6 +13,7 @@ in merger tree from the following formats:
 - :ref:`load-ctrees`
 - :ref:`load-ctrees-hdf5`
 - :ref:`load-gadget4`
+- :ref:`load-csv`
 - :ref:`load-lhalotree`
 - :ref:`load-lhalotree-hdf5`
 - :ref:`load-moria`

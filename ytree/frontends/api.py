@@ -17,6 +17,7 @@ import importlib
 
 _frontends = [
     "ahf",
+    "csv",
     "consistent_trees",
     "consistent_trees_hdf5",
     "gadget4",
