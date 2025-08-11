@@ -21,6 +21,9 @@ used to save the entire arbor or individual trees.
    ~ytree.data_structures.arbor.Arbor.add_analysis_field
    ~ytree.data_structures.arbor.Arbor.add_derived_field
    ~ytree.data_structures.arbor.Arbor.add_vector_field
+   ~ytree.data_structures.arbor.Arbor.arr
+   ~ytree.data_structures.arbor.Arbor.cosmology
+   ~ytree.data_structures.arbor.Arbor.quan
    ~ytree.data_structures.arbor.Arbor.save_arbor
    ~ytree.data_structures.arbor.Arbor.select_halos
    ~ytree.data_structures.arbor.Arbor.set_selector

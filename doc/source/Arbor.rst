@@ -55,6 +55,51 @@ Similar to `yt <http://yt-project.org/docs/dev/analyzing/fields.html>`__,
 ``ytree`` supports accessing fields by their native names as well as generalized
 aliases. For more information on fields in ``ytree``, see :ref:`fields`.
 
+Useful Arbor Attributes
+^^^^^^^^^^^^^^^^^^^^^^^
+
+A loaded arbor will have several helpful attributes.
+
+Creating Arrays and Quantities with Units
+"""""""""""""""""""""""""""""""""""""""""
+
+Support for unitful arrays and quantities is provided by the `unyt
+<https://unyt.readthedocs.io/en/stable/>`__ package. Arrays and
+quantities with symbolic units can be created directly with
+``unyt``. However, if done this way, they will not have access to any
+custom unit systems defined by a dataset. The
+:func:`~ytree.data_structures.arbor.Arbor.arr` and
+:func:`~ytree.data_structures.arbor.Arbor.quan` attributes allow one to
+create arrays and scalar quantities using the loaded arbor's unit
+system.
+
+.. code-block:: python
+
+   >>> my_array = a.arr([1, 2, 3], "Msun")
+   >>> my_quantity = a.quan(106, "km")
+
+Cosmology Calculations
+""""""""""""""""""""""
+
+If the dataset defines the cosmological parameters, `omega_matter`,
+`omega_lambda`, and `hubble_constant`, a
+:ref:`yt:cosmology-calculator` instance can be accessed via the
+:class:`~ytree.data_structures.arbor.Arbor.cosmology` attribute. This
+:class:`~yt.utilities.cosmology.Cosmology` instance will be configured
+with the previously mentioned cosmology parameters from the arbor as
+well as the arbor's internal unit system. If the necessary parameters
+are not defined within the dataset, the cosmology attribute will be
+unavailable.
+
+.. code-block:: python
+
+   >>> print (a.omega_matter, a.omega_lambda, a.hubble_constant)
+   0.285 0.715 0.695
+   >>> print (a.cosmology.comoving_radial_distance(0, 3).to("Mpc/h"))
+   4516.094598250588 Mpc/h
+   >>> print (a.cosmology.critical_density(0).to("Msun/Mpc**3"))
+   134065965531.17598 Msun/Mpc**3
+
 How many trees are there?
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -569,7 +614,7 @@ criteria, i.e., the criteria are combined with an AND operator.
    ...     above=[("redshift", 1)])
 
 For more complex search criteria, a cut region conditional string can be
-provided instead. These should be of the form described in :ref:`cut-regions`.
+provided instead. These should be of the form described in :ref:`yt:cut-regions`.
 These cannot not be given with any of the previously mentioned keywords.
 
 .. code-block:: python
@@ -631,7 +676,7 @@ to the data as a `yt <https://yt-project.org/>`__ dataset. This allows one to
 analyze the entire dataset using the full range of functionality provided by
 ``yt``. In this way, a merger tree dataset is very much like any particle dataset,
 where each particle represent a halo at a single time. For example, this makes it
-possible to select halos within :ref:`geometric data containers <data-objects>`,
+possible to select halos within :ref:`geometric data containers <yt:data-objects>`,
 like spheres or regions.
 
 .. code-block:: python

@@ -12,7 +12,7 @@ can be used to parallelize analysis across multiple nodes of a
 distributed computing system.
 
 .. note:: Before reading this section, consult the
-   :ref:`parallel-computation` section of the ``yt`` documentation to
+   :ref:`yt:parallel-computation` section of the ``yt`` documentation to
    learn how to configure ``yt`` for running in parallel.
 
 Enabling Parallelism and Running in Parallel
