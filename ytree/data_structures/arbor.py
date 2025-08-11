@@ -791,14 +791,14 @@ class Arbor(metaclass=RegisteredArbor):
 
         if select_from is not None:
             import warnings
-            from numpy import VisibleDeprecationWarning
+            from numpy.exceptions import VisibleDeprecationWarning
             warnings.warn(
                 "The \"select_from\" keyword is deprecated and no longer does anything.",
                 VisibleDeprecationWarning, stacklevel=2)
 
         if fields is not None:
             import warnings
-            from numpy import VisibleDeprecationWarning
+            from numpy.exceptions import VisibleDeprecationWarning
             warnings.warn(
                 "The \"fields\" keyword is deprecated and no longer does anything.",
                 VisibleDeprecationWarning, stacklevel=2)

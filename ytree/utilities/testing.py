@@ -218,7 +218,8 @@ class ArborTest:
             verify_get_node(my_tree)
 
             ihalos = np.arange(1, my_tree.tree_size)
-            np.random.shuffle(ihalos)
+            gen = np.random.default_rng(312)
+            gen.shuffle(ihalos)
             for ihalo in ihalos[:3]:
                 my_halo = my_tree.get_node("forest", ihalo)
                 verify_get_node(my_halo)
@@ -323,9 +324,9 @@ def get_random_trees(arbor, seed, n):
     Get n random trees from the arbor.
     """
 
-    np.random.seed(seed)
+    gen = np.random.default_rng(708)
     itrees = np.arange(arbor.size)
-    np.random.shuffle(itrees)
+    gen.shuffle(itrees)
     for itree in itrees[:5]:
         yield arbor[itree]
 
@@ -458,7 +459,8 @@ def verify_get_node(my_tree, n=3):
         node_list = list(my_tree[selector])
 
         inodes = np.arange(len(node_list))
-        np.random.shuffle(inodes)
+        gen = np.random.default_rng(847)
+        gen.shuffle(inodes)
 
         for inode in inodes[:3]:
             my_node = my_tree.get_node(selector, inode)
