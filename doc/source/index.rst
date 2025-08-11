@@ -1,13 +1,13 @@
 Welcome to ytree.
 =================
 
-``ytree`` is a tool for working with merger tree data from multiple
-sources. ``ytree`` is an extension of the `yt
+``ytree`` is a tool for working with tree data (especially merger
+trees) from multiple sources. ``ytree`` is an extension of the `yt
 <https://yt-project.org/>`_ analysis toolkit and provides a similar
-interface for merger tree data that includes universal field names,
-derived fields, symbolic units, parallel functionality, and a
-framework for performing complex analysis. ``ytree`` is able to load
-in merger tree from the following formats:
+interface for tree data that includes universal field names, derived
+fields, symbolic units, parallel functionality, and a framework for
+performing complex analysis. ``ytree`` is able to load in merger tree
+from the following formats:
 
 - :ref:`load-ahf`
 - :ref:`load-ctrees`

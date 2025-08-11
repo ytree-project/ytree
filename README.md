@@ -9,7 +9,11 @@
 [![yt-project](https://img.shields.io/static/v1?label="works%20with"&message="yt"&color="blueviolet")](https://yt-project.org)
 
 This is `ytree`, a [yt](https://github.com/yt-project/yt) extension for
-working with merger tree data.
+working with tree data and especially merger trees.
+
+Generally speaking, tree data defines a one-directional relationship
+between a series of objects. In trees, objects can have one or more
+ancestors, but only a single descendent.
 
 Structure formation in cosmology proceeds in a hierarchical fashion,
 where dark matter halos grow via mergers with other halos. This type
