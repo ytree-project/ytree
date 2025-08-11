@@ -30,6 +30,8 @@ from unittest import \
 from yt.funcs import \
     get_pbar
 
+from numpy.dtypes import StringDType
+
 from ytree.data_structures.load import load
 from ytree.frontends.ytree import YTreeArbor
 from ytree.utilities.io import dirname
@@ -277,7 +279,20 @@ class ArborTest:
                 err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.")
 
     def test_save_and_reload(self):
-        save_and_compare(self.arbor, groups=self.groups, skip=self.tree_skip)
+        skip = self.tree_skip
+        if skip > 1:
+            trees = list(arbor[::skip])
+        else:
+            trees = None
+
+        fn = self.arbor.save_arbor(trees=trees)
+
+        save_arbor = load(fn)
+        if self.load_callback is not None:
+            self.load_callback(save_arbor)
+
+        assert isinstance(save_arbor, YTreeArbor)
+        compare_arbors(save_arbor, self.arbor, groups=self.groups, skip2=skip)
 
     def test_vector_fields(self):
         a = self.arbor
@@ -332,20 +347,16 @@ def get_random_trees(arbor, seed, n):
     for itree in itrees[:5]:
         yield arbor[itree]
 
-def save_and_compare(arbor, skip=1, groups=None):
+def get_stringsafe_compare_arrays(arr1, arr2):
     """
-    Check that arbor saves correctly.
+    Check for string type and convert both to that.
     """
 
-    if skip > 1:
-        trees = list(arbor[::skip])
-    else:
-        trees = None
+    if StringDType() in (arr1.dtype, arr2.dtype):
+        arr1 = arr1.astype(StringDType())
+        arr2 = arr2.astype(StringDType())
 
-    fn = arbor.save_arbor(trees=trees)
-    save_arbor = load(fn)
-    assert isinstance(save_arbor, YTreeArbor)
-    compare_arbors(save_arbor, arbor, groups=groups, skip2=skip)
+    return arr1, arr2
 
 def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
     """
@@ -359,8 +370,10 @@ def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
         fields = a1.field_list
 
     for i, field in enumerate(fields):
+        c1, c2 = get_stringsafe_compare_arrays(
+            a1[field][::skip1], a2[field][::skip2])
         mylog.info(f"Comparing arbor field: {field} ({i+1}/{len(fields)}).")
-        assert_array_equal(a1[field][::skip1], a2[field][::skip2],
+        assert_array_equal(c1, c2,
                            err_msg=f"Arbor field mismatch: {a1, a2, field}.")
 
     trees1 = list(a1[::skip1])
@@ -386,8 +399,10 @@ def compare_trees(t1, t2, groups=None, fields=None):
 
     for field in fields:
         for group in groups:
+            c1, c2 = get_stringsafe_compare_arrays(
+                t1[group, field], t2[group, field])
             assert_array_equal(
-                t1[group, field], t2[group, field],
+                c1, c2,
                 err_msg=f"Tree comparison failed for {group} field: {field}.")
     t1.arbor.reset_node(t1)
     t2.arbor.reset_node(t2)
