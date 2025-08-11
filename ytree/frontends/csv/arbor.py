@@ -31,7 +31,7 @@ from numpy.dtypes import StringDType
 field_data_types = {
     "FLOAT": float,
     "INT": int,
-    "STR": StringDType,
+    "STR": StringDType(),
 }
 
 class CSVArbor(CatalogArbor):
@@ -71,7 +71,7 @@ class CSVArbor(CatalogArbor):
         fields, dtypes, units = ldata
         fi = {}
         for i, (field, dtype, unit) in enumerate(zip(fields, dtypes, units)):
-            my_unit = None if unit == "None" else unit
+            my_unit = "" if unit == "None" else unit
             fi[field] = {"column": i, "units": my_unit,
                          "dtype": field_data_types[dtype]}
 
