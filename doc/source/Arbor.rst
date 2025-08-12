@@ -585,7 +585,9 @@ over.
    >>> for node in leaf_container:
    ...     print (node)
 
-The collection of nodes can be saved to a new arbor.
+The collection of nodes can be saved to a new arbor. The new arbor
+will include all nodes belonging to the tree for which the nodes in
+the container are the roots.
 
 .. code-block:: python
 
