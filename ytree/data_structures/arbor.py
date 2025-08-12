@@ -164,18 +164,29 @@ class Arbor(metaclass=RegisteredArbor):
                 new_unit, self.unit_registry.lut[my_unit][0],
                 length, self.unit_registry.lut[my_unit][3])
 
-        setup = True
+    @functools.cached_property
+    def cosmology(self):
+        """
+        Cosmology calculator with self-consistent parameters and units.
+
+        See :ref:`yt:cosmology-calculator` for more information.
+        """
+
+        missing = []
         for attr in ["hubble_constant",
                      "omega_matter",
                      "omega_lambda"]:
             if getattr(self, attr) is None:
-                setup = False
-                ytreeLogger.warning(
-                    f"{attr} missing from data. "
-                    "Arbor will have no cosmology calculator.")
+                missing.append(attr)
 
-        if setup:
-            self.cosmology = Cosmology(
+        if missing:
+            ytreeLogger.warning(
+                "Cannot create cosmology calculator without missing attributes: " +
+                str(missing))
+            return None
+
+        else:
+            return Cosmology(
                 hubble_constant=self.hubble_constant,
                 omega_matter=self.omega_matter,
                 omega_lambda=self.omega_lambda,
@@ -727,7 +738,27 @@ class Arbor(metaclass=RegisteredArbor):
     @property
     def arr(self):
         """
-        Create a unyt_array using the Arbor's unit registry.
+        Create a unyt_array using the Arbor's unit system.
+
+        Parameters
+        ----------
+
+        input_array : Iterable
+            A tuple, list, or array to attach units to
+        units: String unit specification, unit symbol or astropy object
+            The units of the array. Powers must be specified using python syntax
+            (cm**3, not cm^3).
+        dtype : string or NumPy dtype object
+            The dtype of the returned array data
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("consistent_trees/tree_0_0_0.dat")
+        >>> a.arr([1,2,3], "kg")
+        unyt_array([1, 2, 3], 'kg')
+
         """
         if self._arr is not None:
             return self._arr
@@ -739,7 +770,27 @@ class Arbor(metaclass=RegisteredArbor):
     @property
     def quan(self):
         """
-        Create a unyt_quantity using the Arbor's unit registry.
+        Create a unyt_quantity using the Arbor's unit system.
+
+        Parameters
+        ----------
+
+        input_array : Iterable
+            A tuple, list, or array to attach units to
+        units: String unit specification, unit symbol or astropy object
+            The units of the array. Powers must be specified using python syntax
+            (cm**3, not cm^3).
+        dtype : string or NumPy dtype object
+            The dtype of the returned array data
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("consistent_trees/tree_0_0_0.dat")
+        >>> a.quan(34, "cm")
+        unyt_quantity(34, 'cm')
+
         """
         if self._quan is not None:
             return self._quan
