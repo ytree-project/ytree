@@ -46,7 +46,7 @@ from ytree.data_structures.node_link import \
     NodeLink
 from ytree.data_structures.save_arbor import \
     save_arbor
-from ytree.data_structures.tree_container import TreeContainer
+from ytree.data_structures.tree_container import NodeContainer
 from ytree.data_structures.tree_node import \
     TreeNode
 from ytree.data_structures.tree_node_selector import \
@@ -798,12 +798,11 @@ class Arbor(metaclass=RegisteredArbor):
                                        registry=self.unit_registry)
         return self._quan
 
-    _container = None
-    @property
+    @functools.cached_property
     def container(self):
-        if self._container is None:
-            self._container = functools.partial(TreeContainer, self)
-        return self._container
+        nc = functools.partial(NodeContainer, arbor=self)
+        nc.__doc__ = NodeContainer.__doc__
+        return nc
 
     def select_halos(self, criteria, trees=None,
                      select_from=None, fields=None):
