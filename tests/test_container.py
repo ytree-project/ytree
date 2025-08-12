@@ -31,15 +31,15 @@ def test_containers():
     container = a.container([first, last])
     masses = a.arr([node["mass"] for node in [first, last]])
     assert_array_equal(container["mass"], masses)
-    assert(container.size == 2)
-    assert(container.size == len(container))
+    assert container.size == 2
+    assert container.size == len(container)
 
     my_tree = a[0]
     leaves = my_tree.get_leaf_nodes()
     leaf_container = a.container(leaves)
     for i, leaf in enumerate(leaf_container):
-        assert(leaf["mass"] == leaf_container["mass"][i])
+        assert leaf["mass"] == leaf_container["mass"][i]
 
     a_slice = a.container(a[::8])
-    assert(int(np.ceil(a.size / 8)) == a_slice.size)
+    assert int(np.ceil(a.size / 8)) == a_slice.size
     assert_array_equal(a_slice["mass"], a["mass"][::8])
