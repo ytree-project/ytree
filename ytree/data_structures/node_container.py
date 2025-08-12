@@ -41,7 +41,7 @@ class NodeContainer:
 
     >>> import ytree
     >>> a = ytree.load("tiny_ctrees/locations.dat")
-    >>> a_slice = a.container(a[::4])
+    >>> a_slice = a.container(a[::8])
     >>> print (a.size, a_slice.size)
     32 4
     >>> print (a_slice["mass"])

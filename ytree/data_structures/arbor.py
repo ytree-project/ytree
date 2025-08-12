@@ -46,7 +46,7 @@ from ytree.data_structures.node_link import \
     NodeLink
 from ytree.data_structures.save_arbor import \
     save_arbor
-from ytree.data_structures.tree_container import NodeContainer
+from ytree.data_structures.node_container import NodeContainer
 from ytree.data_structures.tree_node import \
     TreeNode
 from ytree.data_structures.tree_node_selector import \
@@ -800,6 +800,13 @@ class Arbor(metaclass=RegisteredArbor):
 
     @functools.cached_property
     def container(self):
+        """
+        Helper function for creating
+        :class:`~ytree.data_structures.node_container.NodeContainer` objects.
+
+        See :class:`~ytree.data_structures.node_container.NodeContainer` for more
+        information.
+        """
         nc = functools.partial(NodeContainer, arbor=self)
         nc.__doc__ = NodeContainer.__doc__
         return nc
