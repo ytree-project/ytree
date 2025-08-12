@@ -335,6 +335,8 @@ only the ones listed below contain forests with multiple distinct trees.
      - yes
    * - :ref:`load-gadget4`
      - yes
+   * - :ref:`load-csv`
+     - no
    * - :ref:`load-lhalotree`
      - yes
    * - :ref:`load-lhalotree-hdf5`
