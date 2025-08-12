@@ -20,7 +20,9 @@ from numpy.testing import \
     assert_almost_equal, \
     assert_array_equal
 import os
+import pytest
 import shutil
+import subprocess
 import sys
 import tempfile
 from unittest import \
@@ -28,14 +30,13 @@ from unittest import \
 from yt.funcs import \
     get_pbar
 
-from ytree.data_structures.load import \
-    load
-from ytree.frontends.ytree import \
-    YTreeArbor
-from ytree.utilities.loading import \
-    get_path
-from ytree.utilities.logger import \
-    ytreeLogger as mylog
+from numpy.dtypes import StringDType
+
+from ytree.data_structures.load import load
+from ytree.frontends.ytree import YTreeArbor
+from ytree.utilities.io import dirname
+from ytree.utilities.loading import check_path, get_path
+from ytree.utilities.logger import ytreeLogger as mylog
 
 try:
     from mpi4py import MPI
@@ -77,6 +78,10 @@ class TempDirTest(TestCase):
         shutil.rmtree(self.tmpdir)
 
 class ParallelTest:
+    """
+    Test class for ytree parallelism.
+    """
+
     base_filename = "tiny_ctrees/locations.dat"
     test_filename = "test_arbor/test_arbor.h5"
     test_script = None
@@ -89,6 +94,7 @@ class ParallelTest:
             assert_array_equal(tree[group, "test_field"], 2 * tree[group, "mass"])
 
     @skipIf(MPI is None, "mpi4py not installed")
+    @pytest.mark.parallel
     def test_parallel(self):
 
         for i, my_args in enumerate(self.arg_sets):
@@ -102,6 +108,60 @@ class ParallelTest:
                 test_arbor = load(self.test_filename)
                 self.check_values(test_arbor, my_args)
 
+def run_command(command, timeout=None):
+    try:
+        proc = subprocess.run(command, shell=True, timeout=timeout)
+        if proc.returncode == 0:
+            success = True
+        else:
+            success = False
+    except subprocess.TimeoutExpired:
+        print ("Process reached timeout of %d s. (%s)" % (timeout, command))
+        success = False
+    except KeyboardInterrupt:
+        print ("Killed by keyboard interrupt!")
+        success = False
+    return success
+
+class ExampleScriptTest:
+    """
+    Tests for the code examples.
+    """
+
+    script_filename = None
+    input_filename = None
+    timeout = 60
+    output_files = ()
+    ncores = 1
+
+    @pytest.mark.parallel
+    def test_example(self):
+        if self.script_filename is None:
+            return
+
+        if self.input_filename is not None:
+            try:
+                check_path(self.input_filename)
+            except IOError:
+                self.skipTest("test file missing")
+
+        source_dir = dirname(__file__, level=3)
+        script_path = os.path.join(
+            source_dir, "doc", "source", "examples", self.script_filename)
+
+        if self.ncores > 1:
+            if MPI is None:
+                self.skipTest("mpi4py not installed")
+            comm = MPI.COMM_SELF.Spawn(sys.executable, args=[script_path],
+                                       maxprocs=self.ncores)
+            comm.Disconnect()
+        else:
+            command = f"{sys.executable} {script_path}"
+            assert run_command(command, timeout=self.timeout)
+
+        for fn in self.output_files:
+            assert os.path.exists(fn)
+
 class ArborTest:
     """
     A battery of tests for all frontends.
@@ -110,6 +170,7 @@ class ArborTest:
     arbor_type = None
     test_filename = None
     load_kwargs = None
+    load_callback = None
     groups = ("tree", "prog")
     num_data_files = None
     tree_skip = 1
@@ -127,6 +188,8 @@ class ArborTest:
                 self.load_kwargs = {}
 
             self._arbor = load(self.test_filename, **self.load_kwargs)
+            if self.load_callback is not None:
+                self.load_callback(self._arbor)
         return self._arbor
 
     def test_arbor_type(self):
@@ -160,7 +223,8 @@ class ArborTest:
             verify_get_node(my_tree)
 
             ihalos = np.arange(1, my_tree.tree_size)
-            np.random.shuffle(ihalos)
+            gen = np.random.default_rng(312)
+            gen.shuffle(ihalos)
             for ihalo in ihalos[:3]:
                 my_halo = my_tree.get_node("forest", ihalo)
                 verify_get_node(my_halo)
@@ -216,7 +280,20 @@ class ArborTest:
                 err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.")
 
     def test_save_and_reload(self):
-        save_and_compare(self.arbor, groups=self.groups, skip=self.tree_skip)
+        skip = self.tree_skip
+        if skip > 1:
+            trees = list(self.arbor[::skip])
+        else:
+            trees = None
+
+        fn = self.arbor.save_arbor(trees=trees)
+
+        save_arbor = load(fn)
+        if self.load_callback is not None:
+            self.load_callback(save_arbor)
+
+        assert isinstance(save_arbor, YTreeArbor)
+        compare_arbors(save_arbor, self.arbor, groups=self.groups, skip2=skip)
 
     def test_vector_fields(self):
         a = self.arbor
@@ -265,26 +342,28 @@ def get_random_trees(arbor, seed, n):
     Get n random trees from the arbor.
     """
 
-    np.random.seed(seed)
+    gen = np.random.default_rng(708)
     itrees = np.arange(arbor.size)
-    np.random.shuffle(itrees)
+    gen.shuffle(itrees)
     for itree in itrees[:5]:
         yield arbor[itree]
 
-def save_and_compare(arbor, skip=1, groups=None):
+def get_stringsafe_compare_arrays(arr1, arr2):
     """
-    Check that arbor saves correctly.
+    Convert to stringy arrays to a common type for comparison.
     """
 
-    if skip > 1:
-        trees = list(arbor[::skip])
-    else:
-        trees = None
+    if StringDType() in (arr1.dtype, arr2.dtype):
+        # Python 3.9 and earlier require this. Otherwise, you end up
+        # with  "b'Alexander'" instead of 'Alexander'.
+        if arr1.dtype != StringDType():
+            arr1 = arr1.astype(str)
+        arr1 = arr1.astype(StringDType())
+        if arr2.dtype != StringDType():
+            arr2 = arr2.astype(str)
+        arr2 = arr2.astype(StringDType())
 
-    fn = arbor.save_arbor(trees=trees)
-    save_arbor = load(fn)
-    assert isinstance(save_arbor, YTreeArbor)
-    compare_arbors(save_arbor, arbor, groups=groups, skip2=skip)
+    return arr1, arr2
 
 def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
     """
@@ -298,8 +377,10 @@ def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
         fields = a1.field_list
 
     for i, field in enumerate(fields):
+        c1, c2 = get_stringsafe_compare_arrays(
+            a1[field][::skip1], a2[field][::skip2])
         mylog.info(f"Comparing arbor field: {field} ({i+1}/{len(fields)}).")
-        assert_array_equal(a1[field][::skip1], a2[field][::skip2],
+        assert_array_equal(c1, c2,
                            err_msg=f"Arbor field mismatch: {a1, a2, field}.")
 
     trees1 = list(a1[::skip1])
@@ -325,8 +406,10 @@ def compare_trees(t1, t2, groups=None, fields=None):
 
     for field in fields:
         for group in groups:
+            c1, c2 = get_stringsafe_compare_arrays(
+                t1[group, field], t2[group, field])
             assert_array_equal(
-                t1[group, field], t2[group, field],
+                c1, c2,
                 err_msg=f"Tree comparison failed for {group} field: {field}.")
     t1.arbor.reset_node(t1)
     t2.arbor.reset_node(t2)
@@ -400,7 +483,8 @@ def verify_get_node(my_tree, n=3):
         node_list = list(my_tree[selector])
 
         inodes = np.arange(len(node_list))
-        np.random.shuffle(inodes)
+        gen = np.random.default_rng(847)
+        gen.shuffle(inodes)
 
         for inode in inodes[:3]:
             my_node = my_tree.get_node(selector, inode)
@@ -433,7 +517,10 @@ def verify_get_root_nodes(my_tree):
 
     root_nodes1 = list(my_tree.get_root_nodes())
     for root_node in root_nodes1:
-        assert_equal(root_node["desc_uid"], -1)
+        assert_equal(
+            root_node["desc_uid"], -1,
+            err_msg=f"In {my_tree.arbor}: {root_node} has " + \
+                    f"desc_uid={root_node['desc_uid']}, but expected -1.")
 
     root_nodes2 = [node for node in my_tree["forest"]
                     if node.descendent is None]

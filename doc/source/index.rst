@@ -1,17 +1,19 @@
 Welcome to ytree.
 =================
 
-``ytree`` is a tool for working with merger tree data from multiple
-sources. ``ytree`` is an extension of the `yt
+``ytree`` is a tool for working with tree data (especially merger
+trees) from multiple sources. ``ytree`` is an extension of the `yt
 <https://yt-project.org/>`_ analysis toolkit and provides a similar
-interface for merger tree data that includes universal field names,
-derived fields, symbolic units, parallel functionality, and a
-framework for performing complex analysis. ``ytree`` is able to load
-in merger tree from the following formats:
+interface for tree data that includes universal field names, derived
+fields, symbolic units, parallel functionality, and a framework for
+performing complex analysis. ``ytree`` is able to load in merger tree
+from the following formats:
 
 - :ref:`load-ahf`
 - :ref:`load-ctrees`
 - :ref:`load-ctrees-hdf5`
+- :ref:`load-gadget4`
+- :ref:`load-csv`
 - :ref:`load-lhalotree`
 - :ref:`load-lhalotree-hdf5`
 - :ref:`load-moria`
@@ -39,6 +41,8 @@ Table of Contents
 .. toctree::
    :maxdepth: 2
 
+   Help.rst
+   Citing.rst
    Installation.rst
    Data.rst
    Frames.rst
@@ -48,12 +52,11 @@ Table of Contents
    Parallelism.rst
    Analysis.rst
    Examples.rst
+   api_reference.rst
    Conduct.rst
    Contributing.rst
    Developing.rst
-   Help.rst
-   Citing.rst
-   reference.rst
+   Changelog.rst
 
 .. include:: ../../CITATION.rst
 

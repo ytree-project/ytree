@@ -15,7 +15,6 @@ tests for yt frontend and selection functions
 
 import numpy as np
 from numpy.testing import assert_raises
-from unyt import uconcatenate
 import ytree
 
 from ytree.utilities.testing import \
@@ -27,10 +26,20 @@ from ytree.yt_frontend import YTreeDataset
 CTG = "tiny_ctrees/locations.dat"
 
 class YTSelectionTest(TempDirTest):
+    """
+    Test class for selecting halos with yt.
+    """
+
+    _setup = False
+    def setUp(self):
+        super().setUp()
+        self._setup = True
 
     _arbor = None
     @property
     def arbor(self):
+        if not self._setup:
+            return
         if self._arbor is not None:
             return self._arbor
 
@@ -49,7 +58,7 @@ class YTSelectionTest(TempDirTest):
         for field, units in zip(["mass", "redshift"], ["Msun", ""]):
             yt_data = ad["halos", field].to(units)
             yt_data.sort()
-            ytree_data = uconcatenate([t["forest", field] for t in a])
+            ytree_data = np.concatenate([t["forest", field] for t in a])
             ytree_data.sort()
             assert_array_rel_equal(yt_data, ytree_data, decimals=5)
 
@@ -60,8 +69,8 @@ class YTSelectionTest(TempDirTest):
 
         sp = ds.sphere(0.5*ds.domain_center, (20, "Mpc/h"))
 
-        ytree_pos = uconcatenate([t["forest", "position"] for t in a])
-        ytree_mass = uconcatenate([t["forest", "mass"] for t in a])
+        ytree_pos = np.concatenate([t["forest", "position"] for t in a])
+        ytree_mass = np.concatenate([t["forest", "mass"] for t in a])
         r = a.quan(sp.radius.to("unitary"))
         c = a.arr(sp.center.to("unitary"))
         ytree_r = np.sqrt(((ytree_pos - c)**2).sum(axis=1))

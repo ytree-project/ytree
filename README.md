@@ -9,7 +9,11 @@
 [![yt-project](https://img.shields.io/static/v1?label="works%20with"&message="yt"&color="blueviolet")](https://yt-project.org)
 
 This is `ytree`, a [yt](https://github.com/yt-project/yt) extension for
-working with merger tree data.
+working with tree data and especially merger trees.
+
+Generally speaking, tree data defines a one-directional relationship
+between a series of objects. In trees, objects can have one or more
+ancestors, but only a single descendent.
 
 Structure formation in cosmology proceeds in a hierarchical fashion,
 where dark matter halos grow via mergers with other halos. This type
@@ -124,18 +128,19 @@ If you would like to also cite the specific version of `ytree` used in
 your work, include the following reference:
 
 ```
-@software{britton_smith_2022_5959655,
-  author       = {Britton Smith and
-                  Meagan Lang and
-                  Juanjo Bazán},
-  title        = {ytree-project/ytree: ytree 3.1.1 Release},
-  month        = feb,
-  year         = 2022,
-  publisher    = {Zenodo},
-  version      = {ytree-3.1.1},
-  doi          = {10.5281/zenodo.5959655},
-  url          = {https://doi.org/10.5281/zenodo.5959655}
-}
+  @software{britton_smith_2023_8349044,
+    author       = {Britton Smith and
+                    Meagan Lang and
+                    John Wise and
+                    Juanjo Bazán},
+    title        = {ytree-project/ytree: ytree 3.2.1 Release},
+    month        = sep,
+    year         = 2023,
+    publisher    = {Zenodo},
+    version      = {ytree-3.2.1},
+    doi          = {10.5281/zenodo.8349044},
+    url          = {https://doi.org/10.5281/zenodo.8349044}
+  }
 ```
 
 ## Resources

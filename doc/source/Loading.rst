@@ -11,18 +11,97 @@ use the freely available :ref:`sample-data`.
 Amiga Halo Finder
 -----------------
 
-The `Amiga Halo Finder <http://popia.ft.uam.es/AHF/Download.html>`__ format
-stores data in a series of files, with one each per snapshot.  Parameters
-are stored in ".parameters" and ".log" files, halo information in
-".AHF_halos" files, and descendent/ancestor links are stored in ".AHF_mtree"
-files.  Make sure to keep all of these together.  To load, provide the name
-of the first ".parameter" file.
+There are two main ways that the `Amiga Halo Finder
+<http://popia.ft.uam.es/AHF/>`__ will output merger tree information.
+Most AHF outputs will contain a series of files (one per snapshot) linking
+a halo in that snapshot with its progenitors. These usually, but not always,
+have file names ending in ".AHF_mtree". See :ref:`ahf-naming` if these
+files have different names in your data. The second way is to create
+a single file containing descendent/ancestor links for all halos from
+all snapshots. This file usually starts with "MergerTree\_" and ends
+with "-CRMratio2". As long as your data contains one of the above,
+everything should be fine even if the naming conventions are slightly
+different.
+
+Both formats save a series of files associated with each
+snapshot. Parameters are stored in ".parameters" and ".log" files and
+halo properties (i.e., all the fields) in ".AHF_halos" files. Make
+sure to keep all these files together in the same directory.
+
+If you have the one big file starting with "MergerTree\_" and ending
+with "-CRMratio2", use that to load the data.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("AHF_100_tiny/MergerTree_GIZMO-NewMDCLUSTER_0047.txt-CRMratio2")
+
+``ytree`` will then try to guess the naming convention for the
+parameter files based on the name of the one big file or on the
+available files ending in ".parameter". An exception will be raised if
+neither of these methods are able to locate a parameter file. If this
+is the case, provide one using the `parameter_filename` keyword.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("AHF_100_tiny/MergerTree_GIZMO-NewMDCLUSTER_0047.txt-CRMratio2",
+                      parameter_filename="AHF_100_tiny/GIZMO-NewMDCLUSTER_0047.snap_128.parameter")
+
+If you don't have the one big file, then provide the name of the first
+".parameter" file.
 
 .. code-block:: python
 
    >>> import ytree
    >>> a = ytree.load("ahf_halos/snap_N64L16_000.parameter",
    ...                hubble_constant=0.7)
+
+.. _ahf-naming:
+
+AHF data with different naming conventions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Occasionally, the naming conventions for various files will differ
+from the above. Sometimes, the arbor will appear to load correctly,
+but all the trees will appear as singular objects with no descendents
+or ancestors. Other times, you may see an error the first time you try
+to query a tree. Two known variations are:
+
+#. Different file prefixes for the halo catalog and merger tree
+   files. For example, one set of files starting with "AHF" and the
+   other starting with "MTREE".
+#. The mtree data in files not ending in ".AHF_mtree". In this case,
+   there still may be files with this suffix, but they may not contain
+   the data that ``ytree`` is looking for. The files needed for this
+   should look something like below:
+
+.. code-block::
+
+   #   HaloID(1)   HaloPart(2)  NumProgenitors(3)
+   #      SharedPart(1)    HaloID(2)   HaloPart(3)
+   0  29769  12
+     29221  0  29918
+     1652  17  1652
+     362  90  362
+
+In the example below, this data is located in files ending with
+".AHF_croco". The `name_config` keyword can be used to specify a
+dictionary of naming conventions:
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load(
+   >>>     "B25_N256_CDM_1LPT/AHF.B25_N256_CDM_1LPT.snap_055.parameter",
+   >>>     name_config={"ahf_prefix": "AHF.B25_N256_CDM_1LPT",
+   >>>                  "mtree_prefix": "MTREE.B25_N256_CDM_1LPT.z39_adapt",
+   >>>                  "mtree_suffix": ".AHF_croco"})
+
+Valid entries for the `name_config` dictionary are "ahf\_prefix",
+"mtree\_prefix", and "mtree\_suffix". When using AHF to create merger
+trees, it is advisable to use settings that result in file layouts
+like those described here.
 
 .. note:: Four important notes about loading AHF data:
 
@@ -44,7 +123,7 @@ of the first ".parameter" file.
              calculated instead of the tree. However, even in this case,
              only the tree is preserved in ``ytree``. See the `Amiga Halo
              Finder Documentation
-             <http://popia.ft.uam.es/AHF/Documentation.html>`_
+             <http://popia.ft.uam.es/AHF/files/AHF.pdf>`_
              for a discussion of the difference between graphs and trees.
 
 .. _load-ctrees:
@@ -153,6 +232,94 @@ forest access mode, the "root" of the forest, i.e., the
 by doing ``a[N]`` will be the root of one of the trees in that
 forest. See :ref:`forest-access` for how to locate all individual
 trees in a forest.
+
+.. _load-gadget4:
+
+Gadget4
+-------
+
+The `Gadget4
+<https://wwwmpa.mpa-garching.mpg.de/gadget4/09_special_modules/#merger-trees>`__
+format consists of one or more HDF5 files. Each file contains
+information on the trees contained within as well as some or all of
+the associated field data for those trees. Field data for large trees
+can span multiple data files and the start of any file does not
+necessarily correspond to the start of field data for the trees it
+holds. This format supports :ref:`forest-access`.
+
+To load single-file data, load with the path to that file.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("gadget4/trees/trees.hdf5")
+
+To load a dataset consisting of multiple files, provide the path to
+the zeroth file.
+
+.. code-block:: python
+
+   >>> import ytree
+   >>> a = ytree.load("gadget4/treedata/trees.0.hdf5")
+
+For multi-file datasets, all data files must be present for the
+dataset to be loaded. It is not possible to load a subseta
+multi-file dataset. Because data for any given tree is only loaded
+when needed, there is little benefit to trying to load a subset of
+the full data. However, if you really want to limit your dataset to
+a selection of the full data, your best bet is to save just the
+trees you want to a new dataset using the
+:func:`~ytree.data_structures.arbor.Arbor.save_arbor` function.
+See :ref:`saving-trees` for more information.
+
+.. _load-csv:
+
+Generic CSV Data
+----------------
+
+``ytree`` can load tree data from a `CSV
+<https://en.wikipedia.org/wiki/Comma-separated_values>`__ file
+provided that the file defines two fields:
+
+#. "uid" - a universal ID of an item
+#. "desc_uid" - the uid of the item's direct descendent
+
+The CSV file must have a specific format in which the first three
+lines start with the "#" character and define the field names, data
+types, and units. As in standard CSV behavior, spaces are interpreted
+literally in the case of non-numeric data (i.e., a line with "...,
+something,..." will result in a value of " something" and not "something").
+
+.. code-block:: bash
+
+   #uid,desc_uid,name,time,charisma
+   #INT,INT,STR,FLOAT,FLOAT
+   #None,None,None,yr,G
+   1,4,Jen-Luc,2305,144.70137425
+   2,4,William,2335,98.73156766
+   3,4,Beverly,2324,127.979825
+   4,6,Deanna,2336,131.83806431
+   5,6,Thomas,2335,172.14870662
+   6,-1,Tasha,2337,80.64762619
+   7,9,Lwaxana,2305,120.59923579
+
+The supported data types are:
+
+* FLOAT: float
+* INT: integer
+* STR: string
+
+All `units supported by the unyt package
+<https://unyt.readthedocs.io/en/stable/unit_listing.html>`__
+are valid. The word "None" can be used to denote unitless
+fields. *String fields must be unitless.* Also note, if the data does
+not include a "mass" field, another field must be specified for
+progenitor identification (see :ref:`custom-progenitor`).
+
+.. code-block:: python
+
+   >>> a = ytree.load("csv/trees.csv")
+   >>> a.set_selector("max_field_value", "charisma")
 
 .. _load-lhalotree:
 

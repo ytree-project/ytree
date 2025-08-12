@@ -133,10 +133,17 @@ class Arbor(metaclass=RegisteredArbor):
             fn = filename[0]
         else:
             fn = filename
-        self.parameter_filename = fn
+        self._set_parameter_filename(fn)
         self.basename = os.path.basename(fn)
         dn = os.path.dirname(fn)
         self.directory = dn if dn else '.'
+
+    def _set_parameter_filename(self, filename):
+        """
+        Set the name of the file from which to get metadata.
+        """
+
+        self.parameter_filename = filename
 
     def _parse_parameter_file(self):
         """
@@ -197,7 +204,9 @@ class Arbor(metaclass=RegisteredArbor):
         """
         self.field_data = FieldContainer(self)
         self.derived_field_list = []
-        self.analysis_field_list = []
+        # This may already be created by ytree frontend.
+        if not hasattr(self, "analysis_field_list"):
+            self.analysis_field_list = []
         self.field_info.setup_known_fields()
         self.field_info.setup_aliases()
         self.field_info.setup_derived_fields()
@@ -791,14 +800,14 @@ class Arbor(metaclass=RegisteredArbor):
 
         if select_from is not None:
             import warnings
-            from numpy import VisibleDeprecationWarning
+            from numpy.exceptions import VisibleDeprecationWarning
             warnings.warn(
                 "The \"select_from\" keyword is deprecated and no longer does anything.",
                 VisibleDeprecationWarning, stacklevel=2)
 
         if fields is not None:
             import warnings
-            from numpy import VisibleDeprecationWarning
+            from numpy.exceptions import VisibleDeprecationWarning
             warnings.warn(
                 "The \"fields\" keyword is deprecated and no longer does anything.",
                 VisibleDeprecationWarning, stacklevel=2)
@@ -821,7 +830,8 @@ class Arbor(metaclass=RegisteredArbor):
             imatches = np.where(eval(criteria))[0]
             if imatches.size > 0:
                 found += imatches.size
-                pbar._pbar.set_description_str(f"Selecting halos (found {found})")
+                if isinstance(pbar, TqdmProgressBar):
+                    pbar._pbar.set_description_str(f"Selecting halos (found {found})")
             pbar.update(i+1)
 
             for imatch in imatches:
@@ -1011,6 +1021,23 @@ class Arbor(metaclass=RegisteredArbor):
         trees : optional, list or array of TreeNodes
             If given, only save trees stemming from these nodes.
             If not provide, all trees will be saved.
+        save_in_place : optional, bool or None
+            If True, analysis fields will be saved to the original
+            arbor, even if only a subset of all trees is provided
+            with the trees keyword. This will essentially "update"
+            the arbor in place. If False and only a subset of
+            all trees is provided, a new arbor will be created
+            containing only the trees provided. If set to None,
+            behavior is determined by the type of arbor loaded.
+            If the arbor is a YTreeArbor (i.e., saved with
+            save_arbor), save_in_place will be set to True. If
+            not of this type, it will be set to False.
+            Default: None
+        save_roots_only : optional, bool
+            If True, only field values of each node are saved.
+            If False, field data for the entire tree stemming
+            from that node are saved.
+            Default:  False.
         max_file_size : optional, float
             The maximum number of nodes saved to a single file.
             Smaller numbers will result in more files. Performance
@@ -1153,6 +1180,14 @@ class CatalogArbor(Arbor):
         if self.is_planted:
             return
 
+        # This is a somewhat hacky way of catching halos with links
+        # spanning more than one data set. That said, dict access
+        # is much faster than I thought and perhaps this whole
+        # routine needs to be refactored.
+        if self._has_uids:
+            all_dict = {}
+            missed_connections = []
+
         # this can be called once with the list, but fields are
         # not guaranteed to be returned in order.
         if self._has_uids:
@@ -1191,15 +1226,29 @@ class CatalogArbor(Arbor):
                     root = i == 0 or descid == -1
                     # The data says a descendent exists, but it's not there.
                     # This shouldn't happen, but it does sometimes.
+                    # This can also happen when a descendent is more than
+                    # one snapshot removed.
+                    mcollect = False
                     if not root and descid not in lastids:
                         root = True
+                        my_descid = descid
                         descid = data[desc_id_f][it] = -1
+                        if self._has_uids:
+                            mcollect = True
                     tree_node = TreeNode(my_uid, arbor=self, root=root)
                     tree_node._fi = it
                     tree_node.data_file = data_file
                     batch[it] = tree_node
+
+                    if self._has_uids:
+                        all_dict[my_uid] = tree_node
+
                     if root:
-                        trees.append(tree_node)
+                        if mcollect:
+                            tree_node._desc_uid = my_descid
+                            missed_connections.append(tree_node)
+                        else:
+                            trees.append(tree_node)
                     else:
                         ancs[descid].append(tree_node)
                     uid += 1
@@ -1226,6 +1275,18 @@ class CatalogArbor(Arbor):
                     ib += bs
             pbar.update(i+1)
         pbar.finish()
+
+        if self._has_uids:
+            for node in missed_connections:
+                my_desc_uid = node._desc_uid
+                my_desc = all_dict[my_desc_uid]
+                delattr(node, "_desc_uid")
+
+                node._descendent = my_desc
+                node.root = my_desc.root
+                if my_desc._ancestors is None:
+                    my_desc._ancestors = []
+                my_desc._ancestors.append(node)
 
         self._trees = np.array(trees)
         self._size = self._trees.size

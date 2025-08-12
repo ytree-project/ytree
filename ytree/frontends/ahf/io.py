@@ -25,27 +25,67 @@ from ytree.data_structures.io import \
     CatalogDataFile
 from ytree.utilities.io import \
     f_text_block
+from ytree.utilities.misc import fround
 
 class AHFDataFile(CatalogDataFile):
+    _redshift_precision = 3
+
     def __init__(self, filename, arbor):
+        self.arbor = weakref.proxy(arbor)
         self.filename = filename
-        self.filekey = self.filename[:self.filename.rfind(".parameter")]
+        self._catalog_index = arbor._get_file_index(filename)
+        self.filekey = self.filename[:self.filename.rfind(self.arbor._par_suffix)]
         self._parse_header()
 
-        res = re.search(r"\.z\d\.\d{3}", self.filekey)
+        rprec = self._redshift_precision
+        rstr = r"\.z\d\.\d\{%d\}" % rprec
+        res = re.search(rstr, self.filekey)
         if res:
             self.data_filekey = self.filekey[:res.end()]
         else:
-            self.data_filekey = f"{self.filekey}.z{self.redshift:.03f}"
+            zfmt = f".0{rprec}f"
+            for inc in [0, -10**-rprec]:
+                my_z = format(fround(self.redshift, decimals=rprec) + inc, zfmt)
+                fkey = f"{self.filekey}.z{my_z}"
+                if os.path.exists(fkey + self.arbor._data_suffix):
+                    self.data_filekey = fkey
+                    break
 
-        self.halos_filename = self.data_filekey + ".AHF_halos"
-        self.mtree_filename = self.data_filekey + ".AHF_mtree"
-        if not os.path.exists(self.mtree_filename):
-            self.mtree_filename = None
+            if not hasattr(self, "data_filekey"):
+                raise FileNotFoundError(
+                    f"Cannot find data file: {fkey + self.arbor._data_suffix}.")
+
+        self._get_other_filenames()
         self.fh = None
         self._parse_data_header()
         self.offsets = None
-        self.arbor = weakref.proxy(arbor)
+
+    def _get_other_filenames(self):
+        """
+        Figure out the various additional filenames we're going to need here.
+
+        If prefixes for the ahf and mtree files have been set, then we need to
+        look out for this and adjust.
+        """
+
+        self.halos_filename = self.data_filekey + self.arbor._data_suffix
+
+        if self.arbor._ahf_prefix is None:
+            mtree_key = self.data_filekey
+        else:
+            # First, strip of the directory
+            mtree_key = re.sub(f"^{self.arbor.directory}{os.path.sep}", "",
+                               self.data_filekey)
+            # Now, substitute the prefixes
+            mtree_key = re.sub(f"^{self.arbor._ahf_prefix}",
+                               f"{self.arbor._mtree_prefix}",
+                               mtree_key)
+            # Return the directory
+            mtree_key = os.path.join(self.arbor.directory, mtree_key)
+
+        self.mtree_filename = mtree_key + self.arbor._mtree_suffix
+        if not os.path.exists(self.mtree_filename):
+            self.mtree_filename = None
 
     def _parse_data_header(self):
         """
@@ -282,3 +322,26 @@ class AHFDataFile(CatalogDataFile):
         self._get_mtree_fields(tfields, dtypes, field_data)
 
         return field_data
+
+class AHFCRMDataFile(AHFDataFile):
+    def _compute_links(self):
+        """
+        Read the CRMratio2 file.
+        """
+
+    def _compute_links(self):
+        self.arbor._compute_links()
+
+    def _get_mtree_fields(self, tfields, dtypes, field_data):
+        if not tfields:
+            return
+
+        my_ids = field_data["ID"]
+        field_data["desc_id"] = descids = np.full(
+            len(my_ids), -1, dtype=dtypes["desc_id"])
+
+        if not self.links:
+            return
+
+        for i in range(descids.size):
+            descids[i] = self.links.get(my_ids[i], -1)

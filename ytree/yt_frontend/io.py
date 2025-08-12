@@ -17,15 +17,10 @@ ytree io
 import h5py
 from more_itertools import always_iterable
 import numpy as np
-from packaging import version
-from pkg_resources import get_distribution
 
 from yt.utilities.io_handler import BaseIOHandler
 
 _ptype = "halos"
-
-need_hsml = version.parse(get_distribution("yt").version) >= \
-  version.parse("4.1.dev0")
 
 class IOHandlerYTreeHDF5(BaseIOHandler):
     _dataset_type = "ytree_arbor"
@@ -36,10 +31,7 @@ class IOHandlerYTreeHDF5(BaseIOHandler):
     def _read_particle_coords(self, chunks, ptf):
         for data_file in self._yield_data_files(chunks):
             x, y, z = data_file._get_particle_positions(_ptype)
-            if need_hsml:
-                yield _ptype, (x, y, z), 0.0
-            else:
-                yield _ptype, (x, y, z)
+            yield _ptype, (x, y, z), 0.0
 
     def _read_particle_fields(self, chunks, ptf, selector):
         for data_file in self._yield_data_files(chunks):

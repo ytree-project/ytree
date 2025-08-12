@@ -117,6 +117,8 @@ Arbor subclasses for each frontend.
    ~ytree.frontends.consistent_trees.arbor.ConsistentTreesGroupArbor
    ~ytree.frontends.consistent_trees.arbor.ConsistentTreesHlistArbor
    ~ytree.frontends.consistent_trees_hdf5.arbor.ConsistentTreesHDF5Arbor
+   ~ytree.frontends.csv.arbor.CSVArbor
+   ~ytree.frontends.gadget4.arbor.Gadget4Arbor
    ~ytree.frontends.lhalotree.arbor.LHaloTreeArbor
    ~ytree.frontends.lhalotree_hdf5.arbor.LHaloTreeHDF5Arbor
    ~ytree.frontends.moria.arbor.MoriaArbor
@@ -135,6 +137,7 @@ Subclasses for frontend-specific field definitions.
    ~ytree.frontends.ahf.fields.AHFFieldInfo
    ~ytree.frontends.consistent_trees.fields.ConsistentTreesFieldInfo
    ~ytree.frontends.consistent_trees_hdf5.fields.ConsistentTreesHDF5FieldInfo
+   ~ytree.frontends.gadget4.fields.Gadget4FieldInfo
    ~ytree.frontends.lhalotree.fields.LHaloTreeFieldInfo
    ~ytree.frontends.lhalotree_hdf5.fields.LHaloTreeHDF5FieldInfo
    ~ytree.frontends.moria.fields.MoriaFieldInfo
@@ -152,6 +155,7 @@ Subclasses for data i/o from a whole dataset.
    ~ytree.frontends.consistent_trees.io.ConsistentTreesTreeFieldIO
    ~ytree.frontends.consistent_trees_hdf5.io.ConsistentTreesHDF5TreeFieldIO
    ~ytree.frontends.consistent_trees_hdf5.io.ConsistentTreesHDF5RootFieldIO
+   ~ytree.frontends.gadget4.io.Gadget4TreeFieldIO
    ~ytree.frontends.lhalotree.io.LHaloTreeTreeFieldIO
    ~ytree.frontends.lhalotree.io.LHaloTreeRootFieldIO
    ~ytree.frontends.lhalotree_hdf5.io.LHaloTreeHDF5TreeFieldIO
@@ -171,6 +175,8 @@ Subclasses for data i/o from individual files.
    ~ytree.frontends.consistent_trees.io.ConsistentTreesDataFile
    ~ytree.frontends.consistent_trees.io.ConsistentTreesHlistDataFile
    ~ytree.frontends.consistent_trees_hdf5.io.ConsistentTreesHDF5DataFile
+   ~ytree.frontends.csv.io.CSVDataFile
+   ~ytree.frontends.gadget4.io.Gadget4DataFile
    ~ytree.frontends.lhalotree_hdf5.io.LHaloTreeHDF5DataFile
    ~ytree.frontends.moria.io.MoriaDataFile
    ~ytree.frontends.rockstar.io.RockstarDataFile
