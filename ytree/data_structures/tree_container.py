@@ -34,6 +34,10 @@ class NodeContainer:
     2.0633094e+11 Msun
     >>> print (container["mass"])
     [1.0231655e+12 2.0633094e+11] Msun
+    >>> fn = a.save_arbor(trees=container)
+    >>> a_new = ytree.load(fn)
+    >>> print (a_new["mass"])
+    [1.0231655e+12 2.0633094e+11] Msun
 
     >>> import ytree
     >>> a = ytree.load("tiny_ctrees/locations.dat")
@@ -58,6 +62,7 @@ class NodeContainer:
     [TreeNode[1169524360], TreeNode[758740170], TreeNode[278238650],
      TreeNode[142383462], TreeNode[38885675], TreeNode[19602159],
      TreeNode[5057761]]
+
     """
     def __init__(self, nodes, arbor=None):
         self._nodes = nodes
