@@ -114,6 +114,8 @@ required for generating the root nodes of every tree.
    Loading tree roots: 100%|██████| 5105985/5105985 [00:00<00:00, 505656111.95it/s]
    327
 
+.. _root-fields:
+
 Root Fields
 ^^^^^^^^^^^
 
@@ -335,6 +337,8 @@ only the ones listed below contain forests with multiple distinct trees.
      - yes
    * - :ref:`load-gadget4`
      - yes
+   * - :ref:`load-csv`
+     - no
    * - :ref:`load-lhalotree`
      - yes
    * - :ref:`load-lhalotree-hdf5`
@@ -526,6 +530,76 @@ For convenience, individual trees can also be saved by calling
    >>> fn = my_tree.save_tree()
    Creating field arrays [1/1]: 100%|████| 4897/4897 [00:00<00:00, 13711286.17it/s]
    >>> a2 = ytree.load(fn)
+
+.. _node-container:
+
+Arbitrary Collections of TreeNodes
+----------------------------------
+
+Occasionally, one may want to hold onto or work with a collection of
+unrelated :class:`~ytree.data_structures.tree_node.TreeNode`
+objects. The :func:`~ytree.data_structures.arbor.Arbor.container`
+attribute provides a function to create such a container. This
+:class:`~ytree.data_structures.node_container.NodeContainer` object
+accepts any iterable data structure of
+:class:`~ytree.data_structures.tree_node.TreeNode` objects. This
+includes a list of nodes:
+
+.. code-block:: python
+
+   >>> a = ytree.load("tiny_ctrees/locations.dat")
+   >>> first = a[0]
+   >>> last = a[-1]
+   >>> my_container = a.container([first, last])
+
+a slice of the arbor:
+
+.. code-block:: python
+
+   >>> a_slice = a.container(a[::8])
+
+or a generator of nodes:
+
+.. code-block:: python
+
+   >>> leaf_container = a.container(a[0].get_leaf_nodes())
+
+Fields for each node in the container can be queried in the same way
+as :ref:`root-fields` for the arbor.
+
+.. code-block:: python
+
+   >>> print (leaf_container["mass"])
+   [2.6503598e+08 4.2388490e+08 5.6964032e+08 5.5640288e+08 3.5769786e+08
+    1.9870504e+08 6.3597126e+08] Msun
+
+These fields will be cached for faster access the next time.
+
+Nodes can be accessed by numerical index in the container or iterated
+over.
+
+.. code-block:: python
+
+   >>> print (leaf_container[2])
+   TreeNode[278238650]
+   >>> for node in leaf_container:
+   ...     print (node)
+
+The collection of nodes can be saved to a new arbor. The new arbor
+will include all nodes belonging to the tree for which the nodes in
+the container are the roots.
+
+.. code-block:: python
+
+   >>> fn = a.save_arbor(trees=leaf_container)
+   >>> a_new = ytree.load(fn)
+
+.. note::
+
+   :class:`~ytree.data_structures.node_container.NodeContainer`
+   objects are primarily for convenience. Other than the caching of
+   fields mentioned above, there is no performance benefit from using
+   them.
 
 Searching Through Merger Trees (Accessing Like a Database)
 ----------------------------------------------------------

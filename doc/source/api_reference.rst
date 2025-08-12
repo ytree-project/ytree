@@ -22,11 +22,13 @@ used to save the entire arbor or individual trees.
    ~ytree.data_structures.arbor.Arbor.add_derived_field
    ~ytree.data_structures.arbor.Arbor.add_vector_field
    ~ytree.data_structures.arbor.Arbor.arr
+   ~ytree.data_structures.arbor.Arbor.container
    ~ytree.data_structures.arbor.Arbor.cosmology
    ~ytree.data_structures.arbor.Arbor.quan
    ~ytree.data_structures.arbor.Arbor.save_arbor
    ~ytree.data_structures.arbor.Arbor.select_halos
    ~ytree.data_structures.arbor.Arbor.set_selector
+   ~ytree.data_structures.node_container.NodeContainer
    ~ytree.data_structures.tree_node.TreeNode
    ~ytree.data_structures.tree_node.TreeNode.get_leaf_nodes
    ~ytree.data_structures.tree_node.TreeNode.get_root_nodes

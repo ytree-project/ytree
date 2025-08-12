@@ -46,6 +46,7 @@ from ytree.data_structures.node_link import \
     NodeLink
 from ytree.data_structures.save_arbor import \
     save_arbor
+from ytree.data_structures.node_container import NodeContainer
 from ytree.data_structures.tree_node import \
     TreeNode
 from ytree.data_structures.tree_node_selector import \
@@ -55,6 +56,7 @@ from ytree.utilities.logger import \
     fake_pbar
 
 arbor_registry = {}
+_selection_types = ("forest", "tree", "prog")
 
 class RegisteredArbor(type):
     """
@@ -547,7 +549,7 @@ class Arbor(metaclass=RegisteredArbor):
         """
 
         if isinstance(key, str):
-            if key in ("tree", "prog"):
+            if key in _selection_types:
                 raise SyntaxError("Argument must be a field or integer.")
             self._root_io.get_fields(self, fields=[key])
             return self.field_data[key]
@@ -795,6 +797,19 @@ class Arbor(metaclass=RegisteredArbor):
         self._quan = functools.partial(unyt_quantity,
                                        registry=self.unit_registry)
         return self._quan
+
+    @functools.cached_property
+    def container(self):
+        """
+        Helper function for creating
+        :class:`~ytree.data_structures.node_container.NodeContainer` objects.
+
+        See :class:`~ytree.data_structures.node_container.NodeContainer` for more
+        information.
+        """
+        nc = functools.partial(NodeContainer, arbor=self)
+        nc.__doc__ = NodeContainer.__doc__
+        return nc
 
     def select_halos(self, criteria, trees=None,
                      select_from=None, fields=None):
