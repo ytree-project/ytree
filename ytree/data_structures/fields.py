@@ -21,6 +21,7 @@ from ytree.utilities.exceptions import \
     ArborFieldAlreadyExists, \
     ArborFieldCircularDependency, \
     ArborFieldDependencyNotFound, \
+    ArborDerivedFieldException, \
     ArborFieldNotFound
 from ytree.utilities.logger import \
     ytreeLogger as mylog
@@ -29,6 +30,9 @@ def _redshift(field, data):
     return 1. / data["scale_factor"] - 1.
 
 def _time(field, data):
+    co = data.arbor.cosmology
+    if co is None:
+        raise ArborDerivedFieldException(field["name"], data.arbor)
     return data.arbor.cosmology.t_from_z(data["redshift"])
 
 def _vector_func(field, data):
@@ -178,6 +182,8 @@ class FieldInfoContainer(dict):
         fc = FieldDetector(self.arbor, name=name)
         try:
             rv = function(info, fc)
+        except ArborDerivedFieldException:
+            return
         except TypeError as e:
             raise RuntimeError(
 """
@@ -210,9 +216,8 @@ Check the TypeError exception above for more details.
         self.arbor.add_derived_field(
             "redshift", _redshift, units="", force_add=False)
 
-        if hasattr(self.arbor, "cosmology"):
-            self.arbor.add_derived_field(
-                "time", _time, units="Myr", force_add=False)
+        self.arbor.add_derived_field(
+            "time", _time, units="Myr", force_add=False)
 
     def add_vector_field(self, fieldname):
         """

@@ -25,6 +25,11 @@ class ArborFieldException(Exception):
         self.field = field
         self.arbor = arbor
 
+class ArborDerivedFieldException(ArborFieldException):
+    def __str__(self):
+        return (f"Derived field \"{self.field}\" could not be "
+                f"generated for {self.arbor}.")
+
 class ArborFieldDependencyNotFound(Exception):
     def __init__(self, field, dependency, arbor=None):
         self.field = field
