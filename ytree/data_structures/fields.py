@@ -39,8 +39,8 @@ def _time(field, data):
 
 def _vector_func(field, data):
     name = field["name"]
-    field_data = data.arbor.arr([data[f"{name}_{ax}"]
-                                 for ax in "xyz"])
+    cfields = field.get("vector_components", [f"{name}_{ax}" for ax in "xyz"])
+    field_data = data.arbor.arr([data[cfield] for cfield in cfields])
     field_data = np.rollaxis(field_data, 1)
     return field_data
 
@@ -150,7 +150,7 @@ class FieldInfoContainer(dict):
 
     def add_derived_field(self, name, function,
                           units=None, dtype=None, description=None,
-                          vector_field=False, force_add=True):
+                          vector_components=None, force_add=True):
         """
         Add a derived field.
         """
@@ -178,8 +178,10 @@ class FieldInfoContainer(dict):
                 "function": function,
                 "units": units,
                 "dtype": dtype,
-                "vector_field": vector_field,
                 "description": description}
+
+        if vector_components is not None:
+            info["vector_components"] = vector_components
 
         fc = FieldDetector(self.arbor, name=name)
         try:
@@ -221,13 +223,18 @@ Check the TypeError exception above for more details.
         self.arbor.add_derived_field(
             "time", _time, units="Myr", force_add=False)
 
-    def add_vector_field(self, fieldname):
+    def add_vector_field(self, fieldname, cfields=None):
         """
         Add vector and magnitude fields for a field with
         x/y/z components.
+
+        If component fields not provided (with cfields kwarg), assume a
+        naming convention of <fieldname>_<xyz>.
         """
 
-        cfields = [f"{fieldname}_{ax}" for ax in "xyz"]
+        if cfields is None:
+            cfields = [f"{fieldname}_{ax}" for ax in "xyz"]
+
         exists = all([field in self for field in cfields])
         if not exists:
             return None
@@ -237,7 +244,7 @@ Check the TypeError exception above for more details.
 
         units = self[cfields[0]].get("units", None)
         self.arbor.add_derived_field(
-            fieldname, _vector_func, vector_field=True, units=units)
+            fieldname, _vector_func, vector_components=cfields, units=units)
         self.arbor.add_derived_field(
             f"{fieldname}_magnitude", _magnitude_func, units=units)
         return fieldname
@@ -248,22 +255,31 @@ Check the TypeError exception above for more details.
         """
 
         vfields = set()
-        candidates = defaultdict(set)
-        vreg = re.compile(r"^(.+)_[xyz]$")
+        candidates = defaultdict(dict)
+        # match anything, followed by one xyz (case-insensitive),
+        # optionally followed by more characters.
+        vreg = re.compile(r"^(.+)([xyzXYZ]{1})(.*)$")
 
         for field in self:
             match = vreg.match(field)
             if match is None:
                 continue
 
-            vfield = match.groups()[0]
-            candidates[vfield].add(field)
+            pre, comp, suf = match.groups()
+            # remove any trailing hyphens/underscores
+            pre = re.sub("[-_]{1}$", "", pre)
+            vfield = pre + suf
+            candidates[vfield][comp.lower()] = field
+
+        for vfield in candidates:
             if len(candidates[vfield]) == 3:
                 vfields.add(vfield)
 
         added_fields = []
         for field in vfields.union(self.vector_fields):
-            field = self.add_vector_field(field)
+            comp_fields = sorted(candidates[field].values()) \
+              if field in candidates else None
+            field = self.add_vector_field(field, cfields=comp_fields)
             if field is None:
                 continue
             added_fields.append(field)

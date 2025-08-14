@@ -52,8 +52,8 @@ class FieldDetector(Detector):
 
     def _generate_data(self, key):
         fi = self.arbor.field_info[key]
-        if fi.get("vector_field", False):
-            data = np.ones((1, 3))
+        if cfields:= fi.get("vector_components", False):
+            data = np.ones((1, len(cfields)))
         else:
             data = np.ones(1)
         units = fi.get("units", "")

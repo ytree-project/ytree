@@ -964,7 +964,7 @@ class Arbor(metaclass=RegisteredArbor):
 
     def add_derived_field(self, name, function,
                           units=None, dtype=None, description=None,
-                          vector_field=False, force_add=True):
+                          vector_components=None, force_add=True):
         r"""
         Add a field that is a function of other fields.
 
@@ -984,9 +984,10 @@ class Arbor(metaclass=RegisteredArbor):
             default type set by Arbor._default_dtype.
         description : optional, string
             A short description of the field.
-        vector_field: optional, bool
-            If True, field is an xyz vector.
-            Default: False.
+        vector_components : optional, list of strings
+            If given, the field is assumed to be a vector field with
+            the x/y/z component fields provided here.
+            Default: None.
         force_add : optional, bool
             If True, add field even if it already exists and warn the
             user and raise an exception if dependencies do not exist.
@@ -1009,9 +1010,9 @@ class Arbor(metaclass=RegisteredArbor):
         self.field_info.add_derived_field(
             name, function,
             units=units, dtype=dtype, description=description,
-            vector_field=vector_field, force_add=force_add)
+            vector_components=vector_components, force_add=force_add)
 
-    def add_vector_field(self, name):
+    def add_vector_field(self, name, vector_components=None):
         """
         Add vector fields for a set of x,y,z component fields.
 
@@ -1023,6 +1024,10 @@ class Arbor(metaclass=RegisteredArbor):
         ----------
         name : string
             The name of the field. Component x,y,z fields must exist.
+        vector_components : list of strings
+            Used to explicitly provide the x/y/z component fields. If not
+            given, a naming convention of <name>_<xyz> is assumed.
+            Default: None.
 
         Examples
         --------
@@ -1039,7 +1044,7 @@ class Arbor(metaclass=RegisteredArbor):
 
         """
 
-        self.field_info.add_vector_field(name)
+        self.field_info.add_vector_field(name, cfields=vector_components)
 
     def get_yt_selection(self, *args, **kwargs):
         raise NotImplementedError(

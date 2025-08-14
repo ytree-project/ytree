@@ -305,20 +305,22 @@ class ArborTest:
             assert_array_equal(a[f"{field}_magnitude"], magfield,
                                err_msg=f"Magnitude field incorrect: {field}.")
 
-            for i, ax in enumerate("xyz"):
+            cfields = a.field_info[field]["vector_components"]
+
+            for i, cfield in enumerate(cfields):
                 assert_array_equal(
-                    a[f"{field}_{ax}"], a[field][:, i],
+                    a[cfield], a[field][:, i],
                     err_msg=(f"Arbor vector field {field} does not match "
                              f"in dimension {i}."))
 
                 assert_array_equal(
-                    t[f"{field}_{ax}"], t[field][i],
+                    t[cfield], t[field][i],
                     err_msg=(f"Tree vector field {field} does not match "
                              f"in dimension {i}."))
 
                 for group in ["prog", "tree"]:
                     assert_array_equal(
-                        t[group, f"{field}_{ax}"], t[group, field][:, i],
+                        t[group, cfield], t[group, field][:, i],
                         err_msg=(f"{group} vector field {field} does not match "
                                  f"in dimension {i}."))
 
