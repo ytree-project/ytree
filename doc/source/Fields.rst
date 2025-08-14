@@ -107,10 +107,14 @@ For fields that have x, y, and z components, such as position, velocity,
 and angular momentum, a single field can be queried to return an array
 with all the components. For example, for fields named "position_x",
 "position_y", and "position_z", the field "position" will return the
-full vector.
+full vector. ``ytree`` will look through all available fields and do
+some reasonably robust pattern matching in an attempt to identify
+common field names with x/y/z variants.
 
 .. code-block:: python
 
+   >>> import ytree
+   >>> a = ytree.load("AHF_100_tiny/GIZMO-NewMDCLUSTER_0047.snap_128.parameter")
    >>> print (a["position"])
    [[0.0440018, 0.0672202, 0.9569643],
     [0.7383264, 0.1961563, 0.0238852],
@@ -124,7 +128,7 @@ A list of defined vector fields can be seen by doing:
 .. code-block:: python
 
    >>> print (a.field_info.vector_fields)
-   ('position', 'velocity', 'angular_momentum')
+   ('Ec_star', 'Ec_gas', 'velocity', 'Ea_gas', 'position', 'L_star', 'Ea_star', 'L_gas', 'Vc', 'Eb_gas', 'Ec', 'Ea', 'Eb_star', 'L', 'Eb')
 
 For all vector fields, a "_magnitude" field also exists, defined as the
 quadrature sum of the components.
@@ -135,18 +139,22 @@ quadrature sum of the components.
    [ 488.26936644  121.97143067  146.81450507, ...
      200.74057711  166.13782652  529.7336846 ] km/s
 
-Only specifically registered fields will be available as vector fields.
-For example, saved :ref:`analysis-fields` with x,y,z components will
-not automatically be available. However, vector fields can be created
-with the :func:`~ytree.data_structures.arbor.Arbor.add_vector_field`
-function.
+The vector field pattern matching will identify most instances of
+three common field names that differ by just x/y/z
+(case-insensitively). Any that are missed (for example, if they are
+not named with "x/y/z") can be added manually with
+the :func:`~ytree.data_structures.arbor.Arbor.add_vector_field`
+function and using the `vector_components` keyword argument to specify
+the component fields.
 
 .. code-block:: python
 
-   >>> a.add_vector_field("thing")
+   >>> a.add_vector_field("thing", vector_components=["thing_1", "thing_2", "thing_3"])
 
-The above example assumes that fields named "thing_x", "thing_y",
-and "thing_z" already exist.
+In principle, vector fields can be added for dimensionality not equal
+to three in the same manner. It will also be necessary to manually add
+a vector field for any :ref:`derived-fields` or :ref:`analysis-fields`
+created after the arbor is loaded.
 
 .. _analysis-fields:
 
