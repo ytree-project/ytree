@@ -174,6 +174,7 @@ class ArborTest:
     groups = ("tree", "prog")
     num_data_files = None
     tree_skip = 1
+    custom_vector_fields = None
 
     _arbor = None
     @property
@@ -298,8 +299,12 @@ class ArborTest:
     def test_vector_fields(self):
         a = self.arbor
         t = a[0]
-        for field in a.field_info.vector_fields:
 
+        if self.custom_vector_fields is not None:
+            for vfield, cfields in self.custom_vector_fields:
+                a.add_vector_field(vfield, vector_components=cfields)
+
+        for field in a.field_info.vector_fields:
             mylog.info(f"Comparing vector field: {field}.")
             magfield = np.sqrt((a[field]**2).sum(axis=1))
             assert_array_equal(a[f"{field}_magnitude"], magfield,

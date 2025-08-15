@@ -247,6 +247,7 @@ Check the TypeError exception above for more details.
             fieldname, _vector_func, vector_components=cfields, units=units)
         self.arbor.add_derived_field(
             f"{fieldname}_magnitude", _magnitude_func, units=units)
+        self.vector_fields += (fieldname,)
         return fieldname
 
     def setup_vector_fields(self):

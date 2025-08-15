@@ -151,7 +151,8 @@ the component fields.
 
 Vector fields can be added for dimensionality not equal to three in
 the same manner. This can also be used to create multidimensional
-fields where the components have nothing to do with x/y/z.
+fields where the components have nothing to do with x/y/z, provided
+the component fields have the same units.
 
 .. code-block:: python
 
