@@ -76,7 +76,6 @@ class AnalysisPipelineTest(TempDirTest):
             assert_array_equal(tree["forest", "test_field"][~mf],
                                -np.ones((~mf).sum()))
 
-
 def increment_counter(node):
     if getattr(node, "count", None) is None:
         node.count = 0
@@ -90,6 +89,7 @@ def test_handoff_attrs():
 
     ap = ytree.AnalysisPipeline(output_dir=".")
     ap.add_operation(increment_counter)
+
     nodes = list(a[:])
     for node in nodes:
         ap.process_target(node, handoff_attrs=["count"])
@@ -99,3 +99,25 @@ def test_handoff_attrs():
         assert i == node["count"]
         # check the attribute as been deleted
         assert hasattr(node, "count") == False
+
+def do_nothing(node):
+    return
+
+global_count = 0
+def increment_global_counter():
+    global global_count
+    global_count += 1
+
+@requires_file(TCL)
+def test_preprocess():
+    a = ytree.load(TCL)
+
+    ap = ytree.AnalysisPipeline(output_dir=".")
+    ap.add_operation(do_nothing,
+                     preprocess_function=increment_global_counter)
+
+    nodes = list(a[:])
+    for node in nodes:
+        ap.process_target(node)
+
+    assert global_count == 1

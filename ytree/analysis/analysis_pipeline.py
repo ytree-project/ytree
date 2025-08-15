@@ -67,10 +67,12 @@ class AnalysisPipeline:
         if output_dir is None:
             output_dir = "."
         self.output_dir = ensure_dir(output_dir)
+        self._preprocess_functions = []
         self._preprocessed = False
         self._handoff_store = {}
 
-    def add_operation(self, function, *args, always_do=False, **kwargs):
+    def add_operation(self, function, *args, always_do=False,
+                      preprocess_function=None, **kwargs):
         """
         Add an operation to the AnalysisPipeline.
 
@@ -89,11 +91,16 @@ class AnalysisPipeline:
             The function to be called for each node/halo.
         *args : positional arguments
             Any additional positional arguments to be provided to the funciton.
-        always_do: optional, bool
+        always_do : optional, bool
             If True, always perform this operation even if a prior filter has
             returned False. This can be used to add house cleaning operations
             that should always be run.
             Default: False
+        preprocess_function : optional, callable
+            A function to be run once at the start of analysis. This can be
+            used to perform any necessary startup tasks prior to running the
+            pipeline. The function provided must accept no arguments.
+            Default: None
         **kwargs : keyword arguments
             Any keyword arguments to be provided to the function.
         """
@@ -103,6 +110,8 @@ class AnalysisPipeline:
 
         operation = AnalysisOperation(function, *args, always_do=always_do, **kwargs)
         self.actions.append(operation)
+        if preprocess_function is not None:
+            self._preprocess_functions.append(preprocess_function)
 
     def add_recipe(self, function, *args, **kwargs):
         """
@@ -145,13 +154,14 @@ class AnalysisPipeline:
         """
         Create output directories and do any other preliminary steps.
 
-        Run any preprocess functions associated with operation functions.
+        Run any preprocess functions that were added.
         """
 
         if self._preprocessed:
             return
 
-        pre_run = []
+        for pre_func in self._preprocess_functions:
+            pre_func()
 
         for action in self.actions:
             my_output_dir = action.kwargs.get("output_dir")
@@ -159,11 +169,6 @@ class AnalysisPipeline:
                 new_output_dir = ensure_dir(
                     os.path.join(self.output_dir, my_output_dir))
                 action.kwargs["output_dir"] = new_output_dir
-
-            pre_func = getattr(action.function, "preprocess", None)
-            if pre_func is not None and pre_func not in pre_run:
-                pre_func()
-                pre_run.append(pre_func)
 
         self._preprocessed = True
 
