@@ -67,9 +67,12 @@ class AnalysisPipeline:
         if output_dir is None:
             output_dir = "."
         self.output_dir = ensure_dir(output_dir)
+        self._preprocess_functions = []
         self._preprocessed = False
+        self._handoff_store = {}
 
-    def add_operation(self, function, *args, always_do=False, **kwargs):
+    def add_operation(self, function, *args, always_do=False,
+                      preprocess_function=None, **kwargs):
         """
         Add an operation to the AnalysisPipeline.
 
@@ -88,11 +91,16 @@ class AnalysisPipeline:
             The function to be called for each node/halo.
         *args : positional arguments
             Any additional positional arguments to be provided to the funciton.
-        always_do: optional, bool
+        always_do : optional, bool
             If True, always perform this operation even if a prior filter has
             returned False. This can be used to add house cleaning operations
             that should always be run.
             Default: False
+        preprocess_function : optional, callable
+            A function to be run once at the start of analysis. This can be
+            used to perform any necessary startup tasks prior to running the
+            pipeline. The function provided must accept no arguments.
+            Default: None
         **kwargs : keyword arguments
             Any keyword arguments to be provided to the function.
         """
@@ -102,6 +110,8 @@ class AnalysisPipeline:
 
         operation = AnalysisOperation(function, *args, always_do=always_do, **kwargs)
         self.actions.append(operation)
+        if preprocess_function is not None:
+            self._preprocess_functions.append(preprocess_function)
 
     def add_recipe(self, function, *args, **kwargs):
         """
@@ -141,10 +151,17 @@ class AnalysisPipeline:
 
     @parallel_root_only
     def _preprocess(self):
-        "Create output directories and do any other preliminary steps."
+        """
+        Create output directories and do any other preliminary steps.
+
+        Run any preprocess functions that were added.
+        """
 
         if self._preprocessed:
             return
+
+        for pre_func in self._preprocess_functions:
+            pre_func()
 
         for action in self.actions:
             my_output_dir = action.kwargs.get("output_dir")
@@ -155,7 +172,7 @@ class AnalysisPipeline:
 
         self._preprocessed = True
 
-    def process_target(self, target):
+    def process_target(self, target, handoff_attrs=None):
         """
         Process a node through the AnalysisPipeline.
 
@@ -166,13 +183,37 @@ class AnalysisPipeline:
         ----------
         target : :class:`~ytree.data_structures.tree_node.TreeNode`
             The node on which to run the analysis pipeline.
+        handoff_attrs : optional, list of strings
+            A list of attributes to be handed down from one target to
+            the next. If given, these attributes will be taken from the
+            target object after the pipeline is run and stored internally.
+            They will then be attached to the next target run through the
+            pipeline. This can be used to pass down attributes from
+            one target to the next, for example, to accumulate results
+            or hang onto objects that are expensive to create.
+            Default: None.
         """
+
         self._preprocess()
+        if handoff_attrs is None:
+            handoff_attrs = []
+
+        for attr in handoff_attrs:
+            if attr in self._handoff_store:
+                val = self._handoff_store.pop(attr)
+                setattr(target, attr, val)
+
         target_filter = True
         for action in self.actions:
             if target_filter or action.always_do:
                 rval = action(target)
                 if rval is not None:
                     target_filter &= bool(rval)
+
+        for attr in handoff_attrs:
+            if hasattr(target, attr):
+                val = getattr(target, attr)
+                self._handoff_store[attr] = val
+                delattr(target, attr)
 
         return target_filter

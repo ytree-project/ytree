@@ -226,6 +226,25 @@ the ``always_do`` keyword can be set to ``True`` in the call to
    # later, in the pipeline
    ap.add_operation(delete_attributes, ["ds", "sphere"], always_do=True)
 
+Adding Functions that Only Run Once
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some analysis may require some preprocessing steps that happen only
+once for the whole pipeline. This might be some sort of setup that
+needs to happen before everything runs. The ``preprocess_function``
+keyword can be used to provide a function that will be run once when
+the pipeline first starts (i.e., upon the first call to
+:func:`~ytree.analysis.analysis_pipeline.AnalysisPipeline.process_target`). This
+function must accept no arguments.
+
+.. code-block:: python
+
+   def do_this_once():
+       print ("Hello, analysis is starting.")
+
+   # later, in the pipeline
+   ap.add_operation(..., preprocess_function=do_this_once)
+
 Modifying a Node
 ^^^^^^^^^^^^^^^^
 
@@ -300,6 +319,49 @@ with an entire tree and skip the inner loop. After all, a tree in this
 context is just another
 :class:`~ytree.data_structures.tree_node.TreeNode` object, only one
 that has no descendent.
+
+Passing Attributes Between Nodes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Generally speaking, the analysis of each node is independent of the
+other nodes. However, they may be occasions where it is necessary or
+useful to pass information from node to node. For example, imagine
+that one analysis operation :ref:`loads a dataset <yt:loading-data>`
+with `yt <https://yt-project.org/>`__. The building of the yt
+dataset's index is an expensive operation and it would be better to do
+it only once for all nodes that will use it. The ``handoff_attrs``
+keyword can be provided to
+:func:`~ytree.analysis.analysis_pipeline.AnalysisPipeline.process_target`
+to specify a list of attributes to pass between nodes.
+
+.. code-block:: python
+
+   def load_yt_dataset(node):
+       # don't do anything if we've already loaded it
+       if hasattr(node, "ds"):
+           return
+
+       # figure out correct snapshot for this node...
+       ds = yt.load(...)
+       node.ds = ds
+
+   # later, in pipeline setup
+   ap.add_operation(load_yt_dataset)
+
+   # later, when running the pipeline
+   for node in nodes:
+       ap.process_target(node, handoff_attrs=["ds"])
+
+In the above example, the ``load_yt_dataset`` function will first
+check if the node already has a "ds" attribute. If it does not, then
+it will load a dataset and attach it to the node. The
+``handoff_attrs`` keyword will then hand that "ds" attribute between
+successive nodes passed into
+:func:`~ytree.analysis.analysis_pipeline.AnalysisPipeline.process_target`. In
+reality, nodes from different times in a simulation would be
+associated with different snapshots. It would then be useful to check
+if the loaded dataset is, indeed, the correct one and, if not, delete
+it and load a new one.
 
 Creating a Analysis Recipe
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
