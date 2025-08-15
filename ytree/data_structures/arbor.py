@@ -1042,6 +1042,10 @@ class Arbor(metaclass=RegisteredArbor):
         >>> print (a_new["thing"])
         >>> print (a_new["thing_magnitude"])
 
+        >>> import ytree
+        >>> a = ytree.load("AHF_100_tiny/GIZMO-NewMDCLUSTER_0047.snap_128.parameter")
+        >>> a.add_vector_field("mean_z", vector_components=["mean_z_gas", "mean_z_star"])
+
         """
 
         self.field_info.add_vector_field(name, cfields=vector_components)

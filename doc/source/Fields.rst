@@ -129,6 +129,8 @@ A list of defined vector fields can be seen by doing:
 
    >>> print (a.field_info.vector_fields)
    ('Ec_star', 'Ec_gas', 'velocity', 'Ea_gas', 'position', 'L_star', 'Ea_star', 'L_gas', 'Vc', 'Eb_gas', 'Ec', 'Ea', 'Eb_star', 'L', 'Eb')
+   >>> >>> print (a.field_info["Ea_star"]["vector_components"])
+   ['Eax_star', 'Eay_star', 'Eaz_star']
 
 For all vector fields, a "_magnitude" field also exists, defined as the
 quadrature sum of the components.
@@ -147,14 +149,17 @@ the :func:`~ytree.data_structures.arbor.Arbor.add_vector_field`
 function and using the `vector_components` keyword argument to specify
 the component fields.
 
+Vector fields can be added for dimensionality not equal to three in
+the same manner. This can also be used to create multidimensional
+fields where the components have nothing to do with x/y/z.
+
 .. code-block:: python
 
-   >>> a.add_vector_field("thing", vector_components=["thing_1", "thing_2", "thing_3"])
+   >>> a.add_vector_field("mean_z", vector_components=["mean_z_gas", "mean_z_star"])
 
-In principle, vector fields can be added for dimensionality not equal
-to three in the same manner. It will also be necessary to manually add
-a vector field for any :ref:`derived-fields` or :ref:`analysis-fields`
-created after the arbor is loaded.
+It will also be necessary to manually add a vector field for any
+:ref:`derived-fields` or :ref:`analysis-fields` created after the
+arbor is loaded.
 
 .. _analysis-fields:
 
