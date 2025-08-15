@@ -174,6 +174,7 @@ class ArborTest:
     groups = ("tree", "prog")
     num_data_files = None
     tree_skip = 1
+    custom_vector_fields = None
 
     _arbor = None
     @property
@@ -298,27 +299,33 @@ class ArborTest:
     def test_vector_fields(self):
         a = self.arbor
         t = a[0]
-        for field in a.field_info.vector_fields:
 
+        if self.custom_vector_fields is not None:
+            for vfield, cfields in self.custom_vector_fields:
+                a.add_vector_field(vfield, vector_components=cfields)
+
+        for field in a.field_info.vector_fields:
             mylog.info(f"Comparing vector field: {field}.")
             magfield = np.sqrt((a[field]**2).sum(axis=1))
             assert_array_equal(a[f"{field}_magnitude"], magfield,
                                err_msg=f"Magnitude field incorrect: {field}.")
 
-            for i, ax in enumerate("xyz"):
+            cfields = a.field_info[field]["vector_components"]
+
+            for i, cfield in enumerate(cfields):
                 assert_array_equal(
-                    a[f"{field}_{ax}"], a[field][:, i],
+                    a[cfield], a[field][:, i],
                     err_msg=(f"Arbor vector field {field} does not match "
                              f"in dimension {i}."))
 
                 assert_array_equal(
-                    t[f"{field}_{ax}"], t[field][i],
+                    t[cfield], t[field][i],
                     err_msg=(f"Tree vector field {field} does not match "
                              f"in dimension {i}."))
 
                 for group in ["prog", "tree"]:
                     assert_array_equal(
-                        t[group, f"{field}_{ax}"], t[group, field][:, i],
+                        t[group, cfield], t[group, field][:, i],
                         err_msg=(f"{group} vector field {field} does not match "
                                  f"in dimension {i}."))
 

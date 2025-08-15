@@ -107,7 +107,7 @@ class LHaloTreeTreeFieldIO(TreeFieldIO):
             tot_idx = lht.get_total_index(root_node._index_in_lht, halonum)
             data['uid'] = lht.all_uids[tot_idx]
             data['desc_uid'] = lht.all_desc_uids[tot_idx]
-        field_data = data
+        field_data = {field: data[field] for field in fields}
 
         self._apply_units(fields, field_data)
 
