@@ -18,7 +18,11 @@ from numpy.testing import assert_array_equal, assert_equal
 import os
 import ytree
 
-from ytree.utilities.testing import TempDirTest
+from ytree.utilities.testing import \
+    requires_file, \
+    TempDirTest
+
+TCL = "tiny_ctrees/locations.dat"
 
 def set_test_field(node, output_dir=None):
     node["test_field"] = 2 * node["mass"]
@@ -35,7 +39,7 @@ def my_recipe(ap):
     ap.add_operation(set_always, always_do=True)
 
 class AnalysisPipelineTest(TempDirTest):
-    test_filename = "tiny_ctrees/locations.dat"
+    test_filename = TCL
 
     def test_pipeline(self):
 
@@ -71,3 +75,27 @@ class AnalysisPipelineTest(TempDirTest):
                                2 * tree["forest", "mass"][mf])
             assert_array_equal(tree["forest", "test_field"][~mf],
                                -np.ones((~mf).sum()))
+
+
+def increment_counter(node):
+    if getattr(node, "count", None) is None:
+        node.count = 0
+    node["count"] = node.count
+    node.count += 1
+
+@requires_file(TCL)
+def test_handoff_attrs():
+    a = ytree.load(TCL)
+    a.add_analysis_field("count", dtype=int, default=0, units="")
+
+    ap = ytree.AnalysisPipeline(output_dir=".")
+    ap.add_operation(increment_counter)
+    nodes = list(a[:])
+    for node in nodes:
+        ap.process_target(node, handoff_attrs=["count"])
+
+    for i, node in enumerate(nodes):
+        # check value was set off of persistent attribute
+        assert i == node["count"]
+        # check the attribute as been deleted
+        assert hasattr(node, "count") == False
