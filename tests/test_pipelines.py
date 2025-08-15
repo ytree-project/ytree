@@ -98,10 +98,11 @@ def test_handoff_attrs():
         # check value was set off of persistent attribute
         assert i == node["count"]
         # check the attribute as been deleted
-        assert hasattr(node, "count") == False
+        assert hasattr(node, "count") is False
 
 def do_nothing(node):
     return
+
 
 global_count = 0
 def increment_global_counter():
