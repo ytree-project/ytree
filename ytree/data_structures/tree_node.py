@@ -335,7 +335,13 @@ class TreeNode:
         Get a single TreeNode from a tree.
 
         Use this to get the nth TreeNode from a forest, tree, or
-        progenitor list for which the calling TreeNode is the head.
+        progenitor list.
+
+        For forest selection, the index value is absolute and refers
+        to the entire forest in which the node belongs.
+
+        For tree and prog selection, the index refers to the tree
+        for which the calling TreeNode is the head.
 
         Parameters
         ----------
@@ -360,6 +366,9 @@ class TreeNode:
         >>> my_node = my_tree.get_node('prog', 5)
 
         """
+
+        if selector in ("tree", "prog") and index == 0:
+            return self
 
         self.arbor._setup_tree(self)
         self.arbor._grow_tree(self)
