@@ -89,9 +89,29 @@ class ParallelTest:
 
     def check_values(self, arbor, my_args):
         group = my_args[1]
+
+        if "nodes" in group:
+            increment = int(group.split("-")[1])
+        else:
+            increment = None
+
         assert_array_equal(arbor["test_field"], 2 * arbor["mass"])
         for tree in arbor:
-            assert_array_equal(tree[group, "test_field"], 2 * tree[group, "mass"])
+            if increment is None:
+                assert_array_equal(tree[group, "test_field"], 2 * tree[group, "mass"])
+
+            else:
+                all_inds = np.arange(tree.tree_size)
+                my_inds = all_inds[::increment]
+                select = np.isin(all_inds, my_inds)
+                assert_array_equal(
+                    tree["forest", "test_field"][select],
+                    2 * tree["forest", "mass"][select])
+
+                # the ones we didn't do should all be -1
+                assert_array_equal(
+                    tree["forest", "test_field"][~select],
+                    -np.ones_like(tree["forest", "test_field"][~select]))
 
     @skipIf(MPI is None, "mpi4py not installed")
     @pytest.mark.parallel
