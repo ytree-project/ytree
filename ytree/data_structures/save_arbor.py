@@ -187,6 +187,7 @@ def save_data_files(arbor, filename, fields, trees,
         # the entire arbor.
         save_all = any([arbor.field_info[field]["type"] == "analysis"
                         for field in fields])
+        file_sizes = np.diff(arbor._node_io._ei, prepend=0)
     else:
         save_roots = {}
         save_all = True
@@ -207,7 +208,10 @@ def save_data_files(arbor, filename, fields, trees,
         group_nnodes.append(cg_nnodes)
         group_ntrees.append(cg_ntrees)
 
-        total_guess = int(np.round(save_size * (cg_number+1) / sum(group_ntrees)))
+        if update:
+            total_guess = file_sizes.size
+        else:
+            total_guess = int(np.round(save_size * (cg_number+1) / sum(group_ntrees)))
 
         # If we don't need to save the data file, just gather root fields.
         if not save_all and cg_number not in save_files:
@@ -223,9 +227,6 @@ def save_data_files(arbor, filename, fields, trees,
                 arbor, filename, fields,
                 np.array(current_group), root_field_data,
                 cg_number, total_guess)
-
-    if update:
-        file_sizes = np.diff(arbor._node_io._ei, prepend=0)
 
     i = 0
     for tree in trees:
