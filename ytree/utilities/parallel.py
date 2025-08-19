@@ -55,7 +55,7 @@ def make_node(iter_trees, base_trees, node_id):
 
 def parallel_trees(trees, base_trees=None,
                    save_every=None, save_in_place=False,
-                   save_nodes_only=False, filename=None,
+                   save_roots_only=False, filename=None,
                    njobs=0, dynamic=False):
     """
     Iterate over a list of trees in parallel.
