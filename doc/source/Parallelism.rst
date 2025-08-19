@@ -170,8 +170,12 @@ manually, as in the above example.
 
 The ``group`` keyword can be set to ``forest`` (the default),
 ``tree``, or ``prog`` to control which nodes of the tree are looped
-over. The ``dynamic`` and ``njobs`` keywords have similar behavior as
-in :ref:`tree_parallel`.
+over. A list of specific nodes can also be provided with the ``nodes``
+keyword, in which case the ``group`` keyword will be ignored. Note, if
+the ``nodes`` keyword is used, all nodes must belong to the tree
+associated with the node provided in the first argument. The
+``dynamic`` and ``njobs`` keywords have similar behavior as in
+:ref:`tree_parallel`.
 
 .. _node_parallel:
 

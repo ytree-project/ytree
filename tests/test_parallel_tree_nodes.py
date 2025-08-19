@@ -27,4 +27,5 @@ class ParallelTreeNodesTest(TempDirTest, ParallelTest):
         ("all", "prog",   0, 0),
         ("all", "forest", 2, 0),
         ("all", "forest", 0, 1),
+        ("all", "nodes-10", 0, 0),
     )
