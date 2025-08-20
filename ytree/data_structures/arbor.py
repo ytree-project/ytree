@@ -1215,7 +1215,7 @@ class CatalogArbor(Arbor):
 
     def _generate_root_node(self, index):
         """
-        Return a node self._trees.
+        Return a node from self._trees.
 
         These cannot be generated easily, so we keep them.
         """
