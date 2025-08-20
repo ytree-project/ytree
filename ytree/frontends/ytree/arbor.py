@@ -309,8 +309,7 @@ class YTreeArbor(Arbor):
         cr = data_source.cut_region(conditionals)
         return cr
 
-    def get_nodes_from_selection(self, container, trees=None,
-                                 deconstructed=False):
+    def get_nodes_from_selection(self, container):
         """
         Generate TreeNodes from a yt data container.
 
@@ -349,9 +348,6 @@ class YTreeArbor(Arbor):
 
         """
 
-        if trees is not None and len(trees) != self.size:
-            raise ValueError("The trees argument must be a list of all trees.")
-
         # Planting trees is necessary to get access to the start index for
         # each data file (i.e., self._node_io._si).
         self._plant_trees()
@@ -376,21 +372,31 @@ class YTreeArbor(Arbor):
         all_ti = np.concatenate(all_ti).astype(int)
         all_results = list(zip(all_ai, all_ti))
 
-        # Yield results.
-        # If yielding full TreeNode objects, this is quite slow.
-        # Yielding the minimal information to reconstruct a TreeNode
-        # is basically instantaneous.
-        for ai, ti in all_results:
-            if deconstructed:
-                yield (ai, ti)
+        # Yield results as TreeNode objects.
+        # The slowest part of this is generating the root nodes
+        # with self._generate_root_node. The get_node call is fast.
+        # We speed this up by creating a dictionary of roots so we
+        # don't have to regenerate.
+        # For an instant in time, this function accepted a trees kwarg
+        # allowing the user to create and supply the list of all trees
+        # ahead of time. However, I removed this because it was fairly
+        # awkward and not much faster than the internal dict.
 
-            else:
-                if trees is None:
-                    root_node = self._generate_root_node(ai)
-                else:
-                    root_node = trees[ai]
-                my_node = root_node.get_node("forest", ti)
-                yield my_node
+        # Note to the future, yielding just the (ai, ti) tuple as the minimum
+        # required to generate a node later is basically instantaneous.
+        # I experimented with yielding just (ai, ti) and then piping that
+        # into parallel_trees. This was a speedup, but did not result in a
+        # clean interface, so I have scrapped it from here for now.
+        # In the future, it may be better to return a NodeContainer that
+        # contains the (ai, ti) pairs and has parallel iteration implemented.
+
+        my_trees = {}
+        for ai, ti in all_results:
+            if ai not in my_trees:
+                root_node = self._generate_root_node(ai)
+                my_trees[ai] = root_node
+            root_node = my_trees[ai]
+            yield root_node.get_node("forest", ti)
 
     def reload_arbor(self):
         """
