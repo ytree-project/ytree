@@ -54,7 +54,7 @@ def make_node(iter_trees, base_trees, node_id):
         return iter_trees[node_id]
 
 def parallel_trees(trees, base_trees=None,
-                   save_every=None, save_in_place=False,
+                   save_every=None, save_in_place=None,
                    save_roots_only=False, filename=None,
                    njobs=0, dynamic=False):
     """
@@ -158,6 +158,10 @@ def parallel_trees(trees, base_trees=None,
     else:
         arbor = trees[0].arbor
     afields = arbor.analysis_field_list
+
+    if save_in_place is None:
+        from ytree.frontends.ytree.arbor import YTreeArbor
+        save_in_place = isinstance(arbor, YTreeArbor)
 
     save = True
     if save_every is None:
