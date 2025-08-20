@@ -167,14 +167,6 @@ class YTreeArbor(Arbor):
         If multiple criteria are provided, selected halos must meet all
         criteria.
 
-        To specify a custom data container, use the ``ytds`` attribute
-        associated with the arbor to access the merger tree data as a yt
-        dataset. For example:
-
-        >>> import ytree
-        >>> a = ytree.load("arbor/arbor.h5")
-        >>> ds = a.ytds
-
         Parameters
         ----------
         above : optional, list of tuples with (field, value, <units>)
@@ -205,7 +197,9 @@ class YTreeArbor(Arbor):
             The source yt data container to be used to make the cut region.
             If none given, the
             :class:`~yt.data_objects.static_output.Dataset.all_data` container
-            (i.e., the full dataset) is used.
+            (i.e., the full dataset) is used. The ``ytds`` attribute is a yt
+            dataset associated with the arbor and can be used to create data
+            containers for use here.
 
         Returns
         -------
@@ -225,10 +219,13 @@ class YTreeArbor(Arbor):
 
         >>> import ytree
         >>> a = ytree.load("arbor/arbor.h5")
+        >>> ds = a.ytds
+        >>> sphere = ds.sphere(ds.domain_center, (0.1, "unitary"))
         >>> # select halos below 1e13 Msun at redshift > 1
         >>> sel = a.get_yt_selection(
         ...     below=[("mass", 1e13, "Msun")],
-        ...     above=[("redshift", 1)])
+        ...     above=[("redshift", 1)],
+        ...     data_source=sphere)
         >>> print (sel["halos", "mass"])
         >>> print (sel["halos", "virial_radius"])
 
@@ -355,10 +352,9 @@ class YTreeArbor(Arbor):
         if trees is not None and len(trees) != self.size:
             raise ValueError("The trees argument must be a list of all trees.")
 
+        # Planting trees is necessary to get access to the start index for
+        # each data file (i.e., self._node_io._si).
         self._plant_trees()
-        container.get_data([('halos', 'file_number'),
-                            ('halos', 'file_root_index'),
-                            ('halos', 'tree_index')])
 
         all_storage = {}
         for my_store, my_chunk in parallel_objects(container.chunks([], "io"),
@@ -369,6 +365,8 @@ class YTreeArbor(Arbor):
             arbor_index = self._node_io._si[file_number] + file_root_index
             my_store.result = (arbor_index, tree_index)
 
+        # Gather results from all chunks.
+        # This is quite fast so we can afford to pull everything back together.
         all_ai = []
         all_ti = []
         for my_i, my_values in sorted(all_storage.items()):
@@ -376,8 +374,13 @@ class YTreeArbor(Arbor):
             all_ti.append(my_values[1])
         all_ai = np.concatenate(all_ai).astype(int)
         all_ti = np.concatenate(all_ti).astype(int)
+        all_results = list(zip(all_ai, all_ti))
 
-        for ai, ti in zip(all_ai, all_ti):
+        # Yield results.
+        # If yielding full TreeNode objects, this is quite slow.
+        # Yielding the minimal information to reconstruct a TreeNode
+        # is basically instantaneous.
+        for ai, ti in all_results:
             if deconstructed:
                 yield (ai, ti)
 
@@ -386,7 +389,8 @@ class YTreeArbor(Arbor):
                     root_node = self._generate_root_node(ai)
                 else:
                     root_node = trees[ai]
-                yield root_node.get_node("forest", ti)
+                my_node = root_node.get_node("forest", ti)
+                yield my_node
 
     def reload_arbor(self):
         """
