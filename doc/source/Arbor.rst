@@ -531,6 +531,16 @@ For convenience, individual trees can also be saved by calling
    Creating field arrays [1/1]: 100%|████| 4897/4897 [00:00<00:00, 13711286.17it/s]
    >>> a2 = ytree.load(fn)
 
+.. _save-in-place:
+
+Saving New Fields In Place
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If the arbor is of the special :ref:`ytree <load-ytree>` format, new
+data can be added (see :ref:`analysis-fields`) and saved directly to
+the existing dataset by setting the ``save_in_place`` keyword argument
+to True. See :ref:`saving-analysis` for more information.
+
 .. _node-container:
 
 Arbitrary Collections of TreeNodes

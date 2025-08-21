@@ -1060,6 +1060,11 @@ class Arbor(metaclass=RegisteredArbor):
             "This function is only implemented for ytree arbors."
             "Use save_arbor to save your data in the correct format.")
 
+    def reload_arbor(self):
+        raise NotImplementedError(
+            "This function is only implemented for ytree arbors."
+            "Use save_arbor to save your data in the correct format.")
+
     @classmethod
     def _is_valid(cls, *args, **kwargs):
         """

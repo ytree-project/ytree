@@ -400,9 +400,26 @@ class YTreeArbor(Arbor):
 
     def reload_arbor(self):
         """
-        Reload the arbor and setup existing derived fields.
+        Reload the arbor and setup pre-existing derived fields.
 
-        This can be useful to do after saving a bunch of analysis fields.
+        This can be useful to do after performing a long series of analyses
+        in which many :ref:`analysis-fields` have been modified and the results
+        saved in update mode (i.e., new results saved to an existing arbor).
+        This will free analysis fields from memory as they now live on disk as
+        conventional fields.
+
+        This will automatically add any derived or analysis fields that were
+        present in the original arbor. This function may prove useful for
+        keeping memory usage under control in lengthy jobs. Note, this is only
+        available for :ref:`ytree <load-ytree>` arbor types.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("arbor/arbor.h5")
+        >>> # do stuff
+        >>> a = a.reload_arbor()
         """
 
         new_arbor = ytree_load(self.filename)
