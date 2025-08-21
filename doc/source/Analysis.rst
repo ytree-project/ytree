@@ -424,6 +424,8 @@ structures can be safely reset. This can be done with the
    a = ytree.load("arbor/arbor.h5")
 
    # perform some expensive analysis, perhaps in a loop or two
+   trees = list(a[:])
+   a.save_arbor(trees=trees, save_in_place=True)
 
    a = a.reload_arbor()
 
