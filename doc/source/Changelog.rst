@@ -13,6 +13,68 @@ The `CREDITS file
 contains the most up-to-date list of everyone who has contributed to the
 ``ytree`` source code.
 
+Version 3.3.0
+-------------
+
+Release date: *August 21, 2025*
+
+New Features
+^^^^^^^^^^^^
+
+ * Add save_in_place option to save_arbor (`PR #139
+   <https://github.com/ytree-project/ytree/pull/139>`__)
+ * Add TreeContainer convenience class (`PR #140
+   <https://github.com/ytree-project/ytree/pull/140>`__)
+ * Add support for generic csv data (`PR #160
+   <https://github.com/ytree-project/ytree/pull/160>`__)
+
+Minor Enhancements
+^^^^^^^^^^^^^^^^^^
+
+ * Add ability to customize file naming conventions for AHF (`PR #172
+   <https://github.com/ytree-project/ytree/pull/172>`__)
+ * Add documentation for helpful attributes and make cosmology
+   calculator a cached_property (`PR #175
+   <https://github.com/ytree-project/ytree/pull/175>`__)
+ * Add preprocess and handoff_attrs options to AnalysisPipeline (`PR
+   #178 <https://github.com/ytree-project/ytree/pull/178>`__)
+ * Add automatic vector field detection (`PR #179
+   <https://github.com/ytree-project/ytree/pull/179>`__)
+ * Minor speedup for get_node (`PR #180
+   <https://github.com/ytree-project/ytree/pull/180>`__)
+ * Add nodes keyword to parallel_tree_nodes (`PR #181
+   <https://github.com/ytree-project/ytree/pull/181>`__)
+ * Parallelize get_nodes_from_selection (`PR #183
+   <https://github.com/ytree-project/ytree/pull/183>`__)
+
+Bugfixes
+^^^^^^^^
+
+ * Get correct file numbers when doing an update save (`PR #184
+   <https://github.com/ytree-project/ytree/pull/184>`__)
+
+Infrastructure Updates
+^^^^^^^^^^^^^^^^^^^^^^
+
+ * Replace deprecated unyt.uconcatenate function (`PR #165
+   <https://github.com/ytree-project/ytree/pull/165>`__)
+ * Updating python versions and fixing deprecations (`PR #167
+   <https://github.com/ytree-project/ytree/pull/167>`__)
+ * Update version support (`PR #169
+   <https://github.com/ytree-project/ytree/pull/169>`__)
+ * Replace setup.py with pyproject.toml (`PR #170
+   <https://github.com/ytree-project/ytree/pull/170>`__)
+ * Add resource_class for testing and remove daily tests (`PR #171
+   <https://github.com/ytree-project/ytree/pull/171>`__)
+ * Change deprecated numpy.in1d to isin (`PR #173
+   <https://github.com/ytree-project/ytree/pull/173>`__)
+ * Replace deprecated functions (`PR #174
+   <https://github.com/ytree-project/ytree/pull/174>`__)
+ * Generalize package description in docs (`PR #176
+   <https://github.com/ytree-project/ytree/pull/176>`__)
+ * Split frontend tests into separate files (`PR #177
+   <https://github.com/ytree-project/ytree/pull/177>`__)
+
 Version 3.2.1
 -------------
 
