@@ -17,8 +17,7 @@ import numpy as np
 
 from yt.funcs import \
     get_pbar, \
-    is_root as yt_is_root, \
-    mylog
+    is_root as yt_is_root
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm, \
     parallel_objects
