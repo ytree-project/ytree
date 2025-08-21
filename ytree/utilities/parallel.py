@@ -391,8 +391,8 @@ def parallel_tree_nodes(tree, group="forest", nodes=None,
             for field, value in result.items():
                 my_halo[field] = value
 
-def parallel_nodes(trees, group="forest", save_every=None,
-                   save_in_place=None, filename=None,
+def parallel_nodes(trees, group="forest", collect_results=True,
+                   save_every=None, save_in_place=None, filename=None,
                    njobs=None, dynamic=None):
     """
     Iterate over all nodes in a list of trees in parallel.
@@ -417,11 +417,29 @@ def parallel_nodes(trees, group="forest", save_every=None,
         all nodes in the forest, "tree" for all nodes in the tree, or "prog"
         for all nodes in the line of main progenitors.
         Default: "forest"
+    collect_results : optional, bool
+        If True, then results stored in analysis fields will be collected
+        by the root process. This must be set to True if saving is to be
+        done. If False, results collection is ignored. This will result in
+        a significant speedup. If you have no intention of altering analysis
+        fields or do not need results to be recollected or saved, then this is
+        the best option. Setting this to False will automatically set
+        save_every to False as well.
+        Default: True
     save_every : optional, int or False
-        Number of trees to be completed before results are saved. This is
-        used to save intermediate results in case scripts need to be restarted.
-        If None, save will only occur after iterating over all trees. If False,
-        no saving will be done.
+        Number of trees to be completed before results are saved. This is used to
+        save intermediate results in case scripts need to be restarted. This
+        parameter results in different behavior depending on the value of the
+        collect_results keyword. If save_every is set to:
+
+            - integer: if collect_trees is True, the number of trees to complete
+              before saving. If collect_trees is False, a ValueError exception will
+              be raised.
+            - False: no saving will be done. Results will still be collected if
+              collect_results is True.
+            - None: if collect_results if True, save will occur after iterating over
+              all trees. If collect_results is False, no saving will be done.
+
         Default: None
     save_in_place : optional, bool or None
         If True, analysis fields will be saved to the original
@@ -498,7 +516,8 @@ def parallel_nodes(trees, group="forest", save_every=None,
             raise ValueError(f"dynamic must be a tuple of length 2: {dynamic}.")
 
     for tree in parallel_trees(
-            trees, save_every=save_every, save_in_place=save_in_place,
+            trees, collect_results=collect_results,
+            save_every=save_every, save_in_place=save_in_place,
             filename=filename, njobs=njobs[0], dynamic=dynamic[0]):
 
         for node in parallel_tree_nodes(
