@@ -411,7 +411,7 @@ Putting it all Together: Parallel Analysis
 
 To unleash the true power of the
 :class:`~ytree.analysis.analysis_pipeline.AnalysisPipeline`, run it in
-parallel using one of the :ref:`parallel_iterators`. See
+parallel using one of the :ref:`parallel-iterators`. See
 :ref:`ytree_parallel` for more information on using ``ytree`` on
 multiple processors.
 
