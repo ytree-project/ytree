@@ -38,7 +38,26 @@ parallel. For example, to run on 4 processors, do:
 
 where "my_analysis.py" is the name of the script.
 
-.. _parallel_iterators:
+.. _parallel-performance:
+
+An Important Note on Parallel Performance
+-----------------------------------------
+
+On its own, iterating over trees and nodes in parallel is fairly
+efficient. What complicates matters is the collection and storage of
+results with :ref:`analysis-fields`. This must be managed carefully
+and requires significant work behind the scenes. Two of the three
+available parallel iterators
+(:func:`~ytree.utilities.parallel.parallel_trees` and
+:func:`~ytree.utilities.parallel.parallel_nodes`) have the ability to
+save results to the arbor as they go. However, this operation is quite
+expensive. Both of these functions accept a ``collect_results``
+keyword argument which can be set to False to skip results
+collection. If you do not need for results to be collected and/or
+saved within the arbor, then it is highly recommended to set
+``collect_results=False`` as this will greatly improve performance.
+
+.. _parallel-iterators:
 
 Parallel Iterators
 ------------------
@@ -139,6 +158,9 @@ process is the root in a group. Only the results recorded by the root
 process will be collected. In the example above, it is up to the user
 to properly manage the parallelism within the loop.
 
+Before using this function, it is a good idea to read
+:ref:`parallel-performance`.
+
 .. _tree_node_parallel:
 
 Parallelizing over Nodes in a Single Tree
@@ -228,3 +250,6 @@ task queue with 3 process groups of 4 processors each. Each of those
 process groups will work on a single tree using its own task queue,
 consisting of 1 server process and 3 worker processes. What a world we
 live in.
+
+Before using this function, it is a good idea to read
+:ref:`parallel-performance`.

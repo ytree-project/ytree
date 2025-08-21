@@ -404,6 +404,36 @@ See the
 :func:`~ytree.analysis.analysis_pipeline.AnalysisPipeline.add_recipe`
 docstring for an example of including additional function arguments.
 
+.. _reload-arbor:
+
+Reloading Arbors to Reduce Memory Usage
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Over a long period of performing analysis in which
+:ref:`analysis-fields` are modified, memory usage will steadily
+increase as all the modified field values must be held onto. However,
+once these have been saved (either inside the
+:ref:`parallel-iterators` or by :ref:`save-in-place`), these data
+structures can be safely reset. This can be done with the
+:func:`~ytree.frontends.ytree.arbor.YTreeArbor.reload_arbor` function.
+
+.. code-block:: python
+
+   import ytree
+
+   a = ytree.load("arbor/arbor.h5")
+
+   # perform some expensive analysis, perhaps in a loop or two
+   trees = list(a[:])
+   a.save_arbor(trees=trees, save_in_place=True)
+
+   a = a.reload_arbor()
+
+This will automatically add any derived or analysis fields that were
+present in the original arbor. This function may prove useful for
+keeping memory usage under control in lengthy jobs. Note, this is only
+available for :ref:`ytree <load-ytree>` arbor types.
+
 .. _parallel_analysis:
 
 Putting it all Together: Parallel Analysis
@@ -411,7 +441,7 @@ Putting it all Together: Parallel Analysis
 
 To unleash the true power of the
 :class:`~ytree.analysis.analysis_pipeline.AnalysisPipeline`, run it in
-parallel using one of the :ref:`parallel_iterators`. See
+parallel using one of the :ref:`parallel-iterators`. See
 :ref:`ytree_parallel` for more information on using ``ytree`` on
 multiple processors.
 

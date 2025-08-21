@@ -150,3 +150,17 @@ class AnalysisFieldTest(TempDirTest):
             t[f'thing_{ax}'] += 1
             assert_array_equal(t['forest', f'thing_{ax}'], t['forest', 'thing'][:, i])
             assert_array_equal(a2[f'thing_{ax}'], a2['thing'][:, i])
+
+    @requires_file(CT)
+    def test_reload_arbor(self):
+        a = ytree.load(CT)
+
+        fn = a.save_arbor()
+        a = ytree.load(fn)
+        a.add_analysis_field('bears', 'Msun/yr')
+
+        trees = list(a[:])
+        a.save_arbor(trees=trees, save_in_place=True)
+
+        a = a.reload_arbor()
+        assert "bears" in a.field_list

@@ -25,9 +25,12 @@ from yt.data_objects.data_containers import \
     YTDataContainer
 from yt.utilities.logger import \
     ytLogger
+from yt.utilities.parallel_tools.parallel_analysis_interface import \
+    parallel_objects
 
 from ytree.data_structures.arbor import \
     Arbor
+from ytree.data_structures.load import load as ytree_load
 from ytree.frontends.ytree.io import \
     YTreeDataFile, \
     YTreeRootFieldIO, \
@@ -164,14 +167,6 @@ class YTreeArbor(Arbor):
         If multiple criteria are provided, selected halos must meet all
         criteria.
 
-        To specify a custom data container, use the ``ytds`` attribute
-        associated with the arbor to access the merger tree data as a yt
-        dataset. For example:
-
-        >>> import ytree
-        >>> a = ytree.load("arbor/arbor.h5")
-        >>> ds = a.ytds
-
         Parameters
         ----------
         above : optional, list of tuples with (field, value, <units>)
@@ -202,7 +197,9 @@ class YTreeArbor(Arbor):
             The source yt data container to be used to make the cut region.
             If none given, the
             :class:`~yt.data_objects.static_output.Dataset.all_data` container
-            (i.e., the full dataset) is used.
+            (i.e., the full dataset) is used. The ``ytds`` attribute is a yt
+            dataset associated with the arbor and can be used to create data
+            containers for use here.
 
         Returns
         -------
@@ -222,10 +219,13 @@ class YTreeArbor(Arbor):
 
         >>> import ytree
         >>> a = ytree.load("arbor/arbor.h5")
+        >>> ds = a.ytds
+        >>> sphere = ds.sphere(ds.domain_center, (0.1, "unitary"))
         >>> # select halos below 1e13 Msun at redshift > 1
         >>> sel = a.get_yt_selection(
         ...     below=[("mass", 1e13, "Msun")],
-        ...     above=[("redshift", 1)])
+        ...     above=[("redshift", 1)],
+        ...     data_source=sphere)
         >>> print (sel["halos", "mass"])
         >>> print (sel["halos", "virial_radius"])
 
@@ -348,22 +348,92 @@ class YTreeArbor(Arbor):
 
         """
 
+        # Planting trees is necessary to get access to the start index for
+        # each data file (i.e., self._node_io._si).
         self._plant_trees()
-        container.get_data([('halos', 'file_number'),
-                            ('halos', 'file_root_index'),
-                            ('halos', 'tree_index')])
 
-        file_number = container['halos', 'file_number'].d.astype(int)
-        file_root_index = container['halos', 'file_root_index'].d.astype(int)
-        tree_index = container['halos', 'tree_index'].d.astype(int)
-        arbor_index = self._node_io._si[file_number] + file_root_index
+        all_storage = {}
+        for my_store, my_chunk in parallel_objects(container.chunks([], "io"),
+                                                   storage=all_storage):
+            file_number = my_chunk['halos', 'file_number'].d.astype(int)
+            file_root_index = my_chunk['halos', 'file_root_index'].d.astype(int)
+            tree_index = my_chunk['halos', 'tree_index'].d.astype(int)
+            arbor_index = self._node_io._si[file_number] + file_root_index
+            my_store.result = (arbor_index, tree_index)
 
-        for ai, ti in zip(arbor_index, tree_index):
-            root_node = self._generate_root_node(ai)
-            if ti == 0:
-                yield root_node
-            else:
-                yield root_node.get_node("forest", ti)
+        # Gather results from all chunks.
+        # This is quite fast so we can afford to pull everything back together.
+        all_ai = []
+        all_ti = []
+        for my_i, my_values in sorted(all_storage.items()):
+            all_ai.append(my_values[0])
+            all_ti.append(my_values[1])
+        all_ai = np.concatenate(all_ai).astype(int)
+        all_ti = np.concatenate(all_ti).astype(int)
+        all_results = list(zip(all_ai, all_ti))
+
+        # Yield results as TreeNode objects.
+        # The slowest part of this is generating the root nodes
+        # with self._generate_root_node. The get_node call is fast.
+        # We speed this up by creating a dictionary of roots so we
+        # don't have to regenerate.
+        # For an instant in time, this function accepted a trees kwarg
+        # allowing the user to create and supply the list of all trees
+        # ahead of time. However, I removed this because it was fairly
+        # awkward and not much faster than the internal dict.
+
+        # Note to the future, yielding just the (ai, ti) tuple as the minimum
+        # required to generate a node later is basically instantaneous.
+        # I experimented with yielding just (ai, ti) and then piping that
+        # into parallel_trees. This was a speedup, but did not result in a
+        # clean interface, so I have scrapped it from here for now.
+        # In the future, it may be better to return a NodeContainer that
+        # contains the (ai, ti) pairs and has parallel iteration implemented.
+
+        my_trees = {}
+        for ai, ti in all_results:
+            if ai not in my_trees:
+                root_node = self._generate_root_node(ai)
+                my_trees[ai] = root_node
+            root_node = my_trees[ai]
+            yield root_node.get_node("forest", ti)
+
+    def reload_arbor(self):
+        """
+        Reload the arbor and setup pre-existing derived fields.
+
+        This can be useful to do after performing a long series of analyses
+        in which many :ref:`analysis-fields` have been modified and the results
+        saved in update mode (i.e., new results saved to an existing arbor).
+        This will free analysis fields from memory as they now live on disk as
+        conventional fields.
+
+        This will automatically add any derived or analysis fields that were
+        present in the original arbor. This function may prove useful for
+        keeping memory usage under control in lengthy jobs. Note, this is only
+        available for :ref:`ytree <load-ytree>` arbor types.
+
+        Examples
+        --------
+
+        >>> import ytree
+        >>> a = ytree.load("arbor/arbor.h5")
+        >>> # do stuff
+        >>> a = a.reload_arbor()
+        """
+
+        new_arbor = ytree_load(self.filename)
+
+        add_fields = set(self.derived_field_list).difference(
+            new_arbor.derived_field_list)
+        for field in add_fields:
+            fi = self.field_info[field].copy()
+            name = fi.pop("name")
+            function = fi.pop("function")
+            del fi["type"], fi["dependencies"]
+            new_arbor.add_derived_field(name, function, **fi)
+
+        return new_arbor
 
     _ytds = None
     @property

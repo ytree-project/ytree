@@ -531,6 +531,16 @@ For convenience, individual trees can also be saved by calling
    Creating field arrays [1/1]: 100%|████| 4897/4897 [00:00<00:00, 13711286.17it/s]
    >>> a2 = ytree.load(fn)
 
+.. _save-in-place:
+
+Saving New Fields In Place
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If the arbor is of the special :ref:`ytree <load-ytree>` format, new
+data can be added (see :ref:`analysis-fields`) and saved directly to
+the existing dataset by setting the ``save_in_place`` keyword argument
+to True. See :ref:`saving-analysis` for more information.
+
 .. _node-container:
 
 Arbitrary Collections of TreeNodes
@@ -708,7 +718,7 @@ as ``("halos", <field name>)``.
 
    >>> # halos with masses of 1e14 Msun +/- 5%
    >>> selection = a.get_yt_selection(
-           about=[("mass", 1e14, "Msun", 0.05)])
+   ...     about=[("mass", 1e14, "Msun", 0.05)])
 
    >>> print (selection["halos", "redshift"])
    [0.82939091 0.97172537 1.02453741 0.31893065 0.74571856 0.97172537 ...
@@ -728,7 +738,7 @@ contained within the selection.
 
    >>> # halos with masses of 1e14 Msun +/- 5%
    >>> selection = a.get_yt_selection(
-           about=[("mass", 1e14, "Msun", 0.05)])
+   ...     about=[("mass", 1e14, "Msun", 0.05)])
 
    >>> for node in a.get_nodes_from_selection(selector):
    ...     print (node["prog", "mass"])

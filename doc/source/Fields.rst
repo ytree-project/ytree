@@ -209,6 +209,8 @@ or :func:`~ytree.data_structures.tree_node.TreeNode.save_tree`.
    changes made to any analysis fields. Thus, we must use ``list(a[:])``
    to explicitly store a list of trees.
 
+.. _saving-analysis:
+
 Re-saving Analysis Fields and Updating Existing Arbors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

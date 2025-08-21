@@ -15,7 +15,9 @@ parallel utilities
 
 import numpy as np
 
-from yt.funcs import is_root
+from yt.funcs import \
+    get_pbar, \
+    is_root as yt_is_root
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm, \
     parallel_objects
@@ -43,7 +45,8 @@ def regenerate_node(arbor, node, new_index=None):
 
     return new_node
 
-def parallel_trees(trees, save_every=None, save_in_place=None,
+def parallel_trees(trees, collect_results=True,
+                   save_every=None, save_in_place=None,
                    save_roots_only=False, filename=None,
                    njobs=0, dynamic=False):
     """
@@ -63,11 +66,29 @@ def parallel_trees(trees, save_every=None, save_in_place=None,
     ----------
     trees : list of :class:`~ytree.data_structures.tree_node.TreeNode` objects
         The trees to be iterated over in parallel.
+    collect_results : optional, bool
+        If True, then results stored in analysis fields will be collected
+        by the root process. This must be set to True if saving is to be
+        done. If False, results collection is ignored. This will result in
+        a significant speedup. If you have no intention of altering analysis
+        fields or do not need results to be recollected or saved, then this is
+        the best option. Setting this to False will automatically set
+        save_every to False as well.
+        Default: True
     save_every : optional, int or False
-        Number of trees to be completed before results are saved. This is
-        used to save intermediate results in case scripts need to be restarted.
-        If None, save will only occur after iterating over all trees. If False,
-        no saving will be done.
+        Number of trees to be completed before results are saved. This is used to
+        save intermediate results in case scripts need to be restarted. This
+        parameter results in different behavior depending on the value of the
+        collect_results keyword. If save_every is set to:
+
+            - integer: if collect_trees is True, the number of trees to complete
+              before saving. If collect_trees is False, a ValueError exception will
+              be raised.
+            - False: no saving will be done. Results will still be collected if
+              collect_results is True.
+            - None: if collect_results if True, save will occur after iterating over
+              all trees. If collect_results is False, no saving will be done.
+
         Default: None
     save_in_place : optional, bool or None
         If True, analysis fields will be saved to the original
@@ -123,32 +144,75 @@ def parallel_trees(trees, save_every=None, save_in_place=None,
 
     """
 
+    comm = _get_comm(())
+    # This is the root process of the whole operation.
+    # We may split into process groups later, in which case there
+    # will be other root processes and we will uses calls to yt's
+    # is_root to identify them.
+    is_global_root = comm.comm is None or comm.comm.rank == 0
+
+    if dynamic:
+        if is_global_root:
+            nt = len(trees)
+        else:
+            nt = None
+        nt = comm.mpi_bcast(nt, root=0)
+    else:
+        nt = len(trees)
+
+    if nt < 1:
+        return
+
     arbor = trees[0].arbor
     afields = arbor.analysis_field_list
 
-    nt = len(trees)
-    save = True
-    if save_every is None:
-        save_every = nt
+    if save_in_place is None:
+        from ytree.frontends.ytree.arbor import YTreeArbor
+        save_in_place = isinstance(arbor, YTreeArbor)
+
+    # are we actually going to save anything?
+    do_save = True
+    if isinstance(save_every, (int, np.integer)):
+        if collect_results is False:
+            raise ValueError(
+                "collect_results must be True if save_every is set to a number.")
     elif save_every is False:
         save_every = nt
-        save = False
+        do_save = False
+    elif save_every is None:
+        do_save = collect_results
+        save_every = nt
     nb = int(np.ceil(nt / save_every))
 
     for ib in range(nb):
         start = ib * save_every
         end = min(start + save_every, nt)
 
+        my_items = range(start, end)
+
         arbor_storage = {}
-        for tree_store, itree in parallel_objects(
-                range(start, end), storage=arbor_storage,
+        for tree_store, my_item in parallel_objects(
+                my_items, storage=arbor_storage,
                 njobs=njobs, dynamic=dynamic):
 
-            my_tree = trees[itree]
+            my_tree = trees[my_item]
             yield my_tree
 
-            if is_root():
+            # We use yt_is_root here because we want the root of this
+            # workgroup running this iteration, not the global root.
+            # It is this process's job to round up the results for this
+            # iteration and place them in the storage object. This is the
+            # the slowest part as we will copy field data for all of the
+            # analysis fields for the entire forest or tree. In the future,
+            # it may be worth trying to identify the nodes and analysis fields
+            # which were actually altered and copying just them.
+            if yt_is_root():
+                if not collect_results:
+                    continue
+
+                # this is fast
                 my_root = my_tree.find_root()
+
                 tree_store.result_id = (my_root._arbor_index, my_tree.tree_id)
 
                 # If the tree is not a root, only save the "tree" selection
@@ -164,16 +228,22 @@ def parallel_trees(trees, save_every=None, save_in_place=None,
                     tree_store.result = {field: my_tree[field]
                                          for field in afields}
                 else:
+                    # this is the slow part as we are grabbing all analysis
+                    # fields for the entire tree and copying them.
                     tree_store.result = {field: my_tree[selection, field]
                                          for field in afields}
 
             else:
                 tree_store.result_id = None
 
-        # combine results for all trees
-        if is_root():
-            for itree in range(start, end):
-                my_tree = trees[itree]
+        # Use the global root to combine all results.
+        # Both parts of this are fairly slow.
+        if is_global_root and collect_results:
+            my_trees = []
+            pbar = get_pbar("Combining results", len(my_items))
+            for i, my_item in enumerate(my_items):
+                my_tree = trees[my_item]
+                my_trees.append(my_tree)
                 my_root = my_tree.find_root()
                 key = (my_root._arbor_index, my_tree.tree_id)
                 data = arbor_storage[key]
@@ -190,10 +260,12 @@ def parallel_trees(trees, save_every=None, save_in_place=None,
                         arbor._node_io._initialize_analysis_field(my_root, field)
 
                     my_root.field_data[field][indices] = data[field]
+                pbar.update(i+1)
+            pbar.finish()
 
-            if save:
+            if do_save:
                 if save_in_place:
-                    save_trees = trees[start:end]
+                    save_trees = my_trees
                 else:
                     save_trees = trees
 
@@ -220,6 +292,8 @@ def parallel_trees(trees, save_every=None, save_in_place=None,
 
                 trees = [regenerate_node(arbor, tree, new_index=i)
                          for i, tree in enumerate(trees)]
+
+        comm.barrier()
 
 def parallel_tree_nodes(tree, group="forest", nodes=None,
                         njobs=0, dynamic=False):
@@ -300,7 +374,7 @@ def parallel_tree_nodes(tree, group="forest", nodes=None,
 
         my_halo = my_halos[ihalo]
         yield my_halo
-        if is_root():
+        if yt_is_root():
             halo_store.result_id = my_halo.tree_id
             halo_store.result = {field: my_halo[field]
                                  for field in afields}
@@ -308,7 +382,7 @@ def parallel_tree_nodes(tree, group="forest", nodes=None,
             halo_store.result_id = -1
 
     # combine results for this tree
-    if is_root():
+    if yt_is_root():
         for tree_id, result in sorted(tree_storage.items()):
             if tree_id == -1:
                 continue
@@ -317,8 +391,8 @@ def parallel_tree_nodes(tree, group="forest", nodes=None,
             for field, value in result.items():
                 my_halo[field] = value
 
-def parallel_nodes(trees, group="forest", save_every=None,
-                   save_in_place=None, filename=None,
+def parallel_nodes(trees, group="forest", collect_results=True,
+                   save_every=None, save_in_place=None, filename=None,
                    njobs=None, dynamic=None):
     """
     Iterate over all nodes in a list of trees in parallel.
@@ -343,11 +417,29 @@ def parallel_nodes(trees, group="forest", save_every=None,
         all nodes in the forest, "tree" for all nodes in the tree, or "prog"
         for all nodes in the line of main progenitors.
         Default: "forest"
+    collect_results : optional, bool
+        If True, then results stored in analysis fields will be collected
+        by the root process. This must be set to True if saving is to be
+        done. If False, results collection is ignored. This will result in
+        a significant speedup. If you have no intention of altering analysis
+        fields or do not need results to be recollected or saved, then this is
+        the best option. Setting this to False will automatically set
+        save_every to False as well.
+        Default: True
     save_every : optional, int or False
-        Number of trees to be completed before results are saved. This is
-        used to save intermediate results in case scripts need to be restarted.
-        If None, save will only occur after iterating over all trees. If False,
-        no saving will be done.
+        Number of trees to be completed before results are saved. This is used to
+        save intermediate results in case scripts need to be restarted. This
+        parameter results in different behavior depending on the value of the
+        collect_results keyword. If save_every is set to:
+
+            - integer: if collect_trees is True, the number of trees to complete
+              before saving. If collect_trees is False, a ValueError exception will
+              be raised.
+            - False: no saving will be done. Results will still be collected if
+              collect_results is True.
+            - None: if collect_results if True, save will occur after iterating over
+              all trees. If collect_results is False, no saving will be done.
+
         Default: None
     save_in_place : optional, bool or None
         If True, analysis fields will be saved to the original
@@ -424,7 +516,8 @@ def parallel_nodes(trees, group="forest", save_every=None,
             raise ValueError(f"dynamic must be a tuple of length 2: {dynamic}.")
 
     for tree in parallel_trees(
-            trees, save_every=save_every, save_in_place=save_in_place,
+            trees, collect_results=collect_results,
+            save_every=save_every, save_in_place=save_in_place,
             filename=filename, njobs=njobs[0], dynamic=dynamic[0]):
 
         for node in parallel_tree_nodes(

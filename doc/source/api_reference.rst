@@ -41,6 +41,7 @@ used to save the entire arbor or individual trees.
    ~ytree.data_structures.tree_node_selector.min_field_value
    ~ytree.frontends.ytree.arbor.YTreeArbor.get_yt_selection
    ~ytree.frontends.ytree.arbor.YTreeArbor.get_nodes_from_selection
+   ~ytree.frontends.ytree.arbor.YTreeArbor.reload_arbor
    ~ytree.frontends.ytree.arbor.YTreeArbor.ytds
 
 Visualizing Merger Trees

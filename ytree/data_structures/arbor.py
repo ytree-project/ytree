@@ -1060,6 +1060,11 @@ class Arbor(metaclass=RegisteredArbor):
             "This function is only implemented for ytree arbors."
             "Use save_arbor to save your data in the correct format.")
 
+    def reload_arbor(self):
+        raise NotImplementedError(
+            "This function is only implemented for ytree arbors."
+            "Use save_arbor to save your data in the correct format.")
+
     @classmethod
     def _is_valid(cls, *args, **kwargs):
         """
@@ -1215,7 +1220,7 @@ class CatalogArbor(Arbor):
 
     def _generate_root_node(self, index):
         """
-        Return a node self._trees.
+        Return a node from self._trees.
 
         These cannot be generated easily, so we keep them.
         """
