@@ -17,7 +17,8 @@ import numpy as np
 
 from yt.funcs import \
     get_pbar, \
-    is_root as yt_is_root
+    is_root as yt_is_root, \
+    mylog
 from yt.utilities.parallel_tools.parallel_analysis_interface import \
     _get_comm, \
     parallel_objects
@@ -45,15 +46,7 @@ def regenerate_node(arbor, node, new_index=None):
 
     return new_node
 
-def make_node(iter_trees, base_trees, node_id):
-    if isinstance(node_id, tuple):
-        ai, ti = node_id
-        root_node = base_trees[ai]
-        return root_node.get_node("forest", ti)
-    else:
-        return iter_trees[node_id]
-
-def parallel_trees(trees, base_trees=None,
+def parallel_trees(trees, collect_results=True,
                    save_every=None, save_in_place=None,
                    save_roots_only=False, filename=None,
                    njobs=0, dynamic=False):
@@ -153,49 +146,50 @@ def parallel_trees(trees, base_trees=None,
     if nt < 1:
         return
 
-    deconstructed = trees is None or isinstance(trees[0], tuple)
-    if deconstructed:
-        if base_trees is None:
-            raise ValueError("Cannot provide deconstructed trees without base_trees.")
-        else:
-            arbor = base_trees[0].arbor
-    else:
-        arbor = trees[0].arbor
+    arbor = trees[0].arbor
     afields = arbor.analysis_field_list
 
     if save_in_place is None:
         from ytree.frontends.ytree.arbor import YTreeArbor
         save_in_place = isinstance(arbor, YTreeArbor)
 
-    save = True
+    do_save = True
     if save_every is None:
         save_every = nt
     elif save_every is False:
         save_every = nt
-        save = False
+        do_save = False
     nb = int(np.ceil(nt / save_every))
 
     for ib in range(nb):
         start = ib * save_every
         end = min(start + save_every, nt)
 
-        if (is_global_root or not dynamic) and deconstructed:
-            my_items = trees[start:end]
-        else:
-            my_items = range(start, end)
+        my_items = range(start, end)
 
         arbor_storage = {}
         for tree_store, my_item in parallel_objects(
                 my_items, storage=arbor_storage,
                 njobs=njobs, dynamic=dynamic):
 
-            my_tree = make_node(trees, base_trees, my_item)
+            my_tree = trees[my_item]
             yield my_tree
 
             # We use yt_is_root here because we want the root of this
             # workgroup running this iteration, not the global root.
+            # It is this process's job to round up the results for this
+            # iteration and place them in the storage object. This is the
+            # the slowest part as we will copy field data for all of the
+            # analysis fields for the entire forest or tree. In the future,
+            # it may be worth trying to identify the nodes and analysis fields
+            # which were actually altered and copying just them.
             if yt_is_root():
+                if not collect_results:
+                    continue
+
+                # this is fast
                 my_root = my_tree.find_root()
+
                 tree_store.result_id = (my_root._arbor_index, my_tree.tree_id)
 
                 # If the tree is not a root, only save the "tree" selection
@@ -211,6 +205,8 @@ def parallel_trees(trees, base_trees=None,
                     tree_store.result = {field: my_tree[field]
                                          for field in afields}
                 else:
+                    # this is the slow part as we are grabbing all analysis
+                    # fields for the entire tree and copying them.
                     tree_store.result = {field: my_tree[selection, field]
                                          for field in afields}
 
@@ -218,11 +214,12 @@ def parallel_trees(trees, base_trees=None,
                 tree_store.result_id = None
 
         # Use the global root to combine all results.
-        if is_global_root:
+        # Both parts of this are fairly slow.
+        if is_global_root and collect_results:
             my_trees = []
             pbar = get_pbar("Combining results", len(my_items))
             for i, my_item in enumerate(my_items):
-                my_tree = make_node(trees, base_trees, my_item)
+                my_tree = trees[my_item]
                 my_trees.append(my_tree)
                 my_root = my_tree.find_root()
                 key = (my_root._arbor_index, my_tree.tree_id)
@@ -243,7 +240,7 @@ def parallel_trees(trees, base_trees=None,
                 pbar.update(i+1)
             pbar.finish()
 
-            if save:
+            if do_save:
                 if save_in_place:
                     save_trees = my_trees
                 else:
