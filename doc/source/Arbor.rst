@@ -708,7 +708,7 @@ as ``("halos", <field name>)``.
 
    >>> # halos with masses of 1e14 Msun +/- 5%
    >>> selection = a.get_yt_selection(
-           about=[("mass", 1e14, "Msun", 0.05)])
+   ...     about=[("mass", 1e14, "Msun", 0.05)])
 
    >>> print (selection["halos", "redshift"])
    [0.82939091 0.97172537 1.02453741 0.31893065 0.74571856 0.97172537 ...
@@ -728,7 +728,7 @@ contained within the selection.
 
    >>> # halos with masses of 1e14 Msun +/- 5%
    >>> selection = a.get_yt_selection(
-           about=[("mass", 1e14, "Msun", 0.05)])
+   ...     about=[("mass", 1e14, "Msun", 0.05)])
 
    >>> for node in a.get_nodes_from_selection(selector):
    ...     print (node["prog", "mass"])
