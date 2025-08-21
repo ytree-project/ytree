@@ -135,10 +135,14 @@ def parallel_trees(trees, base_trees=None,
     """
 
     comm = _get_comm(())
-    is_root = comm.comm is None or comm.comm.rank == 0
+    # This is the root process of the whole operation.
+    # We may split into process groups later, in which case there
+    # will be other root processes and we will uses calls to yt's
+    # is_root to identify them.
+    is_global_root = comm.comm is None or comm.comm.rank == 0
 
     if dynamic:
-        if is_root:
+        if is_global_root:
             nt = len(trees)
         else:
             nt = None
@@ -175,7 +179,7 @@ def parallel_trees(trees, base_trees=None,
         start = ib * save_every
         end = min(start + save_every, nt)
 
-        if (is_root or not dynamic) and deconstructed:
+        if (is_global_root or not dynamic) and deconstructed:
             my_items = trees[start:end]
         else:
             my_items = range(start, end)
@@ -214,7 +218,7 @@ def parallel_trees(trees, base_trees=None,
                 tree_store.result_id = None
 
         # Use the global root to combine all results.
-        if is_root:
+        if is_global_root:
             my_trees = []
             pbar = get_pbar("Combining results", len(my_items))
             for i, my_item in enumerate(my_items):
