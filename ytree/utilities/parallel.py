@@ -66,11 +66,29 @@ def parallel_trees(trees, collect_results=True,
     ----------
     trees : list of :class:`~ytree.data_structures.tree_node.TreeNode` objects
         The trees to be iterated over in parallel.
+    collect_results : optional, bool
+        If True, then results stored in analysis fields will be collected
+        by the root process. This must be set to True if saving is to be
+        done. If False, results collection is ignored. This will result in
+        a significant speedup. If you have no intention of altering analysis
+        fields or do not need results to be recollected or saved, then this is
+        the best option. Setting this to False will automatically set
+        save_every to False as well.
+        Default: True
     save_every : optional, int or False
-        Number of trees to be completed before results are saved. This is
-        used to save intermediate results in case scripts need to be restarted.
-        If None, save will only occur after iterating over all trees. If False,
-        no saving will be done.
+        Number of trees to be completed before results are saved. This is used to
+        save intermediate results in case scripts need to be restarted. This
+        parameter results in different behavior depending on the value of the
+        collect_results keyword. If save_every is set to:
+
+            - integer: if collect_trees is True, the number of trees to complete
+              before saving. If collect_trees is False, a ValueError exception will
+              be raised.
+            - False: no saving will be done. Results will still be collected if
+              collect_results is True.
+            - None: if collect_results if True, save will occur after iterating over
+              all trees. If collect_results is False, no saving will be done.
+
         Default: None
     save_in_place : optional, bool or None
         If True, analysis fields will be saved to the original
@@ -152,12 +170,18 @@ def parallel_trees(trees, collect_results=True,
         from ytree.frontends.ytree.arbor import YTreeArbor
         save_in_place = isinstance(arbor, YTreeArbor)
 
+    # are we actually going to save anything?
     do_save = True
-    if save_every is None:
-        save_every = nt
+    if isinstance(save_every, (int, np.integer)):
+        if collect_results is False:
+            raise ValueError(
+                "collect_results must be True if save_every is set to a number.")
     elif save_every is False:
         save_every = nt
         do_save = False
+    elif save_every is None:
+        do_save = collect_results
+        save_every = nt
     nb = int(np.ceil(nt / save_every))
 
     for ib in range(nb):
