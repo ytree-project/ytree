@@ -40,7 +40,7 @@ with "-CRMratio2", use that to load the data.
 parameter files based on the name of the one big file or on the
 available files ending in ".parameter". An exception will be raised if
 neither of these methods are able to locate a parameter file. If this
-is the case, provide one using the `parameter_filename` keyword.
+is the case, provide one using the ``parameter_filename`` keyword.
 
 .. code-block:: python
 
@@ -86,7 +86,7 @@ to query a tree. Two known variations are:
      362  90  362
 
 In the example below, this data is located in files ending with
-".AHF_croco". The `name_config` keyword can be used to specify a
+".AHF_croco". The ``name_config`` keyword can be used to specify a
 dictionary of naming conventions:
 
 .. code-block:: python
@@ -98,7 +98,7 @@ dictionary of naming conventions:
    >>>                  "mtree_prefix": "MTREE.B25_N256_CDM_1LPT.z39_adapt",
    >>>                  "mtree_suffix": ".AHF_croco"})
 
-Valid entries for the `name_config` dictionary are "ahf\_prefix",
+Valid entries for the ``name_config`` dictionary are "ahf\_prefix",
 "mtree\_prefix", and "mtree\_suffix". When using AHF to create merger
 trees, it is advisable to use settings that result in file layouts
 like those described here.
@@ -180,7 +180,7 @@ Consistent-Trees-HDF5
 `Consistent-Trees-HDF5 <https://github.com/uchuuproject/uchuutools>`__
 is a variant of the consistent-trees format built on HDF5. It is used by
 the `Skies & Universe <http://www.skiesanduniverses.org/>`_ project.
-This format allows for access by either `forests` or `trees` as per the
+This format allows for access by either *forests* or *trees* as per the
 definitions above. The data can be stored as either a struct of arrays
 or an array of structs. Both layouts are supported, but ``ytree`` is
 currently optimized for the struct of arrays layout. Field access with
@@ -188,8 +188,8 @@ struct of arrays will be 1 to 2 orders of magnitude faster than with
 array of structs.
 
 Datasets from this format consist of a series of HDF5 files with the
-naming convention, `forest.h5`, `forest_0.5`, ..., `forest_N.h5`.
-The numbered files contain the actual data while the `forest.h5` file
+naming convention, "forest.h5", "forest_0.5", ..., "forest_N.h5".
+The numbered files contain the actual data while the "forest.h5" file
 contains virtual datasets that point to the data files. To load all
 the data, provide the path to the virtual dataset file:
 

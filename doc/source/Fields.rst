@@ -146,7 +146,7 @@ three common field names that differ by just x/y/z
 (case-insensitively). Any that are missed (for example, if they are
 not named with "x/y/z") can be added manually with
 the :func:`~ytree.data_structures.arbor.Arbor.add_vector_field`
-function and using the `vector_components` keyword argument to specify
+function and using the ``vector_components`` keyword argument to specify
 the component fields.
 
 Vector fields can be added for dimensionality not equal to three in

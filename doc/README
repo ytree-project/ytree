@@ -16,18 +16,18 @@ Here are some benefits of using ReST + Sphinx:
 - Sphinx can parse the documents into many convenient formats, most notably HTML
   and a PDF.
 
-Building the documentation requires Sphinx.  The easiest thing to do is to 
-install the yt simulation analysis toolkit, available at yt-project.org.  
+Building the documentation requires Sphinx.  The easiest thing to do is to
+install the yt simulation analysis toolkit, available at yt-project.org.
 With that, simply type:
 
     pip install sphinx
 
-With Sphinx installed, build the documentation by typing the following in the 
+With Sphinx installed, build the documentation by typing the following in the
 doc directory:
 
     make html
 
-This will build html documentation in the build/html directory which is 
+This will build html documentation in the build/html directory which is
 viewable with a web browser.
 
 [1] http://docutils.sourceforge.net/rst.html

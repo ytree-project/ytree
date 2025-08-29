@@ -81,8 +81,8 @@ system.
 Cosmology Calculations
 """"""""""""""""""""""
 
-If the dataset defines the cosmological parameters, `omega_matter`,
-`omega_lambda`, and `hubble_constant`, a
+If the dataset defines the cosmological parameters, ``omega_matter``,
+``omega_lambda``, and ``hubble_constant``, a
 :ref:`yt:cosmology-calculator` instance can be accessed via the
 :class:`~ytree.data_structures.arbor.Arbor.cosmology` attribute. This
 :class:`~yt.utilities.cosmology.Cosmology` instance will be configured
