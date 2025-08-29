@@ -66,7 +66,8 @@ class RockstarArbor(CatalogArbor):
                 self.box_size = self.quan(float(pars[0]), pars[1])
             # Looking for <quantities> in <units>
             elif line.startswith("#Units:"):
-                if " in " not in line: continue
+                if " in " not in line:
+                    continue
                 quan, punits = line[8:].strip().split(" in ", 2)
                 for rem in rems:
                     while rem in punits:

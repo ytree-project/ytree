@@ -576,7 +576,7 @@ class Arbor(metaclass=RegisteredArbor):
 
         # If we've been given an array of TreeNodes,
         # just yield them back.
-        if getattr(indices, 'dtype', None) == object:
+        if getattr(indices, 'dtype', None) is np.dtype(object):
             for index in indices:
                 yield index
             return

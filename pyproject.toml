@@ -80,6 +80,15 @@ Changelog = "https://ytree.readthedocs.io/en/latest/Changelog.html"
 Repository = "https://github.com/ytree-project/ytree"
 Issues = "https://github.com/ytree-project/ytree/issues"
 
+[tool.ruff.lint]
+# By default, Ruff enables Flake8's F rules, along with a subset of the E rules,
+# omitting any stylistic rules that overlap with the use of a formatter, like
+# ruff format
+select = ["E4", "E7", "E9", "F"]
+exclude = [
+    "*/__init__.py"
+]
+
 [tool.setuptools]
 include-package-data = true
 zip-safe = false

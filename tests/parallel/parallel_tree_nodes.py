@@ -13,12 +13,12 @@ parallel_tree_nodes test script
 # The full license is in the file COPYING.txt, distributed with this software.
 #-----------------------------------------------------------------------------
 
+import ytree
 from mpi4py import MPI
 import numpy as np
 import sys
 import yt
 yt.enable_parallelism()
-import ytree
 
 def run():
     input_fn, output_fn, selection, group = sys.argv[1:5]

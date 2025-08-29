@@ -76,9 +76,11 @@ class TreeNodeSelector:
     def __init__(self, function, args=None, kwargs=None):
         self.function = function
         self.args = args
-        if self.args is None: self.args = []
+        if self.args is None:
+            self.args = []
         self.kwargs = kwargs
-        if self.kwargs is None: self.kwargs = {}
+        if self.kwargs is None:
+            self.kwargs = {}
 
     def __call__(self, ancestors):
         return self.function(ancestors, *self.args, **self.kwargs)

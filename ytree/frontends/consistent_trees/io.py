@@ -65,7 +65,8 @@ class ConsistentTreesTreeFieldIO(TreeFieldIO):
 
         for i, datum in enumerate(data):
             ldata = datum.strip().split()
-            if len(ldata) == 0: continue
+            if len(ldata) == 0:
+                continue
             for field in fields:
                 dtype = my_dtypes[field]
                 field_data[field][i] = dtype(ldata[fi[field]["column"]])

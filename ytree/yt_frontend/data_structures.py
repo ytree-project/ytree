@@ -219,7 +219,8 @@ class YTreeDataset(SavedDataset):
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
-        if not args[0].endswith(".h5"): return False
+        if not args[0].endswith(".h5"):
+            return False
         with h5py.File(args[0], "r") as f:
             if "data_type" in f.attrs and "arbor_type" in f.attrs:
                 return True

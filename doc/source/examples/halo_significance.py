@@ -17,9 +17,9 @@ tabbing (i.e., 4 spaces to the left).
 
 """
 
+import ytree
 import yt
 yt.enable_parallelism()
-import ytree
 
 def calc_significance(node):
    if node.descendent is None:

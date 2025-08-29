@@ -93,7 +93,8 @@ def _hdf5_yt_array_lite(fh, field):
     units = ""
     if "units" in fh[field].attrs:
         units = fh[field].attrs["units"]
-    if units == "dimensionless": units = ""
+    if units == "dimensionless":
+        units = ""
     return (fh[field][()], units)
 
 def f_text_block(f, block_size=4096, file_size=None, sep="\n",
@@ -118,7 +119,8 @@ def f_text_block(f, block_size=4096, file_size=None, sep="\n",
     for ib in range(nblocks):
         offset = f.tell()
         my_block = min(block_size, read_size-offset)
-        if my_block <= 0: break
+        if my_block <= 0:
+            break
         buff = f.read(my_block)
         linl = -1
         for ih in range(buff.count(sep)):
