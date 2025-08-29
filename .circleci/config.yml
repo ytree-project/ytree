@@ -255,7 +255,7 @@ workflows:
            name: "Python 3.9 tests"
            tag: "3.9.20"
            ytdev: 0
-           pytestkwargs: "--serialonly"
+           pytestkwargs: "--exclude-parallel --exclude-slow"
 
        - tests:
            requires:
@@ -264,7 +264,7 @@ workflows:
            tag: "3.12.7"
            coverage: 1
            ytdev: 1
-           pytestkwargs: "--serialonly"
+           pytestkwargs: "--exclude-parallel --exclude-slow"
 
        - tests:
            requires:
@@ -273,7 +273,7 @@ workflows:
            tag: "3.12.7"
            coverage: 0
            ytdev: 0
-           pytestkwargs: "--serialonly"
+           pytestkwargs: "--exclude-parallel --exclude-slow"
 
        - docs-test:
            name: "Test docs build"
@@ -293,14 +293,14 @@ workflows:
            name: "Python 3.9 tests"
            tag: "3.9.20"
            ytdev: 0
-           pytestkwargs: "--serialonly"
+           pytestkwargs: "--exclude-parallel --exclude-slow"
 
        - tests:
            name: "Python 3.12 tests"
            tag: "3.12.7"
            coverage: 0
            ytdev: 1
-           pytestkwargs: "--serialonly"
+           pytestkwargs: "--exclude-parallel --exclude-slow"
 
        - docs-test:
            name: "Test docs build"

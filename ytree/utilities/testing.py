@@ -195,6 +195,7 @@ class ArborTest:
     num_data_files = None
     tree_skip = 1
     custom_vector_fields = None
+    slow = False
 
     _arbor = None
     @property
