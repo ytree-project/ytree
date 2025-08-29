@@ -18,7 +18,7 @@ from numpy.testing import assert_raises
 import ytree
 
 from ytree.utilities.exceptions import ArborFieldNotFound
-from ytree.utilities.testing import requires_file
+from ytree.testing.utilities import requires_file
 
 CT = "consistent_trees/tree_0_0_0.dat"
 

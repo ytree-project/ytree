@@ -18,7 +18,7 @@ from numpy.testing import assert_array_equal
 
 import ytree
 
-from ytree.utilities.testing import requires_file
+from ytree.testing.utilities import requires_file
 
 TCL = "tiny_ctrees/locations.dat"
 

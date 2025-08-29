@@ -13,7 +13,8 @@ tests for example scripts
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from ytree.utilities.testing import ExampleScriptTest, TempDirTest
+from ytree.testing.example_script_test import ExampleScriptTest
+from ytree.testing.utilities import TempDirTest
 
 
 class TestPlotMostMassive(TempDirTest, ExampleScriptTest):

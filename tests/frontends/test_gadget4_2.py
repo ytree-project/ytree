@@ -1,5 +1,6 @@
 from ytree.frontends.gadget4 import Gadget4Arbor
-from ytree.utilities.testing import ArborTest, TempDirTest
+from ytree.testing.arbor_test import ArborTest
+from ytree.testing.utilities import TempDirTest
 
 
 class Gadget4ArborMultipleTest(TempDirTest, ArborTest):

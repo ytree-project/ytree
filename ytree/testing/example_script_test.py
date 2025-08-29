@@ -2,8 +2,9 @@ import os
 import pytest
 import sys
 
-from ytree.testing.utilities import check_path, run_command
+from ytree.testing.utilities import run_command
 from ytree.utilities.io import dirname
+from ytree.utilities.loading import check_path
 
 try:
     from mpi4py import MPI
