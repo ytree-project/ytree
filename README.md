@@ -2,6 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/ytree-project/ytree/tree/main.svg?style=svg)](https://circleci.com/gh/ytree-project/ytree/tree/main)
 [![codecov](https://codecov.io/gh/ytree-project/ytree/branch/main/graph/badge.svg)](https://codecov.io/gh/ytree-project/ytree)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/ytree-project/ytree/main.svg)](https://results.pre-commit.ci/latest/github/ytree-project/ytree/main)
 [![Documentation Status](https://readthedocs.org/projects/ytree/badge/?version=latest)](http://ytree.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/ytree.svg)](https://badge.fury.io/py/ytree)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/ytree/badges/version.svg)](https://anaconda.org/conda-forge/ytree)
