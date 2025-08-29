@@ -1,5 +1,4 @@
 import os
-import pytest
 import sys
 
 from ytree.testing.utilities import run_command
@@ -23,7 +22,6 @@ class ExampleScriptTest:
     output_files = ()
     ncores = 1
 
-    @pytest.mark.parallel
     def test_example(self):
         if self.script_filename is None:
             return
