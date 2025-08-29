@@ -5,24 +5,24 @@ Gadget4Arbor io classes and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import h5py
 import numpy as np
 import re
 
-from ytree.data_structures.io import \
-    DataFile, \
-    TreeFieldIO
+from ytree.data_structures.io import DataFile, TreeFieldIO
+
 
 class Gadget4DataFile(DataFile):
     _io_attrs = ("ntrees", "nnodes", "tree_sizes", "offsets")
+
     def _load_properties(self):
         self.open()
         self.ntrees = int(self.fh["Header"].attrs["Ntrees_ThisFile"])
@@ -48,22 +48,25 @@ class Gadget4DataFile(DataFile):
         self.fh.close()
         self.fh = None
 
+
 class Gadget4TreeFieldIO(TreeFieldIO):
-    def _read_fields(self, root_node, fields, dtypes=None,
-                     root_only=False):
+    def _read_fields(self, root_node, fields, dtypes=None, root_only=False):
         """
         Read fields from disk for a single tree.
         """
 
         fi = self.arbor.field_info
-        afields = [field for field in fields
-                   if fi[field].get("source") == "arbor"]
+        afields = [field for field in fields if fi[field].get("source") == "arbor"]
         rfields = list(set(fields).difference(afields))
 
         for afield in afields:
             rfields.extend(
-                [dfield for dfield in fi[afield].get("dependencies", [])
-                 if dfield not in rfields])
+                [
+                    dfield
+                    for dfield in fi[afield].get("dependencies", [])
+                    if dfield not in rfields
+                ]
+            )
 
         if root_only:
             fei = root_node._fi
@@ -72,7 +75,7 @@ class Gadget4TreeFieldIO(TreeFieldIO):
 
         freg = re.compile(r"(^.+)_(\d+$)")
         field_data = {field: [] for field in rfields}
-        for dfi in range(root_node._fi, fei+1):
+        for dfi in range(root_node._fi, fei + 1):
             data_file = self.arbor.data_files[dfi]
             close = False
             if data_file.fh is None:
@@ -83,7 +86,7 @@ class Gadget4TreeFieldIO(TreeFieldIO):
 
             si = root_node._si
             if root_only:
-                my_slice = slice(si, si+1)
+                my_slice = slice(si, si + 1)
             else:
                 if dfi == root_node._fi:
                     my_start = si
@@ -116,15 +119,17 @@ class Gadget4TreeFieldIO(TreeFieldIO):
             field_data[field] = np.concatenate(field_data[field])
 
         if afields:
-            field_data.update(self._get_arbor_fields(
-                root_node, field_data, fields, afields, root_only))
+            field_data.update(
+                self._get_arbor_fields(
+                    root_node, field_data, fields, afields, root_only
+                )
+            )
 
         self._apply_units(rfields, field_data)
 
         return field_data
 
-    def _get_arbor_fields(self, root_node, field_data,
-                          fields, afields, root_only):
+    def _get_arbor_fields(self, root_node, field_data, fields, afields, root_only):
         """
         Generate special fields from the arbor/treenode.
         """
@@ -135,8 +140,7 @@ class Gadget4TreeFieldIO(TreeFieldIO):
             if root_only:
                 adata["uid"] = np.array([root_node.uid])
             else:
-                adata["uid"] = root_node.uid + \
-                  np.arange(root_node._tree_size)
+                adata["uid"] = root_node.uid + np.arange(root_node._tree_size)
 
         if "desc_uid" in afields:
             if "TreeDescendant" in fields:

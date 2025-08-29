@@ -5,29 +5,25 @@ Gadget4Arbor class and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import h5py
 import numpy as np
 import re
 
-from yt.funcs import \
-    get_pbar
+from yt.funcs import get_pbar
 
-from ytree.data_structures.arbor import \
-    SegmentedArbor
+from ytree.data_structures.arbor import SegmentedArbor
 
-from ytree.frontends.gadget4.fields import \
-    Gadget4FieldInfo
-from ytree.frontends.gadget4.io import \
-    Gadget4DataFile, \
-    Gadget4TreeFieldIO
+from ytree.frontends.gadget4.fields import Gadget4FieldInfo
+from ytree.frontends.gadget4.io import Gadget4DataFile, Gadget4TreeFieldIO
+
 
 class Gadget4Arbor(SegmentedArbor):
     """
@@ -48,7 +44,8 @@ class Gadget4Arbor(SegmentedArbor):
             reg = re.search(rf"^(.+\D)\d+{suffix}$", self.parameter_filename)
             if reg is None:
                 raise RuntimeError(
-                    f"Cannot determine numbering system for {self.filename}.")
+                    f"Cannot determine numbering system for {self.filename}."
+                )
             prefix = reg.groups()[0]
             files = [f"{prefix}{i}{suffix}" for i in range(self._nfiles)]
 
@@ -66,7 +63,7 @@ class Gadget4Arbor(SegmentedArbor):
         self.omega_matter = g.attrs["Omega0"]
         self.omega_lambda = g.attrs["OmegaLambda"]
         self.box_size = self.quan(g.attrs["BoxSize"], "Mpc/h")
-        
+
         self._redshifts = f["TreeTimes/Redshift"][()]
         self._times = f["TreeTimes/Time"][()]
 
@@ -81,8 +78,7 @@ class Gadget4Arbor(SegmentedArbor):
             if len(dshape) == 1:
                 field_list.append(d)
             else:
-                field_list.extend(
-                    [f"{d}_{i}" for i in range(dshape[1])])
+                field_list.extend([f"{d}_{i}" for i in range(dshape[1])])
 
         self.field_list = field_list
         fi = dict((field, {}) for field in field_list)
@@ -118,7 +114,7 @@ class Gadget4Arbor(SegmentedArbor):
         file_start_offset = file_end_offset - file_sizes
         tree_size = self._node_info["_tree_size"]
         file_start_index = np.digitize(offset, file_end_offset)
-        file_end_index = np.digitize(offset+tree_size, file_end_offset, right=True)
+        file_end_index = np.digitize(offset + tree_size, file_end_offset, right=True)
 
         self._node_info["_fi"] = file_start_index
         self._node_info["_fei"] = file_end_index
@@ -137,9 +133,13 @@ class Gadget4Arbor(SegmentedArbor):
         if not h5py.is_hdf5(fn):
             return False
 
-        attrs = ["Nhalos_ThisFile", "Nhalos_Total",
-                 "Ntrees_ThisFile", "Ntrees_Total",
-                 "NumFiles"]
+        attrs = [
+            "Nhalos_ThisFile",
+            "Nhalos_Total",
+            "Ntrees_ThisFile",
+            "Ntrees_Total",
+            "NumFiles",
+        ]
         groups = ["TreeHalos", "TreeTable", "TreeTimes"]
 
         with h5py.File(fn, mode="r") as f:

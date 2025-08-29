@@ -1,8 +1,6 @@
-from ytree.frontends.consistent_trees import \
-    ConsistentTreesGroupArbor
-from ytree.utilities.testing import \
-    ArborTest, \
-    TempDirTest
+from ytree.frontends.consistent_trees import ConsistentTreesGroupArbor
+from ytree.utilities.testing import ArborTest, TempDirTest
+
 
 class ConsistentTreesGroupArborTest(TempDirTest, ArborTest):
     arbor_type = ConsistentTreesGroupArbor

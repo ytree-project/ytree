@@ -1,8 +1,6 @@
-from ytree.frontends.ahf import \
-    AHFArbor
-from ytree.utilities.testing import \
-    ArborTest, \
-    TempDirTest
+from ytree.frontends.ahf import AHFArbor
+from ytree.utilities.testing import ArborTest, TempDirTest
+
 
 class AHFArborTest(TempDirTest, ArborTest):
     arbor_type = AHFArbor

@@ -5,13 +5,13 @@ CSVArbor class and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from collections import defaultdict
 import numpy as np
@@ -32,6 +32,7 @@ field_data_types = {
     "INT": int,
     "STR": StringDType(),
 }
+
 
 class CSVArbor(CatalogArbor):
     """
@@ -64,15 +65,17 @@ class CSVArbor(CatalogArbor):
 
         lens = [len(_) for _ in ldata]
         if min(lens) != max(lens):
-            raise RuntimeError(
-                "Header lines must have same number of values.")
+            raise RuntimeError("Header lines must have same number of values.")
 
         fields, dtypes, units = ldata
         fi = {}
         for i, (field, dtype, unit) in enumerate(zip(fields, dtypes, units)):
             my_unit = "" if unit == "None" else unit
-            fi[field] = {"column": i, "units": my_unit,
-                         "dtype": field_data_types[dtype]}
+            fi[field] = {
+                "column": i,
+                "units": my_unit,
+                "dtype": field_data_types[dtype],
+            }
 
         try:
             fi["uid"]["dtype"] = np.int64
@@ -104,9 +107,7 @@ class CSVArbor(CatalogArbor):
         desc_uids = {}
         offsets = {}
 
-        for line, loc in f_text_block(
-                data_file.fh, pbar_string="Loading tree roots"):
-
+        for line, loc in f_text_block(data_file.fh, pbar_string="Loading tree roots"):
             online = line.split(self.sep)
             uid = typ_uid(online[col_uid])
             desc_uid = typ_des(online[col_des])
@@ -175,7 +176,7 @@ class CSVArbor(CatalogArbor):
             my_node._offset = offsets[uid]
             my_node.data_file = self.data_files[0]
             ancestors[desc_uid].append(my_node)
-            pbar.update(i+1)
+            pbar.update(i + 1)
         pbar.finish()
 
         self._ancestors = ancestors

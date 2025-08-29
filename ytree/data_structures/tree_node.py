@@ -5,21 +5,20 @@ TreeNode class and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import numpy as np
 import weakref
 
-from ytree.data_structures.fields import \
-    FieldContainer
-from ytree.utilities.exceptions import \
-    ArborUnsettableField
+from ytree.data_structures.fields import FieldContainer
+from ytree.utilities.exceptions import ArborUnsettableField
+
 
 class TreeNode:
     """
@@ -47,7 +46,8 @@ class TreeNode:
         else:
             self.root = None
 
-    _tree_id = None # used by CatalogArbor
+    _tree_id = None  # used by CatalogArbor
+
     @property
     def tree_id(self):
         """
@@ -110,7 +110,8 @@ class TreeNode:
             return
         self.field_data.clear()
 
-    _descendent = None # used by CatalogArbor
+    _descendent = None  # used by CatalogArbor
+
     @property
     def descendent(self):
         """
@@ -130,7 +131,8 @@ class TreeNode:
             return None
         return self.arbor._generate_tree_node(self.root, desc_link)
 
-    _ancestors = None # used by CatalogArbor
+    _ancestors = None  # used by CatalogArbor
+
     @property
     def ancestors(self):
         """
@@ -161,6 +163,7 @@ class TreeNode:
         return None
 
     _uids = None
+
     @property
     def uids(self):
         """
@@ -173,6 +176,7 @@ class TreeNode:
         return self._uids
 
     _desc_uids = None
+
     @property
     def desc_uids(self):
         """
@@ -185,6 +189,7 @@ class TreeNode:
         return self._desc_uids
 
     _tree_size = None
+
     @property
     def tree_size(self):
         """
@@ -195,12 +200,13 @@ class TreeNode:
         if self.is_root:
             self.arbor._setup_tree(self)
             # pass back to the arbor to avoid calculating again
-            self.arbor._store_node_info(self, '_tree_size')
+            self.arbor._store_node_info(self, "_tree_size")
         else:
             self._tree_size = len(list(self["tree"]))
         return self._tree_size
 
     _link_storage = None
+
     @property
     def _links(self):
         """
@@ -221,8 +227,8 @@ class TreeNode:
         """
 
         fi = self.arbor.field_info[key]
-        ftype = fi.get('type')
-        if ftype not in ['analysis', 'analysis_saved']:
+        ftype = fi.get("type")
+        if ftype not in ["analysis", "analysis_saved"]:
             raise ArborUnsettableField(key, self.arbor)
 
         vector_fieldname = fi.get("vector_fieldname", None)
@@ -238,8 +244,7 @@ class TreeNode:
         else:
             root = self.root
             tree_id = self.tree_id
-        self.arbor._node_io.get_fields(self, fields=[key],
-                                       root_only=False)
+        self.arbor._node_io.get_fields(self, fields=[key], root_only=False)
         data = root.field_data[key]
         data[tree_id] = value
         if has_vector_field and vector_fieldname in root.field_data:
@@ -294,12 +299,10 @@ class TreeNode:
         arr_types = ("forest", "prog", "tree")
         if isinstance(key, tuple):
             if len(key) != 2:
-                raise SyntaxError(
-                    "Must be either 1 or 2 arguments.")
+                raise SyntaxError("Must be either 1 or 2 arguments.")
             ftype, field = key
             if ftype not in arr_types:
-                raise SyntaxError(
-                    f"First argument must be one of {str(arr_types)}.")
+                raise SyntaxError(f"First argument must be one of {str(arr_types)}.")
             if not isinstance(field, str):
                 raise SyntaxError("Second argument must be a string.")
 
@@ -319,8 +322,7 @@ class TreeNode:
                 return getattr(self, f"_{key}_nodes")
 
             # return field value for this node
-            self.arbor._node_io.get_fields(self, fields=[key],
-                                           root_only=self.is_root)
+            self.arbor._node_io.get_fields(self, fields=[key], root_only=self.is_root)
             data_object = self.find_root()
             return data_object.field_data[key][self.tree_id]
 
@@ -452,6 +454,7 @@ class TreeNode:
             yield self.get_node(selector, rid)
 
     _ffi = slice(None)
+
     @property
     def _forest_field_indices(self):
         """
@@ -502,6 +505,7 @@ class TreeNode:
                 yield a_node
 
     _tfi = None
+
     @property
     def _tree_field_indices(self):
         """
@@ -546,6 +550,7 @@ class TreeNode:
                 my_node = None
 
     _pfi = None
+
     @property
     def _prog_field_indices(self):
         """
@@ -596,6 +601,4 @@ class TreeNode:
         if filename is None:
             filename = f"tree_{self.uid}"
 
-        return self.arbor.save_arbor(
-            filename=filename, fields=fields,
-            trees=[self])
+        return self.arbor.save_arbor(filename=filename, fields=fields, trees=[self])

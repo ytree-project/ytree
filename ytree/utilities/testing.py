@@ -5,30 +5,25 @@ testing utilities
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import h5py
 import numpy as np
-from numpy.testing import \
-    assert_equal, \
-    assert_almost_equal, \
-    assert_array_equal
+from numpy.testing import assert_equal, assert_almost_equal, assert_array_equal
 import os
 import pytest
 import shutil
 import subprocess
 import sys
 import tempfile
-from unittest import \
-    skipIf, TestCase
-from yt.funcs import \
-    get_pbar
+from unittest import skipIf, TestCase
+from yt.funcs import get_pbar
 
 from numpy.dtypes import StringDType
 
@@ -43,11 +38,10 @@ try:
 except ModuleNotFoundError:
     MPI = None
 
-generate_results = \
-  int(os.environ.get("YTREE_GENERATE_TEST_RESULTS", 0)) == 1
+generate_results = int(os.environ.get("YTREE_GENERATE_TEST_RESULTS", 0)) == 1
+
 
 def requires_file(filename):
-
     def ffalse(func):
         return None
 
@@ -61,6 +55,7 @@ def requires_file(filename):
     except IOError:
         return ffalse
     return ftrue
+
 
 class TempDirTest(TestCase):
     """
@@ -76,6 +71,7 @@ class TempDirTest(TestCase):
     def tearDown(self):
         os.chdir(self.curdir)
         shutil.rmtree(self.tmpdir)
+
 
 class ParallelTest:
     """
@@ -106,27 +102,31 @@ class ParallelTest:
                 select = np.isin(all_inds, my_inds)
                 assert_array_equal(
                     tree["forest", "test_field"][select],
-                    2 * tree["forest", "mass"][select])
+                    2 * tree["forest", "mass"][select],
+                )
 
                 # the ones we didn't do should all be -1
                 assert_array_equal(
                     tree["forest", "test_field"][~select],
-                    -np.ones_like(tree["forest", "test_field"][~select]))
+                    -np.ones_like(tree["forest", "test_field"][~select]),
+                )
 
     @skipIf(MPI is None, "mpi4py not installed")
     @pytest.mark.parallel
     def test_parallel(self):
-
         for i, my_args in enumerate(self.arg_sets):
             with self.subTest(i=i):
-
-                args = [self.test_script, self.base_filename, self.test_filename] + \
-                    [str(arg) for arg in my_args]
-                comm = MPI.COMM_SELF.Spawn(sys.executable, args=args, maxprocs=self.ncores)
+                args = [self.test_script, self.base_filename, self.test_filename] + [
+                    str(arg) for arg in my_args
+                ]
+                comm = MPI.COMM_SELF.Spawn(
+                    sys.executable, args=args, maxprocs=self.ncores
+                )
                 comm.Disconnect()
 
                 test_arbor = load(self.test_filename)
                 self.check_values(test_arbor, my_args)
+
 
 def run_command(command, timeout=None):
     try:
@@ -136,12 +136,13 @@ def run_command(command, timeout=None):
         else:
             success = False
     except subprocess.TimeoutExpired:
-        print ("Process reached timeout of %d s. (%s)" % (timeout, command))
+        print("Process reached timeout of %d s. (%s)" % (timeout, command))
         success = False
     except KeyboardInterrupt:
-        print ("Killed by keyboard interrupt!")
+        print("Killed by keyboard interrupt!")
         success = False
     return success
+
 
 class ExampleScriptTest:
     """
@@ -167,13 +168,15 @@ class ExampleScriptTest:
 
         source_dir = dirname(__file__, level=3)
         script_path = os.path.join(
-            source_dir, "doc", "source", "examples", self.script_filename)
+            source_dir, "doc", "source", "examples", self.script_filename
+        )
 
         if self.ncores > 1:
             if MPI is None:
                 self.skipTest("mpi4py not installed")
-            comm = MPI.COMM_SELF.Spawn(sys.executable, args=[script_path],
-                                       maxprocs=self.ncores)
+            comm = MPI.COMM_SELF.Spawn(
+                sys.executable, args=[script_path], maxprocs=self.ncores
+            )
             comm.Disconnect()
         else:
             command = f"{sys.executable} {script_path}"
@@ -181,6 +184,7 @@ class ExampleScriptTest:
 
         for fn in self.output_files:
             assert os.path.exists(fn)
+
 
 class ArborTest:
     """
@@ -198,6 +202,7 @@ class ArborTest:
     slow = False
 
     _arbor = None
+
     @property
     def arbor(self):
         if self._arbor is None:
@@ -221,8 +226,10 @@ class ArborTest:
         if self.num_data_files is None:
             return
         assert_equal(
-            len(self.arbor.data_files), self.num_data_files,
-            err_msg=f'Incorrect number of data files for {self.arbor}.')
+            len(self.arbor.data_files),
+            self.num_data_files,
+            err_msg=f"Incorrect number of data files for {self.arbor}.",
+        )
 
     def test_get_root_nodes(self):
         for my_tree in get_random_trees(self.arbor, 47457, 5):
@@ -259,9 +266,8 @@ class ArborTest:
 
     def test_reset_node(self):
         t = self.arbor[0]
-        ts0 = len(list(t['tree']))
-        f0 = dict((field, t['tree', field])
-                  for field in ['uid', 'desc_uid'])
+        ts0 = len(list(t["tree"]))
+        f0 = dict((field, t["tree", field]) for field in ["uid", "desc_uid"])
 
         assert self.arbor.is_setup(t)
         assert self.arbor.is_grown(t)
@@ -275,31 +281,38 @@ class ArborTest:
         assert not self.arbor.is_grown(t)
 
         assert_equal(
-            len(list(t['tree'])), ts0,
-            err_msg=f'Trees are not the same size after resetting for {self.arbor}.')
+            len(list(t["tree"])),
+            ts0,
+            err_msg=f"Trees are not the same size after resetting for {self.arbor}.",
+        )
 
         for field in f0:
             assert_array_equal(
-                t['tree', field], f0[field],
-                err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.")
+                t["tree", field],
+                f0[field],
+                err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.",
+            )
 
     def test_reset_nonroot(self):
         t = self.arbor[0]
-        node = list(t['tree'])[1]
-        ts0 = len(list(node['tree']))
-        f0 = dict((field, node['tree', field])
-                  for field in ['uid', 'desc_uid'])
+        node = list(t["tree"])[1]
+        ts0 = len(list(node["tree"]))
+        f0 = dict((field, node["tree", field]) for field in ["uid", "desc_uid"])
 
         self.arbor.reset_node(node)
 
         assert_equal(
-            len(list(node['tree'])), ts0,
-            err_msg=f'Trees are not the same size after resetting for {self.arbor}.')
+            len(list(node["tree"])),
+            ts0,
+            err_msg=f"Trees are not the same size after resetting for {self.arbor}.",
+        )
 
         for field in f0:
             assert_array_equal(
-                node['tree', field], f0[field],
-                err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.")
+                node["tree", field],
+                f0[field],
+                err_msg=f"Tree field {field} not the same after resetting for {self.arbor}.",
+            )
 
     def test_save_and_reload(self):
         skip = self.tree_skip
@@ -327,28 +340,42 @@ class ArborTest:
 
         for field in a.field_info.vector_fields:
             mylog.info(f"Comparing vector field: {field}.")
-            magfield = np.sqrt((a[field]**2).sum(axis=1))
-            assert_array_equal(a[f"{field}_magnitude"], magfield,
-                               err_msg=f"Magnitude field incorrect: {field}.")
+            magfield = np.sqrt((a[field] ** 2).sum(axis=1))
+            assert_array_equal(
+                a[f"{field}_magnitude"],
+                magfield,
+                err_msg=f"Magnitude field incorrect: {field}.",
+            )
 
             cfields = a.field_info[field]["vector_components"]
 
             for i, cfield in enumerate(cfields):
                 assert_array_equal(
-                    a[cfield], a[field][:, i],
-                    err_msg=(f"Arbor vector field {field} does not match "
-                             f"in dimension {i}."))
+                    a[cfield],
+                    a[field][:, i],
+                    err_msg=(
+                        f"Arbor vector field {field} does not match in dimension {i}."
+                    ),
+                )
 
                 assert_array_equal(
-                    t[cfield], t[field][i],
-                    err_msg=(f"Tree vector field {field} does not match "
-                             f"in dimension {i}."))
+                    t[cfield],
+                    t[field][i],
+                    err_msg=(
+                        f"Tree vector field {field} does not match in dimension {i}."
+                    ),
+                )
 
                 for group in ["prog", "tree"]:
                     assert_array_equal(
-                        t[group, cfield], t[group, field][:, i],
-                        err_msg=(f"{group} vector field {field} does not match "
-                                 f"in dimension {i}."))
+                        t[group, cfield],
+                        t[group, field][:, i],
+                        err_msg=(
+                            f"{group} vector field {field} does not match "
+                            f"in dimension {i}."
+                        ),
+                    )
+
 
 def get_tree_split(arbor):
     """
@@ -365,6 +392,7 @@ def get_tree_split(arbor):
         raise RuntimeError("Could not find nodes to test with.")
     return ancs
 
+
 def get_random_trees(arbor, seed, n):
     """
     Get n random trees from the arbor.
@@ -375,6 +403,7 @@ def get_random_trees(arbor, seed, n):
     gen.shuffle(itrees)
     for itree in itrees[:5]:
         yield arbor[itree]
+
 
 def get_stringsafe_compare_arrays(arr1, arr2):
     """
@@ -393,6 +422,7 @@ def get_stringsafe_compare_arrays(arr1, arr2):
 
     return arr1, arr2
 
+
 def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
     """
     Compare all fields for all trees in two arbors.
@@ -405,11 +435,9 @@ def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
         fields = a1.field_list
 
     for i, field in enumerate(fields):
-        c1, c2 = get_stringsafe_compare_arrays(
-            a1[field][::skip1], a2[field][::skip2])
-        mylog.info(f"Comparing arbor field: {field} ({i+1}/{len(fields)}).")
-        assert_array_equal(c1, c2,
-                           err_msg=f"Arbor field mismatch: {a1, a2, field}.")
+        c1, c2 = get_stringsafe_compare_arrays(a1[field][::skip1], a2[field][::skip2])
+        mylog.info(f"Comparing arbor field: {field} ({i + 1}/{len(fields)}).")
+        assert_array_equal(c1, c2, err_msg=f"Arbor field mismatch: {a1, a2, field}.")
 
     trees1 = list(a1[::skip1])
     trees2 = list(a2[::skip2])
@@ -418,8 +446,9 @@ def compare_arbors(a1, a2, groups=None, fields=None, skip1=1, skip2=1):
     pbar = get_pbar("Comparing trees", ntot)
     for i, (t1, t2) in enumerate(zip(trees1, trees2)):
         compare_trees(t1, t2, groups=groups, fields=fields)
-        pbar.update(i+1)
+        pbar.update(i + 1)
     pbar.finish()
+
 
 def compare_trees(t1, t2, groups=None, fields=None):
     """
@@ -434,16 +463,15 @@ def compare_trees(t1, t2, groups=None, fields=None):
 
     for field in fields:
         for group in groups:
-            c1, c2 = get_stringsafe_compare_arrays(
-                t1[group, field], t2[group, field])
+            c1, c2 = get_stringsafe_compare_arrays(t1[group, field], t2[group, field])
             assert_array_equal(
-                c1, c2,
-                err_msg=f"Tree comparison failed for {group} field: {field}.")
+                c1, c2, err_msg=f"Tree comparison failed for {group} field: {field}."
+            )
     t1.arbor.reset_node(t1)
     t2.arbor.reset_node(t2)
 
-def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
-                 **kwargs):
+
+def compare_hdf5(fh1, fh2, compare=None, compare_groups=True, **kwargs):
     """
     Compare all datasets between two hdf5 files.
     """
@@ -457,21 +485,28 @@ def compare_hdf5(fh1, fh2, compare=None, compare_groups=True,
 
     if compare_groups:
         err_msg = f"{fh1.file.filename} and {fh2.file.filename} have different datasets in group {fh1.name}."
-        assert_equal(sorted(list(fh1.keys())), sorted(list(fh2.keys())), err_msg=err_msg)
+        assert_equal(
+            sorted(list(fh1.keys())), sorted(list(fh2.keys())), err_msg=err_msg
+        )
 
     for key in fh1.keys():
         if isinstance(fh1[key], h5py.Group):
-            compare_hdf5(fh1[key], fh2[key],
-                         compare_groups=compare_groups,
-                         compare=compare, **kwargs)
+            compare_hdf5(
+                fh1[key],
+                fh2[key],
+                compare_groups=compare_groups,
+                compare=compare,
+                **kwargs,
+            )
         else:
-            err_msg = f"{key} field not equal for {fh1.file.filename} and {fh2.file.filename}"
+            err_msg = (
+                f"{key} field not equal for {fh1.file.filename} and {fh2.file.filename}"
+            )
             if fh1[key].dtype == "int":
-                assert_array_equal(fh1[key][()], fh2[key][()],
-                                   err_msg=err_msg)
+                assert_array_equal(fh1[key][()], fh2[key][()], err_msg=err_msg)
             else:
-                compare(fh1[key][()], fh2[key][()],
-                        err_msg=err_msg, **kwargs)
+                compare(fh1[key][()], fh2[key][()], err_msg=err_msg, **kwargs)
+
 
 def assert_rel_equal(a1, a2, decimals, err_msg="", verbose=True):
     # We have nan checks in here because occasionally we have fields that get
@@ -497,11 +532,13 @@ def assert_rel_equal(a1, a2, decimals, err_msg="", verbose=True):
         np.array(a1) / np.array(a2), 1.0, decimals, err_msg=err_msg, verbose=verbose
     )
 
+
 def assert_array_rel_equal(a1, a2, decimals=16, **kwargs):
     """
     Wraps assert_rel_equal with, but decimals is a keyword arg.
     """
     assert_rel_equal(a1, a2, decimals, **kwargs)
+
 
 def verify_get_node(my_tree, n=3):
     """
@@ -516,27 +553,35 @@ def verify_get_node(my_tree, n=3):
 
         for inode in inodes[:3]:
             my_node = my_tree.get_node(selector, inode)
-            err_msg = f"get_node failed: {selector} " + \
-              f"with {str(my_tree.arbor)}."
+            err_msg = f"get_node failed: {selector} " + f"with {str(my_tree.arbor)}."
             assert_equal(my_node.uid, node_list[inode].uid, err_msg=err_msg)
 
             if selector == "forest":
-                err_msg = "get_node index is not tree_id for " + \
-                  f"{str(my_tree.arbor)}."
+                err_msg = (
+                    "get_node index is not tree_id for " + f"{str(my_tree.arbor)}."
+                )
                 assert_equal(my_node.tree_id, inode, err_msg=err_msg)
+
 
 def verify_get_leaf_nodes(my_tree):
     """
     Unit tests for get_leaf_nodes.
     """
     for selector in ["forest", "tree", "prog"]:
-        uids1 = np.array([node.uid for node in
-                          my_tree.get_leaf_nodes(selector=selector)])
-        uids2 = np.array([my_halo.uid for my_halo in my_tree[selector]
-                          if not list(my_halo.ancestors)])
+        uids1 = np.array(
+            [node.uid for node in my_tree.get_leaf_nodes(selector=selector)]
+        )
+        uids2 = np.array(
+            [
+                my_halo.uid
+                for my_halo in my_tree[selector]
+                if not list(my_halo.ancestors)
+            ]
+        )
 
-        err_msg=f"get_leaf_nodes failure for {selector} in {my_tree.arbor}."
+        err_msg = f"get_leaf_nodes failure for {selector} in {my_tree.arbor}."
         assert_equal(uids1, uids2, err_msg=err_msg)
+
 
 def verify_get_root_nodes(my_tree):
     """
@@ -546,16 +591,17 @@ def verify_get_root_nodes(my_tree):
     root_nodes1 = list(my_tree.get_root_nodes())
     for root_node in root_nodes1:
         assert_equal(
-            root_node["desc_uid"], -1,
-            err_msg=f"In {my_tree.arbor}: {root_node} has " + \
-                    f"desc_uid={root_node['desc_uid']}, but expected -1.")
+            root_node["desc_uid"],
+            -1,
+            err_msg=f"In {my_tree.arbor}: {root_node} has "
+            + f"desc_uid={root_node['desc_uid']}, but expected -1.",
+        )
 
-    root_nodes2 = [node for node in my_tree["forest"]
-                    if node.descendent is None]
+    root_nodes2 = [node for node in my_tree["forest"] if node.descendent is None]
 
     uids1 = np.sort([node.uid for node in root_nodes1])
     uids2 = np.sort([node.uid for node in root_nodes2])
 
     assert_array_equal(
-        uids1, uids2,
-        err_msg=f"get_root_nodes failure in {my_tree.arbor}.")
+        uids1, uids2, err_msg=f"get_root_nodes failure in {my_tree.arbor}."
+    )

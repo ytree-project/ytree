@@ -5,25 +5,22 @@ ConsistentTreesHDF5Arbor io classes and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from collections import defaultdict
 import h5py
 import numpy as np
 
-from yt.funcs import \
-    get_pbar
+from yt.funcs import get_pbar
 
-from ytree.data_structures.io import \
-    DataFile, \
-    DefaultRootFieldIO, \
-    TreeFieldIO
+from ytree.data_structures.io import DataFile, DefaultRootFieldIO, TreeFieldIO
+
 
 class ChunkStore:
     def __init__(self, chunk_size=262144):
@@ -48,6 +45,7 @@ class ChunkStore:
         data_e = end - si
         return self.data[field][data_s:data_e]
 
+
 class ConsistentTreesHDF5DataFile(DataFile):
     def __init__(self, filename, linkname):
         super().__init__(filename)
@@ -66,9 +64,9 @@ class ConsistentTreesHDF5DataFile(DataFile):
         self.real_fh.close()
         self.fh = None
 
+
 class ConsistentTreesHDF5TreeFieldIO(TreeFieldIO):
-    def _read_fields(self, root_node, fields, dtypes=None,
-                     root_only=False):
+    def _read_fields(self, root_node, fields, dtypes=None, root_only=False):
         """
         Read fields from disk for a single tree.
         """
@@ -79,18 +77,19 @@ class ConsistentTreesHDF5TreeFieldIO(TreeFieldIO):
         if data_file.fh is None:
             close = True
             data_file.open()
-        fh = data_file.fh['Forests']
+        fh = data_file.fh["Forests"]
         if self.arbor._aos:
-            fh = fh['halos']
+            fh = fh["halos"]
 
         if root_only:
-            index = (root_node._si, root_node._si+1)
+            index = (root_node._si, root_node._si + 1)
         else:
             index = (root_node._si, root_node._ei)
 
         field_cache = data_file._field_cache
-        field_data = dict((field, field_cache.get(fh, field, index))
-                          for field in fields)
+        field_data = dict(
+            (field, field_cache.get(fh, field, index)) for field in fields
+        )
 
         if close:
             data_file.close()
@@ -101,6 +100,7 @@ class ConsistentTreesHDF5TreeFieldIO(TreeFieldIO):
 
         return field_data
 
+
 class ConsistentTreesHDF5RootFieldIO(DefaultRootFieldIO):
     """
     Read in fields for first node in all trees/forest.
@@ -109,6 +109,7 @@ class ConsistentTreesHDF5RootFieldIO(DefaultRootFieldIO):
     It will work for array of structs layout, but field access
     will be 1 to 2 orders of magnitude slower.
     """
+
     def _read_fields(self, storage_object, fields, dtypes=None):
         if dtypes is None:
             dtypes = {}
@@ -126,14 +127,14 @@ class ConsistentTreesHDF5RootFieldIO(DefaultRootFieldIO):
         iend = arbor._file_count.cumsum()
         istart = iend - arbor._file_count
 
-        pbar = get_pbar('Reading root fields', arbor.size)
+        pbar = get_pbar("Reading root fields", arbor.size)
         for idf, (data_file, nodes) in enumerate(zip(data_files, index_list)):
-            my_indices = arbor._node_info['_si'][istart[idf]:iend[idf]]
+            my_indices = arbor._node_info["_si"][istart[idf] : iend[idf]]
             arbor._node_io_loop_start(data_file)
 
-            fh = data_file.fh['Forests']
+            fh = data_file.fh["Forests"]
             if self.arbor._aos:
-                fh = fh['halos']
+                fh = fh["halos"]
 
             for field in fields:
                 darray = fh[field][()]

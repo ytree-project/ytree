@@ -5,21 +5,20 @@ LHaloTreeHDF5Arbor io classes and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import h5py
 import numpy as np
 import re
 
-from ytree.data_structures.io import \
-    DataFile, \
-    TreeFieldIO
+from ytree.data_structures.io import DataFile, TreeFieldIO
+
 
 class LHaloTreeHDF5DataFile(DataFile):
     def __init__(self, filename, linkname):
@@ -36,22 +35,25 @@ class LHaloTreeHDF5DataFile(DataFile):
         self.fh.close()
         self.fh = None
 
+
 class LHaloTreeHDF5TreeFieldIO(TreeFieldIO):
-    def _read_fields(self, root_node, fields, dtypes=None,
-                     root_only=False):
+    def _read_fields(self, root_node, fields, dtypes=None, root_only=False):
         """
         Read fields from disk for a single tree.
         """
 
         fi = self.arbor.field_info
-        afields = [field for field in fields
-                   if fi[field].get("source") == "arbor"]
+        afields = [field for field in fields if fi[field].get("source") == "arbor"]
         rfields = list(set(fields).difference(afields))
 
         for afield in afields:
             rfields.extend(
-                [dfield for dfield in fi[afield].get("dependencies", [])
-                 if dfield not in rfields])
+                [
+                    dfield
+                    for dfield in fi[afield].get("dependencies", [])
+                    if dfield not in rfields
+                ]
+            )
 
         data_file = self.arbor.data_files[root_node._fi]
         close = False
@@ -81,8 +83,11 @@ class LHaloTreeHDF5TreeFieldIO(TreeFieldIO):
                 field_data[field] = g[field][index]
 
         if afields:
-            field_data.update(self._get_arbor_fields(
-                root_node, field_data, fields, afields, root_only))
+            field_data.update(
+                self._get_arbor_fields(
+                    root_node, field_data, fields, afields, root_only
+                )
+            )
 
         if close:
             data_file.close()
@@ -91,8 +96,7 @@ class LHaloTreeHDF5TreeFieldIO(TreeFieldIO):
 
         return field_data
 
-    def _get_arbor_fields(self, root_node, field_data,
-                          fields, afields, root_only):
+    def _get_arbor_fields(self, root_node, field_data, fields, afields, root_only):
         """
         Generate special fields from the arbor/treenode.
         """
@@ -103,8 +107,7 @@ class LHaloTreeHDF5TreeFieldIO(TreeFieldIO):
             if root_only:
                 adata["uid"] = np.array([root_node.uid])
             else:
-                adata["uid"] = root_node.uid + \
-                  np.arange(root_node._tree_size)
+                adata["uid"] = root_node.uid + np.arange(root_node._tree_size)
 
         if "desc_uid" in afields:
             if "Descendant" in fields:

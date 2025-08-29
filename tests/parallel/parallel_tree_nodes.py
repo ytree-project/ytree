@@ -5,20 +5,22 @@ parallel_tree_nodes test script
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import ytree
 from mpi4py import MPI
 import numpy as np
 import sys
 import yt
+
 yt.enable_parallelism()
+
 
 def run():
     input_fn, output_fn, selection, group = sys.argv[1:5]
@@ -47,13 +49,12 @@ def run():
             nodes = [tree.get_node("forest", i) for i in inds]
 
         for node in ytree.parallel_tree_nodes(
-                tree,
-                group=group,
-                nodes=nodes,
-                njobs=njobs,
-                dynamic=dynamic):
+            tree, group=group, nodes=nodes, njobs=njobs, dynamic=dynamic
+        ):
             root = node.root
-            yt.mylog.info(f"Doing {node.tree_id}/{root.tree_size} of {root._arbor_index}")
+            yt.mylog.info(
+                f"Doing {node.tree_id}/{root.tree_size} of {root._arbor_index}"
+            )
             node["test_field"] = 2 * node["mass"]
 
     if yt.is_root():

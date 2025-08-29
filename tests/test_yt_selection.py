@@ -5,25 +5,23 @@ tests for yt frontend and selection functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import numpy as np
 from numpy.testing import assert_raises
 import ytree
 
-from ytree.utilities.testing import \
-    TempDirTest, \
-    assert_array_rel_equal, \
-    requires_file
+from ytree.utilities.testing import TempDirTest, assert_array_rel_equal, requires_file
 from ytree.yt_frontend import YTreeDataset
 
 CTG = "tiny_ctrees/locations.dat"
+
 
 class YTSelectionTest(TempDirTest):
     """
@@ -31,11 +29,13 @@ class YTSelectionTest(TempDirTest):
     """
 
     _setup = False
+
     def setUp(self):
         super().setUp()
         self._setup = True
 
     _arbor = None
+
     @property
     def arbor(self):
         if not self._setup:
@@ -67,13 +67,13 @@ class YTSelectionTest(TempDirTest):
         a = self.arbor
         ds = a.ytds
 
-        sp = ds.sphere(0.5*ds.domain_center, (20, "Mpc/h"))
+        sp = ds.sphere(0.5 * ds.domain_center, (20, "Mpc/h"))
 
         ytree_pos = np.concatenate([t["forest", "position"] for t in a])
         ytree_mass = np.concatenate([t["forest", "mass"] for t in a])
         r = a.quan(sp.radius.to("unitary"))
         c = a.arr(sp.center.to("unitary"))
-        ytree_r = np.sqrt(((ytree_pos - c)**2).sum(axis=1))
+        ytree_r = np.sqrt(((ytree_pos - c) ** 2).sum(axis=1))
         in_sphere = ytree_r <= r
 
         ytree_sp_r = ytree_r[in_sphere].to("unitary")
@@ -126,11 +126,10 @@ class YTSelectionTest(TempDirTest):
     def test_above_sphere(self):
         a = self.arbor
         ds = a.ytds
-        sp = ds.sphere(0.5*ds.domain_center, (20, "Mpc/h"))
+        sp = ds.sphere(0.5 * ds.domain_center, (20, "Mpc/h"))
 
         mt = 1e10
-        sel = a.get_yt_selection(above=[("mass", mt, "Msun")],
-                                 data_source=sp)
+        sel = a.get_yt_selection(above=[("mass", mt, "Msun")], data_source=sp)
         sel_mass = sel["halos", "mass"].to("Msun")
         assert (sel_mass >= mt).all()
         sel_mass.sort()
@@ -178,11 +177,10 @@ class YTSelectionTest(TempDirTest):
     def test_below_sphere(self):
         a = self.arbor
         ds = a.ytds
-        sp = ds.sphere(0.5*ds.domain_center, (20, "Mpc/h"))
+        sp = ds.sphere(0.5 * ds.domain_center, (20, "Mpc/h"))
 
         mt = 1e10
-        sel = a.get_yt_selection(below=[("mass", mt, "Msun")],
-                                 data_source=sp)
+        sel = a.get_yt_selection(below=[("mass", mt, "Msun")], data_source=sp)
         sel_mass = sel["halos", "mass"].to("Msun")
         assert (sel_mass <= mt).all()
         sel_mass.sort()
@@ -201,12 +199,14 @@ class YTSelectionTest(TempDirTest):
         within = 0.5
         sel = a.get_yt_selection(about=[("mass", mt, "Msun", within)])
         sel_mass = sel["halos", "mass"].to("Msun")
-        assert ((sel_mass >= (1-within)*mt) & (sel_mass <= (1+within)*mt)).all()
+        assert ((sel_mass >= (1 - within) * mt) & (sel_mass <= (1 + within) * mt)).all()
         sel_mass.sort()
 
         ad = ds.all_data()
         ad_mass = ad["halos", "mass"].to("Msun")
-        yt_mass = ad_mass[(ad_mass >= (1-within)*mt) & (ad_mass <= (1+within)*mt)]
+        yt_mass = ad_mass[
+            (ad_mass >= (1 - within) * mt) & (ad_mass <= (1 + within) * mt)
+        ]
         yt_mass.sort()
         assert_array_rel_equal(sel_mass, yt_mass, decimals=5)
 
@@ -219,12 +219,14 @@ class YTSelectionTest(TempDirTest):
         within = 0.5
         sel = a.get_yt_selection(about=[("mass", mt, within)])
         sel_mass = sel["halos", "mass"].to("Msun")
-        assert ((sel_mass >= (1-within)*mt) & (sel_mass <= (1+within)*mt)).all()
+        assert ((sel_mass >= (1 - within) * mt) & (sel_mass <= (1 + within) * mt)).all()
         sel_mass.sort()
 
         ad = ds.all_data()
         ad_mass = ad["halos", "mass"].to("Msun")
-        yt_mass = ad_mass[(ad_mass >= (1-within)*mt) & (ad_mass <= (1+within)*mt)]
+        yt_mass = ad_mass[
+            (ad_mass >= (1 - within) * mt) & (ad_mass <= (1 + within) * mt)
+        ]
         yt_mass.sort()
         assert_array_rel_equal(sel_mass, yt_mass, decimals=5)
 
@@ -232,18 +234,19 @@ class YTSelectionTest(TempDirTest):
     def test_about_sphere(self):
         a = self.arbor
         ds = a.ytds
-        sp = ds.sphere(0.5*ds.domain_center, (20, "Mpc/h"))
+        sp = ds.sphere(0.5 * ds.domain_center, (20, "Mpc/h"))
 
         mt = 1e10
         within = 0.5
-        sel = a.get_yt_selection(about=[("mass", mt, within)],
-                                 data_source=sp)
+        sel = a.get_yt_selection(about=[("mass", mt, within)], data_source=sp)
         sel_mass = sel["halos", "mass"].to("Msun")
-        assert ((sel_mass >= (1-within)*mt) & (sel_mass <= (1+within)*mt)).all()
+        assert ((sel_mass >= (1 - within) * mt) & (sel_mass <= (1 + within) * mt)).all()
         sel_mass.sort()
 
         sp_mass = sp["halos", "mass"].to("Msun")
-        yt_mass = sp_mass[(sp_mass >= (1-within)*mt) & (sp_mass <= (1+within)*mt)]
+        yt_mass = sp_mass[
+            (sp_mass >= (1 - within) * mt) & (sp_mass <= (1 + within) * mt)
+        ]
         yt_mass.sort()
         assert_array_rel_equal(sel_mass, yt_mass, decimals=5)
 
@@ -283,10 +286,9 @@ class YTSelectionTest(TempDirTest):
     def test_equal_sphere(self):
         a = self.arbor
         ds = a.ytds
-        sp = ds.sphere(0.5*ds.domain_center, (20, "Mpc/h"))
+        sp = ds.sphere(0.5 * ds.domain_center, (20, "Mpc/h"))
 
-        sel = a.get_yt_selection(equal=[("mmp?", 1, "")],
-                                 data_source=sp)
+        sel = a.get_yt_selection(equal=[("mmp?", 1, "")], data_source=sp)
         sel_mmp = sel["halos", "mmp?"].to("")
         assert (sel_mmp == 1).all()
         sel_mmp.sort()
@@ -316,10 +318,11 @@ class YTSelectionTest(TempDirTest):
     def test_conditionals_sphere(self):
         a = self.arbor
         ds = a.ytds
-        sp = ds.sphere(0.5*ds.domain_center, (20, "Mpc/h"))
+        sp = ds.sphere(0.5 * ds.domain_center, (20, "Mpc/h"))
 
-        sel = a.get_yt_selection(conditionals=['obj["halos", "mass"] > 1e10'],
-                                 data_source=sp)
+        sel = a.get_yt_selection(
+            conditionals=['obj["halos", "mass"] > 1e10'], data_source=sp
+        )
         sel_mass = sel["halos", "mass"].to("Msun")
         assert (sel_mass >= 1e10).all()
         sel_mass.sort()
@@ -335,16 +338,15 @@ class YTSelectionTest(TempDirTest):
 
         with assert_raises(ValueError):
             a.get_yt_selection(
-                conditionals=['obj["halos", "mass"] > 1e10'],
-                above=["mass", 1e10])
+                conditionals=['obj["halos", "mass"] > 1e10'], above=["mass", 1e10]
+            )
 
     @requires_file(CTG)
     def test_multiple_criteria_1(self):
         a = self.arbor
         ds = a.ytds
 
-        sel = a.get_yt_selection(above=[("mass", 1e10, "Msun"),
-                                        ("redshift", 0.5)])
+        sel = a.get_yt_selection(above=[("mass", 1e10, "Msun"), ("redshift", 0.5)])
         sel_mass = sel["halos", "mass"].to("Msun")
         assert (sel_mass >= 1e10).all()
         sel_redshift = sel["halos", "redshift"]
@@ -363,8 +365,9 @@ class YTSelectionTest(TempDirTest):
         a = self.arbor
         ds = a.ytds
 
-        sel = a.get_yt_selection(above=[("mass", 1e10, "Msun")],
-                                 below=[("redshift", 0.5)])
+        sel = a.get_yt_selection(
+            above=[("mass", 1e10, "Msun")], below=[("redshift", 0.5)]
+        )
         sel_mass = sel["halos", "mass"].to("Msun")
         assert (sel_mass >= 1e10).all()
         sel_redshift = sel["halos", "redshift"]
@@ -382,7 +385,7 @@ class YTSelectionTest(TempDirTest):
     def test_nodes_from_sphere(self):
         a = self.arbor
         ds = a.ytds
-        sp = ds.sphere(0.5*ds.domain_center, (20, "Mpc/h"))
+        sp = ds.sphere(0.5 * ds.domain_center, (20, "Mpc/h"))
 
         nodes = list(a.get_nodes_from_selection(sp))
 
@@ -395,7 +398,7 @@ class YTSelectionTest(TempDirTest):
         node_pos = a.arr([node["position"] for node in nodes])
         r = a.quan(sp.radius.to("unitary"))
         c = a.arr(sp.center.to("unitary"))
-        node_r = np.sqrt(((node_pos - c)**2).sum(axis=1))
+        node_r = np.sqrt(((node_pos - c) ** 2).sum(axis=1))
         assert (node_r <= r).all()
 
     @requires_file(CTG)

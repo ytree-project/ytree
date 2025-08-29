@@ -1,9 +1,7 @@
 from ytree.data_structures.load import load as ytree_load
-from ytree.frontends.treefrog import \
-    TreeFrogArbor
-from ytree.utilities.testing import \
-    ArborTest, \
-    TempDirTest
+from ytree.frontends.treefrog import TreeFrogArbor
+from ytree.utilities.testing import ArborTest, TempDirTest
+
 
 class TreeFrogArborTest(TempDirTest, ArborTest):
     arbor_type = TreeFrogArbor
@@ -16,8 +14,7 @@ class TreeFrogArborTest(TempDirTest, ArborTest):
     def arbor(self):
         arbor = super().arbor
         if "mass" not in arbor.field_info:
-            arbor.add_alias_field(
-                "mass", "Mass_200crit", units="Msun")
+            arbor.add_alias_field("mass", "Mass_200crit", units="Msun")
         return arbor
 
     def test_load_from_datafile(self):

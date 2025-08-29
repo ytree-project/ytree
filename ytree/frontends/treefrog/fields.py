@@ -5,18 +5,17 @@ TreeFrogArbor fields
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import numpy as np
 
-from ytree.data_structures.fields import \
-    FieldInfoContainer
+from ytree.data_structures.fields import FieldInfoContainer
 
 m_unit = "Msun"
 p_unit = "unitary"
@@ -24,6 +23,7 @@ r_unit = "kpc"
 v_unit = "km/s"
 
 id_type = np.int64
+
 
 class TreeFrogFieldInfo(FieldInfoContainer):
     alias_fields = (
@@ -87,8 +87,9 @@ class TreeFrogFieldInfo(FieldInfoContainer):
         units["length_unit"] = a.quan(a.units["Length_unit_to_kpc"], "kpc")
         units["mass_unit"] = a.quan(a.units["Mass_unit_to_solarmass"], "Msun")
         units["velocity_unit"] = a.quan(a.units["Velocity_unit_to_kms"], "km/s")
-        units["angular_momentum_unit"] = units["mass_unit"] * \
-          units["length_unit"] * units["velocity_unit"]
+        units["angular_momentum_unit"] = (
+            units["mass_unit"] * units["length_unit"] * units["velocity_unit"]
+        )
 
         for unit, val in units.items():
             units[unit] = f"{str(val.d)}*{str(val.units)}"

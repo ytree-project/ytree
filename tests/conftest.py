@@ -3,16 +3,22 @@ import pytest
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--exclude-slow", action="store_true", default=False,
-        help="exclude tests marked as slow"
+        "--exclude-slow",
+        action="store_true",
+        default=False,
+        help="exclude tests marked as slow",
     )
     parser.addoption(
-        "--exclude-serial", action="store_true", default=False,
-        help="exclude tests not using parallelism"
+        "--exclude-serial",
+        action="store_true",
+        default=False,
+        help="exclude tests not using parallelism",
     )
     parser.addoption(
-        "--exclude-parallel", action="store_true", default=False,
-        help="exclude tests using parallelism"
+        "--exclude-parallel",
+        action="store_true",
+        default=False,
+        help="exclude tests using parallelism",
     )
 
 

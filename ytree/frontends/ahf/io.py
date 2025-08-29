@@ -5,13 +5,13 @@ AHFArbor io classes and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from collections import defaultdict
 import numpy as np
@@ -19,13 +19,11 @@ import os
 import re
 import weakref
 
-from ytree.frontends.ahf.misc import \
-    parse_AHF_file
-from ytree.data_structures.io import \
-    CatalogDataFile
-from ytree.utilities.io import \
-    f_text_block
+from ytree.frontends.ahf.misc import parse_AHF_file
+from ytree.data_structures.io import CatalogDataFile
+from ytree.utilities.io import f_text_block
 from ytree.utilities.misc import fround
+
 
 class AHFDataFile(CatalogDataFile):
     _redshift_precision = 3
@@ -34,17 +32,17 @@ class AHFDataFile(CatalogDataFile):
         self.arbor = weakref.proxy(arbor)
         self.filename = filename
         self._catalog_index = arbor._get_file_index(filename)
-        self.filekey = self.filename[:self.filename.rfind(self.arbor._par_suffix)]
+        self.filekey = self.filename[: self.filename.rfind(self.arbor._par_suffix)]
         self._parse_header()
 
         rprec = self._redshift_precision
         rstr = r"\.z\d\.\d\{%d\}" % rprec
         res = re.search(rstr, self.filekey)
         if res:
-            self.data_filekey = self.filekey[:res.end()]
+            self.data_filekey = self.filekey[: res.end()]
         else:
             zfmt = f".0{rprec}f"
-            for inc in [0, -10**-rprec]:
+            for inc in [0, -(10**-rprec)]:
                 my_z = format(fround(self.redshift, decimals=rprec) + inc, zfmt)
                 fkey = f"{self.filekey}.z{my_z}"
                 if os.path.exists(fkey + self.arbor._data_suffix):
@@ -53,7 +51,8 @@ class AHFDataFile(CatalogDataFile):
 
             if not hasattr(self, "data_filekey"):
                 raise FileNotFoundError(
-                    f"Cannot find data file: {fkey + self.arbor._data_suffix}.")
+                    f"Cannot find data file: {fkey + self.arbor._data_suffix}."
+                )
 
         self._get_other_filenames()
         self.fh = None
@@ -74,12 +73,13 @@ class AHFDataFile(CatalogDataFile):
             mtree_key = self.data_filekey
         else:
             # First, strip of the directory
-            mtree_key = re.sub(f"^{self.arbor.directory}{os.path.sep}", "",
-                               self.data_filekey)
+            mtree_key = re.sub(
+                f"^{self.arbor.directory}{os.path.sep}", "", self.data_filekey
+            )
             # Now, substitute the prefixes
-            mtree_key = re.sub(f"^{self.arbor._ahf_prefix}",
-                               f"{self.arbor._mtree_prefix}",
-                               mtree_key)
+            mtree_key = re.sub(
+                f"^{self.arbor._ahf_prefix}", f"{self.arbor._mtree_prefix}", mtree_key
+            )
             # Return the directory
             mtree_key = os.path.join(self.arbor.directory, mtree_key)
 
@@ -111,8 +111,7 @@ class AHFDataFile(CatalogDataFile):
         files. Use that to get the name of the data file.
         """
 
-        vals = parse_AHF_file(
-            self.filekey + ".parameter", {"z": "redshift"})
+        vals = parse_AHF_file(self.filekey + ".parameter", {"z": "redshift"})
 
         for par, val in vals.items():
             setattr(self, par, val)
@@ -122,6 +121,7 @@ class AHFDataFile(CatalogDataFile):
             self.fh = open(self.halos_filename, "r")
 
     _links = None
+
     @property
     def links(self):
         if self._links is None:
@@ -151,7 +151,7 @@ class AHFDataFile(CatalogDataFile):
             self._links = -1
             return
 
-        m = data["shared"]**2 / (data["prog_part"] * data["desc_part"])
+        m = data["shared"] ** 2 / (data["prog_part"] * data["desc_part"])
 
         progids = np.unique(data["prog_id"])
         descids = np.empty(progids.size, dtype=progids.dtype)
@@ -229,8 +229,7 @@ class AHFDataFile(CatalogDataFile):
 
         fi = self.arbor.field_info
         nt = len(tree_nodes)
-        field_data = self._create_field_arrays(
-            rfields, dtypes, size=nt)
+        field_data = self._create_field_arrays(rfields, dtypes, size=nt)
 
         self.open()
         f = self.fh
@@ -255,9 +254,7 @@ class AHFDataFile(CatalogDataFile):
             return
 
         links = self.links
-        descids = np.empty(
-            len(field_data["ID"]),
-            dtype=dtypes['desc_id'])
+        descids = np.empty(len(field_data["ID"]), dtype=dtypes["desc_id"])
 
         if self.links == -1:
             descids[:] = -1
@@ -267,8 +264,7 @@ class AHFDataFile(CatalogDataFile):
                 if not inlink.any():
                     descids[i] = -1
                 else:
-                    descids[i] = \
-                      links["desc_id"][np.where(inlink)[0][0]]
+                    descids[i] = links["desc_id"][np.where(inlink)[0][0]]
 
         field_data["desc_id"] = descids
 
@@ -278,8 +274,7 @@ class AHFDataFile(CatalogDataFile):
 
         fi = self.arbor.field_info
 
-        afields = [field for field in fields
-                   if fi[field].get("source") == "arbor"]
+        afields = [field for field in fields if fi[field].get("source") == "arbor"]
         my_fields = set(fields).difference(afields)
 
         # Separate fields into one that come from the file header,
@@ -301,27 +296,23 @@ class AHFDataFile(CatalogDataFile):
 
         field_data = {}
         if tree_nodes is None:
-            field_data.update(
-                self._read_data_default(rfields, dtypes))
+            field_data.update(self._read_data_default(rfields, dtypes))
 
         else:
             # fields from the actual data
-            field_data.update(
-                self._read_data_select(rfields, tree_nodes, dtypes))
+            field_data.update(self._read_data_select(rfields, tree_nodes, dtypes))
 
             # fields from arbor-related info
-            field_data.update(
-                self._get_arbor_fields(afields, tree_nodes, dtypes))
+            field_data.update(self._get_arbor_fields(afields, tree_nodes, dtypes))
 
             # fields from the file header
-            field_data.update(
-                self._get_header_fields(
-                    hfields, tree_nodes, dtypes))
+            field_data.update(self._get_header_fields(hfields, tree_nodes, dtypes))
 
         # use data from the mtree file to get descendent ids
         self._get_mtree_fields(tfields, dtypes, field_data)
 
         return field_data
+
 
 class AHFCRMDataFile(AHFDataFile):
     def _compute_links(self):
@@ -338,7 +329,8 @@ class AHFCRMDataFile(AHFDataFile):
 
         my_ids = field_data["ID"]
         field_data["desc_id"] = descids = np.full(
-            len(my_ids), -1, dtype=dtypes["desc_id"])
+            len(my_ids), -1, dtype=dtypes["desc_id"]
+        )
 
         if not self.links:
             return

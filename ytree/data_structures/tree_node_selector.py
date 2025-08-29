@@ -5,20 +5,20 @@ TreeNodeSelector functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import numpy as np
 
-from yt.utilities.operator_registry import \
-    OperatorRegistry
+from yt.utilities.operator_registry import OperatorRegistry
 
 tree_node_selector_registry = OperatorRegistry()
+
 
 def add_tree_node_selector(name, function):
     r"""
@@ -47,6 +47,7 @@ def add_tree_node_selector(name, function):
     """
     tree_node_selector_registry[name] = TreeNodeSelector(function)
 
+
 class TreeNodeSelector:
     r"""
     The TreeNodeSelector is responsible for choosing which one of a
@@ -73,6 +74,7 @@ class TreeNodeSelector:
     >>> print (a[0]["prog"])
 
     """
+
     def __init__(self, function, args=None, kwargs=None):
         self.function = function
         self.args = args
@@ -84,6 +86,7 @@ class TreeNodeSelector:
 
     def __call__(self, ancestors):
         return self.function(ancestors, *self.args, **self.kwargs)
+
 
 def max_field_value(ancestors, field):
     r"""
@@ -107,6 +110,7 @@ def max_field_value(ancestors, field):
 
 
 add_tree_node_selector("max_field_value", max_field_value)
+
 
 def min_field_value(ancestors, field):
     r"""

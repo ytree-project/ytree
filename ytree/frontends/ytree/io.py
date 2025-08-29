@@ -5,21 +5,19 @@ YTreeArbor io classes and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import h5py
 import numpy as np
 
-from ytree.data_structures.io import \
-    DefaultRootFieldIO, \
-    DataFile, \
-    TreeFieldIO
+from ytree.data_structures.io import DefaultRootFieldIO, DataFile, TreeFieldIO
+
 
 class YTreeDataFile(DataFile):
     def __init__(self, filename):
@@ -39,6 +37,7 @@ class YTreeDataFile(DataFile):
         if hasattr(self, "analysis_filename"):
             self.analysis_fh.close()
             self.analysis_fh = None
+
 
 class YTreeTreeFieldIO(TreeFieldIO):
     def _read_fields(self, root_node, fields, dtypes=None, root_only=False):
@@ -60,8 +59,11 @@ class YTreeTreeFieldIO(TreeFieldIO):
         # get start_index and end_index
         for itype in ["start", "end"]:
             if getattr(data_file, f"_{itype}_index") is None:
-                setattr(data_file, f"_{itype}_index",
-                        data_file.fh[f"index/tree_{itype}_index"][()])
+                setattr(
+                    data_file,
+                    f"_{itype}_index",
+                    data_file.fh[f"index/tree_{itype}_index"][()],
+                )
         ii = root_node._ai - self._si[dfi]
 
         field_data = {}
@@ -83,14 +85,15 @@ class YTreeTreeFieldIO(TreeFieldIO):
                     fdata = self.arbor.arr(fdata, units)
                 data_file._field_cache[field] = fdata
 
-            field_data[field] = \
-              data_file._field_cache[field][
-                  data_file._start_index[ii]:data_file._end_index[ii]]
+            field_data[field] = data_file._field_cache[field][
+                data_file._start_index[ii] : data_file._end_index[ii]
+            ]
 
         if close:
             data_file.close()
 
         return field_data
+
 
 class YTreeRootFieldIO(DefaultRootFieldIO):
     def _read_fields(self, storage_object, fields, dtypes=None):

@@ -5,19 +5,18 @@ LHaloTreeArbor io classes and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import numpy as np
+
 # import weakref
-from ytree.data_structures.io import \
-    FieldIO, \
-    TreeFieldIO
+from ytree.data_structures.io import FieldIO, TreeFieldIO
 
 
 # class LHaloTreeFileID:
@@ -54,9 +53,7 @@ from ytree.data_structures.io import \
 
 
 class LHaloTreeTreeFieldIO(TreeFieldIO):
-
-    def _read_fields(self, root_node, fields, dtypes=None,
-                     f=None, root_only=False):
+    def _read_fields(self, root_node, fields, dtypes=None, f=None, root_only=False):
         """
         Read fields from disk for a single tree.
 
@@ -94,7 +91,7 @@ class LHaloTreeTreeFieldIO(TreeFieldIO):
         # Don't read all data if only uid/desc_uid requested
         data = None
         for field in fields:
-            if field not in ['uid', 'desc_uid']:
+            if field not in ["uid", "desc_uid"]:
                 # if root_only:
                 #     data = lht.read_single_root(root_node._index_in_lht, fd=f)
                 # else:
@@ -105,8 +102,8 @@ class LHaloTreeTreeFieldIO(TreeFieldIO):
             # always get all ids, even if root_only, since it's fast.
             halonum = None
             tot_idx = lht.get_total_index(root_node._index_in_lht, halonum)
-            data['uid'] = lht.all_uids[tot_idx]
-            data['desc_uid'] = lht.all_desc_uids[tot_idx]
+            data["uid"] = lht.all_uids[tot_idx]
+            data["desc_uid"] = lht.all_desc_uids[tot_idx]
         field_data = {field: data[field] for field in fields}
 
         self._apply_units(fields, field_data)
@@ -121,8 +118,9 @@ class LHaloTreeRootFieldIO(FieldIO):
             dtypes = {}
         my_dtypes = self._determine_dtypes(fields, override_dict=dtypes)
 
-        field_data = {field: np.empty(self.arbor.size, dtype=my_dtypes[field])
-                      for field in fields}
+        field_data = {
+            field: np.empty(self.arbor.size, dtype=my_dtypes[field]) for field in fields
+        }
 
         self._apply_units(fields, field_data)
 
@@ -130,8 +128,9 @@ class LHaloTreeRootFieldIO(FieldIO):
         for lht in self.arbor._lhtfiles:
             ntrees = lht.ntrees
             for field in fields:
-                field_data[field][ntrees_prev:(ntrees_prev + ntrees)] = \
-                  lht._root_data[field]
+                field_data[field][ntrees_prev : (ntrees_prev + ntrees)] = (
+                    lht._root_data[field]
+                )
             ntrees_prev += ntrees
 
         return field_data

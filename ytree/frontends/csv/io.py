@@ -5,15 +5,16 @@ CSVArbor io classes and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from ytree.data_structures.io import CatalogDataFile
+
 
 class CSVDataFile(CatalogDataFile):
     def open(self):
@@ -32,8 +33,7 @@ class CSVDataFile(CatalogDataFile):
 
         fi = self.arbor.field_info
         nt = len(tree_nodes)
-        field_data = \
-          self._create_field_arrays(rfields, dtypes, size=nt)
+        field_data = self._create_field_arrays(rfields, dtypes, size=nt)
 
         self.open()
         f = self.fh

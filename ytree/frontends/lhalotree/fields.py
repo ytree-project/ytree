@@ -5,20 +5,18 @@ LHaloTreeArbor fields
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import numpy as np
 
-from ytree.data_structures.fields import \
-    FieldInfoContainer
-from ytree.frontends.lhalotree.utils import \
-    dtype_header_default
+from ytree.data_structures.fields import FieldInfoContainer
+from ytree.frontends.lhalotree.utils import dtype_header_default
 
 m_unit = "Msun"
 p_unit = "unitary"
@@ -31,6 +29,7 @@ v_unit = "km/s"
 # TODO: Use units from parameter file
 
 id_type = np.int64
+
 
 class LHaloTreeFieldInfo(FieldInfoContainer):
     alias_fields = (
@@ -55,7 +54,6 @@ class LHaloTreeFieldInfo(FieldInfoContainer):
     )
 
     data_types = tuple(
-        [("uid", id_type),
-         ("desc_uid", id_type)] +
-        [(item[0], np.dtype(item[1]))
-         for item in dtype_header_default])
+        [("uid", id_type), ("desc_uid", id_type)]
+        + [(item[0], np.dtype(item[1])) for item in dtype_header_default]
+    )

@@ -5,20 +5,19 @@ RockstarArbor io classes and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import numpy as np
 
-from ytree.data_structures.io import \
-    CatalogDataFile
-from ytree.utilities.io import \
-    f_text_block
+from ytree.data_structures.io import CatalogDataFile
+from ytree.utilities.io import f_text_block
+
 
 class RockstarDataFile(CatalogDataFile):
     def __init__(self, filename, arbor):
@@ -51,8 +50,7 @@ class RockstarDataFile(CatalogDataFile):
             return {}
 
         fi = self.arbor.field_info
-        field_data = \
-          self._create_field_arrays(rfields, dtypes)
+        field_data = self._create_field_arrays(rfields, dtypes)
         offsets = []
 
         self.open()
@@ -67,8 +65,7 @@ class RockstarDataFile(CatalogDataFile):
         self.close()
 
         for field in rfields:
-            field_data[field] = \
-              np.array(field_data[field], dtype=dtypes[field])
+            field_data[field] = np.array(field_data[field], dtype=dtypes[field])
 
         if self.offsets is None:
             self.offsets = np.array(offsets)
@@ -81,8 +78,7 @@ class RockstarDataFile(CatalogDataFile):
 
         fi = self.arbor.field_info
         nt = len(tree_nodes)
-        field_data = \
-          self._create_field_arrays(rfields, dtypes, size=nt)
+        field_data = self._create_field_arrays(rfields, dtypes, size=nt)
 
         self.open()
         f = self.fh

@@ -5,13 +5,13 @@ ytree logger
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import logging
 import sys
@@ -33,6 +33,7 @@ ytreeLogger.addHandler(ytree_sh)
 ytreeLogger.setLevel(20)
 ytreeLogger.propagate = False
 
+
 def set_parallel_logger(comm):
     if comm.size == 1:
         return
@@ -40,18 +41,23 @@ def set_parallel_logger(comm):
     if len(ytreeLogger.handlers) > 0:
         ytreeLogger.handlers[0].setFormatter(f)
 
+
 class fake_pbar:
     def __init__(self, *args):
         pass
+
     def update(self, *args):
         pass
+
     def finish(self):
         pass
 
-class log_level():
+
+class log_level:
     """
     Context manager for setting log level.
     """
+
     def __init__(self, minlevel, mylog=None):
         if mylog is None:
             mylog = ytreeLogger

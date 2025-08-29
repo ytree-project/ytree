@@ -5,22 +5,20 @@ MoriaArbor io classes and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import h5py
 import numpy as np
 import re
 
-from ytree.data_structures.io import \
-    DefaultRootFieldIO, \
-    DataFile, \
-    TreeFieldIO
+from ytree.data_structures.io import DefaultRootFieldIO, DataFile, TreeFieldIO
+
 
 class MoriaDataFile(DataFile):
     field_cache = None
@@ -45,8 +43,8 @@ class MoriaDataFile(DataFile):
         else:
             return self.fh[field][index]
 
-class MoriaTreeFieldIO(TreeFieldIO):
 
+class MoriaTreeFieldIO(TreeFieldIO):
     def get_fields(self, data_object, fields=None, **kwargs):
         """
         Call _setup_tree if asking for desc_uid so we can correct it.
@@ -56,21 +54,23 @@ class MoriaTreeFieldIO(TreeFieldIO):
             self.arbor._setup_tree(data_object)
         super().get_fields(data_object, fields=fields, **kwargs)
 
-    def _read_fields(self, root_node, fields, dtypes=None,
-                     root_only=False):
+    def _read_fields(self, root_node, fields, dtypes=None, root_only=False):
         """
         Read fields from disk for a single tree.
         """
 
         fi = self.arbor.field_info
-        afields = [field for field in fields
-                   if fi[field].get("source") == "arbor"]
+        afields = [field for field in fields if fi[field].get("source") == "arbor"]
         rfields = list(set(fields).difference(afields))
 
         for afield in afields:
             rfields.extend(
-                [dfield for dfield in fi[afield].get("dependencies", [])
-                 if dfield not in rfields])
+                [
+                    dfield
+                    for dfield in fi[afield].get("dependencies", [])
+                    if dfield not in rfields
+                ]
+            )
 
         data_file = self.arbor.data_files[0]
         close = False
@@ -79,7 +79,7 @@ class MoriaTreeFieldIO(TreeFieldIO):
             data_file.open()
 
         if root_only:
-            index = (-1, slice(root_node._si, root_node._si+1))
+            index = (-1, slice(root_node._si, root_node._si + 1))
             dfilter = None
         else:
             index = (slice(None), slice(root_node._si, root_node._ei))
@@ -103,13 +103,14 @@ class MoriaTreeFieldIO(TreeFieldIO):
                 data = field_cache[fieldname][..., ifield]
             else:
                 data = data_file.read_data(field, index)
-            field_data[field] = self._transform_data(
-                data, my_filter=dfilter)
+            field_data[field] = self._transform_data(data, my_filter=dfilter)
 
         if afields:
-            field_data.update(self._get_arbor_fields(
-                root_node, field_data, fields, afields, root_only,
-                my_filter=dfilter))
+            field_data.update(
+                self._get_arbor_fields(
+                    root_node, field_data, fields, afields, root_only, my_filter=dfilter
+                )
+            )
 
         if close:
             data_file.close()
@@ -124,9 +125,9 @@ class MoriaTreeFieldIO(TreeFieldIO):
             data = data[my_filter]
         return data
 
-    def _get_arbor_fields(self, root_node, field_data,
-                          fields, afields, root_only,
-                          my_filter=None):
+    def _get_arbor_fields(
+        self, root_node, field_data, fields, afields, root_only, my_filter=None
+    ):
         """
         Generate special fields from the arbor/treenode.
         """
@@ -135,15 +136,17 @@ class MoriaTreeFieldIO(TreeFieldIO):
 
         if "snap_index" in fields:
             if root_only:
-                adata["snap_index"] = \
-                  np.array([self.arbor._redshifts.size-1], dtype=int)
+                adata["snap_index"] = np.array(
+                    [self.arbor._redshifts.size - 1], dtype=int
+                )
             else:
-                data, _ = np.mgrid[:self.arbor._redshifts.size,
-                                   root_node._si:root_node._ei]
-                adata["snap_index"] = self._transform_data(
-                    data, my_filter=my_filter)
+                data, _ = np.mgrid[
+                    : self.arbor._redshifts.size, root_node._si : root_node._ei
+                ]
+                adata["snap_index"] = self._transform_data(data, my_filter=my_filter)
 
         return adata
+
 
 class MoriaRootFieldIO(DefaultRootFieldIO):
     def _read_fields(self, storage_object, fields, dtypes=None):
@@ -153,20 +156,23 @@ class MoriaRootFieldIO(DefaultRootFieldIO):
             dtypes = {}
 
         fi = self.arbor.field_info
-        afields = [field for field in fields
-                   if fi[field].get("source") == "arbor"]
+        afields = [field for field in fields if fi[field].get("source") == "arbor"]
         rfields = list(set(fields).difference(afields))
 
         for afield in afields:
             rfields.extend(
-                [dfield for dfield in fi[afield].get("dependencies", [])
-                 if dfield not in rfields])
+                [
+                    dfield
+                    for dfield in fi[afield].get("dependencies", [])
+                    if dfield not in rfields
+                ]
+            )
 
         data_file = self.arbor.data_files[0]
         data_file.open()
         fh = data_file.fh
 
-        index = self.arbor._node_info['_si']
+        index = self.arbor._node_info["_si"]
         field_cache = {}
         field_data = {}
         freg = re.compile(r"(^.+)_(\d+$)")
@@ -189,8 +195,7 @@ class MoriaRootFieldIO(DefaultRootFieldIO):
         self._apply_units(rfields, field_data)
 
         if afields:
-            field_data.update(self._get_arbor_fields(
-                field_data, fields, afields))
+            field_data.update(self._get_arbor_fields(field_data, fields, afields))
 
         data_file.close()
 
@@ -200,7 +205,8 @@ class MoriaRootFieldIO(DefaultRootFieldIO):
         adata = {}
 
         if "snap_index" in fields:
-            adata["snap_index"] = \
-              np.full(self.arbor.size, self.arbor._redshifts.size-1)
+            adata["snap_index"] = np.full(
+                self.arbor.size, self.arbor._redshifts.size - 1
+            )
 
         return adata

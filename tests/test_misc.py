@@ -5,27 +5,23 @@ miscellaneous utility tests
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import os
-from ytree.data_structures.load import \
-    load as ytree_load
-from ytree.utilities.io import \
-    f_text_block
-from ytree.utilities.loading import \
-    test_data_dir
-from ytree.utilities.testing import \
-    requires_file, \
-    TempDirTest
+from ytree.data_structures.load import load as ytree_load
+from ytree.utilities.io import f_text_block
+from ytree.utilities.loading import test_data_dir
+from ytree.utilities.testing import requires_file, TempDirTest
 
 R0 = os.path.join(test_data_dir, "rockstar/rockstar_halos/out_0.list")
 R63 = os.path.join(test_data_dir, "rockstar/rockstar_halos/out_63.list")
+
 
 @requires_file(R63)
 def test_f_text_block():
@@ -46,6 +42,7 @@ def test_f_text_block():
         for l1, l2 in zip(lines, lines2):
             assert l1 == l2
 
+
 class MiscTest(TempDirTest):
     """
     Some miscellaneous tests in temporary directories
@@ -59,9 +56,10 @@ class MiscTest(TempDirTest):
         Fixed in PR #19: https://github.com/ytree-project/ytree/pull/19
         """
         a = ytree_load(R0)
-        t = a[a['mass'].argmax()]
-        t['prog', 'redshift']
+        t = a[a["mass"].argmax()]
+        t["prog", "redshift"]
         t.save_tree()
+
 
 @requires_file(R0)
 def test_field_access_without_tree_setup():
@@ -71,5 +69,5 @@ def test_field_access_without_tree_setup():
     Fixed in PR #20: https://github.com/ytree-project/ytree/pull/20
     """
     a = ytree_load(R0)
-    t = a[a['mass'].argmax()]
-    list(t.ancestors)[0]['desc_uid']
+    t = a[a["mass"].argmax()]
+    list(t.ancestors)[0]["desc_uid"]

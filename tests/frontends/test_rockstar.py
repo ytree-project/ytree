@@ -1,8 +1,6 @@
-from ytree.frontends.rockstar import \
-    RockstarArbor
-from ytree.utilities.testing import \
-    ArborTest, \
-    TempDirTest
+from ytree.frontends.rockstar import RockstarArbor
+from ytree.utilities.testing import ArborTest, TempDirTest
+
 
 class RockstarArborTest(TempDirTest, ArborTest):
     arbor_type = RockstarArbor

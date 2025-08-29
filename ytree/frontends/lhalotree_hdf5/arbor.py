@@ -5,30 +5,29 @@ LHaloTreeHDF5Arbor class and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import glob
 import h5py
 import numpy as np
 import re
 
-from yt.funcs import \
-    get_pbar
+from yt.funcs import get_pbar
 
-from ytree.data_structures.arbor import \
-    SegmentedArbor
+from ytree.data_structures.arbor import SegmentedArbor
 
-from ytree.frontends.lhalotree_hdf5.fields import \
-    LHaloTreeHDF5FieldInfo
-from ytree.frontends.lhalotree_hdf5.io import \
-    LHaloTreeHDF5DataFile, \
-    LHaloTreeHDF5TreeFieldIO
+from ytree.frontends.lhalotree_hdf5.fields import LHaloTreeHDF5FieldInfo
+from ytree.frontends.lhalotree_hdf5.io import (
+    LHaloTreeHDF5DataFile,
+    LHaloTreeHDF5TreeFieldIO,
+)
+
 
 class LHaloTreeHDF5Arbor(SegmentedArbor):
     """
@@ -40,9 +39,14 @@ class LHaloTreeHDF5Arbor(SegmentedArbor):
     _field_info_class = LHaloTreeHDF5FieldInfo
     _tree_field_io_class = LHaloTreeHDF5TreeFieldIO
 
-    def __init__(self, filename,
-                 hubble_constant=1.0, box_size=None,
-                 omega_matter=None, omega_lambda=None):
+    def __init__(
+        self,
+        filename,
+        hubble_constant=1.0,
+        box_size=None,
+        omega_matter=None,
+        omega_lambda=None,
+    ):
         self.hubble_constant = hubble_constant
         self.omega_matter = omega_matter
         self.omega_lambda = omega_lambda
@@ -55,7 +59,8 @@ class LHaloTreeHDF5Arbor(SegmentedArbor):
         reg = re.search(rf"^(.+\D)\d+{suffix}$", self.filename)
         if reg is None:
             raise RuntimeError(
-                f"Cannot determine numbering system for {self.filename}.")
+                f"Cannot determine numbering system for {self.filename}."
+            )
         prefix = reg.groups()[0]
         files = glob.glob(f"{prefix}*{self._suffix}")
         self.data_files = [self._data_file_class(f, self) for f in files]
@@ -63,7 +68,7 @@ class LHaloTreeHDF5Arbor(SegmentedArbor):
         self._size = self._file_count.sum()
 
     def _parse_parameter_file(self):
-        f = h5py.File(self.parameter_filename, mode='r')
+        f = h5py.File(self.parameter_filename, mode="r")
         g = f["Header"]
         ntrees = g.attrs["NtreesPerFile"]
         self._redshifts = g["Redshifts"][()]
@@ -79,8 +84,7 @@ class LHaloTreeHDF5Arbor(SegmentedArbor):
             if len(dshape) == 1:
                 field_list.append(d)
             else:
-                field_list.extend(
-                    [f"{d}_{i}" for i in range(dshape[1])])
+                field_list.extend([f"{d}_{i}" for i in range(dshape[1])])
 
         self.field_list = field_list
         fi = dict((field, {}) for field in field_list)
@@ -96,7 +100,7 @@ class LHaloTreeHDF5Arbor(SegmentedArbor):
 
         c = 0
         file_offsets = self._file_count.cumsum() - self._file_count
-        pbar = get_pbar('Planting trees', self._size)
+        pbar = get_pbar("Planting trees", self._size)
         for idf, data_file in enumerate(self.data_files):
             data_file.open()
             tree_size = data_file.fh["Header"]["TreeNHalos"][()]
@@ -106,14 +110,14 @@ class LHaloTreeHDF5Arbor(SegmentedArbor):
             istart = file_offsets[idf]
             iend = istart + size
 
-            self._node_info['_fi'][istart:iend] = idf
-            self._node_info['_si'][istart:iend] = np.arange(size)
-            self._node_info['_tree_size'][istart:iend] = tree_size
+            self._node_info["_fi"][istart:iend] = idf
+            self._node_info["_si"][istart:iend] = np.arange(size)
+            self._node_info["_tree_size"][istart:iend] = tree_size
             c += size
             pbar.update(c)
         pbar.finish()
-        uids = self._node_info['_tree_size']
-        self._node_info['uid'] = uids.cumsum() - uids
+        uids = self._node_info["_tree_size"]
+        self._node_info["uid"] = uids.cumsum() - uids
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
@@ -125,11 +129,17 @@ class LHaloTreeHDF5Arbor(SegmentedArbor):
         if not h5py.is_hdf5(fn):
             return False
 
-        attrs = ["FirstSnapshotNr", "LastSnapshotNr", "SnapSkipFac",
-                 "NtreesPerFile", "NhalosPerFile", "ParticleMass"]
+        attrs = [
+            "FirstSnapshotNr",
+            "LastSnapshotNr",
+            "SnapSkipFac",
+            "NtreesPerFile",
+            "NhalosPerFile",
+            "ParticleMass",
+        ]
         groups = ["Redshifts", "TotNsubhalos", "TreeNHalos"]
 
-        with h5py.File(fn, mode='r') as f:
+        with h5py.File(fn, mode="r") as f:
             g = f["Header"]
             for attr in attrs:
                 if attr not in g.attrs:

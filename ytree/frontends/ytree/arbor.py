@@ -5,46 +5,33 @@ YTreeArbor class and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import h5py
 import json
 import numpy as np
 import os
 
-from unyt.unit_registry import \
-    UnitRegistry
+from unyt.unit_registry import UnitRegistry
 
-from yt.data_objects.data_containers import \
-    YTDataContainer
-from yt.utilities.logger import \
-    ytLogger
-from yt.utilities.parallel_tools.parallel_analysis_interface import \
-    parallel_objects
+from yt.data_objects.data_containers import YTDataContainer
+from yt.utilities.logger import ytLogger
+from yt.utilities.parallel_tools.parallel_analysis_interface import parallel_objects
 
-from ytree.data_structures.arbor import \
-    Arbor
+from ytree.data_structures.arbor import Arbor
 from ytree.data_structures.load import load as ytree_load
-from ytree.frontends.ytree.io import \
-    YTreeDataFile, \
-    YTreeRootFieldIO, \
-    YTreeTreeFieldIO
-from ytree.frontends.ytree.utilities import \
-    get_about, \
-    get_conditional
-from ytree.utilities.io import \
-    _hdf5_yt_attr, \
-    parse_h5_attr
-from ytree.utilities.logger import \
-    log_level
-from ytree.yt_frontend import \
-    YTreeDataset
+from ytree.frontends.ytree.io import YTreeDataFile, YTreeRootFieldIO, YTreeTreeFieldIO
+from ytree.frontends.ytree.utilities import get_about, get_conditional
+from ytree.utilities.io import _hdf5_yt_attr, parse_h5_attr
+from ytree.utilities.logger import log_level
+from ytree.yt_frontend import YTreeDataset
+
 
 class YTreeArbor(Arbor):
     """
@@ -52,21 +39,22 @@ class YTreeArbor(Arbor):
     :func:`~ytree.data_structures.arbor.Arbor.save_arbor`
     or :func:`~ytree.data_structures.tree_node.TreeNode.save_tree` functions.
     """
+
     _root_field_io_class = YTreeRootFieldIO
     _tree_field_io_class = YTreeTreeFieldIO
     _suffix = ".h5"
-    _node_io_attrs = ('_ai',)
+    _node_io_attrs = ("_ai",)
 
     def _node_io_loop_prepare(self, nodes):
         if nodes is None:
             nodes = np.arange(self.size)
-            ai = self._node_info['_ai']
+            ai = self._node_info["_ai"]
         elif nodes.dtype == object:
             ai = np.array(
-                [node._ai if node.is_root else node.root._ai
-                 for node in nodes])
-        else: # assume an array of indices
-            ai = self._node_info['_ai'][nodes]
+                [node._ai if node.is_root else node.root._ai for node in nodes]
+            )
+        else:  # assume an array of indices
+            ai = self._node_info["_ai"][nodes]
 
         # the order they will be processed
         io_order = np.argsort(ai)
@@ -91,23 +79,20 @@ class YTreeArbor(Arbor):
         data_file.close()
 
     def _parse_parameter_file(self):
-        self._prefix = \
-          self.filename[:self.filename.rfind(self._suffix)]
+        self._prefix = self.filename[: self.filename.rfind(self._suffix)]
 
         fh = h5py.File(self.filename, mode="r")
-        for attr in ["hubble_constant",
-                     "omega_matter",
-                     "omega_lambda"]:
+        for attr in ["hubble_constant", "omega_matter", "omega_lambda"]:
             setattr(self, attr, fh.attrs.get(attr, None))
         if "unit_registry_json" in fh.attrs:
-            self.unit_registry = \
-              UnitRegistry.from_json(
-                  parse_h5_attr(fh, "unit_registry_json"))
+            self.unit_registry = UnitRegistry.from_json(
+                parse_h5_attr(fh, "unit_registry_json")
+            )
         if "box_size" in fh.attrs:
             self.box_size = _hdf5_yt_attr(
-                fh, "box_size", unit_registry=self.unit_registry)
-        self.field_info.update(
-            json.loads(parse_h5_attr(fh, "field_info")))
+                fh, "box_size", unit_registry=self.unit_registry
+            )
+        self.field_info.update(json.loads(parse_h5_attr(fh, "field_info")))
         self._size = fh.attrs["total_trees"]
         fh.close()
 
@@ -133,22 +118,29 @@ class YTreeArbor(Arbor):
             return
 
         fh = h5py.File(self.filename, "r")
-        self._node_info['uid'][:] = fh["data"]["uid"][()].astype(np.int64)
+        self._node_info["uid"][:] = fh["data"]["uid"][()].astype(np.int64)
         self._node_io._si = fh["index"]["tree_start_index"][()]
         self._node_io._ei = fh["index"]["tree_end_index"][()]
         fh.close()
 
-        self._node_info['_ai'][:] = np.arange(self.size)
-        self.data_files = \
-          [YTreeDataFile(f"{self._prefix}_{i:04d}{self._suffix}")
-           for i in range(self._node_io._si.size)]
+        self._node_info["_ai"][:] = np.arange(self.size)
+        self.data_files = [
+            YTreeDataFile(f"{self._prefix}_{i:04d}{self._suffix}")
+            for i in range(self._node_io._si.size)
+        ]
         if self.analysis_filename is not None:
             for i, df in enumerate(self.data_files):
-                df.analysis_filename = \
-                  f"{self._prefix}_{i:04d}-analysis{self._suffix}"
+                df.analysis_filename = f"{self._prefix}_{i:04d}-analysis{self._suffix}"
 
-    def get_yt_selection(self, above=None, below=None, equal=None, about=None,
-                         conditionals=None, data_source=None):
+    def get_yt_selection(
+        self,
+        above=None,
+        below=None,
+        equal=None,
+        about=None,
+        conditionals=None,
+        data_source=None,
+    ):
         """
         Get a selection of halos meeting given criteria.
 
@@ -281,14 +273,14 @@ class YTreeArbor(Arbor):
                 f"\nabove: {above}"
                 f"\nbelow: {below}"
                 f"\nequal: {equal}"
-                f"\nabout: {about}")
+                f"\nabout: {about}"
+            )
 
         if data_source is None:
             data_source = self.ytds.all_data()
 
         if not isinstance(data_source, YTDataContainer):
-            raise ValueError(
-                f"data_source must be a YTDataContainer: {data_source}.")
+            raise ValueError(f"data_source must be a YTDataContainer: {data_source}.")
 
         for criterion in above:
             condition = get_conditional("above", criterion)
@@ -353,11 +345,12 @@ class YTreeArbor(Arbor):
         self._plant_trees()
 
         all_storage = {}
-        for my_store, my_chunk in parallel_objects(container.chunks([], "io"),
-                                                   storage=all_storage):
-            file_number = my_chunk['halos', 'file_number'].d.astype(int)
-            file_root_index = my_chunk['halos', 'file_root_index'].d.astype(int)
-            tree_index = my_chunk['halos', 'tree_index'].d.astype(int)
+        for my_store, my_chunk in parallel_objects(
+            container.chunks([], "io"), storage=all_storage
+        ):
+            file_number = my_chunk["halos", "file_number"].d.astype(int)
+            file_root_index = my_chunk["halos", "file_root_index"].d.astype(int)
+            tree_index = my_chunk["halos", "tree_index"].d.astype(int)
             arbor_index = self._node_io._si[file_number] + file_root_index
             my_store.result = (arbor_index, tree_index)
 
@@ -425,7 +418,8 @@ class YTreeArbor(Arbor):
         new_arbor = ytree_load(self.filename)
 
         add_fields = set(self.derived_field_list).difference(
-            new_arbor.derived_field_list)
+            new_arbor.derived_field_list
+        )
         for field in add_fields:
             fi = self.field_info[field].copy()
             name = fi.pop("name")
@@ -436,6 +430,7 @@ class YTreeArbor(Arbor):
         return new_arbor
 
     _ytds = None
+
     @property
     def ytds(self):
         """

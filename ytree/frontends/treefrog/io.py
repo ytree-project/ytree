@@ -5,27 +5,23 @@ TreeFrogArbor io classes and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from collections import defaultdict
 import h5py
 import numpy as np
 
-from yt.funcs import \
-    get_pbar
+from yt.funcs import get_pbar
 
-from ytree.data_structures.io import \
-    DataFile, \
-    DefaultRootFieldIO, \
-    TreeFieldIO
-from ytree.utilities.exceptions import \
-    ArborFieldNotFound
+from ytree.data_structures.io import DataFile, DefaultRootFieldIO, TreeFieldIO
+from ytree.utilities.exceptions import ArborFieldNotFound
+
 
 class TreeFrogDataFile(DataFile):
     def _calculate_arbor_offsets(self):
@@ -77,6 +73,7 @@ class TreeFrogDataFile(DataFile):
         return self.fh[group][field][()][frange]
 
     _arbor_start = None
+
     @property
     def arbor_start(self):
         if self._arbor_start is None:
@@ -84,6 +81,7 @@ class TreeFrogDataFile(DataFile):
         return self._arbor_start
 
     _arbor_offset = None
+
     @property
     def arbor_offset(self):
         if self._arbor_offset is None:
@@ -94,21 +92,19 @@ class TreeFrogDataFile(DataFile):
         if self.fh is None:
             self.fh = h5py.File(self.filename, mode="r")
 
+
 class TreeFrogTreeFieldIO(TreeFieldIO):
-    def _read_fields(self, root_node, fields, dtypes=None,
-                     root_only=False):
+    def _read_fields(self, root_node, fields, dtypes=None, root_only=False):
         """
         Read fields from disk for a single tree.
         """
 
         if dtypes is None:
             dtypes = {}
-        my_dtypes = self._determine_dtypes(
-            fields, override_dict=dtypes)
+        my_dtypes = self._determine_dtypes(fields, override_dict=dtypes)
 
         fi = self.arbor.field_info
-        afields = [field for field in fields
-                   if fi[field].get("source") == "arbor"]
+        afields = [field for field in fields if fi[field].get("source") == "arbor"]
         rfields = list(set(fields).difference(afields))
 
         data_file = self.arbor.data_files[root_node._fi]
@@ -136,15 +132,16 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
             ge = in_snap[0]
 
         rdata = defaultdict(list)
-        for gi in range(gs, ge-1, -1):
+        for gi in range(gs, ge - 1, -1):
             group = f"Snap_{gi:03d}"
             offset = offsets[gi]
             size = sizes[gi]
             for field in rfields:
                 rdata[field].append(
                     data_file.read_data(
-                        group, field,
-                        frange=slice(offset,offset+size)))
+                        group, field, frange=slice(offset, offset + size)
+                    )
+                )
 
             for field in afields:
                 rdata[field].append(self._get_arbor_field(field, gi, size))
@@ -172,6 +169,7 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
         else:
             raise ArborFieldNotFound(field, arbor=self.arbor)
 
+
 class TreeFrogRootFieldIO(DefaultRootFieldIO):
     """
     Read fields for the roots of all forests.
@@ -180,15 +178,14 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
     and the offset within that snapshot. We use this information to
     open only the HDF5 groups that have data we need.
     """
+
     def _read_fields(self, storage_object, fields, dtypes=None):
         if dtypes is None:
             dtypes = {}
-        my_dtypes = self._determine_dtypes(
-            fields, override_dict=dtypes)
+        my_dtypes = self._determine_dtypes(fields, override_dict=dtypes)
 
         fi = self.arbor.field_info
-        afields = [field for field in fields
-                   if fi[field].get("source") == "arbor"]
+        afields = [field for field in fields if fi[field].get("source") == "arbor"]
         rfields = list(set(fields).difference(afields))
 
         arbor = self.arbor
@@ -200,7 +197,7 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
 
         c = 0
         rdata = defaultdict(list)
-        pbar = get_pbar('Reading root fields', arbor.size)
+        pbar = get_pbar("Reading root fields", arbor.size)
         for idf, (data_file, nodes) in enumerate(zip(data_files, index_list)):
             arbor._node_io_loop_start(data_file)
 

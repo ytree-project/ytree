@@ -1,8 +1,6 @@
-from ytree.frontends.consistent_trees_hdf5 import \
-    ConsistentTreesHDF5Arbor
-from ytree.utilities.testing import \
-    ArborTest, \
-    TempDirTest
+from ytree.frontends.consistent_trees_hdf5 import ConsistentTreesHDF5Arbor
+from ytree.utilities.testing import ArborTest, TempDirTest
+
 
 class ConsistentTreesHDF5ArborTest1(TempDirTest, ArborTest):
     arbor_type = ConsistentTreesHDF5Arbor

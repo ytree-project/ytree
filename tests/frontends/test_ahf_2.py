@@ -1,8 +1,6 @@
-from ytree.frontends.ahf import \
-    AHFCRMArbor
-from ytree.utilities.testing import \
-    ArborTest, \
-    TempDirTest
+from ytree.frontends.ahf import AHFCRMArbor
+from ytree.utilities.testing import ArborTest, TempDirTest
+
 
 class AHFCRMArborTest(TempDirTest, ArborTest):
     arbor_type = AHFCRMArbor

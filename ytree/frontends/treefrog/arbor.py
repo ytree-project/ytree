@@ -5,29 +5,28 @@ TreeFrogArbor class and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import h5py
 import numpy as np
 import os
 import re
 
-from ytree.data_structures.arbor import \
-    SegmentedArbor
-from ytree.frontends.treefrog.fields import \
-    TreeFrogFieldInfo
-from ytree.frontends.treefrog.io import \
-    TreeFrogDataFile, \
-    TreeFrogRootFieldIO, \
-    TreeFrogTreeFieldIO
-from ytree.utilities.logger import \
-    ytreeLogger as mylog
+from ytree.data_structures.arbor import SegmentedArbor
+from ytree.frontends.treefrog.fields import TreeFrogFieldInfo
+from ytree.frontends.treefrog.io import (
+    TreeFrogDataFile,
+    TreeFrogRootFieldIO,
+    TreeFrogTreeFieldIO,
+)
+from ytree.utilities.logger import ytreeLogger as mylog
+
 
 class TreeFrogArbor(SegmentedArbor):
     """
@@ -54,17 +53,19 @@ class TreeFrogArbor(SegmentedArbor):
             return filename
 
         match = re.search(rf"{self._suffix}\.\d+$", filename)
-        forest_fn = filename[:match.start()] + suffix
+        forest_fn = filename[: match.start()] + suffix
         return forest_fn
 
     def _get_data_files(self):
-        self.data_files = [TreeFrogDataFile(f"{self._prefix}{self._suffix}.{i}")
-                           for i in range(self._nfiles)]
+        self.data_files = [
+            TreeFrogDataFile(f"{self._prefix}{self._suffix}.{i}")
+            for i in range(self._nfiles)
+        ]
 
     @property
     def _prefix(self):
         suffix = f".foreststats{self._suffix}"
-        return self.parameter_filename[:-len(suffix)]
+        return self.parameter_filename[: -len(suffix)]
 
     def _parse_parameter_file(self):
         with h5py.File(self.parameter_filename, mode="r") as f:
@@ -91,15 +92,17 @@ class TreeFrogArbor(SegmentedArbor):
                 return
 
             self.units = {}
-            for attr in ["Length_unit_to_kpc",
-                         "Mass_unit_to_solarmass",
-                         "Velocity_unit_to_kms"]:
+            for attr in [
+                "Length_unit_to_kpc",
+                "Mass_unit_to_solarmass",
+                "Velocity_unit_to_kms",
+            ]:
                 self.units[attr] = f["Header/Units"].attrs[attr]
 
             field_list = list(f["Snap_000"].keys())
-            self._scale_factors = \
-              np.array([f[f"Snap_{i:03d}"].attrs["scalefactor"]
-                        for i in range(self._nsnaps)])
+            self._scale_factors = np.array(
+                [f[f"Snap_{i:03d}"].attrs["scalefactor"] for i in range(self._nsnaps)]
+            )
 
         self.field_list = field_list
         self.field_info.update({field: {} for field in field_list})
@@ -112,20 +115,20 @@ class TreeFrogArbor(SegmentedArbor):
             return
 
         with h5py.File(self.parameter_filename, mode="r") as f:
-            self._node_info['_tree_size'] = f["ForestInfo"]["ForestSizes"][()]
+            self._node_info["_tree_size"] = f["ForestInfo"]["ForestSizes"][()]
 
         ei = self._file_count.cumsum()
         si = ei - self._file_count
         trees = np.arange(self._size)
         fi = np.digitize(trees, ei)
         # number of the file each forest lives in
-        self._node_info['_fi'] = fi
+        self._node_info["_fi"] = fi
         # index within that file each forest is at
-        self._node_info['_si'] = trees - si[fi]
+        self._node_info["_si"] = trees - si[fi]
         # This is slightly unsafe since the call to get_fields to get the uid field
         # will call _plant_trees, too. It will not get here because is_planted will
         # be True. As long as _fi and _si are initialized properly, it should be ok.
-        self._node_info['uid'] = self["uid"]
+        self._node_info["uid"] = self["uid"]
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
@@ -139,13 +142,24 @@ class TreeFrogArbor(SegmentedArbor):
         if not h5py.is_hdf5(fn):
             return False
 
-        info = \
-          {"Header": ['FileSplittingCriteria', 'FilesSplitByForest',
-                      'HaloCatalogBaseFileName', 'NFiles', 'NSnaps'],
-          "ForestInfo": ['MaxForestFOFGroupID', 'MaxForestFOFGroupSize',
-                         'MaxForestID', 'MaxForestSize', 'NForests']}
+        info = {
+            "Header": [
+                "FileSplittingCriteria",
+                "FilesSplitByForest",
+                "HaloCatalogBaseFileName",
+                "NFiles",
+                "NSnaps",
+            ],
+            "ForestInfo": [
+                "MaxForestFOFGroupID",
+                "MaxForestFOFGroupSize",
+                "MaxForestID",
+                "MaxForestSize",
+                "NForests",
+            ],
+        }
 
-        with h5py.File(fn, mode='r') as f:
+        with h5py.File(fn, mode="r") as f:
             for group, attrs in info.items():
                 if group not in f:
                     return False
