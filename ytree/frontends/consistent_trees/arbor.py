@@ -85,7 +85,8 @@ class ConsistentTreesArbor(SegmentedArbor):
                           block_size).astype(np.int64)
         for ib in range(nblocks):
             my_block = min(block_size, file_size - offset)
-            if my_block <= 0: break
+            if my_block <= 0:
+                break
             buff = data_file.fh.read(my_block)
             lihash = -1
             for ih in range(buff.count("#")):
@@ -115,7 +116,8 @@ class ConsistentTreesArbor(SegmentedArbor):
         with the string, "Consistent Trees".
         """
         fn = args[0]
-        if not fn.endswith(".dat"): return False
+        if not fn.endswith(".dat"):
+            return False
         with open(fn, "r") as f:
             valid = False
             while True:
@@ -125,7 +127,8 @@ class ConsistentTreesArbor(SegmentedArbor):
                 if "Consistent Trees" in line:
                     valid = True
                     break
-            if not valid: return False
+            if not valid:
+                return False
         return True
 
 class ConsistentTreesGroupArbor(ConsistentTreesArbor):

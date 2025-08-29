@@ -19,10 +19,10 @@ tabbing (i.e., 4 spaces to the left).
 
 """
 
+import ytree
 import numpy as np
 import yt
 yt.enable_parallelism()
-import ytree
 
 def calc_a50(node):
     # main progenitor masses
