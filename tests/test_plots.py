@@ -13,7 +13,7 @@ tests for plotting
 # The full license is in the file COPYING.txt, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from ytree.utilities.testing import requires_file, TempDirTest
+from ytree.testing.utilities import requires_file, TempDirTest
 
 import ytree
 

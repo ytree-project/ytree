@@ -15,7 +15,8 @@ tests for parallel_tree_nodes iterator
 
 import os
 
-from ytree.utilities.testing import ParallelTest, TempDirTest
+from ytree.testing.parallel_test import ParallelTest
+from ytree.testing.utilities import TempDirTest
 
 script_path = os.path.dirname(__file__)
 

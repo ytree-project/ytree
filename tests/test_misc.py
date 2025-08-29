@@ -17,7 +17,7 @@ import os
 from ytree.data_structures.load import load as ytree_load
 from ytree.utilities.io import f_text_block
 from ytree.utilities.loading import test_data_dir
-from ytree.utilities.testing import requires_file, TempDirTest
+from ytree.testing.utilities import requires_file, TempDirTest
 
 R0 = os.path.join(test_data_dir, "rockstar/rockstar_halos/out_0.list")
 R63 = os.path.join(test_data_dir, "rockstar/rockstar_halos/out_63.list")

@@ -17,9 +17,10 @@ import numpy as np
 import os
 import tempfile
 import ytree
-from ytree.utilities.loading import test_data_dir
-from ytree.utilities.testing import ArborTest, TempDirTest, requires_file
 from ytree.frontends.lhalotree import LHaloTreeArbor, utils as lhtutils
+from ytree.testing.arbor_test import ArborTest
+from ytree.testing.utilities import TempDirTest, requires_file
+from ytree.utilities.loading import test_data_dir
 
 
 MMT = os.path.join(test_data_dir, "lhalotree", "trees_063.0")

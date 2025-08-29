@@ -17,7 +17,7 @@ import numpy as np
 from numpy.testing import assert_raises
 import ytree
 
-from ytree.utilities.testing import TempDirTest, assert_array_rel_equal, requires_file
+from ytree.testing.utilities import TempDirTest, assert_array_rel_equal, requires_file
 from ytree.yt_frontend import YTreeDataset
 
 CTG = "tiny_ctrees/locations.dat"

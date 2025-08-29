@@ -1,5 +1,6 @@
 from ytree.frontends.ahf import AHFArbor
-from ytree.utilities.testing import ArborTest, TempDirTest
+from ytree.testing.arbor_test import ArborTest
+from ytree.testing.utilities import TempDirTest
 
 
 class AHFArborTest(TempDirTest, ArborTest):

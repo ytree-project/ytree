@@ -17,7 +17,7 @@ import numpy as np
 from numpy.testing import assert_array_equal, assert_equal, assert_raises
 
 from ytree.utilities.exceptions import ArborFieldAlreadyExists, ArborUnsettableField
-from ytree.utilities.testing import requires_file, TempDirTest
+from ytree.testing.utilities import requires_file, TempDirTest
 
 import ytree
 

@@ -3,7 +3,8 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from ytree.frontends.moria import MoriaArbor
-from ytree.utilities.testing import ArborTest, TempDirTest
+from ytree.testing.arbor_test import ArborTest
+from ytree.testing.utilities import TempDirTest
 
 
 class MoriaArborTest(TempDirTest, ArborTest):

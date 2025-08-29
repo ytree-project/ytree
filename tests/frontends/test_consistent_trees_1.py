@@ -1,5 +1,6 @@
 from ytree.frontends.consistent_trees import ConsistentTreesArbor
-from ytree.utilities.testing import ArborTest, TempDirTest
+from ytree.testing.arbor_test import ArborTest
+from ytree.testing.utilities import TempDirTest
 
 
 class ConsistentTreesArborTest(TempDirTest, ArborTest):

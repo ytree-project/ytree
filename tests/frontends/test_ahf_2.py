@@ -1,5 +1,6 @@
 from ytree.frontends.ahf import AHFCRMArbor
-from ytree.utilities.testing import ArborTest, TempDirTest
+from ytree.testing.arbor_test import ArborTest
+from ytree.testing.utilities import TempDirTest
 
 
 class AHFCRMArborTest(TempDirTest, ArborTest):

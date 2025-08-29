@@ -1,6 +1,7 @@
 from ytree.data_structures.load import load as ytree_load
 from ytree.frontends.lhalotree_hdf5 import LHaloTreeHDF5Arbor
-from ytree.utilities.testing import ArborTest, TempDirTest
+from ytree.testing.arbor_test import ArborTest
+from ytree.testing.utilities import TempDirTest
 
 
 class LHaloTreeHDF5ArborTest(TempDirTest, ArborTest):

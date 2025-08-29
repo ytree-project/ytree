@@ -1,5 +1,6 @@
 from ytree.frontends.csv import CSVArbor
-from ytree.utilities.testing import ArborTest, TempDirTest
+from ytree.testing.arbor_test import ArborTest
+from ytree.testing.utilities import TempDirTest
 
 
 class CSVArborTest(TempDirTest, ArborTest):

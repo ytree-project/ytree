@@ -14,7 +14,7 @@ parallel_trees test script
 # -----------------------------------------------------------------------------
 
 import ytree
-from ytree.utilities.testing import get_tree_split
+from ytree.testing.utilities import get_tree_split
 from mpi4py import MPI
 import sys
 import yt
