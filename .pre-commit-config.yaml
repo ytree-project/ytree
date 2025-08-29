@@ -1,0 +1,35 @@
+minimum_pre_commit_version: "1.15.0"
+
+ci:
+    autofix_prs: false
+    autoupdate_schedule: monthly
+
+repos:
+
+# there are some other useful hooks we could enable from here in the future
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v6.0.0
+  hooks:
+  - id: check-executables-have-shebangs
+  - id: check-case-conflict # make sure no filenames would conflict on
+                            # case-insensitive filesystems
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+  # these hooks check that .json, .toml, .yaml files have valid syntax
+  - id: check-json
+  - id: check-toml
+  - id: check-yaml
+
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.12.11
+  hooks:
+  # run the linter
+  - id: ruff-check
+    args: [--fix, "--show-fixes"]
+  # run the formatter
+  - id: ruff-format
+
+-   repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+    -   id: rst-backticks

@@ -268,7 +268,7 @@ function which creates a ``yt`` sphere.
    def get_yt_sphere(node):
        # this works if get_yt_dataset has been called first
        ds = node.ds
-       
+
        center = node["position"].to("unitary")
        radius = node["virial_radius"].to("unitary")
        node.sphere = ds.sphere((center, "unitary"), (radius, "unitary"))

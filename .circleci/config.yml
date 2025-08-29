@@ -70,20 +70,6 @@ commands:
                 girder-cli --api-url https://girder.hub.yt/api/v1 download 59835a1ee2a67400016a2cda $YTREE_DATA
             fi
 
-  lint:
-    description: "Lint."
-    steps:
-      - run:
-          name: "Lint."
-          command: |
-            if [ ! -d $HOME/venv ]; then
-                python3 -m venv $HOME/venv
-            fi
-            source $BASH_ENV
-            source $HOME/venv/bin/activate
-            pip install flake8
-            flake8 tests ytree doc/source/examples
-
   run-tests:
     description: "Build ytree and run tests."
     parameters:
@@ -133,21 +119,6 @@ executors:
       - image: cimg/python:<< parameters.tag >>
 
 jobs:
-  linting:
-    resource_class: small
-    parameters:
-      tag:
-        type: string
-        default: latest
-    working_directory: ~/ytree
-    steps:
-      - checkout
-      - set-env
-      - lint
-    executor:
-      name: python
-      tag: << parameters.tag >>
-
   tests:
     parameters:
       tag:
@@ -245,21 +216,13 @@ workflows:
 
    normal-tests:
      jobs:
-       - linting:
-           name: "linting"
-           tag: "3.12.7"
-
        - tests:
-           requires:
-             - linting
            name: "Python 3.9 tests"
            tag: "3.9.20"
            ytdev: 0
            pytestkwargs: "--exclude-parallel --exclude-slow"
 
        - tests:
-           requires:
-             - linting
            name: "Python 3.12 tests"
            tag: "3.12.7"
            coverage: 1
@@ -267,8 +230,6 @@ workflows:
            pytestkwargs: "--exclude-parallel --exclude-slow"
 
        - tests:
-           requires:
-             - linting
            name: "Python 3.12 tests"
            tag: "3.12.7"
            coverage: 0
