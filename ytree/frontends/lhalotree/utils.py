@@ -5,47 +5,52 @@ LHaloTree utilities
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import numpy as np
 import os
 import glob
 
-from ytree.utilities.logger import \
-    ytreeLogger
+from ytree.utilities.logger import ytreeLogger
 
 """Default header data type."""
 dtype_header_default = [
     # merger tree pointers
-    ('Descendant', 'i4'),
-    ('FirstProgenitor', 'i4'),
-    ('NextProgenitor', 'i4'),
-    ('FirstHaloInFOFgroup', 'i4'),
-    ('NextHaloInFOFgroup', 'i4'),
+    ("Descendant", "i4"),
+    ("FirstProgenitor", "i4"),
+    ("NextProgenitor", "i4"),
+    ("FirstHaloInFOFgroup", "i4"),
+    ("NextHaloInFOFgroup", "i4"),
     # properties of halo
-    ('Len', 'i4'),
-    ('M_Mean200', 'f4'),
-    ('Mvir', 'f4'), # for Millennium, Mvir=M_Crit200
-    ('M_TopHat', 'f4'),
-    ('Pos', 'f4', 3),
-    ('Vel', 'f4', 3),
-    ('VelDisp', 'f4'),
-    ('Vmax', 'f4'),
-    ('Spin', 'f4', 3),
-    ('MostBoundID', 'i8'),
+    ("Len", "i4"),
+    ("M_Mean200", "f4"),
+    ("Mvir", "f4"),  # for Millennium, Mvir=M_Crit200
+    ("M_TopHat", "f4"),
+    ("Pos", "f4", 3),
+    ("Vel", "f4", 3),
+    ("VelDisp", "f4"),
+    ("Vmax", "f4"),
+    ("Spin", "f4", 3),
+    ("MostBoundID", "i8"),
     # original position in simulation tree files
-    ('SnapNum', 'i4'),
-    ('FileNr', 'i4'),
-    ('SubhaloIndex', 'i4'),
-    ('SubHalfMass', 'f4')]
-halo_fields = ['Descendant', 'FirstProgenitor', 'NextProgenitor',
-               'FirstHaloInFOFgroup', 'NextHaloInFOFgroup']
+    ("SnapNum", "i4"),
+    ("FileNr", "i4"),
+    ("SubhaloIndex", "i4"),
+    ("SubHalfMass", "f4"),
+]
+halo_fields = [
+    "Descendant",
+    "FirstProgenitor",
+    "NextProgenitor",
+    "FirstHaloInFOFgroup",
+    "NextHaloInFOFgroup",
+]
 
 
 def read_header_default(filename):
@@ -61,21 +66,21 @@ def read_header_default(filename):
     """
     # Open
     if isinstance(filename, str):
-        fd = open(filename, 'rb')
+        fd = open(filename, "rb")
         close = True
     else:
         fd = filename
         close = False
     # Read
-    dtype1 = np.dtype([('ntrees', 'i4'), ('totnhalos', 'i4')])
+    dtype1 = np.dtype([("ntrees", "i4"), ("totnhalos", "i4")])
     x1 = np.fromfile(fd, dtype=dtype1, count=1)
-    ntrees = x1['ntrees'][0]
-    nhalos = x1['totnhalos'][0]
-    dtype2 = np.dtype('i4')
+    ntrees = x1["ntrees"][0]
+    nhalos = x1["totnhalos"][0]
+    dtype2 = np.dtype("i4")
     x2 = np.fromfile(fd, dtype=dtype2, count=ntrees)
-    assert (len(x2) == ntrees)
-    assert (np.sum(x2) == nhalos)
-    header_size = dtype1.itemsize + ntrees*dtype2.itemsize
+    assert len(x2) == ntrees
+    assert np.sum(x2) == nhalos
+    header_size = dtype1.itemsize + ntrees * dtype2.itemsize
     # Close
     if close:
         fd.close()
@@ -89,20 +94,20 @@ def save_header_default(filename, nhalos_per_tree):
         filename (str): Full path to file that should be written to.
         nhalos_per_tree (np.ndarray): The number of halos in each tree that
             will be written to the file.
-    
+
     Returns:
         int: The size of the header that was written.
 
     """
     ntrees = len(nhalos_per_tree)
     nhalos = np.sum(nhalos_per_tree)
-    dtype1 = np.dtype([('ntrees', 'i4'), ('totnhalos', 'i4')])
+    dtype1 = np.dtype([("ntrees", "i4"), ("totnhalos", "i4")])
     x1 = np.array([(ntrees, nhalos)], dtype=dtype1)
-    x2 = nhalos_per_tree.astype('i4')
+    x2 = nhalos_per_tree.astype("i4")
     header_size = x1.nbytes + x2.nbytes
     # Open
     if isinstance(filename, str):
-        fd = open(filename, 'wb')
+        fd = open(filename, "wb")
         close = True
     else:
         fd = filename
@@ -116,8 +121,7 @@ def save_header_default(filename, nhalos_per_tree):
     return header_size
 
 
-def _read_from_mmap(filename, start=0, nhalo=None,
-                    header_size=None, item_dtype=None):
+def _read_from_mmap(filename, start=0, nhalo=None, header_size=None, item_dtype=None):
     r"""Read one or more halos from a memmapped file.
 
     Args:
@@ -144,7 +148,7 @@ def _read_from_mmap(filename, start=0, nhalo=None,
             header_size = 0
         if item_dtype is None:
             item_dtype = dtype_header_default
-        mmap = np.memmap(filename, dtype=item_dtype, mode='c', offset=header_size)
+        mmap = np.memmap(filename, dtype=item_dtype, mode="c", offset=header_size)
     if nhalo is None:
         stop = None
     else:
@@ -175,16 +179,16 @@ def _save_to_mmap(filename, data, start=0, header_size=None):
         if header_size is None:
             header_size = 0
         item_dtype = data.dtype
-        mmap = np.memmap(filename, dtype=item_dtype, mode='r+',
-                         offset=header_size, shape=(nhalo, ))
+        mmap = np.memmap(
+            filename, dtype=item_dtype, mode="r+", offset=header_size, shape=(nhalo,)
+        )
         flush = True
-    mmap[start:(start + nhalo)] = data[:]
+    mmap[start : (start + nhalo)] = data[:]
     if flush:
         del mmap  # flush to disk
 
 
-def _read_from_file(filename, start=0, nhalo=None,
-                    header_size=None, item_dtype=None):
+def _read_from_file(filename, start=0, nhalo=None, header_size=None, item_dtype=None):
     r"""Read one or more halos from the file using np.fromfile.
 
     Args:
@@ -211,7 +215,7 @@ def _read_from_file(filename, start=0, nhalo=None,
     # Open file as necessary
     opened = False
     if isinstance(filename, str):
-        fd = open(filename, 'rb')
+        fd = open(filename, "rb")
         opened = True
     else:
         fd = filename
@@ -245,7 +249,7 @@ def _save_to_file(filename, data, start=0, header_size=None):
     # Open file as necessary
     opened = False
     if isinstance(filename, str):
-        fd = open(filename, 'rb+')
+        fd = open(filename, "rb+")
         opened = True
     else:
         fd = filename
@@ -372,15 +376,25 @@ class LHaloTreeReader:
 
     """
 
-    def __init__(self, filename, parameters=None, parameter_file=None,
-                 scale_factors=None, scale_factor_file=None,
-                 header_size=None, nhalos_per_tree=None, read_header_func=None,
-                 item_dtype=None, silent=False, validate=False):
+    def __init__(
+        self,
+        filename,
+        parameters=None,
+        parameter_file=None,
+        scale_factors=None,
+        scale_factor_file=None,
+        header_size=None,
+        nhalos_per_tree=None,
+        read_header_func=None,
+        item_dtype=None,
+        silent=False,
+        validate=False,
+    ):
         # Files
         self.filename = self._verify_file(filename)
         self.fileindex = 0
         self.filepattern = self.filename
-        ext = self.filename.split('.')[-1]
+        ext = self.filename.split(".")[-1]
         if ext.isdigit():
             self.fileindex = int(ext)
             self.filepattern = os.path.splitext(self.filename)[0] + ".*"
@@ -389,38 +403,54 @@ class LHaloTreeReader:
             self.parameter_file = None
         else:
             self.parameter_file = self._verify_file(
-                parameter_file, suffix='.param', error_tag='Parameter file',
-                silent=silent)
+                parameter_file,
+                suffix=".param",
+                error_tag="Parameter file",
+                silent=silent,
+            )
             self._parameters = None
         if scale_factors is not None:
             self._scale_factors = np.asarray(scale_factors)
             self.scale_factor_file = None
         else:
             self.scale_factor_file = self._verify_file(
-                scale_factor_file, suffix='.a_list', error_tag='Scale factor file',
-                silent=silent)
+                scale_factor_file,
+                suffix=".a_list",
+                error_tag="Scale factor file",
+                silent=silent,
+            )
             self._scale_factors = None
         # Header info
         if (header_size is None) or (nhalos_per_tree is None):
-            if (read_header_func is None):
+            if read_header_func is None:
                 read_header_func = read_header_default
             header_size, nhalos_per_tree = read_header_func(filename)
-        if (item_dtype is None):
+        if item_dtype is None:
             item_dtype = dtype_header_default
         self.header_size = header_size
         self.nhalos_per_tree = nhalos_per_tree
-        self.nhalos_before_tree = (np.cumsum(self.nhalos_per_tree) -
-                                   self.nhalos_per_tree)
+        self.nhalos_before_tree = np.cumsum(self.nhalos_per_tree) - self.nhalos_per_tree
         self.totnhalos = np.sum(self.nhalos_per_tree)
         self.ntrees = len(self.nhalos_per_tree)
         self.item_dtype = np.dtype(item_dtype)
         # Fields
         self.raw_fields = list(self.item_dtype.fields.keys())
-        self.add_fields = ['desc_uid', 'scale_factor', 'uid',
-                           'x', 'y', 'z', 'vx', 'vy', 'vz',
-                           'Jx', 'Jy', 'Jz']
+        self.add_fields = [
+            "desc_uid",
+            "scale_factor",
+            "uid",
+            "x",
+            "y",
+            "z",
+            "vx",
+            "vy",
+            "vz",
+            "Jx",
+            "Jy",
+            "Jz",
+        ]
         self.fields = self.raw_fields + self.add_fields
-        for k in ['Pos', 'Vel', 'Spin']:
+        for k in ["Pos", "Vel", "Spin"]:
             self.fields.remove(k)
         # Check file size
         item_size = self.item_dtype.itemsize
@@ -430,7 +460,8 @@ class LHaloTreeReader:
             raise IOError(
                 f"File is {file_size} bytes, but {self.totnhalos} items of size "
                 f"{item_size} with header of {self.header_size} bytes should be "
-                f"{body_size + self.header_size} bytes total.")
+                f"{body_size + self.header_size} bytes total."
+            )
         # Load all data, validate, and cache some fields
         self.set_global_properties(validate=validate)
 
@@ -446,28 +477,31 @@ class LHaloTreeReader:
 
         """
         # Tree num array
-        self.treenum_arr = np.zeros(self.totnhalos, dtype='int64')
+        self.treenum_arr = np.zeros(self.totnhalos, dtype="int64")
         start = self.nhalos_before_tree
         stop = start + self.nhalos_per_tree
         for t in range(self.ntrees):
-            self.treenum_arr[start[t]:stop[t]] = t
+            self.treenum_arr[start[t] : stop[t]] = t
         # Memmap/file object
-        self.fobj = np.memmap(self.filename, dtype=self.item_dtype, mode='c',
-                              offset=self.header_size)
+        self.fobj = np.memmap(
+            self.filename, dtype=self.item_dtype, mode="c", offset=self.header_size
+        )
         # Read all data
         data = self.read_all_trees(skip_add_fields=True, validate=validate)
         # File number
-        self.filenum = data['FileNr'][0]
-        if (data['SnapNum'][0] + 1) != len(self.scale_factors):  # pragma: no cover
+        self.filenum = data["FileNr"][0]
+        if (data["SnapNum"][0] + 1) != len(self.scale_factors):  # pragma: no cover
             ytreeLogger.warning(
-                f"First FoF central is in snapshot {data['SnapNum'][0] + 1}/{len(self.scale_factors)}.")
+                f"First FoF central is in snapshot {data['SnapNum'][0] + 1}/{len(self.scale_factors)}."
+            )
         # Halo unique IDs
         self.all_uids = np.bitwise_or(
-            np.int64(self.filenum) << 32, np.arange(self.totnhalos, dtype='int64'))
+            np.int64(self.filenum) << 32, np.arange(self.totnhalos, dtype="int64")
+        )
         # Get descendant unique IDs
-        desc = data['Descendant']
-        pos_flag = (desc >= 0)
-        desc_uid = np.zeros(self.totnhalos, dtype='int64') - 1
+        desc = data["Descendant"]
+        pos_flag = desc >= 0
+        desc_uid = np.zeros(self.totnhalos, dtype="int64") - 1
         desc_abs = self.get_total_index(self.treenum_arr, desc)
         desc_uid[pos_flag] = self.all_uids[desc_abs[pos_flag]]
         self.all_desc_uids = desc_uid
@@ -503,11 +537,11 @@ class LHaloTreeReader:
 
         """
         if error_tag is None:
-            error_tag = 'File'
+            error_tag = "File"
         if (filename is None) or (not os.path.isfile(filename)):
             if suffix is None:  # pragma: no cover
                 raise IOError(f"{error_tag} dosn't exist: {filename}")
-            pattern = os.path.join(os.path.dirname(self.filename), '*' + suffix)
+            pattern = os.path.join(os.path.dirname(self.filename), "*" + suffix)
             files = glob.glob(pattern)
             if len(files) == 0:  # pragma: no cover
                 raise IOError(f"{error_tag} could not be located matching: {pattern}")
@@ -522,7 +556,7 @@ class LHaloTreeReader:
         r"""dict: Key/value pairs read from the parameter file."""
         if self._parameters is None:
             self._parameters = dict()
-            with open(self.parameter_file, 'r') as fd:
+            with open(self.parameter_file, "r") as fd:
                 for line in fd:
                     line_strip = line.strip()
                     if len(line_strip) == 0:
@@ -536,37 +570,37 @@ class LHaloTreeReader:
     @property
     def hubble_constant(self):
         r"""float: Hubble constants."""
-        return float(self.parameters['HubbleParam'])
+        return float(self.parameters["HubbleParam"])
 
     @property
     def omega_matter(self):
         r"""float: Matter energy density."""
-        return float(self.parameters['Omega0'])
+        return float(self.parameters["Omega0"])
 
     @property
     def omega_lambda(self):
         r"""float: Dark matter energy density."""
-        return float(self.parameters['OmegaLambda'])
+        return float(self.parameters["OmegaLambda"])
 
     @property
     def box_size(self):
         r"""float: Size of periodic boundaries."""
-        return float(self.parameters['BoxSize'])
+        return float(self.parameters["BoxSize"])
 
     @property
     def periodic(self):
         r"""bool: Does the simulation have periodic boundaries or not."""
-        return bool(int(self.parameters['PeriodicBoundariesOn']))
+        return bool(int(self.parameters["PeriodicBoundariesOn"]))
 
     @property
     def comoving(self):
         r"""bool: Is the simulation in comoving units."""
-        return bool(int(self.parameters['ComovingIntegrationOn']))
+        return bool(int(self.parameters["ComovingIntegrationOn"]))
 
     @property
     def units_vel(self):
         r"""str: Units of velocity."""
-        u_cms = float(self.parameters['UnitVelocity_in_cm_per_s'])
+        u_cms = float(self.parameters["UnitVelocity_in_cm_per_s"])
         out = f"{u_cms / 100000.0:f}*km/s"
         # TODO: Does this need adjusted for comoving?
         return out
@@ -574,8 +608,8 @@ class LHaloTreeReader:
     @property
     def units_len(self):
         r"""str: Units of length."""
-        u_cm = float(self.parameters['UnitLength_in_cm'])
-        out = f"{u_cm / 3.085678e+21:f}*kpc"
+        u_cm = float(self.parameters["UnitLength_in_cm"])
+        out = f"{u_cm / 3.085678e21:f}*kpc"
         if self.comoving:
             out += "/h"
         return out
@@ -583,8 +617,8 @@ class LHaloTreeReader:
     @property
     def units_mass(self):
         r"""str: Units of mass."""
-        u_g = float(self.parameters['UnitMass_in_g'])
-        out = f"{u_g / 1.989e+33:f}*Msun"
+        u_g = float(self.parameters["UnitMass_in_g"])
+        out = f"{u_g / 1.989e33:f}*Msun"
         if self.comoving:
             out += "/h"
         return out
@@ -593,7 +627,7 @@ class LHaloTreeReader:
     def scale_factors(self):
         r"""np.ndarray: Array of scale factors at each snapshot."""
         if self._scale_factors is None:
-            self._scale_factors = np.fromfile(self.scale_factor_file, sep='\n')
+            self._scale_factors = np.fromfile(self.scale_factor_file, sep="\n")
         return self._scale_factors
 
     def get_total_index(self, treenum, halonum=None):
@@ -653,8 +687,9 @@ class LHaloTreeReader:
     #         offset += halonum * self.item_dtype.itemsize
     #     return offset
 
-    def read_single_tree(self, treenum, halonum=None, fd=None,
-                         skip_add_fields=False, validate=False):
+    def read_single_tree(
+        self, treenum, halonum=None, fd=None, skip_add_fields=False, validate=False
+    ):
         r"""Read a single tree from the file.
 
         Args:
@@ -690,8 +725,9 @@ class LHaloTreeReader:
             self.validate_tree(treenum, out, halonum=halonum)
         # Add fields
         if not skip_add_fields:
-            out = self.add_computed_fields(treenum, out, halonum=halonum,
-                                           validate=validate)
+            out = self.add_computed_fields(
+                treenum, out, halonum=halonum, validate=validate
+            )
         return out
 
     def read_single_halo(self, treenum, halonum, **kwargs):
@@ -761,13 +797,13 @@ class LHaloTreeReader:
             dict: Dictionary of fields for each halo with added fields.
 
         """
-        nhalos = len(tree['SnapNum'])
+        nhalos = len(tree["SnapNum"])
         if treenum == -1:
-            assert (nhalos == self.totnhalos)
-            assert (halonum is None)
+            assert nhalos == self.totnhalos
+            assert halonum is None
         elif nhalos != self.nhalos_per_tree[treenum]:
-            assert (nhalos == 1)
-            assert (halonum is not None)
+            assert nhalos == 1
+            assert halonum is not None
         else:
             halonum = None
         # Unique ID for each halo and descendant in tree
@@ -775,22 +811,34 @@ class LHaloTreeReader:
         uid = self.all_uids[idx]
         desc_uid = self.all_desc_uids[idx]
         # Scale factors
-        scale_factor = self.scale_factors[tree['SnapNum']]
+        scale_factor = self.scale_factors[tree["SnapNum"]]
         # Position x, y, z
-        x = tree['Pos'][:, 0]
-        y = tree['Pos'][:, 1]
-        z = tree['Pos'][:, 2]
+        x = tree["Pos"][:, 0]
+        y = tree["Pos"][:, 1]
+        z = tree["Pos"][:, 2]
         # Velocity x, y, z
-        vx = tree['Vel'][:, 0]
-        vy = tree['Vel'][:, 1]
-        vz = tree['Vel'][:, 2]
+        vx = tree["Vel"][:, 0]
+        vy = tree["Vel"][:, 1]
+        vz = tree["Vel"][:, 2]
         # Spin x, y, z
-        Jx = tree['Spin'][:, 0]
-        Jy = tree['Spin'][:, 1]
-        Jz = tree['Spin'][:, 2]
+        Jx = tree["Spin"][:, 0]
+        Jy = tree["Spin"][:, 1]
+        Jz = tree["Spin"][:, 2]
         # Add new fields
-        new_fields = dict(uid=uid, desc_uid=desc_uid, scale_factor=scale_factor,
-                          x=x, y=y, z=z, vx=vx, vy=vy, vz=vz, Jx=Jx, Jy=Jy, Jz=Jz)
+        new_fields = dict(
+            uid=uid,
+            desc_uid=desc_uid,
+            scale_factor=scale_factor,
+            x=x,
+            y=y,
+            z=z,
+            vx=vx,
+            vy=vy,
+            vz=vz,
+            Jx=Jx,
+            Jy=Jy,
+            Jz=Jz,
+        )
         out = tree
         out.update(**new_fields)
         if validate:
@@ -830,10 +878,10 @@ class LHaloTreeReader:
                 nhalos = self.nhalos_per_tree[treenum]
         fields = list(tree.keys())
         for k in fields:
-            assert (len(tree[k]) == nhalos)
+            assert len(tree[k]) == nhalos
         # Check fields
         for k in self.raw_fields:
-            assert (k in fields)
+            assert k in fields
         # Don't check tree indices for a single halo
         if halonum is not None:
             return
@@ -843,37 +891,42 @@ class LHaloTreeReader:
             nhalos = self.nhalos_per_tree[treenum_arr]
         # Check that halos are within tree
         for k in halo_fields:
-            assert ((tree[k] < nhalos).all())
+            assert (tree[k] < nhalos).all()
         # Check FOF central exists and all subs in one snapshot
-        central = tree['FirstHaloInFOFgroup']
-        assert ((central >= 0).all())
+        central = tree["FirstHaloInFOFgroup"]
+        assert (central >= 0).all()
         if treenum == -1:
             central = self.get_total_index(treenum_arr, central)
-        assert ((tree['SnapNum'] == tree['SnapNum'][central]).all())
+        assert (tree["SnapNum"] == tree["SnapNum"][central]).all()
         # Check that progenitors/descendants are back/forward in time
-        descend = tree['Descendant'].astype('i4')
-        has_descend = (descend >= 0)
+        descend = tree["Descendant"].astype("i4")
+        has_descend = descend >= 0
         not_descend = np.logical_not(has_descend)
         # Not strictly True
         # assert ((tree['SnapNum'][not_descend] ==
         #         (len(self.scale_factors) - 1)).all())
         if treenum == -1:
             descend = self.get_total_index(treenum_arr, descend)
-        assert ((tree['SnapNum'][descend[has_descend]] >
-                tree['SnapNum'][has_descend]).all())
+        assert (
+            tree["SnapNum"][descend[has_descend]] > tree["SnapNum"][has_descend]
+        ).all()
         # Check progenitors are back in time
         descend[not_descend] = np.where(not_descend)[0]
-        progen1 = tree['FirstProgenitor']
-        progen2 = tree['NextProgenitor']
-        has_progen1 = (progen1 >= 0)
-        has_progen2 = (progen2 >= 0)
+        progen1 = tree["FirstProgenitor"]
+        progen2 = tree["NextProgenitor"]
+        has_progen1 = progen1 >= 0
+        has_progen2 = progen2 >= 0
         if treenum == -1:
             progen1 = self.get_total_index(treenum_arr, progen1)
             progen2 = self.get_total_index(treenum_arr, progen2)
-        assert ((tree['SnapNum'][progen1[has_progen1]] <=
-                tree['SnapNum'][descend[has_progen1]]).all())
-        assert ((tree['SnapNum'][progen2[has_progen2]] <=
-                tree['SnapNum'][descend[has_progen2]]).all())
+        assert (
+            tree["SnapNum"][progen1[has_progen1]]
+            <= tree["SnapNum"][descend[has_progen1]]
+        ).all()
+        assert (
+            tree["SnapNum"][progen2[has_progen2]]
+            <= tree["SnapNum"][descend[has_progen2]]
+        ).all()
 
     def validate_fields(self, tree):
         r"""Check that the tree/halo has all of the expected fields.
@@ -888,4 +941,4 @@ class LHaloTreeReader:
         # Check fields
         fields = list(tree.keys())
         for k in self.fields:
-            assert (k in fields)
+            assert k in fields

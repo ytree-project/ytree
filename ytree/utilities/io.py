@@ -5,36 +5,33 @@ io utilities
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import errno
 import numpy as np
 import os
-from unyt import \
-    unyt_array, \
-    unyt_quantity
+from unyt import unyt_array, unyt_quantity
 
-from yt.funcs import \
-    get_pbar
-from ytree.utilities.logger import \
-    fake_pbar
+from yt.funcs import get_pbar
+from ytree.utilities.logger import fake_pbar
+
 
 def dirname(path, level=1):
     """
     Multi-level version of os.path.dirname.
     """
     if not isinstance(level, int) or level < 1:
-        raise ValueError(
-            f"level must be a positive integer: {level}.")
+        raise ValueError(f"level must be a positive integer: {level}.")
     for i in range(level):
         path = os.path.dirname(path)
     return path
+
 
 def ensure_dir(path):
     r"""Parallel safe directory maker."""
@@ -50,6 +47,7 @@ def ensure_dir(path):
             raise
     return path
 
+
 def parse_h5_attr(f, attr):
     """A Python3-safe function for getting hdf5 attributes.
 
@@ -59,9 +57,10 @@ def parse_h5_attr(f, attr):
     """
     val = f.attrs.get(attr, None)
     if isinstance(val, bytes):
-        return val.decode('utf8')
+        return val.decode("utf8")
     else:
         return val
+
 
 def _hdf5_yt_attr(fh, attr, unit_registry=None):
     """
@@ -85,6 +84,7 @@ def _hdf5_yt_attr(fh, attr, unit_registry=None):
             val = unyt_quantity(val, units, registry=unit_registry)
     return val
 
+
 def _hdf5_yt_array_lite(fh, field):
     """
     Read an hdf5 dataset.  If that dataset has a "units" attribute,
@@ -97,8 +97,8 @@ def _hdf5_yt_array_lite(fh, field):
         units = ""
     return (fh[field][()], units)
 
-def f_text_block(f, block_size=4096, file_size=None, sep="\n",
-                 pbar_string=None):
+
+def f_text_block(f, block_size=4096, file_size=None, sep="\n", pbar_string=None):
     """
     Read lines from a file faster than f.readlines().
     """
@@ -108,8 +108,7 @@ def f_text_block(f, block_size=4096, file_size=None, sep="\n",
         file_size = f.tell() - start
         f.seek(start)
 
-    nblocks = np.ceil(float(file_size) /
-                      block_size).astype(np.int64)
+    nblocks = np.ceil(float(file_size) / block_size).astype(np.int64)
     read_size = file_size + start
     lbuff = ""
     if pbar_string is None:
@@ -118,26 +117,26 @@ def f_text_block(f, block_size=4096, file_size=None, sep="\n",
         pbar = get_pbar(pbar_string, file_size)
     for ib in range(nblocks):
         offset = f.tell()
-        my_block = min(block_size, read_size-offset)
+        my_block = min(block_size, read_size - offset)
         if my_block <= 0:
             break
         buff = f.read(my_block)
         linl = -1
         for ih in range(buff.count(sep)):
-            inl = buff.find(sep, linl+1)
+            inl = buff.find(sep, linl + 1)
             if inl < 0:
-                lbuff += buff[linl+1:]
+                lbuff += buff[linl + 1 :]
                 continue
             else:
-                line = lbuff + buff[linl+1:inl]
+                line = lbuff + buff[linl + 1 : inl]
                 loc = offset - len(lbuff) + linl + 1
                 lbuff = ""
                 linl = inl
-                pbar.update(loc+len(line)-start+1)
+                pbar.update(loc + len(line) - start + 1)
                 yield line, loc
-        lbuff += buff[linl+1:]
+        lbuff += buff[linl + 1 :]
     if lbuff:
         loc = f.tell() - len(lbuff)
-        pbar.update(loc+len(lbuff)-start+1)
+        pbar.update(loc + len(lbuff) - start + 1)
         yield lbuff, loc
     pbar.finish()

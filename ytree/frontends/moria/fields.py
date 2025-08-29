@@ -5,18 +5,17 @@ MoriaArbor fields
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import re
 
-from ytree.data_structures.fields import \
-    FieldInfoContainer
+from ytree.data_structures.fields import FieldInfoContainer
 
 a_unit = "Msun/h/yr"
 m_unit = "Msun/h"
@@ -25,9 +24,11 @@ r_unit = "kpc/h"
 v_unit = "km/s"
 j_unit = "Msun * Mpc * km * s**-1 * h**-2"
 
+
 def _arbor_index_field(field, data):
     vals = getattr(data.arbor, f"_{field['name']}s")
     return vals[data["snap_index"].astype(int)]
+
 
 class MoriaFieldInfo(FieldInfoContainer):
     alias_fields = (
@@ -141,20 +142,20 @@ class MoriaFieldInfo(FieldInfoContainer):
 
     def setup_derived_fields(self):
         self.arbor.add_derived_field(
-            "redshift", _arbor_index_field,
-            units="", force_add=False)
+            "redshift", _arbor_index_field, units="", force_add=False
+        )
         # this will add it to field list for saving
         self.arbor.field_list.append("redshift")
 
         self.arbor.add_derived_field(
-            "scale_factor", _arbor_index_field,
-            units="", force_add=False)
+            "scale_factor", _arbor_index_field, units="", force_add=False
+        )
         # this will add it to field list for saving
         self.arbor.field_list.append("scale_factor")
 
         self.arbor.add_derived_field(
-            "time", _arbor_index_field,
-            units="Gyr", force_add=False)
+            "time", _arbor_index_field, units="Gyr", force_add=False
+        )
         # this will add it to field list for saving
         self.arbor.field_list.append("time")
 

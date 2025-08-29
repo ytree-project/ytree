@@ -5,19 +5,19 @@ TreeFarmArbor io classes and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import h5py
 import numpy as np
 
-from ytree.data_structures.io import \
-    CatalogDataFile
+from ytree.data_structures.io import CatalogDataFile
+
 
 class TreeFarmDataFile(CatalogDataFile):
     def open(self):
@@ -27,7 +27,7 @@ class TreeFarmDataFile(CatalogDataFile):
         self.open()
         fh = self.fh
         self.redshift = fh.attrs["current_redshift"]
-        self.nhalos   = fh.attrs["num_halos"]
+        self.nhalos = fh.attrs["num_halos"]
         # Files with no halos won't have the units.
         # Keep trying until we get one.
         if not hasattr(self.arbor, "field_list"):
@@ -59,8 +59,7 @@ class TreeFarmDataFile(CatalogDataFile):
 
         self.open()
         fh = self.fh
-        field_data = dict((field, fh[field][()])
-                          for field in rfields)
+        field_data = dict((field, fh[field][()]) for field in rfields)
         self.close()
 
         for field in rfields:

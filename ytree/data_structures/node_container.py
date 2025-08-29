@@ -5,6 +5,7 @@ from ytree.data_structures.fields import FieldContainer
 
 _selection_types = ("forest", "tree", "prog")
 
+
 class NodeContainer:
     """
     A container to hold a persistent collection of unrelated TreeNodes.
@@ -64,6 +65,7 @@ class NodeContainer:
      TreeNode[5057761]]
 
     """
+
     def __init__(self, nodes, arbor=None):
         self._nodes = nodes
         self.field_data = FieldContainer(arbor)
@@ -92,12 +94,12 @@ class NodeContainer:
 
             if key not in self.field_data:
                 self.field_data[key] = self.field_data.arbor.arr(
-                    [tree[key] for tree in self.nodes])
+                    [tree[key] for tree in self.nodes]
+                )
             return self.field_data[key]
 
         if isinstance(key, (int, np.integer, slice)):
             return self.nodes[key]
 
         else:
-            raise ValueError(
-                f"Unrecognized argument type: {key} ({type(key)}).")
+            raise ValueError(f"Unrecognized argument type: {key} ({type(key)}).")

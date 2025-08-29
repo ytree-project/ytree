@@ -1,8 +1,6 @@
-from ytree.frontends.consistent_trees import \
-    ConsistentTreesHlistArbor
-from ytree.utilities.testing import \
-    ArborTest, \
-    TempDirTest
+from ytree.frontends.consistent_trees import ConsistentTreesHlistArbor
+from ytree.utilities.testing import ArborTest, TempDirTest
+
 
 class ConsistentTreesHlistArborTest(TempDirTest, ArborTest):
     arbor_type = ConsistentTreesHlistArbor

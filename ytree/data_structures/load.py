@@ -5,21 +5,20 @@ load function
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-from ytree.data_structures.arbor import \
-    arbor_registry
-from ytree.utilities.loading import \
-    get_path
+from ytree.data_structures.arbor import arbor_registry
+from ytree.utilities.loading import get_path
 
 global load_warn
 load_warn = True
+
 
 def load(filename, method=None, **kwargs):
     """
@@ -91,7 +90,7 @@ def load(filename, method=None, **kwargs):
             errmsg = "Could not distinguish between these arbor types:\n"
             for candidate in candidates:
                 errmsg += f"Possible: {candidate}.\n"
-            errmsg += "Provide one of these types using the \"method\" keyword."
+            errmsg += 'Provide one of these types using the "method" keyword.'
             raise IOError(errmsg)
         else:
             method = candidates[0]
@@ -99,15 +98,16 @@ def load(filename, method=None, **kwargs):
     else:
         if method not in arbor_registry:
             raise IOError(
-                f"Invalid method: {method}. Available: {arbor_registry.keys()}.")
+                f"Invalid method: {method}. Available: {arbor_registry.keys()}."
+            )
 
     global load_warn
     if method not in ["YTree"] and load_warn:
         print(
-f"""Additional features and improved performance (usually) by saving this arbor with \"save_arbor\" and reloading:
+            f"""Additional features and improved performance (usually) by saving this arbor with \"save_arbor\" and reloading:
 \t>>> a = ytree.load(\"{filename}\")
 \t>>> fn = a.save_arbor()
 \t>>> a = ytree.load(fn)"""
-            )
+        )
         load_warn = False
     return arbor_registry[method](filename, **kwargs)

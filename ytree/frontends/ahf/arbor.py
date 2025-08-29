@@ -5,33 +5,26 @@ AHFArbor class and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from collections import defaultdict
 import glob
 import os
 import re
 
-from ytree.data_structures.arbor import \
-    CatalogArbor
-from ytree.frontends.ahf.fields import \
-    AHFFieldInfo, \
-    AHFCRMFieldInfo
-from ytree.frontends.ahf.io import \
-    AHFDataFile, \
-    AHFCRMDataFile
-from ytree.frontends.ahf.misc import \
-    parse_AHF_file
-from unyt.unit_registry import \
-    UnitRegistry
-from ytree.utilities.io import \
-    f_text_block
+from ytree.data_structures.arbor import CatalogArbor
+from ytree.frontends.ahf.fields import AHFFieldInfo, AHFCRMFieldInfo
+from ytree.frontends.ahf.io import AHFDataFile, AHFCRMDataFile
+from ytree.frontends.ahf.misc import parse_AHF_file
+from unyt.unit_registry import UnitRegistry
+from ytree.utilities.io import f_text_block
+
 
 class AHFArbor(CatalogArbor):
     """
@@ -52,13 +45,18 @@ class AHFArbor(CatalogArbor):
     _field_info_class = AHFFieldInfo
     _data_file_class = AHFDataFile
 
-    def __init__(self, filename,
-                 log_filename=None,
-                 parameter_filename=None,
-                 crm_filename=None,
-                 hubble_constant=1.0, box_size=None,
-                 omega_matter=None, omega_lambda=None,
-                 name_config=None):
+    def __init__(
+        self,
+        filename,
+        log_filename=None,
+        parameter_filename=None,
+        crm_filename=None,
+        hubble_constant=1.0,
+        box_size=None,
+        omega_matter=None,
+        omega_lambda=None,
+        name_config=None,
+    ):
         self.unit_registry = UnitRegistry()
         self.hubble_constant = hubble_constant
         self.omega_matter = omega_matter
@@ -74,7 +72,8 @@ class AHFArbor(CatalogArbor):
         self._set_naming_conventions(name_config)
 
         self._file_pattern = re.compile(
-            rf"(^.+[^0-9a-zA-Z]+)(\d+).*{self._par_suffix}$")
+            rf"(^.+[^0-9a-zA-Z]+)(\d+).*{self._par_suffix}$"
+        )
         super().__init__(filename)
 
     def _set_naming_conventions(self, config):
@@ -85,10 +84,12 @@ class AHFArbor(CatalogArbor):
         for k, v in config.items():
             if not re.match(r"\w+_(?:prefix|suffix)", k):
                 raise ValueError(
-                    f"name_config entry must end in either prefix or suffix: \"{k}\"")
+                    f'name_config entry must end in either prefix or suffix: "{k}"'
+                )
             if not hasattr(self, f"_{k}"):
                 raise ValueError(
-                    f"name_config entry not associated with a known attribute: \"{k}\"")
+                    f'name_config entry not associated with a known attribute: "{k}"'
+                )
 
             setattr(self, f"_{k}", v)
 
@@ -98,8 +99,9 @@ class AHFArbor(CatalogArbor):
         Checking if this has the proper crm prefix and suffix.
         """
 
-        return os.path.basename(filename).startswith(cls._crm_prefix) and \
-          filename.endswith(cls._crm_suffix)
+        return os.path.basename(filename).startswith(
+            cls._crm_prefix
+        ) and filename.endswith(cls._crm_suffix)
 
     def _guess_crm_filename(self, filename):
         """
@@ -147,9 +149,11 @@ class AHFArbor(CatalogArbor):
     def _parse_parameter_file(self):
         df = AHFDataFile(self.parameter_filename, self)
 
-        pars = {"simu.omega0": "omega_matter",
-                "simu.lambda0": "omega_lambda",
-                "simu.boxsize": "box_size"}
+        pars = {
+            "simu.omega0": "omega_matter",
+            "simu.lambda0": "omega_lambda",
+            "simu.boxsize": "box_size",
+        }
 
         if self.log_filename is None:
             fns = glob.glob(df.filekey + "*.log")
@@ -162,8 +166,7 @@ class AHFArbor(CatalogArbor):
 
         if log_filename is not None and os.path.exists(log_filename):
             vals = parse_AHF_file(log_filename, pars, sep=":")
-            for attr in ["omega_matter",
-                         "omega_lambda"]:
+            for attr in ["omega_matter", "omega_lambda"]:
                 setattr(self, attr, vals.get(attr))
             if "box_size" in vals:
                 self.box_size = self.quan(vals["box_size"], "Mpc/h")
@@ -176,10 +179,10 @@ class AHFArbor(CatalogArbor):
         line = f.readline()
         f.close()
 
-        fields = [key[:key.rfind("(")]
-                  for key in line[1:].strip().split()]
-        fi = dict([(field, {"column": i, "file": "halos"})
-                   for i, field in enumerate(fields)])
+        fields = [key[: key.rfind("(")] for key in line[1:].strip().split()]
+        fi = dict(
+            [(field, {"column": i, "file": "halos"}) for i, field in enumerate(fields)]
+        )
 
         # the scale factor comes from the catalog file header
         fields.append("redshift")
@@ -193,6 +196,7 @@ class AHFArbor(CatalogArbor):
         self.field_info.update(fi)
 
     _fprefix = None
+
     @property
     def _prefix(self):
         if self._fprefix is None:
@@ -210,22 +214,19 @@ class AHFArbor(CatalogArbor):
         my_files = glob.glob(f"{self._prefix}*{self._par_suffix}")
         # sort by catalog number
         my_files.sort(key=self._get_file_index)
-        self.data_files = \
-          [self._data_file_class(f, self) for f in my_files]
+        self.data_files = [self._data_file_class(f, self) for f in my_files]
 
         # Set the mtree file for file i to that of i-1, since
         # AHF thinks in terms of progenitors and not descendents.
         for i, data_file in enumerate(self.data_files[:-1]):
-            data_file.mtree_filename = \
-              self.data_files[i+1].mtree_filename
+            data_file.mtree_filename = self.data_files[i + 1].mtree_filename
         self.data_files[-1].mtree_filename = None
         self.data_files.reverse()
 
     def _get_file_index(self, f):
         reg = self._file_pattern.search(f)
         if not reg:
-            raise RuntimeError(
-                f"Could not locate index within file: {f}.")
+            raise RuntimeError(f"Could not locate index within file: {f}.")
         return int(reg.groups()[1])
 
     @classmethod
@@ -244,6 +245,7 @@ class AHFArbor(CatalogArbor):
             return False
 
         return True
+
 
 class AHFCRMArbor(AHFArbor):
     """
@@ -271,12 +273,13 @@ class AHFCRMArbor(AHFArbor):
         else:
             if not os.path.exists(self.crm_filename):
                 raise RuntimeError(
-                    "Specified crm_filename does not exist: ",
-                    self.crm_filename)
+                    "Specified crm_filename does not exist: ", self.crm_filename
+                )
 
         if self.crm_filename is None:
             raise RuntimeError(
-                f"crm_filename is None for {type(self)}. This shouldn't be.")
+                f"crm_filename is None for {type(self)}. This shouldn't be."
+            )
 
         if self.parameter_filename is None:
             self.parameter_filename = self._guess_parameter_filename(filename)
@@ -284,11 +287,13 @@ class AHFCRMArbor(AHFArbor):
             if not os.path.exists(self.parameter_filename):
                 raise RuntimeError(
                     "Specified parameter_filename does not exist: ",
-                    self.parameter_filename)
+                    self.parameter_filename,
+                )
 
         if self.parameter_filename is None:
             raise RuntimeError(
-                f"parameter_filename is None for {type(self)}. This shouldn't be.")
+                f"parameter_filename is None for {type(self)}. This shouldn't be."
+            )
 
     def _set_parameter_filename(self, filename):
         """
@@ -309,14 +314,15 @@ class AHFCRMArbor(AHFArbor):
                 return None
 
         basename = os.path.basename(filename)
-        filekey = basename[len(self._crm_prefix):-len(self._crm_suffix)]
+        filekey = basename[len(self._crm_prefix) : -len(self._crm_suffix)]
 
         # try a couple guesses at naming conventions,
         # but don't work too hard.
         for midfix in self._frequent_crm_midfixes:
             pfns = glob.glob(
-                os.path.join(self.directory, filekey[:-len(midfix)]) +
-                f"*{self._par_suffix}")
+                os.path.join(self.directory, filekey[: -len(midfix)])
+                + f"*{self._par_suffix}"
+            )
             if pfns:
                 break
 
@@ -327,7 +333,8 @@ class AHFCRMArbor(AHFArbor):
         if not pfns:
             raise RuntimeError(
                 f"Could not find any files ending in {self._par_suffix} "
-                "from which to get parameters. Put some of those in here.")
+                "from which to get parameters. Put some of those in here."
+            )
 
         try:
             pfns.sort(key=self._get_file_index)

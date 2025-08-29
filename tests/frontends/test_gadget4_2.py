@@ -1,8 +1,6 @@
-from ytree.frontends.gadget4 import \
-    Gadget4Arbor
-from ytree.utilities.testing import \
-    ArborTest, \
-    TempDirTest
+from ytree.frontends.gadget4 import Gadget4Arbor
+from ytree.utilities.testing import ArborTest, TempDirTest
+
 
 class Gadget4ArborMultipleTest(TempDirTest, ArborTest):
     arbor_type = Gadget4Arbor

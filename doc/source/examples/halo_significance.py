@@ -19,29 +19,31 @@ tabbing (i.e., 4 spaces to the left).
 
 import ytree
 import yt
+
 yt.enable_parallelism()
 
+
 def calc_significance(node):
-   if node.descendent is None:
-       dt = 0. * node["time"]
-   else:
-       dt = node.descendent["time"] - node["time"]
+    if node.descendent is None:
+        dt = 0.0 * node["time"]
+    else:
+        dt = node.descendent["time"] - node["time"]
 
-   sig = node["mass"] * dt
-   if node.ancestors is not None:
-       for anc in node.ancestors:
-           sig += calc_significance(anc)
+    sig = node["mass"] * dt
+    if node.ancestors is not None:
+        for anc in node.ancestors:
+            sig += calc_significance(anc)
 
-   node["significance"] = sig
-   return sig
+    node["significance"] = sig
+    return sig
 
 
 if __name__ == "__main__":
     # Remove the next three and final three lines to run conventionally.
     from mpi4py import MPI
+
     comm = MPI.Comm.Get_parent()
     try:
-
         a = ytree.load("tiny_ctrees/locations.dat")
         a.add_analysis_field("significance", "Msun*Myr")
 
@@ -57,7 +59,7 @@ if __name__ == "__main__":
             a2 = ytree.load("halo_significance/halo_significance.h5")
             a2.set_selector("max_field_value", "significance")
             prog = list(a2[0]["prog"])
-            print (prog)
+            print(prog)
 
     # Remove the next three lines to run conventionally.
     except BaseException:

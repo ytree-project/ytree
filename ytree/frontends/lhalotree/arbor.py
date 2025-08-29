@@ -5,33 +5,26 @@ LHaloTreeArbor class and member functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import numpy as np
 import glob
 
-from yt.funcs import \
-    get_pbar
-from unyt.exceptions import \
-    UnitParseError
+from yt.funcs import get_pbar
+from unyt.exceptions import UnitParseError
 
-from ytree.data_structures.arbor import \
-    Arbor
+from ytree.data_structures.arbor import Arbor
 
-from ytree.frontends.lhalotree.fields import \
-    LHaloTreeFieldInfo
-from ytree.frontends.lhalotree.io import \
-    LHaloTreeTreeFieldIO, LHaloTreeRootFieldIO
-from ytree.frontends.lhalotree.utils import \
-    LHaloTreeReader
-from ytree.utilities.logger import \
-    ytreeLogger
+from ytree.frontends.lhalotree.fields import LHaloTreeFieldInfo
+from ytree.frontends.lhalotree.io import LHaloTreeTreeFieldIO, LHaloTreeRootFieldIO
+from ytree.frontends.lhalotree.utils import LHaloTreeReader
+from ytree.utilities.logger import ytreeLogger
 
 
 class LHaloTreeArbor(Arbor):
@@ -43,14 +36,20 @@ class LHaloTreeArbor(Arbor):
     _tree_field_io_class = LHaloTreeTreeFieldIO
     _root_field_io_class = LHaloTreeRootFieldIO
     _default_dtype = np.float32
-    _node_io_attrs = ('_lht', '_index_in_lht')
+    _node_io_attrs = ("_lht", "_index_in_lht")
 
     def __init__(self, *args, **kwargs):
         r"""Added reader class to allow fast access of header info."""
-        reader_keys = ['parameters', 'parameter_file',
-                       'scale_factors', 'scale_factor_file',
-                       'header_size', 'nhalos_per_tree', 'read_header_func',
-                       'item_dtype']
+        reader_keys = [
+            "parameters",
+            "parameter_file",
+            "scale_factors",
+            "scale_factor_file",
+            "header_size",
+            "nhalos_per_tree",
+            "read_header_func",
+            "item_dtype",
+        ]
         reader_kwargs = dict()
         for k in reader_keys:
             if k in kwargs:
@@ -63,15 +62,21 @@ class LHaloTreeArbor(Arbor):
         self._lhtfiles = [None for _ in files]
         self._lhtfiles[lht0.fileindex] = lht0
         if len(files) > 1:
-            if ((('header_size' in reader_kwargs) or  # pragma: no cover
-                 ('nhalos_per_tree' in reader_kwargs))):
-                raise RuntimeError("Cannot use 'header_size' or 'nhalos_per_tree' " +
-                                   "for trees split across multiple files. Use " +
-                                   "'read_header_func' instead.")
-            reader_kwargs.update(parameters=lht0.parameters,
-                                 scale_factors=lht0.scale_factors,
-                                 item_dtype=lht0.item_dtype,
-                                 silent=True)
+            if (
+                ("header_size" in reader_kwargs)  # pragma: no cover
+                or ("nhalos_per_tree" in reader_kwargs)
+            ):
+                raise RuntimeError(
+                    "Cannot use 'header_size' or 'nhalos_per_tree' "
+                    + "for trees split across multiple files. Use "
+                    + "'read_header_func' instead."
+                )
+            reader_kwargs.update(
+                parameters=lht0.parameters,
+                scale_factors=lht0.scale_factors,
+                item_dtype=lht0.item_dtype,
+                silent=True,
+            )
             for f in files:
                 if f == lht0.filename:
                     continue
@@ -124,9 +129,8 @@ class LHaloTreeArbor(Arbor):
         - list of fields
         """
 
-        for u in ['mass', 'vel', 'len']:
-            setattr(self, '_lht_units_' + u,
-                    getattr(self._lht0, 'units_' + u))
+        for u in ["mass", "vel", "len"]:
+            setattr(self, "_lht_units_" + u, getattr(self._lht0, "units_" + u))
             # v, s = getattr(self._lht0, 'units_' + u).split()
             # setattr(self, '_lht_units_' + u, self.quan(float(v), s))
 
@@ -143,28 +147,39 @@ class LHaloTreeArbor(Arbor):
         fi = {}
         # for example:
         # fi["mass"] = {"column": 4, "units": "Msun/h", ...}
-        none_keys = ['Descendant', 'FirstProgenitor', 'NextProgenitor',
-                     'FirstHaloInFOFgroup', 'NextHaloInFOFgroup',
-                     'Len', 'MostBoundID',
-                     'SnapNum', 'FileNr', 'SubhaloIndex',
-                     'uid', 'desc_uid', 'scale_factor',
-                     'Jx', 'Jy', 'Jz']
-        mass_keys = ['M_Mean200', 'Mvir', 'M_TopHat', 'SubHalfMass']
-        dist_keys = ['x', 'y', 'z']
-        velo_keys = ['VelDisp', 'Vmax', 'vx', 'vy', 'vz']
+        none_keys = [
+            "Descendant",
+            "FirstProgenitor",
+            "NextProgenitor",
+            "FirstHaloInFOFgroup",
+            "NextHaloInFOFgroup",
+            "Len",
+            "MostBoundID",
+            "SnapNum",
+            "FileNr",
+            "SubhaloIndex",
+            "uid",
+            "desc_uid",
+            "scale_factor",
+            "Jx",
+            "Jy",
+            "Jz",
+        ]
+        mass_keys = ["M_Mean200", "Mvir", "M_TopHat", "SubHalfMass"]
+        dist_keys = ["x", "y", "z"]
+        velo_keys = ["VelDisp", "Vmax", "vx", "vy", "vz"]
         all_keys = [none_keys, mass_keys, dist_keys, velo_keys]
-        all_units = ['', self._lht_units_mass, self._lht_units_len,
-                     self._lht_units_vel]
+        all_units = ["", self._lht_units_mass, self._lht_units_len, self._lht_units_vel]
         for keylist, unit in zip(all_keys, all_units):
             try:
                 self.quan(1, unit)
                 punit = unit
             except UnitParseError:  # pragma: no cover
                 ytreeLogger.warning(f"Could not parse unit: {unit}")
-                punit = ''
+                punit = ""
             for k in keylist:
-                fi[k] = {'units': punit}
-            
+                fi[k] = {"units": punit}
+
         self.field_list = fields
         self.field_info.update(fi)
 
@@ -185,16 +200,16 @@ class LHaloTreeArbor(Arbor):
         self._size = ntrees_tot
 
         pbar = get_pbar("Loading tree roots", ntrees_tot)
-        self._node_info['_lht'] = np.empty(ntrees_tot, dtype=object)
+        self._node_info["_lht"] = np.empty(ntrees_tot, dtype=object)
 
         itot = 0
         for ifile, lht in enumerate(self._lhtfiles):
             ntrees = lht.ntrees
             root_uids = lht.all_uids[lht.nhalos_before_tree]
             for i in range(ntrees):
-                self._node_info['uid'][itot] = root_uids[i]
-                self._node_info['_lht'][itot] = lht
-                self._node_info['_index_in_lht'][itot] = i
+                self._node_info["uid"][itot] = root_uids[i]
+                self._node_info["_lht"][itot] = lht
+                self._node_info["_index_in_lht"][itot] = i
                 itot += 1
                 pbar.update(itot)
 

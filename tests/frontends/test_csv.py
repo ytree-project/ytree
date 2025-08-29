@@ -1,8 +1,6 @@
-from ytree.frontends.csv import \
-    CSVArbor
-from ytree.utilities.testing import \
-    ArborTest, \
-    TempDirTest
+from ytree.frontends.csv import CSVArbor
+from ytree.utilities.testing import ArborTest, TempDirTest
+
 
 class CSVArborTest(TempDirTest, ArborTest):
     arbor_type = CSVArbor

@@ -6,45 +6,43 @@ Data structures for ytree frontend.
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree Development Team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import h5py
 import numpy as np
 import json
 import os
 
-from yt.data_objects.static_output import \
-    ParticleFile
-from yt.frontends.ytdata.data_structures import \
-    SavedDataset
-from yt.geometry.particle_geometry_handler import \
-    ParticleIndex
+from yt.data_objects.static_output import ParticleFile
+from yt.frontends.ytdata.data_structures import SavedDataset
+from yt.geometry.particle_geometry_handler import ParticleIndex
 
 from ytree.utilities.io import parse_h5_attr
 from ytree.yt_frontend.fields import YTreeFieldInfo
 
 _ptype = "halos"
-_unit_defaults = \
-  {"mass":     {"field": "mass",       "units": "Msun"},
-   "velocity": {"field": "velocity_x", "units": "km/s"},
-   "time":     {"field": "time",       "units": "Gyr"}}
+_unit_defaults = {
+    "mass": {"field": "mass", "units": "Msun"},
+    "velocity": {"field": "velocity_x", "units": "km/s"},
+    "time": {"field": "time", "units": "Gyr"},
+}
+
 
 class YTreeHDF5File(ParticleFile):
     def __init__(self, ds, io, filename, file_id, frange):
         with h5py.File(filename, mode="r") as f:
-            self.total_particles_file = \
-              {_ptype: f['data'].attrs['num_elements']}
+            self.total_particles_file = {_ptype: f["data"].attrs["num_elements"]}
         super().__init__(ds, io, filename, file_id, frange)
 
     @property
     def _prefix(self):
-        return self.filename[:-len(self.ds._suffix)]
+        return self.filename[: -len(self.ds._suffix)]
 
     @property
     def _file_number(self):
@@ -78,7 +76,7 @@ class YTreeHDF5File(ParticleFile):
         We use this to find the index of the root node in the arbor.
         """
 
-        return np.full(self.end-self.start, self._file_number)[mask]
+        return np.full(self.end - self.start, self._file_number)[mask]
 
     def _get_tree_index(self, f, mask):
         """
@@ -131,7 +129,8 @@ class YTreeHDF5File(ParticleFile):
         with h5py.File(self.filename, mode="r") as f:
             units = parse_h5_attr(f[pn % "x"], "units")
             pos = np.vstack(
-                [self._read_data(f, pn % ax, mask).astype("float64") for ax in "xyz"]).T
+                [self._read_data(f, pn % ax, mask).astype("float64") for ax in "xyz"]
+            ).T
 
         if close:
             f.close()
@@ -148,6 +147,7 @@ class YTreeHDF5File(ParticleFile):
 
         return pos
 
+
 class YTreeDataset(SavedDataset):
     _index_class = ParticleIndex
     _file_class = YTreeHDF5File
@@ -156,14 +156,22 @@ class YTreeDataset(SavedDataset):
     _con_attrs = ("hubble_constant", "omega_matter", "omega_lambda")
     _force_periodicity = True
 
-    def __init__(self, filename, dataset_type="ytree_arbor",
-                 index_order=None,
-                 units_override=None, unit_system="cgs"):
-        self._prefix = filename[:filename.rfind(self._suffix)]
+    def __init__(
+        self,
+        filename,
+        dataset_type="ytree_arbor",
+        index_order=None,
+        units_override=None,
+        unit_system="cgs",
+    ):
+        self._prefix = filename[: filename.rfind(self._suffix)]
         self.index_order = index_order
-        super().__init__(filename, dataset_type,
-                         units_override=units_override,
-                         unit_system=unit_system)
+        super().__init__(
+            filename,
+            dataset_type,
+            units_override=units_override,
+            unit_system=unit_system,
+        )
         self._get_analysis_field_dict()
 
     def _get_analysis_field_dict(self):
@@ -172,20 +180,19 @@ class YTreeDataset(SavedDataset):
             return
 
         with h5py.File(analysis_filename, mode="r") as f:
-            afd = json.loads(f.attrs['field_info'])
+            afd = json.loads(f.attrs["field_info"])
         for fi in afd.values():
             fi["source"] = "analysis"
         self._field_dict.update(afd)
 
     def _set_derived_attrs(self):
-        self.domain_center = 0.5 * (self.domain_right_edge +
-                                    self.domain_left_edge)
+        self.domain_center = 0.5 * (self.domain_right_edge + self.domain_left_edge)
         self.domain_width = self.domain_right_edge - self.domain_left_edge
 
     def _with_parameter_file_open(self, f):
-        self.file_count = f.attrs['total_files']
-        self.particle_count = f.attrs['total_nodes']
-        self._field_dict = json.loads(f.attrs['field_info'])
+        self.file_count = f.attrs["total_files"]
+        self.particle_count = f.attrs["total_nodes"]
+        self._field_dict = json.loads(f.attrs["field_info"])
         if "unit_system_name" not in self.parameters:
             self.parameters["unit_system_name"] = "mks"
 
@@ -194,10 +201,10 @@ class YTreeDataset(SavedDataset):
         self.current_time = None
         self.cosmological_simulation = 1
         self.dimensionality = 3
-        prefix = self.parameter_filename[:-len(self._suffix)]
+        prefix = self.parameter_filename[: -len(self._suffix)]
         self.filename_template = f"{prefix}_%(num)04d{self._suffix}"
-        self.particle_types = (_ptype)
-        self.particle_types_raw = (_ptype)
+        self.particle_types = _ptype
+        self.particle_types_raw = _ptype
         super()._parse_parameter_file()
 
         box_size = self.parameters["box_size"]
@@ -215,7 +222,7 @@ class YTreeDataset(SavedDataset):
             self.unit_registry.modify(f"code_{myu}", cuval.in_base())
 
     def __repr__(self):
-        return self.basename[:self.basename.rfind(self._suffix)]
+        return self.basename[: self.basename.rfind(self._suffix)]
 
     @classmethod
     def _is_valid(self, *args, **kwargs):

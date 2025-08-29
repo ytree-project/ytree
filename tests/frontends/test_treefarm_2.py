@@ -1,8 +1,6 @@
-from ytree.frontends.treefarm import \
-    TreeFarmArbor
-from ytree.utilities.testing import \
-    ArborTest, \
-    TempDirTest
+from ytree.frontends.treefarm import TreeFarmArbor
+from ytree.utilities.testing import ArborTest, TempDirTest
+
 
 class TreeFarmArborAncestorsTest(TempDirTest, ArborTest):
     arbor_type = TreeFarmArbor

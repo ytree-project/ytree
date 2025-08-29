@@ -12,6 +12,7 @@ from yt.utilities.parallel_tools.parallel_analysis_interface import parallel_roo
 from ytree.analysis.analysis_operators import AnalysisOperation
 from ytree.utilities.io import ensure_dir
 
+
 class AnalysisPipeline:
     """
     Initialize an AnalysisPipeline.
@@ -71,8 +72,9 @@ class AnalysisPipeline:
         self._preprocessed = False
         self._handoff_store = {}
 
-    def add_operation(self, function, *args, always_do=False,
-                      preprocess_function=None, **kwargs):
+    def add_operation(
+        self, function, *args, always_do=False, preprocess_function=None, **kwargs
+    ):
         """
         Add an operation to the AnalysisPipeline.
 
@@ -167,7 +169,8 @@ class AnalysisPipeline:
             my_output_dir = action.kwargs.get("output_dir")
             if my_output_dir is not None:
                 new_output_dir = ensure_dir(
-                    os.path.join(self.output_dir, my_output_dir))
+                    os.path.join(self.output_dir, my_output_dir)
+                )
                 action.kwargs["output_dir"] = new_output_dir
 
         self._preprocessed = True

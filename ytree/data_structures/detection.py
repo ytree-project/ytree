@@ -5,22 +5,21 @@ Field detection classes
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from collections import defaultdict
 import numpy as np
 
-from ytree.utilities.exceptions import \
-    ArborFieldNotFound, \
-    ArborFieldDependencyNotFound
+from ytree.utilities.exceptions import ArborFieldNotFound, ArborFieldDependencyNotFound
 
 _selectors = ("forest", "tree", "prog")
+
 
 class Detector(defaultdict):
     """
@@ -38,10 +37,12 @@ class Detector(defaultdict):
     def _generate_data(self, key):
         raise NotImplementedError
 
+
 class FieldDetector(Detector):
     """
     A fake field data container used to calculate dependencies.
     """
+
     def __init__(self, arbor, name=None):
         self.arbor = arbor
         self.name = name
@@ -52,17 +53,19 @@ class FieldDetector(Detector):
 
     def _generate_data(self, key):
         fi = self.arbor.field_info[key]
-        if cfields:= fi.get("vector_components", False):
+        if cfields := fi.get("vector_components", False):
             data = np.ones((1, len(cfields)))
         else:
             data = np.ones(1)
         units = fi.get("units", "")
         self[key] = self.arbor.arr(data, units)
 
+
 class SelectionDetector(Detector):
     """
     A TreeNode-like object to test select_halos criteria.
     """
+
     def __init__(self, arbor):
         self.arbor = arbor
         self.selectors = []

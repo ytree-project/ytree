@@ -2,11 +2,9 @@ import h5py
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from ytree.frontends.moria import \
-    MoriaArbor
-from ytree.utilities.testing import \
-    ArborTest, \
-    TempDirTest
+from ytree.frontends.moria import MoriaArbor
+from ytree.utilities.testing import ArborTest, TempDirTest
+
 
 class MoriaArborTest(TempDirTest, ArborTest):
     arbor_type = MoriaArbor
@@ -19,8 +17,7 @@ class MoriaArborTest(TempDirTest, ArborTest):
     def arbor(self):
         arbor = super().arbor
         if "mass" not in arbor.field_info:
-            arbor.add_alias_field(
-                "mass", "Mpeak", units="Msun")
+            arbor.add_alias_field("mass", "Mpeak", units="Msun")
         return arbor
 
     def test_missing_descuids(self):
@@ -28,9 +25,9 @@ class MoriaArborTest(TempDirTest, ArborTest):
         a._plant_trees()
 
         fh = h5py.File(self.arbor.parameter_filename, mode="r")
-        dids = fh['descendant_id'][()]
-        ids = fh['id'][()]
-        dindex = fh['descendant_index'][()]
+        dids = fh["descendant_id"][()]
+        ids = fh["id"][()]
+        dindex = fh["descendant_index"][()]
         missing = np.setdiff1d(dids, ids)
 
         for my_desc in missing:
@@ -39,7 +36,7 @@ class MoriaArborTest(TempDirTest, ArborTest):
 
             index = np.where(dids == my_desc)
             my_id = ids[index][0]
-            my_dindex = (index[0]+1, dindex[index][0])
+            my_dindex = (index[0] + 1, dindex[index][0])
 
             ai = np.digitize(dindex[index][0], a._node_info["_si"]) - 1
             t = a[ai]

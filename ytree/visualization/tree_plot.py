@@ -5,24 +5,24 @@ visualization imports
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from functools import wraps
 import numpy as np
 
-from unyt import \
-    unyt_quantity
+from unyt import unyt_quantity
 
 try:
     import pydot
 except ImportError:
     pydot = None
+
 
 def clear_graph(f):
     @wraps(f)
@@ -30,7 +30,9 @@ def clear_graph(f):
         rv = f(*args, **kwargs)
         args[0].graph = None
         return rv
+
     return newfunc
+
 
 class TreePlot:
     """
@@ -114,21 +116,21 @@ class TreePlot:
     _min_field_size = None
     _max_field_size = None
 
-    _size_field = 'mass'
+    _size_field = "mass"
     _size_log = True
     _min_mass = None
     _min_mass_ratio = None
 
-    def __init__(self, tree, dot_kwargs=None,
-                 node_function=None, edge_function=None):
+    def __init__(self, tree, dot_kwargs=None, node_function=None, edge_function=None):
         """
         Initialize a TreePlot.
         """
 
         if pydot is None:
             raise RuntimeError(
-                "TreePlot requires the pydot module. " +
-                "You may also need to install graphviz.")
+                "TreePlot requires the pydot module. "
+                + "You may also need to install graphviz."
+            )
 
         self.tree = tree
 
@@ -137,16 +139,12 @@ class TreePlot:
             dot_kwargs = {}
         self.dot_kwargs.update(dot_kwargs)
 
-        if node_function is not None and \
-          not callable(node_function):
-            raise RuntimeError(
-                "node_function should be a callable function.")
+        if node_function is not None and not callable(node_function):
+            raise RuntimeError("node_function should be a callable function.")
         self.node_function = node_function
 
-        if edge_function is not None and \
-          not callable(edge_function):
-            raise RuntimeError(
-                "edge_function should be a callable function.")
+        if edge_function is not None and not callable(edge_function):
+            raise RuntimeError("edge_function should be a callable function.")
         self.edge_function = edge_function
 
         self.graph = None
@@ -178,7 +176,7 @@ class TreePlot:
         if self.graph is None:
             self._plot()
 
-        suffix = filename[filename.rfind(".")+1:]
+        suffix = filename[filename.rfind(".") + 1 :]
         func = getattr(self.graph, f"write_{suffix}", None)
         if func is None:
             raise RuntimeError(f"Cannot save to file format: {suffix}.")
@@ -187,7 +185,7 @@ class TreePlot:
         return filename
 
     def _plot(self):
-        self.graph = pydot.Dot(graph_type='graph', **self.dot_kwargs)
+        self.graph = pydot.Dot(graph_type="graph", **self.dot_kwargs)
         self._plot_ancestors(self.tree)
 
     def _plot_ancestors(self, halo):
@@ -199,11 +197,12 @@ class TreePlot:
             return
 
         for anc in ancestors:
-            if self.min_mass is not None and \
-              anc['mass'] < self.min_mass:
+            if self.min_mass is not None and anc["mass"] < self.min_mass:
                 continue
-            if self.min_mass_ratio is not None and \
-              anc['mass'] / anc.root['mass'] < self.min_mass_ratio:
+            if (
+                self.min_mass_ratio is not None
+                and anc["mass"] / anc.root["mass"] < self.min_mass_ratio
+            ):
                 continue
 
             anc_node = self._plot_node(anc)
@@ -226,18 +225,21 @@ class TreePlot:
                 node_kwargs = self.node_function(halo)
 
             else:
-                prog_ids = halo.find_root()['prog', 'uid']
-                if halo['uid'] in prog_ids:
-                    color = 'red'
+                prog_ids = halo.find_root()["prog", "uid"]
+                if halo["uid"] in prog_ids:
+                    color = "red"
                 else:
-                    color = 'black'
-                node_kwargs = \
-                  {'style': 'filled', 'label': '', 'fillcolor': color,
-                   'shape': 'circle', 'fixedsized': 'true',
-                   'width': self._size_norm(halo)}
+                    color = "black"
+                node_kwargs = {
+                    "style": "filled",
+                    "label": "",
+                    "fillcolor": color,
+                    "shape": "circle",
+                    "fixedsized": "true",
+                    "width": self._size_norm(halo),
+                }
 
-            my_node = pydot.Node(
-                node_name, **node_kwargs)
+            my_node = pydot.Node(node_name, **node_kwargs)
             graph.add_node(my_node)
         else:
             my_node = my_node[0]
@@ -246,7 +248,7 @@ class TreePlot:
 
     def _size_norm(self, halo):
         if self._min_field_size is None:
-            tdata = self.tree['tree', self.size_field]
+            tdata = self.tree["tree", self.size_field]
             if self.size_log:
                 self._min_field_size = tdata[tdata > 0].min()
             else:
@@ -254,7 +256,7 @@ class TreePlot:
         nmin = self._min_field_size
 
         if self._max_field_size is None:
-            tdata = self.tree['tree', self.size_field]
+            tdata = self.tree["tree", self.size_field]
             self._max_field_size = tdata.max()
         nmax = self._max_field_size
 
@@ -265,8 +267,7 @@ class TreePlot:
             val = (fval - nmin) / (nmax - nmin)
         val = np.clip(float(val), 0, 1)
 
-        size = val * (self._max_dot_size - self._min_dot_size) + \
-          self._min_dot_size
+        size = val * (self._max_dot_size - self._min_dot_size) + self._min_dot_size
         return size
 
     @property
@@ -280,7 +281,7 @@ class TreePlot:
     @clear_graph
     def min_mass(self, val):
         if not isinstance(val, unyt_quantity):
-            val = unyt_quantity(val, 'Msun')
+            val = unyt_quantity(val, "Msun")
         self._min_mass = val
 
     @property

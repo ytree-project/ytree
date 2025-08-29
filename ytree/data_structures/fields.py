@@ -5,13 +5,13 @@ Arbor field-related classes
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from collections import defaultdict
 import numpy as np
@@ -19,23 +19,26 @@ import re
 import weakref
 
 from ytree.data_structures.detection import FieldDetector
-from ytree.utilities.exceptions import \
-    ArborFieldAlreadyExists, \
-    ArborFieldCircularDependency, \
-    ArborFieldDependencyNotFound, \
-    ArborDerivedFieldException, \
-    ArborFieldNotFound
-from ytree.utilities.logger import \
-    ytreeLogger as mylog
+from ytree.utilities.exceptions import (
+    ArborFieldAlreadyExists,
+    ArborFieldCircularDependency,
+    ArborFieldDependencyNotFound,
+    ArborDerivedFieldException,
+    ArborFieldNotFound,
+)
+from ytree.utilities.logger import ytreeLogger as mylog
+
 
 def _redshift(field, data):
-    return 1. / data["scale_factor"] - 1.
+    return 1.0 / data["scale_factor"] - 1.0
+
 
 def _time(field, data):
     co = data.arbor.cosmology
     if co is None:
         raise ArborDerivedFieldException(field["name"], data.arbor)
     return data.arbor.cosmology.t_from_z(data["redshift"])
+
 
 def _vector_func(field, data):
     name = field["name"]
@@ -44,9 +47,11 @@ def _vector_func(field, data):
     field_data = np.rollaxis(field_data, 1)
     return field_data
 
+
 def _magnitude_func(field, data):
-    name = field["name"][:-len("_magnitude")]
-    return np.sqrt((data[name]**2).sum(axis=1))
+    name = field["name"][: -len("_magnitude")]
+    return np.sqrt((data[name] ** 2).sum(axis=1))
+
 
 class FieldInfoContainer(dict):
     """
@@ -86,13 +91,14 @@ class FieldInfoContainer(dict):
             dtype = self.arbor._default_dtype
 
         self.arbor.analysis_field_list.append(name)
-        self[name] = {"type": "analysis",
-                      "default": default,
-                      "dtype": dtype,
-                      "units": units}
+        self[name] = {
+            "type": "analysis",
+            "default": default,
+            "dtype": dtype,
+            "units": units,
+        }
 
-    def add_alias_field(self, alias, field, units=None,
-                        force_add=True):
+    def add_alias_field(self, alias, field, units=None, force_add=True):
         """
         Add an alias field.
         """
@@ -105,25 +111,22 @@ class FieldInfoContainer(dict):
                 else:
                     fl = self.arbor.field_list
                 mylog.warning(
-                    f"Overriding field \"{alias}\" that already "
-                    f"exists as {ftype} field.")
+                    f'Overriding field "{alias}" that already exists as {ftype} field.'
+                )
                 fl.pop(fl.index(alias))
             else:
                 return
 
         if field not in self:
             if force_add:
-                raise ArborFieldDependencyNotFound(
-                    field, alias, arbor=self)
+                raise ArborFieldDependencyNotFound(field, alias, arbor=self)
             else:
                 return
 
         if units is None:
             units = self[field].get("units")
         self.arbor.derived_field_list.append(alias)
-        self[alias] = \
-          {"type": "alias", "units": units,
-           "dependencies": [field]}
+        self[alias] = {"type": "alias", "units": units, "dependencies": [field]}
         if "aliases" not in self[field]:
             self[field]["aliases"] = []
             self[field]["aliases"].append(alias)
@@ -138,8 +141,8 @@ class FieldInfoContainer(dict):
                 fieldname = (fieldname,)
             for fname in fieldname:
                 self.arbor.add_alias_field(
-                    aliasname, fname, units=units,
-                    force_add=False)
+                    aliasname, fname, units=units, force_add=False
+                )
 
         # Fields with "/" in the name don't play well with hdf5.
         for field in self.arbor.field_list:
@@ -148,9 +151,16 @@ class FieldInfoContainer(dict):
             alias = field.replace("/", "_")
             self.arbor.add_alias_field(alias, field)
 
-    def add_derived_field(self, name, function,
-                          units=None, dtype=None, description=None,
-                          vector_components=None, force_add=True):
+    def add_derived_field(
+        self,
+        name,
+        function,
+        units=None,
+        dtype=None,
+        description=None,
+        vector_components=None,
+        force_add=True,
+    ):
         """
         Add a derived field.
         """
@@ -163,8 +173,8 @@ class FieldInfoContainer(dict):
                 else:
                     fl = self.arbor.field_list
                 mylog.warning(
-                    f"Overriding field \"{name}\" that already "
-                    f"exists as {ftype} field.")
+                    f'Overriding field "{name}" that already exists as {ftype} field.'
+                )
                 fl.pop(fl.index(name))
             else:
                 return
@@ -173,12 +183,14 @@ class FieldInfoContainer(dict):
             units = ""
         if dtype is None:
             dtype = self.arbor._default_dtype
-        info = {"name": name,
-                "type": "derived",
-                "function": function,
-                "units": units,
-                "dtype": dtype,
-                "description": description}
+        info = {
+            "name": name,
+            "type": "derived",
+            "function": function,
+            "units": units,
+            "dtype": dtype,
+            "description": description,
+        }
 
         if vector_components is not None:
             info["vector_components"] = vector_components
@@ -190,7 +202,7 @@ class FieldInfoContainer(dict):
             return
         except TypeError as e:
             raise RuntimeError(
-"""
+                """
 
 Field function syntax in ytree has changed. Field functions must
 now take two arguments, as in the following:
@@ -198,7 +210,8 @@ def my_field(field, data):
     return data['mass']
 
 Check the TypeError exception above for more details.
-""")
+"""
+            )
             raise e
 
         except ArborFieldDependencyNotFound as e:
@@ -217,11 +230,9 @@ Check the TypeError exception above for more details.
         """
         Add stock derived fields.
         """
-        self.arbor.add_derived_field(
-            "redshift", _redshift, units="", force_add=False)
+        self.arbor.add_derived_field("redshift", _redshift, units="", force_add=False)
 
-        self.arbor.add_derived_field(
-            "time", _time, units="Myr", force_add=False)
+        self.arbor.add_derived_field("time", _time, units="Myr", force_add=False)
 
     def add_vector_field(self, fieldname, cfields=None):
         """
@@ -244,9 +255,11 @@ Check the TypeError exception above for more details.
 
         units = self[cfields[0]].get("units", None)
         self.arbor.add_derived_field(
-            fieldname, _vector_func, vector_components=cfields, units=units)
+            fieldname, _vector_func, vector_components=cfields, units=units
+        )
         self.arbor.add_derived_field(
-            f"{fieldname}_magnitude", _magnitude_func, units=units)
+            f"{fieldname}_magnitude", _magnitude_func, units=units
+        )
         self.vector_fields += (fieldname,)
         return fieldname
 
@@ -278,8 +291,9 @@ Check the TypeError exception above for more details.
 
         added_fields = []
         for field in vfields.union(self.vector_fields):
-            comp_fields = sorted(candidates[field].values()) \
-              if field in candidates else None
+            comp_fields = (
+                sorted(candidates[field].values()) if field in candidates else None
+            )
             field = self.add_vector_field(field, cfields=comp_fields)
             if field is None:
                 continue
@@ -314,10 +328,8 @@ Check the TypeError exception above for more details.
             if ftype == "derived" or ftype == "alias":
                 deps = self[field]["dependencies"]
                 if field in deps:
-                    raise ArborFieldCircularDependency(
-                        field, self.arbor)
-                fields_to_resolve.extend(
-                    set(deps).difference(set(fields_to_resolve)))
+                    raise ArborFieldCircularDependency(field, self.arbor)
+                fields_to_resolve.extend(set(deps).difference(set(fields_to_resolve)))
                 if field not in fields_to_generate:
                     fields_to_generate.append(field)
             elif ftype == "analysis":
@@ -328,9 +340,11 @@ Check the TypeError exception above for more details.
 
         return fields_to_read, fields_to_generate
 
+
 class FieldContainer(dict):
     """
     A container for field data.
     """
+
     def __init__(self, arbor):
         self.arbor = weakref.proxy(arbor)

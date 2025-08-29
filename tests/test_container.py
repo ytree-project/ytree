@@ -5,13 +5,13 @@ tests for NodeContainer
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -21,6 +21,7 @@ import ytree
 from ytree.utilities.testing import requires_file
 
 TCL = "tiny_ctrees/locations.dat"
+
 
 @requires_file(TCL)
 def test_containers():

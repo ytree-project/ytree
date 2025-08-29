@@ -5,21 +5,21 @@ TreeFarmArbor fields
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-from ytree.data_structures.fields import \
-    FieldInfoContainer
+from ytree.data_structures.fields import FieldInfoContainer
 
 m_unit = "Msun"
 p_unit = "unitary"
 r_unit = "kpc"
 v_unit = "km/s"
+
 
 class TreeFarmFieldInfo(FieldInfoContainer):
     alias_fields = (

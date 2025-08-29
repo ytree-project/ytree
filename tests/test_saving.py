@@ -5,23 +5,21 @@ tests for saving arbors and trees
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-from ytree.utilities.testing import \
-    compare_trees, \
-    requires_file, \
-    TempDirTest
+from ytree.utilities.testing import compare_trees, requires_file, TempDirTest
 
 import ytree
 
 CT = "consistent_trees/tree_0_0_0.dat"
 TCT = "tiny_ctrees/locations.dat"
+
 
 class SaveArborTest(TempDirTest):
     @requires_file(CT)
@@ -55,8 +53,7 @@ class SaveArborTest(TempDirTest):
         a2 = ytree.load(fn)
 
         assert len(a2.field_list) == 4
-        assert sorted(["mass", "redshift", "uid", "desc_uid"]) == \
-          sorted(a2.field_list)
+        assert sorted(["mass", "redshift", "uid", "desc_uid"]) == sorted(a2.field_list)
 
         fields = a2.field_list[:]
         fields.remove("desc_uid")
@@ -94,7 +91,7 @@ class SaveArborTest(TempDirTest):
 
         fn = a.save_arbor()
         a2 = ytree.load(fn)
-        a2.add_analysis_field("test_field", "", default=-1.)
+        a2.add_analysis_field("test_field", "", default=-1.0)
 
         # this should be only a subset of all trees
         trees = list(a2[a2["mass"] > 3e11])
@@ -120,7 +117,7 @@ class SaveArborTest(TempDirTest):
 
         fn = a.save_arbor()
         a2 = ytree.load(fn)
-        a2.add_analysis_field("test_field", "", default=-1.)
+        a2.add_analysis_field("test_field", "", default=-1.0)
 
         # this should be only a subset of all trees
         trees = list(a2[a2["mass"] > 3e11])
@@ -146,7 +143,7 @@ class SaveArborTest(TempDirTest):
 
         fn = a.save_arbor()
         a2 = ytree.load(fn)
-        a2.add_analysis_field("test_field", "", default=-1.)
+        a2.add_analysis_field("test_field", "", default=-1.0)
 
         # this should be only a subset of all trees
         trees = list(a2[a2["mass"] > 3e11])
@@ -174,9 +171,8 @@ class SaveArborTest(TempDirTest):
 
         fn = a.save_arbor()
         a2 = ytree.load(fn)
-        a2.add_analysis_field("test_field", "", default=-1.)
+        a2.add_analysis_field("test_field", "", default=-1.0)
 
         trees = list(a2[a2["mass"] > 3e11])
         with self.assertRaises(ValueError):
-            a2.save_arbor(trees=trees, save_in_place=False,
-                          save_roots_only=True)
+            a2.save_arbor(trees=trees, save_in_place=False, save_roots_only=True)

@@ -5,20 +5,18 @@ RockstarArbor fields
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import numpy as np
 
-from ytree.data_structures.fields import \
-    FieldInfoContainer
-from ytree.frontends.rockstar.misc import \
-    Group
+from ytree.data_structures.fields import FieldInfoContainer
+from ytree.frontends.rockstar.misc import Group
 
 m_unit = "Msun"
 p_unit = "unitary"
@@ -26,6 +24,7 @@ r_unit = "kpc"
 v_unit = "km/s"
 
 id_type = np.int64
+
 
 class RockstarFieldInfo(FieldInfoContainer):
     alias_fields = (
@@ -49,11 +48,12 @@ class RockstarFieldInfo(FieldInfoContainer):
     )
 
     data_types = (
-        ('ID', id_type),
-        ('DescID', id_type),
-        ('uid', id_type),
-        ('desc_uid', id_type),
+        ("ID", id_type),
+        ("DescID", id_type),
+        ("uid", id_type),
+        ("desc_uid", id_type),
     )
+
 
 def setup_field_groups():
     m = Group("masses")

@@ -5,21 +5,20 @@ ConsistentTreesArbor utility functions
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import re
 
-from unyt.exceptions import \
-    UnitParseError
+from unyt.exceptions import UnitParseError
 
-def parse_ctrees_header(arbor, input_stream,
-                        ntrees_in_file=True):
+
+def parse_ctrees_header(arbor, input_stream, ntrees_in_file=True):
     """
     Parse consistent-trees header information.
 
@@ -34,13 +33,14 @@ def parse_ctrees_header(arbor, input_stream,
     fields = []
     fi = {}
     fdb = {}
-    rems = [f"{s[0]}{t}{s[1]}"
-            for s in [("(", ")"), ("", "")]
-            for t in ["physical, peculiar",
-                      "comoving", "physical"]]
+    rems = [
+        f"{s[0]}{t}{s[1]}"
+        for s in [("(", ")"), ("", "")]
+        for t in ["physical, peculiar", "comoving", "physical"]
+    ]
 
     if isinstance(input_stream, str):
-        f = open(input_stream, mode='r')
+        f = open(input_stream, mode="r")
         is_file = True
     else:
         is_file = False
@@ -49,8 +49,7 @@ def parse_ctrees_header(arbor, input_stream,
         if is_file:
             return f.readline()
         else:
-            return input_stream.pop(0) \
-              if input_stream else None
+            return input_stream.pop(0) if input_stream else None
 
     # Read the first line as a list of all fields.
     # Do some footwork to remove awkard characters.
@@ -61,15 +60,14 @@ def parse_ctrees_header(arbor, input_stream,
         if match is None:
             fields.append(pf)
         else:
-            fields.append(pf[:match.start()])
+            fields.append(pf[: match.start()])
 
     # Now grab a bunch of things from the header.
     while True:
         line = next_line()
         if line is None:
             if ntrees_in_file:
-                raise IOError(
-                    f"Encountered enexpected EOF reading {input_stream}.")
+                raise IOError(f"Encountered enexpected EOF reading {input_stream}.")
             else:
                 break
         elif not line.startswith("#"):
@@ -81,9 +79,9 @@ def parse_ctrees_header(arbor, input_stream,
         # cosmological parameters
         if "Omega_M" in line:
             pars = line[1:].split(";")
-            for j, par in enumerate(["omega_matter",
-                                     "omega_lambda",
-                                     "hubble_constant"]):
+            for j, par in enumerate(
+                ["omega_matter", "omega_lambda", "hubble_constant"]
+            ):
                 v = float(pars[j].split(" = ")[1])
                 setattr(arbor, par, v)
 
@@ -101,7 +99,7 @@ def parse_ctrees_header(arbor, input_stream,
             # Pull out what's enclosed and remove things like
             # "comoving" and "physical".
             if "(" in line and ")" in line:
-                punits = desc[desc.find("(")+1:desc.rfind(")")]
+                punits = desc[desc.find("(") + 1 : desc.rfind(")")]
                 for rem in rems:
                     while rem in punits:
                         pre, mid, pos = punits.partition(rem)
@@ -123,8 +121,7 @@ def parse_ctrees_header(arbor, input_stream,
 
             # Assign units and description.
             for tfield in tfields:
-                fdb[tfield.lower()] = {"description": desc.strip(),
-                                       "units": punits}
+                fdb[tfield.lower()] = {"description": desc.strip(), "units": punits}
 
     if is_file:
         f.close()
@@ -132,12 +129,10 @@ def parse_ctrees_header(arbor, input_stream,
     # Fill the field info with the units found above.
     for i, field in enumerate(fields):
         if "(" in field and ")" in field:
-            cfield = field[:field.find("(")]
+            cfield = field[: field.find("(")]
         else:
             cfield = field
-        fi[field] = fdb.get(cfield.lower(),
-                            {"description": "",
-                             "units": ""})
+        fi[field] = fdb.get(cfield.lower(), {"description": "", "units": ""})
         fi[field]["column"] = i
 
     arbor.box_size = arbor.quan(float(box[0]), box[1])

@@ -5,24 +5,24 @@ parallel utilities
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree development team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import numpy as np
 
-from yt.funcs import \
-    get_pbar, \
-    is_root as yt_is_root
-from yt.utilities.parallel_tools.parallel_analysis_interface import \
-    _get_comm, \
-    parallel_objects
+from yt.funcs import get_pbar, is_root as yt_is_root
+from yt.utilities.parallel_tools.parallel_analysis_interface import (
+    _get_comm,
+    parallel_objects,
+)
 
 from ytree.data_structures.load import load as ytree_load
+
 
 def regenerate_node(arbor, node, new_index=None):
     """
@@ -45,10 +45,17 @@ def regenerate_node(arbor, node, new_index=None):
 
     return new_node
 
-def parallel_trees(trees, collect_results=True,
-                   save_every=None, save_in_place=None,
-                   save_roots_only=False, filename=None,
-                   njobs=0, dynamic=False):
+
+def parallel_trees(
+    trees,
+    collect_results=True,
+    save_every=None,
+    save_in_place=None,
+    save_roots_only=False,
+    filename=None,
+    njobs=0,
+    dynamic=False,
+):
     """
     Iterate over a list of trees in parallel.
 
@@ -168,6 +175,7 @@ def parallel_trees(trees, collect_results=True,
 
     if save_in_place is None:
         from ytree.frontends.ytree.arbor import YTreeArbor
+
         save_in_place = isinstance(arbor, YTreeArbor)
 
     # are we actually going to save anything?
@@ -175,7 +183,8 @@ def parallel_trees(trees, collect_results=True,
     if isinstance(save_every, (int, np.integer)):
         if collect_results is False:
             raise ValueError(
-                "collect_results must be True if save_every is set to a number.")
+                "collect_results must be True if save_every is set to a number."
+            )
     elif save_every is False:
         save_every = nt
         do_save = False
@@ -192,9 +201,8 @@ def parallel_trees(trees, collect_results=True,
 
         arbor_storage = {}
         for tree_store, my_item in parallel_objects(
-                my_items, storage=arbor_storage,
-                njobs=njobs, dynamic=dynamic):
-
+            my_items, storage=arbor_storage, njobs=njobs, dynamic=dynamic
+        ):
             my_tree = trees[my_item]
             yield my_tree
 
@@ -225,13 +233,13 @@ def parallel_trees(trees, collect_results=True,
                     selection = "tree"
 
                 if save_roots_only:
-                    tree_store.result = {field: my_tree[field]
-                                         for field in afields}
+                    tree_store.result = {field: my_tree[field] for field in afields}
                 else:
                     # this is the slow part as we are grabbing all analysis
                     # fields for the entire tree and copying them.
-                    tree_store.result = {field: my_tree[selection, field]
-                                         for field in afields}
+                    tree_store.result = {
+                        field: my_tree[selection, field] for field in afields
+                    }
 
             else:
                 tree_store.result_id = None
@@ -260,7 +268,7 @@ def parallel_trees(trees, collect_results=True,
                         arbor._node_io._initialize_analysis_field(my_root, field)
 
                     my_root.field_data[field][indices] = data[field]
-                pbar.update(i+1)
+                pbar.update(i + 1)
             pbar.finish()
 
             if do_save:
@@ -269,13 +277,17 @@ def parallel_trees(trees, collect_results=True,
                 else:
                     save_trees = trees
 
-                fn = arbor.save_arbor(filename=filename, trees=save_trees,
-                                      save_in_place=save_in_place,
-                                      save_roots_only=save_roots_only)
+                fn = arbor.save_arbor(
+                    filename=filename,
+                    trees=save_trees,
+                    save_in_place=save_in_place,
+                    save_roots_only=save_roots_only,
+                )
                 new_arbor = ytree_load(fn)
 
                 add_fields = set(arbor.derived_field_list).difference(
-                    new_arbor.derived_field_list)
+                    new_arbor.derived_field_list
+                )
                 for field in add_fields:
                     fi = arbor.field_info[field].copy()
                     ftype = fi.pop("type")
@@ -290,13 +302,15 @@ def parallel_trees(trees, collect_results=True,
 
                 arbor = new_arbor
 
-                trees = [regenerate_node(arbor, tree, new_index=i)
-                         for i, tree in enumerate(trees)]
+                trees = [
+                    regenerate_node(arbor, tree, new_index=i)
+                    for i, tree in enumerate(trees)
+                ]
 
         comm.barrier()
 
-def parallel_tree_nodes(tree, group="forest", nodes=None,
-                        njobs=0, dynamic=False):
+
+def parallel_tree_nodes(tree, group="forest", nodes=None, njobs=0, dynamic=False):
     """
     Iterate over nodes in a single tree in parallel.
 
@@ -369,15 +383,13 @@ def parallel_tree_nodes(tree, group="forest", nodes=None,
 
     tree_storage = {}
     for halo_store, ihalo in parallel_objects(
-            range(len(my_halos)), storage=tree_storage,
-            njobs=njobs, dynamic=dynamic):
-
+        range(len(my_halos)), storage=tree_storage, njobs=njobs, dynamic=dynamic
+    ):
         my_halo = my_halos[ihalo]
         yield my_halo
         if yt_is_root():
             halo_store.result_id = my_halo.tree_id
-            halo_store.result = {field: my_halo[field]
-                                 for field in afields}
+            halo_store.result = {field: my_halo[field] for field in afields}
         else:
             halo_store.result_id = -1
 
@@ -391,9 +403,17 @@ def parallel_tree_nodes(tree, group="forest", nodes=None,
             for field, value in result.items():
                 my_halo[field] = value
 
-def parallel_nodes(trees, group="forest", collect_results=True,
-                   save_every=None, save_in_place=None, filename=None,
-                   njobs=None, dynamic=None):
+
+def parallel_nodes(
+    trees,
+    group="forest",
+    collect_results=True,
+    save_every=None,
+    save_in_place=None,
+    filename=None,
+    njobs=None,
+    dynamic=None,
+):
     """
     Iterate over all nodes in a list of trees in parallel.
 
@@ -516,12 +536,15 @@ def parallel_nodes(trees, group="forest", collect_results=True,
             raise ValueError(f"dynamic must be a tuple of length 2: {dynamic}.")
 
     for tree in parallel_trees(
-            trees, collect_results=collect_results,
-            save_every=save_every, save_in_place=save_in_place,
-            filename=filename, njobs=njobs[0], dynamic=dynamic[0]):
-
+        trees,
+        collect_results=collect_results,
+        save_every=save_every,
+        save_in_place=save_in_place,
+        filename=filename,
+        njobs=njobs[0],
+        dynamic=dynamic[0],
+    ):
         for node in parallel_tree_nodes(
-                tree, group=group,
-                njobs=njobs[1], dynamic=dynamic[1]):
-
+            tree, group=group, njobs=njobs[1], dynamic=dynamic[1]
+        ):
             yield node

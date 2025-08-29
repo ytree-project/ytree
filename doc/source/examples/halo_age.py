@@ -22,7 +22,9 @@ tabbing (i.e., 4 spaces to the left).
 import ytree
 import numpy as np
 import yt
+
 yt.enable_parallelism()
+
 
 def calc_a50(node):
     # main progenitor masses
@@ -37,7 +39,7 @@ def calc_a50(node):
         pscale = node["prog", "scale_factor"]
         # linearly interpolate
         i = np.where(m50)[0][0]
-        slope = (pscale[i-1] - pscale[i]) / (pmass[i-1] - pmass[i])
+        slope = (pscale[i - 1] - pscale[i]) / (pmass[i - 1] - pmass[i])
         th = slope * (mh - pmass[i]) + pscale[i]
 
     node["a50"] = th
@@ -46,9 +48,9 @@ def calc_a50(node):
 if __name__ == "__main__":
     # Remove the next three and final three lines to run conventionally.
     from mpi4py import MPI
+
     comm = MPI.Comm.Get_parent()
     try:
-
         a = ytree.load("tiny_ctrees/locations.dat")
         a.add_analysis_field("a50", "")
 
@@ -62,7 +64,7 @@ if __name__ == "__main__":
 
         if yt.is_root():
             a2 = ytree.load("halo_age/halo_age.h5")
-            print (a2[0]["a50"])
+            print(a2[0]["a50"])
 
     # Remove the next three lines to run conventionally.
     except BaseException:

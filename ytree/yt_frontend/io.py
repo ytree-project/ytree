@@ -6,13 +6,13 @@ ytree io
 
 """
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Copyright (c) ytree Development Team. All rights reserved.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import h5py
 from more_itertools import always_iterable
@@ -21,6 +21,7 @@ import numpy as np
 from yt.utilities.io_handler import BaseIOHandler
 
 _ptype = "halos"
+
 
 class IOHandlerYTreeHDF5(BaseIOHandler):
     _dataset_type = "ytree_arbor"
@@ -75,8 +76,11 @@ class IOHandlerYTreeHDF5(BaseIOHandler):
 
     def _identify_fields(self, data_file):
         _node_fields = ["file_root_index", "file_number", "tree_index"]
-        fields = [(_ptype, field) for field in list(self.ds._field_dict.keys()) +
-                  _node_fields]
-        units = dict(((_ptype, field), self.ds._field_dict[field].get("units", ""))
-                     for field in self.ds._field_dict)
+        fields = [
+            (_ptype, field) for field in list(self.ds._field_dict.keys()) + _node_fields
+        ]
+        units = dict(
+            ((_ptype, field), self.ds._field_dict[field].get("units", ""))
+            for field in self.ds._field_dict
+        )
         return fields, units
