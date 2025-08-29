@@ -8,15 +8,19 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ytree"
-description = "An extension of yt for working with merger tree data."
+description = "A Python package for analyzing tree data and especially merger trees."
 authors = [
-    { name = "Britton Smith", email = "brittonsmith@gmail.clm" },
+    { name = "Britton Smith", email = "brittonsmith@gmail.com" },
 ]
 keywords = [
-    "simulation",
-    "merger tree",
+    "python",
+    "data",
+    "analysis",
     "astronomy",
-    "astrophysics"
+    "astrophysics",
+    "simulations",
+    "merger trees",
+    "trees",
 ]
 readme = "README.md"
 classifiers = [
