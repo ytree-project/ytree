@@ -67,4 +67,5 @@ if __name__ == "__main__":
         run()
     except BaseException:
         pass
+    comm.Barrier()
     comm.Disconnect()
