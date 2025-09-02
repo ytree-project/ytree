@@ -89,7 +89,7 @@ commands:
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
-            TESTFILES=$(circleci tests glob "tests/test_*.py" "tests/frontends/test_*.py tests/parallel/test_*.py" | circleci tests split --split-by=timings)
+            TESTFILES=$(circleci tests glob "tests/test_*.py" "tests/frontends/test_*.py" "tests/parallel/test_*.py" | circleci tests split --split-by=timings)
             << parameters.pytestcommand >> --cov=ytree --junitxml=test-results/junit.xml << parameters.pytestkwargs >> $TESTFILES
             python fix-junit.py test-results/junit.xml
             if [ << parameters.coverage >> == 1 ]; then
