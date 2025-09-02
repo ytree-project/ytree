@@ -13,6 +13,7 @@ tabbing (i.e., 4 spaces to the left).
 
     except BaseException:
         pass
+    comm.Barrier()
     comm.Disconnect()
 
 """
@@ -39,7 +40,7 @@ def calc_significance(node):
 
 
 if __name__ == "__main__":
-    # Remove the next three and final three lines to run conventionally.
+    # Remove the next three and final four lines to run conventionally.
     from mpi4py import MPI
 
     comm = MPI.Comm.Get_parent()
@@ -61,7 +62,8 @@ if __name__ == "__main__":
             prog = list(a2[0]["prog"])
             print(prog)
 
-    # Remove the next three lines to run conventionally.
+    # Remove the next four lines to run conventionally.
     except BaseException:
         pass
+    comm.Barrier()
     comm.Disconnect()
