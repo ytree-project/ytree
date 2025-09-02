@@ -1,5 +1,5 @@
 """
-tests for example scripts
+tests for example halo significance script
 
 
 
@@ -17,13 +17,13 @@ from ytree.testing.example_script_test import ExampleScriptTest
 from ytree.testing.utilities import TempDirTest
 
 
-class TestPlotMostMassive(TempDirTest, ExampleScriptTest):
-    script_filename = "plot_most_massive.py"
+class TestHaloSignificance(TempDirTest, ExampleScriptTest):
+    ncores = 2
+    script_filename = "halo_significance.py"
     input_filename = "tiny_ctrees/locations.dat"
-    output_files = ("most_massive.png",)
-
-
-class TestPlotMostHalos(TempDirTest, ExampleScriptTest):
-    script_filename = "plot_most_halos.py"
-    input_filename = "tiny_ctrees/locations.dat"
-    output_files = ("most_halos.png",)
+    output_files = (
+        "halo_significance/halo_significance-analysis.h5",
+        "halo_significance/halo_significance.h5",
+        "halo_significance/halo_significance_0000-analysis.h5",
+        "halo_significance/halo_significance_0000.h5",
+    )
