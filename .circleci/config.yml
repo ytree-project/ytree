@@ -78,9 +78,6 @@ commands:
         default: 0
       pytestkwargs:
         type: string
-      pytestcommand:
-        type: string
-        default: pytest
 
     steps:
       - run:
@@ -89,9 +86,14 @@ commands:
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
-            TESTFILES=$(circleci tests glob "tests/test_*.py" "tests/frontends/test_*.py" "tests/parallel/test_*.py" | circleci tests split --split-by=timings)
-            << parameters.pytestcommand >> --cov=ytree --junitxml=test-results/junit.xml << parameters.pytestkwargs >> $TESTFILES
-            python fix-junit.py test-results/junit.xml
+            # run serial tests
+            TESTFILES=$(circleci tests glob "tests/test_*.py" "tests/frontends/test_*.py" | circleci tests split --split-by=timings)
+            pytest --cov=ytree --junitxml=test-results/junit_serial.xml --exclude-parallel << parameters.pytestkwargs >> $TESTFILES
+            python scripts/fix-junit.py test-results/junit_serial.xml
+            # run parallel tests
+            TESTFILES=$(circleci tests glob "tests/parallel/test_*.py" | circleci tests split --split-by=timings)
+            mpirun -np 1 pytest --cov=ytree --junitxml=test-results/junit_parallel.xml --exclude-serial << parameters.pytestkwargs >> $TESTFILES
+            python scripts/fix-junit.py test-results/junit_parallel.xml
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
                 codecov
@@ -141,9 +143,6 @@ jobs:
         default: 0
       pytestkwargs:
         type: string
-      pytestcommand:
-        type: string
-        default: pytest
     parallelism: << parameters.parallelism >>
     resource_class: << parameters.resource_class >>
     executor:
@@ -187,7 +186,6 @@ jobs:
       - run-tests:
           coverage: << parameters.coverage >>
           pytestkwargs: << parameters.pytestkwargs >>
-          pytestcommand: << parameters.pytestcommand >>
 
   docs-test:
     resource_class: small
@@ -227,29 +225,21 @@ workflows:
            name: "Python 3.9 tests"
            tag: "3.9.20"
            ytdev: 0
-           pytestkwargs: "--exclude-parallel --exclude-slow"
+           pytestkwargs: "--exclude-slow"
 
        - tests:
-           name: "Python 3.12 serial tests"
+           name: "Python 3.12 tests"
            tag: "3.12.7"
            coverage: 1
            ytdev: 1
-           pytestkwargs: "--exclude-parallel --exclude-slow"
-
-       - tests:
-           name: "Python 3.12 parallel tests"
-           tag: "3.12.7"
-           coverage: 1
-           ytdev: 1
-           pytestkwargs: "--exclude-serial --exclude-slow"
-           pytestcommand: "mpirun -np 1 pytest"
+           pytestkwargs: "--exclude-slow"
 
        - tests:
            name: "Python 3.12 tests"
            tag: "3.12.7"
            coverage: 0
            ytdev: 0
-           pytestkwargs: "--exclude-parallel --exclude-slow"
+           pytestkwargs: "--exclude-slow"
 
        - docs-test:
            name: "Test docs build"
@@ -269,14 +259,14 @@ workflows:
            name: "Python 3.9 tests"
            tag: "3.9.20"
            ytdev: 0
-           pytestkwargs: "--exclude-parallel --exclude-slow"
+           pytestkwargs: "--exclude-slow"
 
        - tests:
            name: "Python 3.12 tests"
            tag: "3.12.7"
            coverage: 0
            ytdev: 1
-           pytestkwargs: "--exclude-parallel --exclude-slow"
+           pytestkwargs: "--exclude-slow"
 
        - docs-test:
            name: "Test docs build"
