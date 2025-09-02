@@ -285,7 +285,7 @@ def parallel_trees(
                 )
 
                 new_arbor = ytree_load(fn)
-                new_arbor.restore_derived_fields_from(arbor)
+                new_arbor._restore_derived_fields_from(arbor)
                 arbor = new_arbor
 
                 trees = [

@@ -416,7 +416,7 @@ class YTreeArbor(Arbor):
         """
 
         new_arbor = ytree_load(self.filename)
-        new_arbor.restore_derived_fields_from(self)
+        new_arbor._restore_derived_fields_from(self)
         return new_arbor
 
     _ytds = None

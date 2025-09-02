@@ -389,7 +389,7 @@ class Arbor(metaclass=RegisteredArbor):
         for attr in attrs:
             setattr(tree_node, attr, None)
 
-    def restore_derived_fields_from(self, arbor):
+    def _restore_derived_fields_from(self, arbor):
         """
         Reload derived fields defined in another arbor.
 
