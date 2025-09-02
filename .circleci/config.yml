@@ -223,11 +223,18 @@ workflows:
            pytestkwargs: "--exclude-parallel --exclude-slow"
 
        - tests:
-           name: "Python 3.12 tests"
+           name: "Python 3.12 serial tests"
            tag: "3.12.7"
            coverage: 1
            ytdev: 1
            pytestkwargs: "--exclude-parallel --exclude-slow"
+
+       - tests:
+           name: "Python 3.12 parallel tests"
+           tag: "3.12.7"
+           coverage: 1
+           ytdev: 1
+           pytestkwargs: "--exclude-serial --exclude-slow"
 
        - tests:
            name: "Python 3.12 tests"
