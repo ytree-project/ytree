@@ -416,17 +416,7 @@ class YTreeArbor(Arbor):
         """
 
         new_arbor = ytree_load(self.filename)
-
-        add_fields = set(self.derived_field_list).difference(
-            new_arbor.derived_field_list
-        )
-        for field in add_fields:
-            fi = self.field_info[field].copy()
-            name = fi.pop("name")
-            function = fi.pop("function")
-            del fi["type"], fi["dependencies"]
-            new_arbor.add_derived_field(name, function, **fi)
-
+        new_arbor.restore_derived_fields_from(self)
         return new_arbor
 
     _ytds = None
