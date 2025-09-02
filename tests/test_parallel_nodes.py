@@ -19,45 +19,54 @@ from ytree.testing.parallel_test import ParallelTest
 from ytree.testing.utilities import TempDirTest
 
 script_path = os.path.dirname(__file__)
+test_script = os.path.join(script_path, "parallel/parallel_nodes.py")
 
 
-class ParallelNodesTest(TempDirTest, ParallelTest):
-    test_script = os.path.join(script_path, "parallel/parallel_nodes.py")
-    arg_sets = (
-        ("all", "forest", 1, 0, 0, 0, 4),
-        ("all", "tree", 1, 0, 0, 0, 4),
-        ("all", "prog", 1, 0, 0, 0, 4),
-        ("all", "forest", 0, 1, 0, 0, 4),
-        (
-            "all",
-            "forest",
-            1,
-            0,
-            0,
-            0,
-        ),  # sets save_every to None
-        ("all", "forest", 1, 0, 0, 1, 4),
-        ("all", "forest", 0, 1, 1, 0, 4),
-    )
+class ParallelNodesTest1(TempDirTest, ParallelTest):
+    test_script = test_script
+    args = ("all", "forest", 1, 0, 0, 0, 4)
 
 
-class NonRootParallelNodesTest(ParallelNodesTest):
+class ParallelNodesTest2(TempDirTest, ParallelTest):
+    test_script = test_script
+    args = ("all", "tree", 1, 0, 0, 0, 4)
+
+
+class ParallelNodesTest3(TempDirTest, ParallelTest):
+    test_script = test_script
+    args = ("all", "prog", 1, 0, 0, 0, 4)
+
+
+class ParallelNodesTest4(TempDirTest, ParallelTest):
+    test_script = test_script
+    args = ("all", "forest", 0, 1, 0, 0, 4)
+
+
+class ParallelNodesTest5(TempDirTest, ParallelTest):
+    test_script = test_script
+    # sets save_every to None
+    args = ("all", "forest", 1, 0, 0, 0)
+
+
+class ParallelNodesTest6(TempDirTest, ParallelTest):
+    test_script = test_script
+    args = ("all", "forest", 1, 0, 0, 1, 4)
+
+
+class ParallelNodesTest7(TempDirTest, ParallelTest):
+    test_script = test_script
+    args = ("all", "forest", 0, 1, 1, 0, 4)
+
+
+class ParallelNodesTest8(TempDirTest, ParallelTest):
     ncores = 2
-    arg_sets = (
-        (
-            "nonroot",
-            "tree",
-            1,
-            0,
-            0,
-            0,
-        ),  # sets save_every to None
-        (
-            "nonroot",
-            "tree",
-            0,
-            1,
-            0,
-            0,
-        ),  # sets save_every to None
-    )
+    test_script = test_script
+    # sets save_every to None
+    args = ("nonroot", "tree", 1, 0, 0, 0)
+
+
+class ParallelNodesTest9(TempDirTest, ParallelTest):
+    ncores = 2
+    test_script = test_script
+    # sets save_every to None
+    args = ("nonroot", "tree", 0, 1, 0, 0)
