@@ -19,7 +19,7 @@ from ytree.testing.parallel_test import ParallelTest
 from ytree.testing.utilities import TempDirTest
 
 script_path = os.path.dirname(__file__)
-test_script = os.path.join(script_path, "parallel_nodes.py")
+test_script = os.path.join(script_path, "run_parallel_nodes.py")
 
 
 class ParallelNodesTest9(TempDirTest, ParallelTest):
