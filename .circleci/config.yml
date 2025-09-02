@@ -78,6 +78,9 @@ commands:
         default: 0
       pytestkwargs:
         type: string
+      pytestcommand:
+        type: string
+        default: pytest
 
     steps:
       - run:
@@ -87,7 +90,7 @@ commands:
             source $BASH_ENV
             source $HOME/venv/bin/activate
             TESTFILES=$(circleci tests glob "tests/*.py" "tests/frontends/*.py" | circleci tests split --split-by=timings)
-            pytest --cov=ytree --junitxml=test-results/junit.xml << parameters.pytestkwargs >> $TESTFILES
+            << parameters.pytestcommand >> --cov=ytree --junitxml=test-results/junit.xml << parameters.pytestkwargs >> $TESTFILES
             python fix-junit.py test-results/junit.xml
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
@@ -138,6 +141,9 @@ jobs:
         default: 0
       pytestkwargs:
         type: string
+      pytestcommand:
+        type: string
+        default: pytest
     parallelism: << parameters.parallelism >>
     resource_class: << parameters.resource_class >>
     executor:
@@ -181,6 +187,7 @@ jobs:
       - run-tests:
           coverage: << parameters.coverage >>
           pytestkwargs: << parameters.pytestkwargs >>
+          pytestcommand: << parameters.pytestcommand >>
 
   docs-test:
     resource_class: small
@@ -235,6 +242,7 @@ workflows:
            coverage: 1
            ytdev: 1
            pytestkwargs: "--exclude-serial --exclude-slow"
+           pytestcommand: "mpirun -np 1 pytest"
 
        - tests:
            name: "Python 3.12 tests"
