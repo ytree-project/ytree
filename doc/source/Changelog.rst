@@ -13,6 +13,31 @@ The `CREDITS file
 contains the most up-to-date list of everyone who has contributed to the
 ``ytree`` source code.
 
+Version 3.3.1
+-------------
+
+Release date: *September 3, 2025*
+
+Bugfixes
+^^^^^^^^
+
+ * Fix a bug in parallel_trees and fix parallelism testing (`PR #194
+   <https://github.com/ytree-project/ytree/pull/194>`__)
+
+Infrastructure Updates
+^^^^^^^^^^^^^^^^^^^^^^
+
+ * Add testing option to exclude slow tests in (`PR #187
+   <https://github.com/ytree-project/ytree/pull/187>`__)
+ * Fix ruff lint errors in (`PR #188
+   <https://github.com/ytree-project/ytree/pull/188>`__)
+ * Apply ruff formatting in (`PR #189
+   <https://github.com/ytree-project/ytree/pull/189>`__)
+ * Add pre-commit in (`PR #190
+   <https://github.com/ytree-project/ytree/pull/190>`__)
+ * Split up testing.py in (`PR #191
+   <https://github.com/ytree-project/ytree/pull/191>`__)
+
 Version 3.3.0
 -------------
 
