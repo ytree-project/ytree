@@ -30,16 +30,16 @@ your work, include the following reference:
 
 ::
 
-  @software{britton_smith_2025_16983993,
+  @software{britton_smith_2025_17045610,
     author       = {Britton Smith and
                     Meagan Lang and
                     John Wise and
                     Juanjo Bazán},
-    title        = {ytree-project/ytree: ytree 3.3.0 Release},
-    month        = aug,
+    title        = {ytree-project/ytree: ytree 3.3.1 Release},
+    month        = sep,
     year         = 2025,
     publisher    = {Zenodo},
-    version      = {ytree-3.3.0},
-    doi          = {10.5281/zenodo.16983993},
-    url          = {https://doi.org/10.5281/zenodo.16983993},
+    version      = {ytree-3.3.1},
+    doi          = {10.5281/zenodo.17045610},
+    url          = {https://doi.org/10.5281/zenodo.17045610},
   }
