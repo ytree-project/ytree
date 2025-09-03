@@ -227,27 +227,27 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.9 tests"
-           tag: "3.9.20"
+           tag: "3.9.22"
            ytdev: 0
            pytestkwargs: "--exclude-slow"
 
        - tests:
-           name: "Python 3.12 tests"
-           tag: "3.12.7"
+           name: "Python 3.13 tests"
+           tag: "3.13.7"
            coverage: 1
            ytdev: 1
            pytestkwargs: "--exclude-slow"
 
        - tests:
-           name: "Python 3.12 tests"
-           tag: "3.12.7"
+           name: "Python 3.13 tests"
+           tag: "3.13.7"
            coverage: 0
            ytdev: 0
            pytestkwargs: "--exclude-slow"
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.12.7"
+           tag: "3.13.7"
            ytdev: 0
 
    weekly:
@@ -261,18 +261,18 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.9 tests"
-           tag: "3.9.20"
+           tag: "3.9.22"
            ytdev: 0
            pytestkwargs: "--exclude-slow"
 
        - tests:
-           name: "Python 3.12 tests"
-           tag: "3.12.7"
+           name: "Python 3.13 tests"
+           tag: "3.13.7"
            coverage: 0
            ytdev: 1
            pytestkwargs: "--exclude-slow"
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.12.7"
+           tag: "3.13.7"
            ytdev: 0
