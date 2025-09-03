@@ -23,8 +23,8 @@ class ParallelTest:
     test_script = None
     ncores = 4
 
-    def check_values(self, arbor, my_args):
-        group = my_args[1]
+    def check_values(self, arbor):
+        group = self.args[1]
 
         if "nodes" in group:
             increment = int(group.split("-")[1])
@@ -54,15 +54,12 @@ class ParallelTest:
     @skipIf(MPI is None, "mpi4py not installed")
     @pytest.mark.parallel
     def test_parallel(self):
-        for i, my_args in enumerate(self.arg_sets):
-            with self.subTest(i=i):
-                args = [self.test_script, self.base_filename, self.test_filename] + [
-                    str(arg) for arg in my_args
-                ]
-                comm = MPI.COMM_SELF.Spawn(
-                    sys.executable, args=args, maxprocs=self.ncores
-                )
-                comm.Disconnect()
+        args = [self.test_script, self.base_filename, self.test_filename] + [
+            str(arg) for arg in self.args
+        ]
+        comm = MPI.COMM_SELF.Spawn(sys.executable, args=args, maxprocs=self.ncores)
+        comm.Barrier()
+        comm.Disconnect()
 
-                test_arbor = load(self.test_filename)
-                self.check_values(test_arbor, my_args)
+        test_arbor = load(self.test_filename)
+        self.check_values(test_arbor)

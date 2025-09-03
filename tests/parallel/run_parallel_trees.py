@@ -1,5 +1,5 @@
 """
-parallel_nodes test script
+parallel_trees test script
 
 
 
@@ -24,10 +24,10 @@ yt.enable_parallelism()
 
 def run():
     input_fn, output_fn, selection, group = sys.argv[1:5]
-    njobs = tuple([int(arg) for arg in sys.argv[5:7]])
-    dynamic = tuple([bool(int(arg)) for arg in sys.argv[7:9]])
-    if len(sys.argv) > 9:
-        save_every = int(sys.argv[9])
+    njobs = int(sys.argv[5])
+    dynamic = bool(int(sys.argv[6]))
+    if len(sys.argv) > 7:
+        save_every = int(sys.argv[7])
     else:
         save_every = None
 
@@ -43,23 +43,22 @@ def run():
         print(f"Bad selection: {selection}.")
         sys.exit(1)
 
-    for node in ytree.parallel_nodes(
-        trees,
-        group=group,
-        njobs=njobs,
-        dynamic=dynamic,
-        save_every=save_every,
-        filename=output_fn,
+    for tree in ytree.parallel_trees(
+        trees, njobs=njobs, dynamic=dynamic, save_every=save_every, filename=output_fn
     ):
-        root = node.root
-        yt.mylog.info(f"Doing {node.tree_id}/{root.tree_size} of {root._arbor_index}")
-        node["test_field"] = 2 * node["mass"]
+        for node in tree[group]:
+            root = node.root
+            yt.mylog.info(
+                f"Doing {node.tree_id}/{root.tree_size} of {root._arbor_index}"
+            )
+            node["test_field"] = 2 * node["mass"]
 
 
 if __name__ == "__main__":
     comm = MPI.Comm.Get_parent()
     try:
         run()
-    except BaseException:
-        pass
+    except BaseException as e:
+        print(f"Exception raised on {comm.rank} of {comm.size}: {e}")
+    comm.Barrier()
     comm.Disconnect()

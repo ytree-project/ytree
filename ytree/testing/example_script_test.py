@@ -43,6 +43,7 @@ class ExampleScriptTest:
             comm = MPI.COMM_SELF.Spawn(
                 sys.executable, args=[script_path], maxprocs=self.ncores
             )
+            comm.Barrier()
             comm.Disconnect()
         else:
             command = f"{sys.executable} {script_path}"

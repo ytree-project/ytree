@@ -283,31 +283,15 @@ def parallel_trees(
                     save_in_place=save_in_place,
                     save_roots_only=save_roots_only,
                 )
+
                 new_arbor = ytree_load(fn)
-
-                add_fields = set(arbor.derived_field_list).difference(
-                    new_arbor.derived_field_list
-                )
-                for field in add_fields:
-                    fi = arbor.field_info[field].copy()
-                    ftype = fi.pop("type")
-                    # skip aliases as they will have been saved as the field
-                    if ftype == "alias":
-                        continue
-
-                    name = fi.pop("name")
-                    function = fi.pop("function")
-                    del fi["dependencies"]
-                    new_arbor.add_derived_field(name, function, **fi)
-
+                new_arbor._restore_derived_fields_from(arbor)
                 arbor = new_arbor
 
                 trees = [
                     regenerate_node(arbor, tree, new_index=i)
                     for i, tree in enumerate(trees)
                 ]
-
-        comm.barrier()
 
 
 def parallel_tree_nodes(tree, group="forest", nodes=None, njobs=0, dynamic=False):

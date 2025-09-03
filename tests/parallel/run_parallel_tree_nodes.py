@@ -65,6 +65,7 @@ if __name__ == "__main__":
     comm = MPI.Comm.Get_parent()
     try:
         run()
-    except BaseException:
-        pass
+    except BaseException as e:
+        print(f"Exception raised on {comm.rank} of {comm.size}: {e}")
+    comm.Barrier()
     comm.Disconnect()

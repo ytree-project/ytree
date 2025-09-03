@@ -33,6 +33,7 @@ from ytree.data_structures.save_arbor import save_arbor
 from ytree.data_structures.node_container import NodeContainer
 from ytree.data_structures.tree_node import TreeNode
 from ytree.data_structures.tree_node_selector import tree_node_selector_registry
+from ytree.utilities.exceptions import ArborFieldDependencyNotFound
 from ytree.utilities.logger import ytreeLogger, fake_pbar
 
 arbor_registry = {}
@@ -387,6 +388,39 @@ class Arbor(metaclass=RegisteredArbor):
 
         for attr in attrs:
             setattr(tree_node, attr, None)
+
+    def _restore_derived_fields_from(self, arbor):
+        """
+        Reload derived fields defined in another arbor.
+
+        Parameters
+        ----------
+        arbor : :class:`~ytree.data_structures.arbor.Arbor`
+            The source arbor where derived fields have been defined.
+        """
+
+        add_fields = set(arbor.derived_field_list).difference(self.derived_field_list)
+        for field in add_fields:
+            # skip if it already exists in new arbor
+            if field in self.field_info:
+                continue
+
+            fi = arbor.field_info[field].copy()
+            ftype = fi.pop("type")
+            # skip aliases as they will have been saved as the field
+            if ftype == "alias":
+                continue
+
+            name = fi.pop("name")
+            function = fi.pop("function")
+            del fi["dependencies"]
+            try:
+                self.add_derived_field(name, function, **fi)
+
+            # Skip fields with missing dependencies.
+            # They are likely missing because an alias was saved instead.
+            except ArborFieldDependencyNotFound:
+                continue
 
     @property
     def ytds(self):

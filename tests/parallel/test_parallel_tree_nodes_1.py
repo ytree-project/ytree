@@ -19,15 +19,9 @@ from ytree.testing.parallel_test import ParallelTest
 from ytree.testing.utilities import TempDirTest
 
 script_path = os.path.dirname(__file__)
+test_script = os.path.join(script_path, "run_parallel_tree_nodes.py")
 
 
-class ParallelTreeNodesTest(TempDirTest, ParallelTest):
-    test_script = os.path.join(script_path, "parallel/parallel_tree_nodes.py")
-    arg_sets = (
-        ("all", "forest", 0, 0),
-        ("all", "tree", 0, 0),
-        ("all", "prog", 0, 0),
-        ("all", "forest", 2, 0),
-        ("all", "forest", 0, 1),
-        ("all", "nodes-10", 0, 0),
-    )
+class ParallelTreeNodesTest1(TempDirTest, ParallelTest):
+    test_script = test_script
+    args = ("all", "forest", 0, 0)
