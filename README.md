@@ -67,7 +67,7 @@ pip install ytree
 ### conda installation
 
 ```
-conda install -c conda-forge ytree
+conda install conda-forge::ytree
 ```
 
 ### source installation
@@ -100,50 +100,8 @@ Sample data for all merger tree formats supported by `ytree` is available on the
 
 ## Citing `ytree`
 
-If you use `ytree` in your work, please cite the following:
-
-```
-Smith et al., (2019). ytree: A Python package for analyzing merger trees.
-Journal of Open Source Software, 4(44), 1881,
-https://doi.org/10.21105/joss.01881
-```
-
-For BibTeX users:
-
-```
-  @article{ytree,
-    doi = {10.21105/joss.01881},
-    url = {https://doi.org/10.21105/joss.01881},
-    year  = {2019},
-    month = {dec},
-    publisher = {The Open Journal},
-    volume = {4},
-    number = {44},
-    pages = {1881},
-    author = {Britton D. Smith and Meagan Lang},
-    title = {ytree: A Python package for analyzing merger trees},
-    journal = {Journal of Open Source Software}
-  }
-```
-
-If you would like to also cite the specific version of `ytree` used in
-your work, include the following reference:
-
-```
-  @software{britton_smith_2025_17045610,
-    author       = {Britton Smith and
-                    Meagan Lang and
-                    John Wise and
-                    Juanjo Bazán},
-    title        = {ytree-project/ytree: ytree 3.3.1 Release},
-    month        = sep,
-    year         = 2025,
-    publisher    = {Zenodo},
-    version      = {ytree-3.3.1},
-    doi          = {10.5281/zenodo.17045610},
-    url          = {https://doi.org/10.5281/zenodo.17045610},
-  }
-```
+If you use `ytree` in your work, please cite it. Citation instructions
+can be found [here](https://ytree.readthedocs.io/en/latest/Citing.html).
 
 ## Resources
 
