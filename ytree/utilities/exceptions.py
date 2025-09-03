@@ -14,7 +14,7 @@ ytree exceptions
 # -----------------------------------------------------------------------------
 
 
-class ArborDataFileEmpty(Exception):
+class YTreeDataFileEmpty(Exception):
     def __init__(self, filename):
         self.filename = filename
 
@@ -22,18 +22,18 @@ class ArborDataFileEmpty(Exception):
         return f"Data file is empty: {self.filename}."
 
 
-class ArborFieldException(Exception):
+class YTreeFieldException(Exception):
     def __init__(self, field, arbor=None):
         self.field = field
         self.arbor = arbor
 
 
-class ArborDerivedFieldException(ArborFieldException):
+class YTreeDerivedFieldException(YTreeFieldException):
     def __str__(self):
         return f'Derived field "{self.field}" could not be generated for {self.arbor}.'
 
 
-class ArborFieldDependencyNotFound(Exception):
+class YTreeFieldDependencyNotFound(Exception):
     def __init__(self, field, dependency, arbor=None):
         self.field = field
         self.dependency = dependency
@@ -46,22 +46,22 @@ class ArborFieldDependencyNotFound(Exception):
         )
 
 
-class ArborFieldCircularDependency(ArborFieldException):
+class YTreeFieldCircularDependency(YTreeFieldException):
     def __str__(self):
         return f'Field depends on itself: "{self.field}" in {self.arbor}.'
 
 
-class ArborFieldNotFound(ArborFieldException):
+class YTreeFieldNotFound(YTreeFieldException):
     def __str__(self):
         return f'Field not found: "{self.field}" in {self.arbor}.'
 
 
-class ArborFieldAlreadyExists(ArborFieldException):
+class YTreeFieldAlreadyExists(YTreeFieldException):
     def __str__(self):
         return f'Field already exists: "{self.field}" in {self.arbor}.'
 
 
-class ArborAnalysisFieldNotGenerated(ArborFieldException):
+class YTreeAnalysisFieldNotGenerated(YTreeFieldException):
     def __str__(self):
         return (
             f'Analysis field "{self.field}" needed but '
@@ -69,7 +69,7 @@ class ArborAnalysisFieldNotGenerated(ArborFieldException):
         )
 
 
-class ArborAnalysisFieldNotFound(ArborFieldException):
+class YTreeAnalysisFieldNotFound(YTreeFieldException):
     def __str__(self):
         return (
             f'Analysis field "{self.field}" has been removed '
@@ -77,7 +77,7 @@ class ArborAnalysisFieldNotFound(ArborFieldException):
         )
 
 
-class ArborUnsettableField(ArborFieldException):
+class YTreeUnsettableField(YTreeFieldException):
     def __str__(self):
         return (
             f'Cannot set values for field "{self.field}" in {self.arbor}. '

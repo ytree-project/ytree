@@ -20,7 +20,7 @@ import numpy as np
 from yt.funcs import get_pbar
 
 from ytree.data_structures.io import DataFile, DefaultRootFieldIO, TreeFieldIO
-from ytree.utilities.exceptions import ArborFieldNotFound
+from ytree.utilities.exceptions import YTreeFieldNotFound
 
 
 class TreeFrogDataFile(DataFile):
@@ -167,7 +167,7 @@ class TreeFrogTreeFieldIO(TreeFieldIO):
         if field == "scale_factor":
             return self.arbor._scale_factors[gi] * np.ones(size)
         else:
-            raise ArborFieldNotFound(field, arbor=self.arbor)
+            raise YTreeFieldNotFound(field, arbor=self.arbor)
 
 
 class TreeFrogRootFieldIO(DefaultRootFieldIO):
@@ -249,4 +249,4 @@ class TreeFrogRootFieldIO(DefaultRootFieldIO):
         if field == "scale_factor":
             return self.arbor._scale_factors[s1]
         else:
-            raise ArborFieldNotFound(field, arbor=self.arbor)
+            raise YTreeFieldNotFound(field, arbor=self.arbor)

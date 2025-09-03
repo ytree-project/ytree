@@ -27,7 +27,7 @@ from ytree.frontends.consistent_trees_hdf5.io import (
     ConsistentTreesHDF5RootFieldIO,
     ConsistentTreesHDF5TreeFieldIO,
 )
-from ytree.utilities.exceptions import ArborDataFileEmpty
+from ytree.utilities.exceptions import YTreeDataFileEmpty
 from ytree.utilities.logger import ytreeLogger as mylog
 
 _access_names = {
@@ -110,7 +110,7 @@ class ConsistentTreesHDF5Arbor(SegmentedArbor):
         if virtual:
             fgroup = f.get("File0")
             if fgroup is None:
-                raise ArborDataFileEmpty(self.filename)
+                raise YTreeDataFileEmpty(self.filename)
         else:
             fgroup = f
 

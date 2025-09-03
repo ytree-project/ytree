@@ -17,7 +17,7 @@ import numpy as np
 import weakref
 
 from ytree.data_structures.fields import FieldContainer
-from ytree.utilities.exceptions import ArborUnsettableField
+from ytree.utilities.exceptions import YTreeUnsettableField
 
 
 class TreeNode:
@@ -229,7 +229,7 @@ class TreeNode:
         fi = self.arbor.field_info[key]
         ftype = fi.get("type")
         if ftype not in ["analysis", "analysis_saved"]:
-            raise ArborUnsettableField(key, self.arbor)
+            raise YTreeUnsettableField(key, self.arbor)
 
         vector_fieldname = fi.get("vector_fieldname", None)
         has_vector_field = vector_fieldname is not None

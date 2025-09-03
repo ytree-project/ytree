@@ -17,7 +17,7 @@ from numpy.testing import assert_raises
 
 import ytree
 
-from ytree.utilities.exceptions import ArborFieldNotFound
+from ytree.utilities.exceptions import YTreeFieldNotFound
 from ytree.testing.utilities import requires_file
 
 CT = "consistent_trees/tree_0_0_0.dat"
@@ -40,7 +40,7 @@ def test_select_halos():
 def test_select_halos_bad_input():
     a = ytree.load(CT)
 
-    with assert_raises(ArborFieldNotFound):
+    with assert_raises(YTreeFieldNotFound):
         list(a.select_halos("(tree['forest', 'not_a_field'].to('Msun') > 1e13)"))
 
     with assert_raises(ValueError):

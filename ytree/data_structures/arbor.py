@@ -33,7 +33,7 @@ from ytree.data_structures.save_arbor import save_arbor
 from ytree.data_structures.node_container import NodeContainer
 from ytree.data_structures.tree_node import TreeNode
 from ytree.data_structures.tree_node_selector import tree_node_selector_registry
-from ytree.utilities.exceptions import ArborFieldDependencyNotFound
+from ytree.utilities.exceptions import YTreeFieldDependencyNotFound
 from ytree.utilities.logger import ytreeLogger, fake_pbar
 
 arbor_registry = {}
@@ -419,7 +419,7 @@ class Arbor(metaclass=RegisteredArbor):
 
             # Skip fields with missing dependencies.
             # They are likely missing because an alias was saved instead.
-            except ArborFieldDependencyNotFound:
+            except YTreeFieldDependencyNotFound:
                 continue
 
     @property

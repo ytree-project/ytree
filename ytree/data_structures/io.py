@@ -18,7 +18,7 @@ import numpy as np
 import os
 import weakref
 
-from ytree.utilities.exceptions import ArborAnalysisFieldNotGenerated
+from ytree.utilities.exceptions import YTreeAnalysisFieldNotGenerated
 from ytree.utilities.logger import ytreeLogger as mylog
 
 
@@ -142,7 +142,7 @@ class FieldIO:
             field = fields_to_generate.pop(0)
             if fi[field].get("type") == "analysis":
                 if field not in fields:
-                    raise ArborAnalysisFieldNotGenerated(field, self.arbor)
+                    raise YTreeAnalysisFieldNotGenerated(field, self.arbor)
                 self._initialize_analysis_field(storage_object, field)
                 continue
             deps = set(fi[field]["dependencies"])

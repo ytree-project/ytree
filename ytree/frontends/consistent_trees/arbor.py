@@ -31,7 +31,7 @@ from ytree.frontends.consistent_trees.io import (
 from ytree.frontends.consistent_trees.utilities import parse_ctrees_header
 from ytree.frontends.rockstar.arbor import RockstarArbor
 
-from ytree.utilities.exceptions import ArborDataFileEmpty
+from ytree.utilities.exceptions import YTreeDataFileEmpty
 from ytree.utilities.io import f_text_block
 
 
@@ -139,7 +139,7 @@ class ConsistentTreesGroupArbor(ConsistentTreesArbor):
         self._hoffset = f.tell()
         line = f.readline()
         if not line:
-            raise ArborDataFileEmpty(self.filename)
+            raise YTreeDataFileEmpty(self.filename)
 
         fn = os.path.join(self.directory, line.split()[3])
         super()._parse_parameter_file(filename=fn, ntrees_in_file=False)

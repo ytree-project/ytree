@@ -16,7 +16,7 @@ Field detection classes
 from collections import defaultdict
 import numpy as np
 
-from ytree.utilities.exceptions import ArborFieldNotFound, ArborFieldDependencyNotFound
+from ytree.utilities.exceptions import YTreeFieldNotFound, YTreeFieldDependencyNotFound
 
 _selectors = ("forest", "tree", "prog")
 
@@ -49,7 +49,7 @@ class FieldDetector(Detector):
 
     def _validate_key(self, key):
         if key not in self.arbor.field_info:
-            raise ArborFieldDependencyNotFound(self.name, key, self.arbor)
+            raise YTreeFieldDependencyNotFound(self.name, key, self.arbor)
 
     def _generate_data(self, key):
         fi = self.arbor.field_info[key]
@@ -80,7 +80,7 @@ class SelectionDetector(Detector):
             raise ValueError(f"Selector must be one of {_selectors}: {selector}.")
 
         if field not in self.arbor.field_info:
-            raise ArborFieldNotFound(field, self.arbor)
+            raise YTreeFieldNotFound(field, self.arbor)
 
     def _generate_data(self, key):
         selector, field = key
