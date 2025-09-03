@@ -20,11 +20,11 @@ import weakref
 
 from ytree.data_structures.detection import FieldDetector
 from ytree.utilities.exceptions import (
-    ArborFieldAlreadyExists,
-    ArborFieldCircularDependency,
-    ArborFieldDependencyNotFound,
-    ArborDerivedFieldException,
-    ArborFieldNotFound,
+    YTreeFieldAlreadyExists,
+    YTreeFieldCircularDependency,
+    YTreeFieldDependencyNotFound,
+    YTreeDerivedFieldException,
+    YTreeFieldNotFound,
 )
 from ytree.utilities.logger import ytreeLogger as mylog
 
@@ -36,7 +36,7 @@ def _redshift(field, data):
 def _time(field, data):
     co = data.arbor.cosmology
     if co is None:
-        raise ArborDerivedFieldException(field["name"], data.arbor)
+        raise YTreeDerivedFieldException(field["name"], data.arbor)
     return data.arbor.cosmology.t_from_z(data["redshift"])
 
 
@@ -85,7 +85,7 @@ class FieldInfoContainer(dict):
         """
 
         if name in self:
-            raise ArborFieldAlreadyExists(name, arbor=self)
+            raise YTreeFieldAlreadyExists(name, arbor=self)
 
         if dtype is None:
             dtype = self.arbor._default_dtype
@@ -119,7 +119,7 @@ class FieldInfoContainer(dict):
 
         if field not in self:
             if force_add:
-                raise ArborFieldDependencyNotFound(field, alias, arbor=self)
+                raise YTreeFieldDependencyNotFound(field, alias, arbor=self)
             else:
                 return
 
@@ -198,7 +198,7 @@ class FieldInfoContainer(dict):
         fc = FieldDetector(self.arbor, name=name)
         try:
             rv = function(info, fc)
-        except ArborDerivedFieldException:
+        except YTreeDerivedFieldException:
             return
         except TypeError as e:
             raise RuntimeError(
@@ -214,7 +214,7 @@ Check the TypeError exception above for more details.
             )
             raise e
 
-        except ArborFieldDependencyNotFound as e:
+        except YTreeFieldDependencyNotFound as e:
             if force_add:
                 raise e
             else:
@@ -322,13 +322,13 @@ Check the TypeError exception above for more details.
                 del fcache[field]
 
             if field not in self:
-                raise ArborFieldNotFound(field, self.arbor)
+                raise YTreeFieldNotFound(field, self.arbor)
 
             ftype = self[field].get("type")
             if ftype == "derived" or ftype == "alias":
                 deps = self[field]["dependencies"]
                 if field in deps:
-                    raise ArborFieldCircularDependency(field, self.arbor)
+                    raise YTreeFieldCircularDependency(field, self.arbor)
                 fields_to_resolve.extend(set(deps).difference(set(fields_to_resolve)))
                 if field not in fields_to_generate:
                     fields_to_generate.append(field)
