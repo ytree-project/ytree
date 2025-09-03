@@ -23,4 +23,4 @@ from ytree.visualization.tree_plot import TreePlot
 
 from ytree.utilities.parallel import parallel_trees, parallel_tree_nodes, parallel_nodes
 
-__version__ = "3.3.2.dev"
+__version__ = "3.3.2-dev"

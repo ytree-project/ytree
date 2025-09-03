@@ -21,7 +21,7 @@ conda
 
 .. code-block:: bash
 
-   $ conda install -c conda-forge ytree
+   $ conda install conda-forge::ytree
 
 Installing from Source
 ----------------------

@@ -13,11 +13,17 @@
 # serve to show the default.
 
 import glob
+import os
+import sys
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 # sys.path.insert(0, os.path.abspath('.'))
+
+sys.path.insert(0, os.path.abspath("../../scripts"))
+
+from get_version import get_version
 
 # -- General configuration ------------------------------------------------
 
@@ -67,7 +73,7 @@ author = "ytree development team"
 # built documents.
 #
 # The short X.Y version.
-version = "3.3.2.dev"
+version = get_version()
 # The full version, including alpha/beta/rc tags.
 release = version
 
