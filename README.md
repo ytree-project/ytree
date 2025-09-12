@@ -8,7 +8,7 @@
 [![PyPI version](https://badge.fury.io/py/ytree.svg)](https://badge.fury.io/py/ytree)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/ytree/badges/version.svg)](https://anaconda.org/conda-forge/ytree)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.01881/status.svg)](https://doi.org/10.21105/joss.01881)
-[![DOI](https://zenodo.org/badge/98564214.svg)](https://doi.org/10.5281/zenodo.1174373)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1174373.svg)](https://doi.org/10.5281/zenodo.1174373)
 [![yt-project](https://img.shields.io/static/v1?label="works%20with"&message="yt"&color="blueviolet")](https://yt-project.org)
 
 This is `ytree`, a [yt](https://github.com/yt-project/yt) extension for
