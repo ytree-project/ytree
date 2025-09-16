@@ -1,4 +1,4 @@
-include CITATION.rst CODE_OF_CONDUCT.md CONTRIBUTING.rst COPYING.txt CREDITS LICENSE README*
+include CITATION.rst CODE_OF_CONDUCT.md CONTRIBUTING.rst COPYING.txt CREDITS README.md
 recursive-include ytree *.py *.txt
 recursive-include doc *.rst *.py *.png
 recursive-include paper *.bib *.md *.png
