@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-  "setuptools>=61.2",
+  "setuptools>=77.0.0",
   "setuptools_scm[toml]>=7.0.1",
 ]
 
@@ -12,6 +12,8 @@ description = "A Python package for analyzing tree data and especially merger tr
 authors = [
     { name = "Britton Smith", email = "brittonsmith@gmail.com" },
 ]
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 keywords = [
     "python",
     "data",
@@ -28,7 +30,7 @@ classifiers = [
     "Environment :: Console",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Astronomy",
-    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Science/Research",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: POSIX :: Linux",
     "Operating System :: Unix",
@@ -95,9 +97,6 @@ exclude = [
 [tool.setuptools]
 include-package-data = true
 zip-safe = false
-license-files = [
-    "LICENSE",
-]
 
 [tool.setuptools.packages.find]
 include = [
