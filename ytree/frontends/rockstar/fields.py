@@ -64,7 +64,7 @@ def setup_field_groups():
     v.add_thing(lambda a: a.lower().startswith("v"))
     r = Group("radii")
     r.add_thing(lambda a: a.lower().startswith("r"))
-    r.add_thing(lambda a: (len(a) > 1 and a.lower().startswith("x")))
+    r.add_thing(lambda a: len(a) > 1 and a.lower().startswith("x"))
     a = Group("angular")
     a.add_thing(lambda a: a.lower().startswith("j"))
     return [m, p, v, r, a]
