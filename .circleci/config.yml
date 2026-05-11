@@ -88,7 +88,7 @@ commands:
             source $HOME/venv/bin/activate
             # run serial tests
             TESTFILES=$(circleci tests glob "tests/test_*.py" "tests/frontends/test_*.py" | circleci tests split --split-by=timings)
-            pytest --cov=ytree --junitxml=test-results/junit_serial.xml --exclude-parallel << parameters.pytestkwargs >> $TESTFILES
+            pytest -v --cov=ytree --junitxml=test-results/junit_serial.xml --exclude-parallel << parameters.pytestkwargs >> $TESTFILES
             python scripts/fix-junit.py test-results/junit_serial.xml
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
@@ -96,7 +96,7 @@ commands:
             fi
             # run parallel tests
             TESTFILES=$(circleci tests glob "tests/parallel/test_*.py" | circleci tests split --split-by=timings)
-            mpirun -np 1 pytest --cov=ytree --junitxml=test-results/junit_parallel.xml --exclude-serial << parameters.pytestkwargs >> $TESTFILES
+            mpirun -np 1 pytest -v --cov=ytree --junitxml=test-results/junit_parallel.xml --exclude-serial << parameters.pytestkwargs >> $TESTFILES
             python scripts/fix-junit.py test-results/junit_parallel.xml
             if [ << parameters.coverage >> == 1 ]; then
                 # code coverage report
