@@ -268,11 +268,12 @@ workflows:
    normal-tests:
      jobs:
        - get-test-data:
+           name: "Get test data."
            tag: "3.13.7"
 
        - tests:
            requires:
-             - get-test-data: success
+             - "Get test data.": success
            name: "Python 3.9 tests"
            tag: "3.9.22"
            ytdev: 0
@@ -280,7 +281,7 @@ workflows:
 
        - tests:
            requires:
-             - get-test-data: success
+             - "Get test data.": success
            name: "Python 3.13 tests"
            tag: "3.13.7"
            coverage: 1
@@ -289,7 +290,7 @@ workflows:
 
        - tests:
            requires:
-             - get-test-data: success
+             - "Get test data.": success
            name: "Python 3.13 tests"
            tag: "3.13.7"
            coverage: 0
@@ -311,11 +312,12 @@ workflows:
                 - main
      jobs:
        - get-test-data:
+           name: "Get test data."
            tag: "3.13.7"
 
        - tests:
            requires:
-             - get-test-data: success
+             - "Get test data.": success
            name: "Python 3.9 tests"
            tag: "3.9.22"
            ytdev: 0
@@ -323,7 +325,7 @@ workflows:
 
        - tests:
            requires:
-             - get-test-data: success
+             - "Get test data.": success
            name: "Python 3.13 tests"
            tag: "3.13.7"
            coverage: 0
