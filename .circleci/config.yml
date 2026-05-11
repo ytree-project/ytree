@@ -128,6 +128,56 @@ executors:
       - image: cimg/python:<< parameters.tag >>
 
 jobs:
+  get-test-data:
+    parameters:
+      tag:
+        type: string
+        default: latest
+      resource_class:
+        type: string
+        default: small
+      ytdev:
+        type: integer
+        default: 0
+    resource_class: << parameters.resource_class >>
+    executor:
+      name: python
+      tag: << parameters.tag >>
+
+    working_directory: ~/ytree
+
+    steps:
+      - checkout
+      - set-env
+
+      - restore_cache:
+          name: "Restore dependencies cache."
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-aberson
+
+      - install:
+          ytdev: << parameters.ytdev >>
+      - configure-ytree
+
+      - save_cache:
+          name: "Save dependencies cache."
+          key: python-<< parameters.tag >>-<< parameters.ytdev >>-dependencies-aberson
+          paths:
+            - ~/.cache/pip
+            - ~/venv
+            - ~/yt-git
+
+      - restore_cache:
+          name: "Restore test data cache."
+          key: test-data-adair
+
+      - download-test-data
+
+      - save_cache:
+          name: "Save test data cache."
+          key: test-data-adair
+          paths:
+            - ~/ytree_test
+
   tests:
     parameters:
       tag:
@@ -179,14 +229,6 @@ jobs:
           name: "Restore test data cache."
           key: test-data-adair
 
-      - download-test-data
-
-      - save_cache:
-          name: "Save test data cache."
-          key: test-data-adair
-          paths:
-            - ~/ytree_test
-
       - run-tests:
           coverage: << parameters.coverage >>
           pytestkwargs: << parameters.pytestkwargs >>
@@ -225,13 +267,20 @@ workflows:
 
    normal-tests:
      jobs:
+       - get-test-data:
+           tag: "3.13.7"
+
        - tests:
+           requires:
+             - get-test-data: success
            name: "Python 3.9 tests"
            tag: "3.9.22"
            ytdev: 0
            pytestkwargs: "--exclude-slow"
 
        - tests:
+           requires:
+             - get-test-data: success
            name: "Python 3.13 tests"
            tag: "3.13.7"
            coverage: 1
@@ -239,6 +288,8 @@ workflows:
            pytestkwargs: "--exclude-slow"
 
        - tests:
+           requires:
+             - get-test-data: success
            name: "Python 3.13 tests"
            tag: "3.13.7"
            coverage: 0
@@ -259,13 +310,20 @@ workflows:
               only:
                 - main
      jobs:
+       - get-test-data:
+           tag: "3.13.7"
+
        - tests:
+           requires:
+             - get-test-data: success
            name: "Python 3.9 tests"
            tag: "3.9.22"
            ytdev: 0
            pytestkwargs: "--exclude-slow"
 
        - tests:
+           requires:
+             - get-test-data: success
            name: "Python 3.13 tests"
            tag: "3.13.7"
            coverage: 0
