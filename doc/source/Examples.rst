@@ -130,3 +130,36 @@ Do the following to run the script on two processors:
 .. code-block:: bash
 
    $ mpirun -np 2 python halo_significance.py
+
+Merger and Smooth Accretion Rates
+----------------------------------
+
+Script: `merger_accretion_rates.py <_static/merger_accretion_rates.py>`__
+
+The growth of a dark matter halo can be decomposed into two components:
+mass gained through mergers with other halos, and mass gained through
+smooth accretion of diffuse material. Below we define a function that
+calculates both rates for each halo node. 
+
+The merger rate is calculated by summing the masses of all direct 
+ancestors, subtracting the main progenitor mass, and dividing by 
+the time between them. The smooth accretion rate is then inferred
+as the residual between the total mass growth rate and the merger rate.
+
+.. literalinclude :: examples/merger_accretion_rates.py
+   :language: python
+   :lines: 17-36
+
+Then, we setup an :ref:`Analysis Pipeline <analysis>` and use
+:func:`~ytree.utilities.parallel.parallel_nodes` to loop over all halos
+in parallel.
+
+.. literalinclude :: examples/merger_accretion_rates.py
+   :language: python
+   :lines: 38-54
+
+Do the following to run the script on two processors:
+
+.. code-block:: bash
+
+   $ mpirun -np 2 python merger_accretion_rates.py
