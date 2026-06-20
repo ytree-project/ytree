@@ -60,8 +60,8 @@ if __name__ == "__main__":
     comm = MPI.Comm.Get_parent()
     try:
         a = ytree.load("tiny_ctrees/locations.dat")
-        a.add_analysis_field("mdot_merger", units="Msun/yr", default=0.)
-        a.add_analysis_field("mdot_accretion", units="Msun/yr", default=0.)
+        a.add_analysis_field("mdot_merger", units="Msun/yr", default=0.0)
+        a.add_analysis_field("mdot_accretion", units="Msun/yr", default=0.0)
 
         ap = ytree.AnalysisPipeline()
         ap.add_operation(calc_accretion_rates)
