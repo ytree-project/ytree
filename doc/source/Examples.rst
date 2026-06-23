@@ -61,7 +61,7 @@ interpolating from the mass of the main progenitor.
 
 .. literalinclude :: examples/halo_age.py
    :language: python
-   :lines: 22,26-43
+   :lines: 30-46
 
 Then, we setup an :ref:`Analysis Pipeline <analysis>` including this
 function and use :func:`~ytree.utilities.parallel.parallel_nodes`
@@ -69,13 +69,13 @@ to loop over all halos in the dataset in parallel.
 
 .. literalinclude :: examples/halo_age.py
    :language: python
-   :lines: 23-26,52-61
+   :lines: 55-64
 
 Finally, we reload the saved data and print the age of the first halo.
 
 .. literalinclude :: examples/halo_age.py
    :language: python
-   :lines: 63-65
+   :lines: 66-68
 
 Do the following to run the script on two processors:
 
@@ -104,7 +104,7 @@ for every halo in a single tree.
 
 .. literalinclude :: examples/halo_significance.py
    :language: python
-   :lines: 24-36
+   :lines: 27-39
 
 Then, we use the :ref:`analysis_pipeline` to calculate the
 significance for all trees and save a new dataset. Because the
@@ -115,7 +115,7 @@ tree to each processor using the
 
 .. literalinclude :: examples/halo_significance.py
    :language: python
-   :lines: 20-23,45-54
+   :lines: 48-57
 
 After loading the new arbor, we use the
 :func:`~ytree.data_structures.arbor.Arbor.set_selector` function to
@@ -123,7 +123,7 @@ use the new significance field to determine the progenitor line.
 
 .. literalinclude :: examples/halo_significance.py
    :language: python
-   :lines: 56-60
+   :lines: 59-63
 
 Do the following to run the script on two processors:
 
@@ -152,7 +152,7 @@ as the residual between the total mass growth rate and the merger rate.
 
 .. literalinclude :: examples/merger_accretion_rates.py
    :language: python
-   :lines: 28-51
+   :lines: 35-51
 
 Then, we setup an :ref:`Analysis Pipeline <analysis>` and use
 :func:`~ytree.utilities.parallel.parallel_nodes` to loop over all halos
@@ -160,7 +160,7 @@ in parallel.
 
 .. literalinclude :: examples/merger_accretion_rates.py
    :language: python
-   :lines: 58-75
+   :lines: 60-70
 
 Do the following to run the script on two processors:
 
