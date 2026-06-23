@@ -25,6 +25,7 @@ tabbing (i.e., 4 spaces to the left).
 
 """
 
+import numpy as np
 import ytree
 import yt
 
@@ -36,12 +37,9 @@ def calc_accretion_rates(node):
     if not ancestors:
         return
 
-    try:
-        main_prog = list(node["prog"])[1]
-    except IndexError:
-        return
+    main_prog = ancestors[np.argmax([p["mass"] for p in ancestors])]
 
-    dt = node["time"].to("yr") - main_prog["time"].to("yr")
+    dt = node["time"] - main_prog["time"]
     if dt == 0:
         return
 

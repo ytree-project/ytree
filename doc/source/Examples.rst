@@ -136,6 +136,10 @@ Merger and Smooth Accretion Rates
 
 Script: `merger_accretion_rates.py <_static/merger_accretion_rates.py>`__
 
+.. note:: This script includes extra code to make it run within the
+   test suite. To run conventionally, remove the lines indicated in
+   the header of script.
+
 The growth of a dark matter halo can be decomposed into two components:
 mass gained through mergers with other halos, and mass gained through
 smooth accretion of diffuse material. Below we define a function that
@@ -148,7 +152,7 @@ as the residual between the total mass growth rate and the merger rate.
 
 .. literalinclude :: examples/merger_accretion_rates.py
    :language: python
-   :lines: 17-36
+   :lines: 28-51
 
 Then, we setup an :ref:`Analysis Pipeline <analysis>` and use
 :func:`~ytree.utilities.parallel.parallel_nodes` to loop over all halos
@@ -156,7 +160,7 @@ in parallel.
 
 .. literalinclude :: examples/merger_accretion_rates.py
    :language: python
-   :lines: 38-54
+   :lines: 58-75
 
 Do the following to run the script on two processors:
 

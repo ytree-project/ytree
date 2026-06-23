@@ -1,5 +1,5 @@
 """
-tests for example halo age script
+tests for example accretion rates script
 
 
 
