@@ -1,9 +1,9 @@
-Cython==3.2.5
-h5py==3.14.0
-ipython==8.18.1
+Cython==3.2.8
+h5py==3.16.0
+ipython==8.39.0
 ipython-genutils==0.2.0
-matplotlib==3.9.4
-numpy==2.0.2
+matplotlib==3.10.9
+numpy==2.2.6
 sphinx-bootstrap-theme==0.8.1
 sympy==1.14.0
-yt==4.3.1
+yt==4.4.2
