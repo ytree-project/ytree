@@ -1,4 +1,4 @@
-Cython==3.2.8
+Cython==3.2.9
 h5py==3.16.0
 ipython==8.39.0
 ipython-genutils==0.2.0
